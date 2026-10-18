@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101010">
+<title>BID Poeirão 2027</title>
+<style>
+:root{--bg:#f4f5f7;--ink:#151515;--muted:#6b7280;--gold:#c7a54b;--line:#e5e7eb;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:#101010;color:white;padding:28px 18px 24px;border-bottom:4px solid var(--gold)}
+.wrap{max-width:1050px;margin:auto}.top{display:flex;align-items:center;gap:14px}.crest{width:54px;height:54px;border:2px solid var(--gold);border-radius:14px;display:grid;place-items:center;color:var(--gold);font-weight:900;font-size:21px}
+h1{font-size:clamp(24px,4vw,36px);line-height:1.05;margin:0;letter-spacing:.04em} .sub{margin:7px 0 0;color:#d1d5db;font-size:13px;letter-spacing:.12em}
+.season{margin-left:auto;border:1px solid #555;border-radius:999px;padding:8px 12px;color:var(--gold);font-weight:700;font-size:12px;white-space:nowrap}
+main{max-width:1050px;margin:24px auto;padding:0 16px 40px}.intro{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:18px}.intro h2{margin:0 0 5px;font-size:24px}.intro p{margin:0;color:var(--muted);font-size:14px}
+.pill{background:#fff;border:1px solid var(--line);padding:8px 11px;border-radius:999px;font-size:12px;color:#4b5563}
+.searchbar{display:flex;gap:10px;background:#fff;border:1px solid var(--line);padding:12px;border-radius:16px;box-shadow:0 5px 20px #11111108}
+input,select{font:inherit;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;min-width:0;width:100%;outline-color:var(--gold)}
+button{font:inherit;border:0;border-radius:10px;padding:12px 16px;background:#151515;color:#fff;font-weight:700;cursor:pointer}button:hover{background:#333}.secondary{background:#fff;color:#151515;border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 22px}.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.stat small{color:var(--muted);display:block}.stat strong{font-size:25px;display:block;margin-top:5px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}.panelhead{display:flex;justify-content:space-between;align-items:center;padding:17px 18px;border-bottom:1px solid var(--line)}.panelhead h3{margin:0;font-size:16px}.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:600px}th,td{text-align:left;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px}th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;background:#fafafa}.empty{text-align:center;padding:34px 18px;color:var(--muted)}.status{display:inline-block;padding:5px 9px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:11px;font-weight:800}.status.approved{background:#dcfce7;color:#166534}.status.rejected{background:#fee2e2;color:#991b1b}
+footer{max-width:1050px;margin:0 auto;padding:0 16px 30px;color:#6b7280;font-size:12px}.admin{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}.admin summary{cursor:pointer;font-weight:750}.notice{margin-top:12px;padding:12px 14px;background:#fff8e6;border:1px solid #f0d99b;border-radius:10px;color:#6d5415;font-size:13px;line-height:1.5}.hidden{display:none!important}
+@media(max-width:650px){.season{display:none}.intro{align-items:start;flex-direction:column}.searchbar{flex-direction:column}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.top{align-items:flex-start}}
+</style>
+</head>
+<body>
+<header><div class="wrap top"><div class="crest">BP</div><div><h1>BID POEIRÃO</h1><p class="sub">BOLETIM INFORMATIVO DE ATLETAS</p></div><div class="season">TEMPORADA 2027</div></div></header>
+<main>
+  <div class="intro"><div><h2>Consulta de atletas</h2><p>Pesquise inscrições por nome, equipe ou número BID.</p></div><span class="pill">Futebol amador</span></div>
+  <div class="searchbar">
+    <input id="search" placeholder="Digite o nome do atleta, equipe ou BID..." aria-label="Pesquisar atletas">
+    <select id="filter" aria-label="Filtrar situação"><option value="">Todas as situações</option><option value="Aprovado">Aprovados</option><option value="Pendente">Pendentes</option><option value="Rejeitado">Rejeitados</option></select>
+    <button id="clear">Limpar</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><small>Atletas na lista demonstrativa</small><strong id="count">0</strong></div>
+    <div class="stat"><small>Inscrições aprovadas</small><strong id="approved">0</strong></div>
+    <div class="stat"><small>Temporada</small><strong>2027</strong></div>
+  </div>
+  <section class="panel">
+    <div class="panelhead"><h3>Boletim informativo</h3><span class="pill">Consulta pública</span></div>
+    <div class="tablewrap"><table><thead><tr><th>Nº BID</th><th>Atleta</th><th>Equipe</th><th>Inscrição</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div id="empty" class="empty">Nenhum atleta cadastrado nesta prévia.<br>Quando o banco de dados for conectado, os atletas inscritos aparecerão aqui.</div>
+  </section>
+  <details class="admin">
+    <summary>Área administrativa — acesso restrito (prévia)</summary>
+    <div class="notice">Esta versão é apenas a interface inicial. O login real, o cadastro de equipes, a aprovação, o OCR e o armazenamento protegido ainda precisam ser conectados a um backend antes de receber dados reais.</div>
+    <div style="display:grid;gap:10px;margin-top:14px;max-width:460px">
+      <input type="email" placeholder="E-mail do administrador" disabled>
+      <input type="password" placeholder="Senha" disabled>
+      <button disabled style="opacity:.55;cursor:not-allowed">Entrar (será ativado na próxima etapa)</button>
+    </div>
+  </details>
+</main>
+<footer>© BID Poeirão · Temporada 2027 · Esta página demonstrativa não contém dados reais de atletas nem documentos pessoais.</footer>
+<script>
+const players = [];
+const rows = document.getElementById('rows');
+const empty = document.getElementById('empty');
+function render(){
+ const q=document.getElementById('search').value.trim().toLowerCase();
+ const f=document.getElementById('filter').value;
+ const found=players.filter(p=>(!q || [p.id,p.name,p.team].some(v=>v.toLowerCase().includes(q))) && (!f||p.status===f));
+ rows.innerHTML='';
+ found.forEach(p=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${p.id}</td><td>${p.name}</td><td>${p.team}</td><td><span class="status ${p.status==='Aprovado'?'approved':p.status==='Rejeitado'?'rejected':''}">${p.status}</span></td>`;rows.appendChild(tr)});
+ empty.classList.toggle('hidden',found.length>0);
+ document.getElementById('count').textContent=players.length;
+ document.getElementById('approved').textContent=players.filter(p=>p.status==='Aprovado').length;
+}
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('filter').addEventListener('change',render);
+document.getElementById('clear').addEventListener('click',()=>{document.getElementById('search').value='';document.getElementById('filter').value='';render()});
+render();
+</script>
+</body>
+</html>
