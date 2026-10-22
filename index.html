@@ -433,125 +433,32 @@ button, .button, .btn {
 
 
 <style id="tvfpModernRefresh">
-/* TVFP ESPORTES — visual moderno, letras maiúsculas e curvas */
-:root{
-  --tvfp-gold:#e4b936;
-  --tvfp-gold-light:#ffe28a;
-  --tvfp-dark:#070909;
-  --tvfp-panel:#101413;
-  --tvfp-border:rgba(228,185,54,.42);
-}
-html{scroll-behavior:smooth}
-body{
-  text-transform:uppercase;
-  letter-spacing:.025em;
-  background:#070909!important;
-  color:#f8f6ef!important;
-}
-input,select,textarea,button{font-family:inherit}
-input,select,textarea{ text-transform:uppercase; border-radius:14px!important; }
-input::placeholder,textarea::placeholder{text-transform:uppercase}
-header{
-  position:relative;
-  isolation:isolate;
-  overflow:hidden;
-  padding:22px 0!important;
-  background:
-    radial-gradient(ellipse at 82% 10%,rgba(228,185,54,.25),transparent 34%),
-    linear-gradient(115deg,#050606 0%,#151713 52%,#080909 100%)!important;
-  border-bottom:4px solid var(--tvfp-gold)!important;
-  box-shadow:0 12px 32px rgba(0,0,0,.38);
-}
-header:before{
-  content:"";
-  position:absolute;inset:-45% -10% auto 25%;height:230%;
-  border:1px solid rgba(228,185,54,.17);
-  border-radius:50%;
-  transform:rotate(-8deg);
-  z-index:-1;pointer-events:none;
-}
-header:after{
-  content:"";
-  position:absolute;right:-5%;bottom:-75px;width:42%;height:150px;
-  border:1px solid rgba(255,226,138,.18);border-radius:50%;
-  pointer-events:none;z-index:-1;
-}
-header .wrap,header .brand{position:relative;z-index:1}
-.brand{gap:18px!important}
-.brand .logo,.tvfp-brand-logo{
-  border-radius:22px!important;
-  border:2px solid var(--tvfp-gold)!important;
-  box-shadow:0 0 0 5px rgba(228,185,54,.09),0 12px 28px rgba(0,0,0,.4);
-}
-.brand h1{
-  color:#fff!important;
-  font-weight:950!important;
-  letter-spacing:.075em!important;
-  text-shadow:0 3px 18px #000;
-}
-.brand p{color:var(--tvfp-gold-light)!important;font-weight:800}
-.season,.pill{
-  border-radius:999px!important;
-  background:linear-gradient(135deg,#ffe28a,#d6a624)!important;
-  color:#15120a!important;border:1px solid #f4d778!important;
-  box-shadow:0 5px 18px rgba(0,0,0,.25);
-}
-main{padding-top:24px!important}
-.hero{align-items:center!important}
-.hero h2{font-weight:950;letter-spacing:.035em}
-.panel,.box,.card,.stat,.team,.competition-choice,.event,.fixture{
-  border-radius:20px!important;
-  border-color:var(--tvfp-border)!important;
-  box-shadow:0 10px 26px rgba(0,0,0,.18);
-}
-.panel{overflow:hidden}
-.panel .ph{
-  background:linear-gradient(105deg,#e4b936,#f7d977 52%,#d1a12b)!important;
-  color:#15120a!important;
-  padding:17px 20px!important;
-}
-.panel .ph h3{color:#15120a!important;font-weight:950!important;letter-spacing:.04em}
-.pad{padding:18px!important}
-.stat{
-  border-top:4px solid var(--tvfp-gold)!important;
-  border-radius:18px!important;
-  background:linear-gradient(145deg,#171a18,#0d0f0e)!important;
-}
-.tabs{gap:10px!important}
-.tab,button{
-  border-radius:999px!important;
-  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
-}
-button:hover,.tab:hover{transform:translateY(-1px);box-shadow:0 7px 18px #0003}
-button.gold,.gold,.tab.active{
-  background:linear-gradient(135deg,#ffe28a,#d6a624)!important;
-  color:#15120a!important;border:1px solid #f4d778!important;
-}
-.secondary,.tab{
-  border-radius:999px!important;
-}
-.team{border-radius:18px!important}
-.team.sel{box-shadow:0 0 0 2px rgba(228,185,54,.18)}
-.crest{border-radius:16px!important}
-table{border-radius:14px;overflow:hidden}
-th{letter-spacing:.09em!important}
-td,th{padding:12px 14px}
-.formgrid{gap:14px!important}
-label{letter-spacing:.035em}
-.actions{gap:10px!important}
-.note{border-radius:16px!important}
-footer#creditsFooter{border-radius:24px 24px 0 0!important}
-@media(max-width:700px){
-  header{padding:15px 0!important}
-  .brand{gap:11px!important}
-  .brand h1{font-size:clamp(17px,5vw,25px)!important}
-  .brand p{font-size:9px!important}
-  .panel,.stat,.box{border-radius:16px!important}
-}
-@media(prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  *,*:before,*:after{transition:none!important;animation:none!important}
-}
+/* REDESIGN VISUAL: LETRAS MAIUSCULAS, PRETO/DOURADO E CURVAS MODERNAS */
+:root{--gold:#e0b83f;--line:#353535;--ink:#f7f4eb;--muted:#c2c2c2}
+html{scroll-behavior:smooth} body,body *{text-transform:uppercase}
+html,body{background:#070707!important;color:#f7f4eb!important}
+body{background-image:radial-gradient(ellipse at 50% -12%,#282318 0%,#0b0b0b 48%,#050505 100%)!important;line-height:1.5}
+header{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(115deg,#050505 0%,#17130a 48%,#050505 100%)!important;border:0!important;border-bottom:4px solid var(--gold)!important;padding:20px 0 24px!important;box-shadow:0 12px 36px #0009}
+header:before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 78% 40%,#d6ad3625,transparent 40%),linear-gradient(90deg,transparent 0 49.8%,#d6ad3612 50%,transparent 50.2%)}
+header .wrap{max-width:1400px;padding:0 24px}
+header .brand{gap:20px;min-width:0}
+header .logo,.tvfp-brand-logo{width:88px!important;height:88px!important;border-radius:22px!important;border:2px solid var(--gold)!important;background:#111!important;box-shadow:0 0 0 5px #d6ad3615,0 8px 24px #0008;object-fit:contain}
+header h1,#brandTitle{font-size:clamp(24px,4.2vw,48px)!important;line-height:1.05!important;font-weight:1000!important;letter-spacing:.045em!important;color:#f6e5ad!important;text-shadow:0 3px 18px #d6ad3630;margin:0!important}
+header p,#competitionSubtitle{font-size:clamp(9px,1.1vw,12px)!important;letter-spacing:.16em!important;color:#d5d0c2!important;margin-top:8px!important}
+.season{margin-left:auto;background:linear-gradient(135deg,#f3d46a,#bd8c1c)!important;color:#17120a!important;border:1px solid #f9e39a!important;border-radius:999px!important;padding:12px 18px!important;box-shadow:0 6px 20px #d6ad3625;letter-spacing:.04em}
+main{max-width:1400px!important;padding:0 22px 42px!important;margin:28px auto!important}
+.hero{padding:22px 24px;border:1px solid #3a3320;border-radius:24px;background:linear-gradient(120deg,#15130e,#0b0b0b 70%)!important;box-shadow:0 12px 30px #0005}
+.hero h2{letter-spacing:.025em;color:#f3d36a}.hero p{color:#c9c5ba!important}
+.panel,.box,.card,.stat,.team,.event,.competition-choice,.fixture,.tab,.note{border-radius:18px!important}
+.panel{background:linear-gradient(145deg,#141414,#090909)!important;border:1px solid #49402a!important;box-shadow:0 10px 28px #0004;margin-bottom:18px!important}
+.panel .ph,.panel>.ph{background:linear-gradient(110deg,#e5bd45,#b88b20)!important;color:#100e08!important;padding:17px 22px!important;border-bottom:1px solid #f2d36b!important}
+.panel .ph h3{font-size:15px!important;letter-spacing:.04em}
+.pad{padding:20px!important}.stat{background:linear-gradient(145deg,#191919,#0b0b0b)!important;border:1px solid #3b3525!important;border-top:4px solid var(--gold)!important;padding:17px!important;box-shadow:0 7px 22px #0003}.stat small{color:#c7c2b5!important}.stat strong{color:#f4d36c!important}
+.tabs{gap:9px!important}.tab,button{border-radius:14px!important;transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;letter-spacing:.015em}button:hover,.tab:hover{transform:translateY(-1px);box-shadow:0 6px 16px #0004}.tab{background:#171717!important;color:#f5f0e3!important;border:1px solid #484848!important;padding:12px 17px!important}.tab.active,.gold,button.gold{background:linear-gradient(135deg,#f0ce5d,#c69a29)!important;color:#171207!important;border-color:#f0ce5d!important}
+input,select,textarea{border-radius:12px!important;background:#181818!important;color:#fff!important;border:1px solid #4b4638!important;padding:12px!important}input:focus,select:focus,textarea:focus{outline:2px solid #d6ad3677;border-color:var(--gold)!important}
+label{color:#d9c98f!important}.team{background:#101010!important;color:#f7f4eb!important;border:1px solid #383838!important;padding:14px!important}.team.sel{background:#211c0d!important;border:2px solid var(--gold)!important}.crest{border:1px solid var(--gold)!important;background:#201b0c!important;color:#f1d16a!important}
+table{color:#f5f2e9!important}th{background:#d6ad36!important;color:#14110a!important}td{border-color:#303030!important}tbody tr:nth-child(even){background:#151515!important}.box{background:#111!important;border-color:#373737!important}.detail{border-color:#303030!important}.detail span:first-child,.muted,.teammeta{color:#bbb5a8!important}.chip{background:#262318!important;color:#f0d77f!important}.fixture{background:linear-gradient(145deg,#171717,#0a0a0a)!important;color:#f7f4eb!important;border:1px solid #645020!important}.fixture .versus{color:#e4bd45!important}.fixture-date{border-radius:12px 12px 0 0;background:linear-gradient(90deg,#b98b20,#f0d268,#b98b20)!important;color:#14110a!important}.note{background:#211b0c!important;border-color:#66501d!important;color:#f2d98e!important}.pill{border-radius:999px!important}.danger,button.danger{background:linear-gradient(135deg,#d43a32,#9e1717)!important;color:white!important}.green,button.green{background:linear-gradient(135deg,#268457,#155a3a)!important;color:white!important}footer{color:#aaa596!important}
+@media(max-width:700px){header .wrap{padding:0 14px}.brand{gap:12px!important;align-items:center}.brand .logo,.tvfp-brand-logo{width:60px!important;height:60px!important;border-radius:16px!important}.season{display:none}.hero{padding:17px;border-radius:19px}.panel .ph{padding:14px 16px!important}.pad{padding:14px!important}main{padding:0 12px 30px!important;margin-top:16px!important}.tabs{gap:7px}.tab{padding:10px 12px!important;font-size:12px}}
 </style>
 
 </head>
