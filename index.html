@@ -431,6 +431,129 @@ button, .button, .btn {
 }
 </style>
 
+
+<style id="tvfpModernRefresh">
+/* TVFP ESPORTES — visual moderno, letras maiúsculas e curvas */
+:root{
+  --tvfp-gold:#e4b936;
+  --tvfp-gold-light:#ffe28a;
+  --tvfp-dark:#070909;
+  --tvfp-panel:#101413;
+  --tvfp-border:rgba(228,185,54,.42);
+}
+html{scroll-behavior:smooth}
+body{
+  text-transform:uppercase;
+  letter-spacing:.025em;
+  background:#070909!important;
+  color:#f8f6ef!important;
+}
+input,select,textarea,button{font-family:inherit}
+input,select,textarea{ text-transform:uppercase; border-radius:14px!important; }
+input::placeholder,textarea::placeholder{text-transform:uppercase}
+header{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  padding:22px 0!important;
+  background:
+    radial-gradient(ellipse at 82% 10%,rgba(228,185,54,.25),transparent 34%),
+    linear-gradient(115deg,#050606 0%,#151713 52%,#080909 100%)!important;
+  border-bottom:4px solid var(--tvfp-gold)!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.38);
+}
+header:before{
+  content:"";
+  position:absolute;inset:-45% -10% auto 25%;height:230%;
+  border:1px solid rgba(228,185,54,.17);
+  border-radius:50%;
+  transform:rotate(-8deg);
+  z-index:-1;pointer-events:none;
+}
+header:after{
+  content:"";
+  position:absolute;right:-5%;bottom:-75px;width:42%;height:150px;
+  border:1px solid rgba(255,226,138,.18);border-radius:50%;
+  pointer-events:none;z-index:-1;
+}
+header .wrap,header .brand{position:relative;z-index:1}
+.brand{gap:18px!important}
+.brand .logo,.tvfp-brand-logo{
+  border-radius:22px!important;
+  border:2px solid var(--tvfp-gold)!important;
+  box-shadow:0 0 0 5px rgba(228,185,54,.09),0 12px 28px rgba(0,0,0,.4);
+}
+.brand h1{
+  color:#fff!important;
+  font-weight:950!important;
+  letter-spacing:.075em!important;
+  text-shadow:0 3px 18px #000;
+}
+.brand p{color:var(--tvfp-gold-light)!important;font-weight:800}
+.season,.pill{
+  border-radius:999px!important;
+  background:linear-gradient(135deg,#ffe28a,#d6a624)!important;
+  color:#15120a!important;border:1px solid #f4d778!important;
+  box-shadow:0 5px 18px rgba(0,0,0,.25);
+}
+main{padding-top:24px!important}
+.hero{align-items:center!important}
+.hero h2{font-weight:950;letter-spacing:.035em}
+.panel,.box,.card,.stat,.team,.competition-choice,.event,.fixture{
+  border-radius:20px!important;
+  border-color:var(--tvfp-border)!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.18);
+}
+.panel{overflow:hidden}
+.panel .ph{
+  background:linear-gradient(105deg,#e4b936,#f7d977 52%,#d1a12b)!important;
+  color:#15120a!important;
+  padding:17px 20px!important;
+}
+.panel .ph h3{color:#15120a!important;font-weight:950!important;letter-spacing:.04em}
+.pad{padding:18px!important}
+.stat{
+  border-top:4px solid var(--tvfp-gold)!important;
+  border-radius:18px!important;
+  background:linear-gradient(145deg,#171a18,#0d0f0e)!important;
+}
+.tabs{gap:10px!important}
+.tab,button{
+  border-radius:999px!important;
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
+}
+button:hover,.tab:hover{transform:translateY(-1px);box-shadow:0 7px 18px #0003}
+button.gold,.gold,.tab.active{
+  background:linear-gradient(135deg,#ffe28a,#d6a624)!important;
+  color:#15120a!important;border:1px solid #f4d778!important;
+}
+.secondary,.tab{
+  border-radius:999px!important;
+}
+.team{border-radius:18px!important}
+.team.sel{box-shadow:0 0 0 2px rgba(228,185,54,.18)}
+.crest{border-radius:16px!important}
+table{border-radius:14px;overflow:hidden}
+th{letter-spacing:.09em!important}
+td,th{padding:12px 14px}
+.formgrid{gap:14px!important}
+label{letter-spacing:.035em}
+.actions{gap:10px!important}
+.note{border-radius:16px!important}
+footer#creditsFooter{border-radius:24px 24px 0 0!important}
+@media(max-width:700px){
+  header{padding:15px 0!important}
+  .brand{gap:11px!important}
+  .brand h1{font-size:clamp(17px,5vw,25px)!important}
+  .brand p{font-size:9px!important}
+  .panel,.stat,.box{border-radius:16px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*:before,*:after{transition:none!important;animation:none!important}
+}
+</style>
+
 </head>
 <body>
 <header>
