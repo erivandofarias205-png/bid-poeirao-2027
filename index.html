@@ -700,6 +700,11 @@ button.gold, .gold button { color:#111!important; }
 #publicView th,#publicView td{white-space:nowrap}
 #publicView th{vertical-align:middle;text-align:center}
 #publicView td{vertical-align:middle}
+</style><style id="competition-format-organized">
+#newCompetitionFormat{min-height:42px}
+#groupCountWrap,#teamsPerGroupWrap{max-width:100%}
+#newCompetitionRegulation{max-width:100%}
+#competitionList a{color:#f5d45b;font-weight:800;text-decoration:underline}
 </style></head>
 <body>
 <header>
@@ -756,7 +761,11 @@ button.gold, .gold button { color:#111!important; }
 <div id="adminProtected" class="hidden">
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
 <div class="panel"><div class="ph"><h3>Nome da competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"></label></div><div class="actions"><button id="saveCompetition" class="gold">Salvar competição principal</button></div></div></div>
-<div class="panel"><div class="ph"><h3>Competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"></label><label>Formato<input id="newCompetitionFormat" type="text" placeholder="Ex.: Grupos, mata-mata, pontos corridos"></label><label>Símbolo da competição<input id="newCompetitionLogo" type="file" accept="image/*"></label></div><div class="actions"><button id="addCompetition" class="gold" type="button">Adicionar competição</button></div><div id="competitionList" class="small" aria-live="polite"></div><p class="small">As competições devem ser gravadas no Supabase. Se o cadastro falhar, confira a mensagem exibida e as permissões da tabela.</p></div></div>
+<div class="panel"><div class="ph"><h3>Competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"></label><label>Formato da competição<select id="newCompetitionFormat"><option value="grupos">Fase de grupos</option><option value="mata-mata">Mata-mata</option><option value="pontos-corridos">Pontos corridos</option><option value="mista">Mista (grupos + mata-mata)</option></select></label>
+<label id="groupCountWrap">Quantidade de grupos<input id="newCompetitionGroupCount" type="number" min="1" max="32" value="4" placeholder="Ex.: 4"></label>
+<label id="teamsPerGroupWrap">Equipes por grupo<input id="newCompetitionTeamsPerGroup" type="number" min="2" max="32" value="4" placeholder="Ex.: 4"></label>
+<label>Símbolo da competição<input id="newCompetitionLogo" type="file" accept="image/*"></label>
+<label class="wide">Regulamento da competição (PDF)<input id="newCompetitionRegulation" type="file" accept=".pdf,application/pdf"><small class="muted">Opcional. O regulamento poderá ser consultado na competição.</small></label></div><div class="actions"><button id="addCompetition" class="gold" type="button">Adicionar competição</button></div><div id="competitionList" class="small" aria-live="polite"></div><p class="small">As competições devem ser gravadas no Supabase. Se o cadastro falhar, confira a mensagem exibida e as permissões da tabela.</p></div></div>
 <div class="panel"><div class="ph"><h3>Cadastrar equipe</h3><span class="pill">1 · Equipes</span></div><div class="pad"><div class="formgrid"><label>Nome da equipe<input id="teamName" placeholder="Ex.: Português de Águas Belas"></label><label>Sigla para o escudo<input id="teamInitials" maxlength="5" placeholder="Ex.: PAB"></label><label>Grupo da equipe (opcional)<input id="teamGroup" placeholder="Ex.: A, B, C"></label><label>Escudo da equipe (opcional)<input id="teamLogo" type="file" accept="image/*"></label><label>Vídeo da equipe (opcional)<input id="teamVideo" type="file" accept="video/*"></label><label>Patrocinadores da equipe<input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona"></label></div><div class="actions"><button id="saveTeam" class="gold">Cadastrar equipe</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"><label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"></label><label>Data de nascimento<input id="athBirth" type="date"></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"></label><label>CPF (uso administrativo)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00"></label><label>Data da inscrição<input id="athReg" type="date"></label><label>Foto do atleta (opcional)<input id="athPhoto" type="file" accept="image/*"></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button id="saveAthlete" class="gold">Cadastrar pessoa</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
@@ -1166,16 +1175,28 @@ function renderPublicCompetitions(){
 function renderCompetitionManager(){
  const list=$('competitionList');if(!list)return;
  const comps=db.competitions||[];
- list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
+ list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}${c.groupCount?` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup||'—')} equipe(s)`:''}${c.regulationUrl?` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`:''}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
  document.querySelectorAll('[data-activate-comp]').forEach(b=>b.onclick=()=>{db.activeCompetitionId=b.dataset.activateComp;const c=comps.find(x=>x.id===db.activeCompetitionId);if(c){db.competition=c.name;if($('competitionName'))$('competitionName').value=c.name}saveDb();});
  document.querySelectorAll('[data-delete-comp]').forEach(b=>b.onclick=()=>{if(!confirm('Excluir esta competição? Os atletas e equipes não serão apagados.'))return;db.competitions=db.competitions.filter(c=>c.id!==b.dataset.deleteComp);if(db.activeCompetitionId===b.dataset.deleteComp)db.activeCompetitionId=db.competitions[0]?.id||'';saveDb();});
 }
+function updateCompetitionFormatFields(){
+ const format=$('newCompetitionFormat')?.value||'grupos';
+ const showGroups=['grupos','mista'].includes(format);
+ ['groupCountWrap','teamsPerGroupWrap'].forEach(id=>{const el=$(id);if(el)el.style.display=showGroups?'':'none'});
+}
+$('newCompetitionFormat')?.addEventListener('change',updateCompetitionFormatFields);
+updateCompetitionFormatFields();
 $('addCompetition')?.addEventListener('click',async()=>{
  const name=$('newCompetitionName')?.value.trim();if(!name){alert('Digite o nome da competição.');return}
  const seasonText=$('newCompetitionSeason')?.value.trim()||'';
  const season=Number.parseInt(seasonText,10);
- const format=$('newCompetitionFormat')?.value.trim()||'';
+ const format=$('newCompetitionFormat')?.value||'grupos';
+ const groupCount=['grupos','mista'].includes(format)?Math.max(1,Number.parseInt($('newCompetitionGroupCount')?.value||'1',10)):null;
+ const teamsPerGroup=['grupos','mista'].includes(format)?Math.max(2,Number.parseInt($('newCompetitionTeamsPerGroup')?.value||'2',10)):null;
+ const regulationFile=$('newCompetitionRegulation')?.files?.[0]||null;
  const file=$('newCompetitionLogo')?.files?.[0]||null;
+ if(regulationFile && regulationFile.type!=='application/pdf' && !regulationFile.name.toLowerCase().endsWith('.pdf')){alert('O regulamento deve ser um arquivo PDF.');return}
+ if(regulationFile && regulationFile.size>10*1024*1024){alert('O regulamento deve ter até 10 MB.');return}
  if(seasonText && !Number.isInteger(season)){alert('Informe a temporada como ano, por exemplo 2026.');return}
  try{
    if(typeof supabaseClient==='undefined'){throw new Error('A conexão com o Supabase não está disponível. Atualize a página.');}
@@ -1193,18 +1214,36 @@ $('addCompetition')?.addEventListener('click',async()=>{
      if(uploadError) throw new Error('Falha ao enviar a logo para o bucket bid-fotos: '+uploadError.message);
      const {data:urlData}=supabaseClient.storage.from('bid-fotos').getPublicUrl(path); logoUrl=urlData?.publicUrl||null;
    }
-   const payload={nome:name,temporada:Number.isInteger(season)?season:new Date().getFullYear(),formato:format||null,logo_url:logoUrl,status:'ativa'};
-   let result=await supabaseClient.from('competicoes').insert(payload).select('id,nome,temporada,formato,logo_url,status').single();
+   let regulationUrl=null;
+   if(regulationFile){
+     const path='regulamentos/'+crypto.randomUUID()+'.pdf';
+     const {error:regError}=await supabaseClient.storage.from('bid-fotos').upload(path,regulationFile,{upsert:false,contentType:'application/pdf'});
+     if(regError) throw new Error('Falha ao enviar o regulamento para o bucket bid-fotos: '+regError.message);
+     const {data:regUrlData}=supabaseClient.storage.from('bid-fotos').getPublicUrl(path);
+     regulationUrl=regUrlData?.publicUrl||null;
+   }
+   const payload={nome:name,temporada:Number.isInteger(season)?season:new Date().getFullYear(),formato:format||null,logo_url:logoUrl,status:'ativa',quantidade_grupos:groupCount,equipes_por_grupo:teamsPerGroup,regulamento_url:regulationUrl};
+   let result=await supabaseClient.from('competicoes').insert(payload).select('id,nome,temporada,formato,logo_url,status,quantidade_grupos,equipes_por_grupo,regulamento_url').single();
+   if(result.error && /column .* does not exist|schema cache|could not find the .* column/i.test(result.error.message||'')){
+     const basePayload={nome:payload.nome,temporada:payload.temporada,formato:payload.formato,logo_url:payload.logo_url,status:payload.status};
+     result=await supabaseClient.from('competicoes').insert(basePayload).select('id,nome,temporada,formato,logo_url,status').single();
+   }
    if(result.error && /schema cache|could not find the table|does not exist/i.test(result.error.message||'')){
      result=await supabaseClient.from('COMPETICOES').insert(payload).select('id,nome,temporada,formato,logo_url,status').single();
    }
    const {data:created,error}=result;
    if(error) throw error;
    if(!db.competitions)db.competitions=[];
-   const c={id:String(created.id),dbId:created.id,name:created.nome,season:String(created.temporada),format:created.formato||'',logo:created.logo_url||'',_remote:true};
+   const c={id:String(created.id),dbId:created.id,name:created.nome,season:String(created.temporada),format:created.formato||'',groupCount:created.quantidade_grupos??groupCount,teamsPerGroup:created.equipes_por_grupo??teamsPerGroup,regulationUrl:created.regulamento_url||regulationUrl||'',logo:created.logo_url||'',_remote:true};
    db.competitions.push(c);db.activeCompetitionId=c.id;db.competition=name;
    if($('competitionName'))$('competitionName').value=name;
-   ['newCompetitionName','newCompetitionSeason','newCompetitionFormat'].forEach(id=>{if($(id))$(id).value=''});if($('newCompetitionLogo'))$('newCompetitionLogo').value='';
+   ['newCompetitionName','newCompetitionSeason'].forEach(id=>{if($(id))$(id).value=''});
+   if($('newCompetitionFormat'))$('newCompetitionFormat').value='grupos';
+   if($('newCompetitionGroupCount'))$('newCompetitionGroupCount').value='4';
+   if($('newCompetitionTeamsPerGroup'))$('newCompetitionTeamsPerGroup').value='4';
+   if($('newCompetitionLogo'))$('newCompetitionLogo').value='';
+   if($('newCompetitionRegulation'))$('newCompetitionRegulation').value='';
+   updateCompetitionFormatFields();
    saveDb();alert('Competição cadastrada no Supabase com sucesso.');
  }catch(e){console.error(e);alert('Não foi possível salvar a competição no Supabase. Detalhe: '+(e?.message||e));}
 });
