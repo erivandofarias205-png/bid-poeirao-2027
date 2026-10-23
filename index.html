@@ -759,6 +759,7 @@ button.gold, .gold button { color:#111!important; }
   </div>
 </div>
 <div id="adminProtected" class="hidden">
+<div class="panel" id="adminGamesShortcut"><div class="ph"><h3>Gerenciar tabela de jogos</h3></div><div class="pad"><p>Cadastre partidas, datas, horários, locais, rodadas e placares da competição selecionada.</p><div class="actions"><button type="button" class="gold" id="adminOpenGames">ABRIR TABELA DE JOGOS</button></div></div></div>
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
 <div class="panel"><div class="ph"><h3>Nome da competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"></label></div><div class="actions"><button id="saveCompetition" class="gold">Salvar competição principal</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"></label><label>Formato da competição<select id="newCompetitionFormat"><option value="grupos">Fase de grupos</option><option value="mata-mata">Mata-mata</option><option value="pontos-corridos">Pontos corridos</option><option value="mista">Mista (grupos + mata-mata)</option></select></label>
@@ -1047,7 +1048,7 @@ function renderEvents(){
  $('emptyEvents').classList.toggle('hidden',db.events.length>0);
 }
 function renderAdminList(){
- $('adminList').innerHTML=db.teams.map(t=>`<div style="padding:12px 0;border-bottom:1px solid #eee"><b>${esc(t.name)}</b> <span class="muted small">(${t.players.length} atleta(s))</span><div class="small muted" style="margin-top:5px">${t.players.map(p=>esc(p.id)+' · '+esc(p.name)).join(' | ')||'Sem atletas cadastrados'}</div><div class="actions"><button class="secondary" data-select-team="${esc(t.id)}">Abrir equipe</button><button class="danger" data-delete-team="${esc(t.id)}">Excluir equipe</button></div></div>`).join('')||'<p class="muted">Nenhuma equipe cadastrada.</p>';
+ $('adminList').innerHTML=db.teams.map(t=>`<div style="padding:12px 0;border-bottom:1px solid #eee"><b>${esc(t.name)}</b> <span class="muted small">(${t.players.length} atleta(s))</span><div class="small muted" style="margin-top:5px">${t.players.map(p=>`<span style="display:inline-flex;gap:6px;align-items:center;margin:3px 8px 3px 0">${esc(p.id)} · ${esc(p.name)} <button type="button" class="secondary" data-edit-athlete="${esc(p.id)}" style="padding:4px 8px;font-size:11px">Editar</button></span>`).join('')||'Sem atletas cadastrados'}</div><div class="actions"><button class="secondary" data-select-team="${esc(t.id)}">Abrir equipe</button><button class="danger" data-delete-team="${esc(t.id)}">Excluir equipe</button></div></div>`).join('')||'<p class="muted">Nenhuma equipe cadastrada.</p>';
  document.querySelectorAll('[data-select-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.selectTeam;renderAll();showTab('public')});
  document.querySelectorAll('[data-delete-team]').forEach(b=>b.onclick=async()=>{
    const t=findTeam(b.dataset.deleteTeam);
@@ -1175,7 +1176,7 @@ function renderPublicCompetitions(){
 function renderCompetitionManager(){
  const list=$('competitionList');if(!list)return;
  const comps=db.competitions||[];
- list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}${c.groupCount?` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup||'—')} equipe(s)`:''}${c.regulationUrl?` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`:''}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
+ list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}${c.groupCount?` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup||'—')} equipe(s)`:''}${c.regulationUrl?` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`:''}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="secondary" data-edit-comp="${esc(c.id)}">Editar</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
  document.querySelectorAll('[data-activate-comp]').forEach(b=>b.onclick=()=>{db.activeCompetitionId=b.dataset.activateComp;const c=comps.find(x=>x.id===db.activeCompetitionId);if(c){db.competition=c.name;if($('competitionName'))$('competitionName').value=c.name}saveDb();});
  document.querySelectorAll('[data-delete-comp]').forEach(b=>b.onclick=()=>{if(!confirm('Excluir esta competição? Os atletas e equipes não serão apagados.'))return;db.competitions=db.competitions.filter(c=>c.id!==b.dataset.deleteComp);if(db.activeCompetitionId===b.dataset.deleteComp)db.activeCompetitionId=db.competitions[0]?.id||'';saveDb();});
 }
@@ -1595,5 +1596,91 @@ async function loadSupabaseTeams() {
 })();
 </script>
 
+
+<script id="bid-admin-edit-tools">
+(function(){
+ const $=id=>document.getElementById(id);
+ const escText=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ async function requireAdmin(){
+   if(window.__BID_ADMIN_VERIFIED!==true){alert('Entre pela área Administração para editar informações.');return false}
+   if(typeof supabaseClient!=='undefined'){
+     const {data}=await supabaseClient.auth.getSession();
+     if(!data?.session){alert('Sua sessão de administrador expirou. Entre novamente.');return false}
+     const {data:ok,error}=await supabaseClient.rpc('is_admin');
+     if(error||ok!==true){alert('A conta não foi confirmada como administradora.');return false}
+   }
+   return true;
+ }
+ document.addEventListener('click',async ev=>{
+   const athleteBtn=ev.target.closest('[data-edit-athlete]');
+   if(athleteBtn){
+     ev.preventDefault(); if(!await requireAdmin())return;
+     const id=athleteBtn.dataset.editAthlete;
+     let athlete=null,team=null;
+     for(const t of (window.db?.teams||[])){const p=(t.players||[]).find(x=>String(x.id)===String(id));if(p){athlete=p;team=t;break}}
+     if(!athlete){alert('Atleta não encontrado na lista administrativa.');return}
+     const name=prompt('Nome completo:',athlete.name||'');if(name===null)return;
+     const birth=prompt('Data de nascimento (AAAA-MM-DD):',athlete.birth||'');if(birth===null)return;
+     const city=prompt('Naturalidade / cidade:',athlete.city||athlete.naturalidade||'');if(city===null)return;
+     const cpf=prompt('CPF (11 dígitos, ou deixe vazio):',athlete.cpf||'');if(cpf===null)return;
+     const digits=cpf.replace(/\D/g,'');if(digits&&digits.length!==11){alert('O CPF deve ter 11 dígitos.');return}
+     const update={nome:name.trim(),data_nascimento:birth||null,cpf:digits||null};
+     try{
+       if(athlete._remote||team?.dbId){
+         const {error}=await supabaseClient.from('ATLETAS').update(update).eq('numero_inscricao',id);
+         if(error)throw error;
+         // city needs a matching column in the Supabase table to persist across devices.
+         const {error:cityError}=await supabaseClient.from('ATLETAS').update({naturalidade:city||null}).eq('numero_inscricao',id);
+         if(cityError && !/column .* does not exist|schema cache|could not find/i.test(cityError.message||''))throw cityError;
+       }
+       athlete.name=name.trim();athlete.birth=birth;athlete.city=city;athlete.naturalidade=city;athlete.cpf=digits;
+       if(typeof saveDb==='function')saveDb();if(typeof renderAll==='function')renderAll();
+       alert('Dados do atleta atualizados.'+(team?.dbId?' Se a naturalidade não existir como coluna no Supabase, ela ficará apenas nesta versão até criarmos essa coluna.':''));
+     }catch(err){console.error(err);alert('Não foi possível salvar a alteração no banco: '+(err?.message||err))}
+     return;
+   }
+   const compBtn=ev.target.closest('[data-edit-comp]');
+   if(compBtn){
+     ev.preventDefault();if(!await requireAdmin())return;
+     const c=(window.db?.competitions||[]).find(x=>String(x.id)===String(compBtn.dataset.editComp));if(!c){alert('Competição não encontrada.');return}
+     const name=prompt('Nome da competição:',c.name||'');if(name===null)return;
+     const season=prompt('Temporada:',c.season||'');if(season===null)return;
+     const formats=[['grupos','Fase de grupos'],['mata-mata','Mata-mata'],['pontos-corridos','Pontos corridos'],['mista','Mista (grupos + mata-mata)']];
+     const formatText=prompt('Formato: grupos, mata-mata, pontos-corridos ou mista',c.format||'grupos');if(formatText===null)return;
+     const format=formatText.trim().toLowerCase();
+     if(!formats.some(x=>x[0]===format)){alert('Formato inválido. Use: grupos, mata-mata, pontos-corridos ou mista.');return}
+     let groupCount=c.groupCount??4,teamsPerGroup=c.teamsPerGroup??4;
+     if(['grupos','mista'].includes(format)){
+       const gc=prompt('Quantidade de grupos:',String(groupCount));if(gc===null)return;groupCount=Math.max(1,parseInt(gc,10)||1);
+       const tg=prompt('Equipes por grupo:',String(teamsPerGroup));if(tg===null)return;teamsPerGroup=Math.max(2,parseInt(tg,10)||2);
+     }
+     try{
+       if(c._remote||c.dbId){
+         const payload={nome:name.trim(),temporada:parseInt(season,10)||new Date().getFullYear(),formato:format,quantidade_grupos:['grupos','mista'].includes(format)?groupCount:null,equipes_por_grupo:['grupos','mista'].includes(format)?teamsPerGroup:null};
+         let {error}=await supabaseClient.from('competicoes').update(payload).eq('id',c.dbId||c.id);
+         if(error && /column .* does not exist|schema cache|could not find/i.test(error.message||'')){
+           ({error}=await supabaseClient.from('competicoes').update({nome:payload.nome,temporada:payload.temporada,formato:payload.formato}).eq('id',c.dbId||c.id));
+         }
+         if(error)throw error;
+       }
+       c.name=name.trim();c.season=season;c.format=format;c.groupCount=groupCount;c.teamsPerGroup=teamsPerGroup;
+       if(typeof saveDb==='function')saveDb();if(typeof renderAll==='function')renderAll();
+       alert('Competição atualizada.');
+     }catch(err){console.error(err);alert('Não foi possível atualizar a competição: '+(err?.message||err))}
+   }
+ });
+})();
+</script>
+
+<script id="admin-games-shortcut-script">
+document.addEventListener('DOMContentLoaded',function(){
+ const b=document.getElementById('adminOpenGames');
+ if(b)b.addEventListener('click',function(){
+   const tab=document.querySelector('[data-tab="games"]');
+   if(tab)tab.click();
+   else alert('A aba Tabela de Jogos não foi encontrada.');
+ });
+});
+</script>
 </body>
 </html>
