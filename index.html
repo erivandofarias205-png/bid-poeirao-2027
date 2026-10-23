@@ -951,8 +951,21 @@ function downloadCardImage(p,t,photo,logo){
 function prepareEvent(pid,tid){showTab('game');$('gameTeam').value=tid;updateAthleteSelect(pid)}
 function updateSelects(){
  const opts=db.teams.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
- ['athTeam','gameTeam','matchHome','matchAway'].forEach(id=>{$(id).innerHTML=opts});
- if(selectedTeam&&findTeam(selectedTeam)){$('athTeam').value=selectedTeam;$('gameTeam').value=selectedTeam}
+ ['athTeam','gameTeam','matchHome','matchAway'].forEach(id=>{const el=$(id);if(el)el.innerHTML=opts});
+ const competitions=db.competitions||[];
+ const compOpts='<option value="">Selecione a competição</option>'+
+   competitions.map(c=>`<option value="${esc(c.id)}">${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');
+ ['teamCompetition','athCompetition'].forEach(id=>{
+   const el=$(id);if(!el)return;
+   const previous=el.value;
+   el.innerHTML=compOpts;
+   if(previous&&competitions.some(c=>String(c.id)===String(previous)))el.value=previous;
+   else if(db.activeCompetitionId&&competitions.some(c=>String(c.id)===String(db.activeCompetitionId)))el.value=String(db.activeCompetitionId);
+ });
+ if(selectedTeam&&findTeam(selectedTeam)){
+   if($('athTeam'))$('athTeam').value=selectedTeam;
+   if($('gameTeam'))$('gameTeam').value=selectedTeam;
+ }
  updateAthleteSelect();
 }
 function updateAthleteSelect(preselect){const t=findTeam($('gameTeam').value);$('gameAthlete').innerHTML=(t?.players||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.id)} · ${esc(p.name)}</option>`).join('');if(preselect)$('gameAthlete').value=preselect}
@@ -1390,19 +1403,25 @@ const supabaseClient = window.supabase.createClient(
 // Carrega competições: tenta o nome padrão em minúsculas e, se necessário, a tabela em maiúsculas.
 async function loadSupabaseCompetitions() {
   let lastError = null;
-  for (const tableName of ['competicoes', 'COMPETICOES']) {
+  // A tabela existente no projeto é public."COMPETICOES"; consulte-a primeiro.
+  for (const tableName of ['COMPETICOES', 'competicoes']) {
     try {
       const { data, error } = await supabaseClient.from(tableName)
-        .select('id,nome,temporada,formato,logo_url,status').order('temporada', { ascending: false });
+        .select('id,nome,temporada,formato,logo_url,status')
+        .order('temporada', { ascending: false });
       if (error) { lastError = error; continue; }
-      const remote = (data || []).map(row => ({
+      const rows = data || [];
+      // Não considerar uma tabela vazia como sucesso se a alternativa ainda pode conter os dados.
+      if (!rows.length) continue;
+      const remote = rows.map(row => ({
         id: String(row.id), dbId: row.id, name: row.nome, season: String(row.temporada || ''),
         format: row.formato || '', logo: row.logo_url || '', status: row.status || 'ativa', _remote: true
       }));
       const localOnly = (db.competitions || []).filter(c => !c._remote && !c.dbId);
       db.competitions = [...remote, ...localOnly];
-      if (!db.activeCompetitionId && remote.length) db.activeCompetitionId = remote[0].id;
-      if (db.activeCompetitionId && !db.competitions.some(c => String(c.id) === String(db.activeCompetitionId)) && remote.length) db.activeCompetitionId = remote[0].id;
+      if (!db.activeCompetitionId || !db.competitions.some(c => String(c.id) === String(db.activeCompetitionId))) {
+        db.activeCompetitionId = remote[0].id;
+      }
       const active = db.competitions.find(c => String(c.id) === String(db.activeCompetitionId));
       if (active) db.competition = active.name;
       saveDb();
@@ -1410,9 +1429,9 @@ async function loadSupabaseCompetitions() {
       return;
     } catch (error) { lastError = error; }
   }
-  console.warn('Não foi possível carregar competições do Supabase:', lastError);
-  const detail = lastError?.message || String(lastError || 'erro desconhecido');
-  alert(`Não foi possível carregar as competições do Supabase. Detalhe: ${detail}\n\nSe a tabela COMPETICOES aparece no Table Editor, abra o SQL Editor e execute: NOTIFY pgrst, 'reload schema'; depois atualize esta página. Confira também se as colunas nome, temporada, formato, logo_url e status existem.`);
+  console.error('Não foi possível carregar competições do Supabase:', lastError);
+  const detail = lastError?.message || String(lastError || 'nenhuma tabela retornou competições');
+  alert(`Não foi possível carregar as competições do Supabase. Detalhe: ${detail}. Confira as permissões SELECT e os nomes das colunas.`);
 }
 
 // Carrega as equipes do banco sem apagar as informações locais já existentes.
