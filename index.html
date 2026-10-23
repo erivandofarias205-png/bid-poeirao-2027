@@ -1722,7 +1722,47 @@ async function loadSupabaseTeams() {
       });
     });
 
-    try {
+   
+    // Busca diretores e musa salvos no Supabase.
+    const { data: personnelRows, error: personnelError } = await supabaseClient
+      .from('equipe_pessoal')
+      .select('id,equipe_id,nome,funcao,data_nascimento,cidade,cpf,numero_inscricao,nome_esportivo,foto_url');
+
+    if (personnelError) {
+      console.error('Erro ao carregar diretores e musa:', personnelError);
+    } else {
+      (personnelRows || []).forEach(person => {
+        const team = remoteTeams.find(t => String(t.dbId) === String(person.equipe_id));
+        if (!team) return;
+
+        if (!team.players) team.players = [];
+
+        const personId = String(person.numero_inscricao || ('PESSOAL-' + person.id));
+        const alreadyExists = team.players.some(p =>
+          String(p.id) === personId ||
+          (p._remotePersonnel && String(p.dbId) === String(person.id))
+        );
+
+        if (!alreadyExists) {
+          team.players.push({
+            id: personId,
+            dbId: person.id,
+            name: person.nome,
+            role: person.funcao,
+            birth: person.data_nascimento || '',
+            city: person.cidade || '',
+            cpf: person.cpf || '',
+            registered: person.numero_inscricao || '',
+            sportsName: person.nome_esportivo || '',
+            foto_url: person.foto_url || '',
+            photo: person.foto_url || '',
+            _remotePersonnel: true
+          });
+        }
+      });
+    }
+
+   try {
       const extraPeople = JSON.parse(localStorage.getItem('tvfp_team_personnel_v1') || '[]');
       extraPeople.forEach(person => {
         const t = remoteTeams.find(x => String(x.id) === String(person.teamId) || String(x.dbId) === String(person.teamDbId));
