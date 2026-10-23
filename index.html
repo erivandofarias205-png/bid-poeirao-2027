@@ -922,7 +922,7 @@ const $=id=>document.getElementById(id);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateBR(s){if(!s)return '—';let p=s.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s}
 function cpfDigits(s){return String(s||'').replace(/\D/g,'')}
-function cpfMask(s){const d=cpfDigits(s);if(d.length<11)return 'xxx.***.***-**';return 'xxx.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11)}
+function cpfMask(s){const d=cpfDigits(s);if(d.length<11)return 'XXX.***.***-**';return 'XXX.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11)}
 function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))}
 function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
 function teamBelongsToActiveCompetition(t){
@@ -1588,6 +1588,19 @@ async function loadSupabaseCompetitions() {
 
 // Carrega equipes, vínculos de competição e atletas do Supabase.
 async function loadSupabaseTeams() {
+  // Preservação: nunca apagar tvfp_team_personnel_v1 durante o carregamento.
+  // O arquivo aberto via file:// tem armazenamento diferente do domínio Vercel;
+  // publicar este HTML no mesmo domínio mantém acesso ao armazenamento existente.
+  try {
+    const personnelKey = 'tvfp_team_personnel_v1';
+    const savedPersonnel = localStorage.getItem(personnelKey);
+    if (savedPersonnel !== null) {
+      const parsedPersonnel = JSON.parse(savedPersonnel);
+      if (!Array.isArray(parsedPersonnel)) console.warn('Cadastro local de diretores/musas não está em formato de lista; preservado sem alteração.');
+    }
+  } catch (preserveError) {
+    console.warn('Não foi possível verificar os cadastros locais; nenhum dado foi removido.', preserveError);
+  }
   try {
     const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
@@ -1670,10 +1683,20 @@ async function loadSupabaseTeams() {
     try {
       const extraPeople = JSON.parse(localStorage.getItem('tvfp_team_personnel_v1') || '[]');
       extraPeople.forEach(person => {
-        const t = remoteTeams.find(x => String(x.id) === String(person.teamId) || String(x.dbId) === String(person.teamDbId));
-        if (t && (!t.players || !t.players.some(p => String(p.id) === String(person.id)))) {
+        const normalizeTeamName = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
+        const personTeamId = String(person.teamId ?? '');
+        const personTeamDbId = String(person.teamDbId ?? '');
+        const personTeamName = normalizeTeamName(person.teamName || person.equipe_nome || person.team || '');
+        const t = remoteTeams.find(x =>
+          String(x.id) === personTeamId || String(x.dbId) === personTeamId ||
+          String(x.id) === personTeamDbId || String(x.dbId) === personTeamDbId ||
+          (personTeamName && normalizeTeamName(x.name) === personTeamName)
+        );
+        if (t) {
           if (!t.players) t.players = [];
-          t.players.push(person);
+          const exists = t.players.some(p => String(p.id) === String(person.id) ||
+            (p.role === person.role && normalizeTeamName(p.name) === normalizeTeamName(person.name)));
+          if (!exists) t.players.push(person);
         }
       });
     } catch(e) { console.warn('Não foi possível recuperar diretores/musa locais', e); }
