@@ -1649,7 +1649,7 @@ async function loadSupabaseTeams() {
 
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
-      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url')
+      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf')
       .order('nome');
     if (athleteError) throw athleteError;
 
@@ -1661,7 +1661,7 @@ async function loadSupabaseTeams() {
       const assocTeamId = athleteCompetitionTeams.get(String(row.id));
       athletesByTeam.get(key).push({
         id: row.numero_inscricao || ('BID-' + String(row.id)), dbId: row.id,
-        name: row.nome, birth: row.data_nascimento || '', cpf: '', registered: '', role:'jogador', sportsName:'',
+        name: row.nome, birth: row.data_nascimento || '', cpf: row.cpf || '', registered: '', role:'jogador', sportsName:'',
         foto_url: row.foto_url || '', photo: row.foto_url || '',
         played: row.status === 'Atuou', yellow: row.cartoes_amarelos || 0,
         red: row.cartoes_vermelhos || 0, goals: row.gols || 0,
