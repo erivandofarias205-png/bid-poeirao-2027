@@ -1065,23 +1065,21 @@ function renderAdminList(){
  document.querySelectorAll('[data-delete-team]').forEach(b=>b.onclick=async()=>{
    const t=findTeam(b.dataset.deleteTeam);
    if(!t) return;
-   if(!confirm('Excluir definitivamente a equipe '+t.name+' do Supabase e apagar os atletas vinculados a ela? Esta ação não pode ser desfeita.')) return;
+   if(!confirm('Remover a equipe '+t.name+'? O cadastro e os atletas não serão apagados automaticamente. Para excluir definitivamente um cadastro global, faça isso separadamente após conferir seus vínculos.')) return;
    if(t.dbId && t._remote){
      b.disabled=true;
      try{
        const {data:sessionData}=await supabaseClient.auth.getSession();
-       if(!sessionData?.session){alert('Entre como administrador antes de excluir uma equipe.');return;}
+       if(!sessionData?.session){alert('Entre como administrador antes de remover uma equipe.');return;}
        const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
        if(adminError||adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return;}
-       // Primeiro remove os atletas da equipe; depois remove a equipe no banco.
-       const {error:athleteDeleteError}=await supabaseClient.from('ATLETAS').delete().eq('equipe_id',t.dbId);
-       if(athleteDeleteError) throw athleteDeleteError;
+       // Segurança: não apagar ATLETAS por equipe_id. A remoção da equipe só ocorre se o banco permitir.
        const {error:teamDeleteError}=await supabaseClient.from('EQUIPES').delete().eq('id',t.dbId);
        if(teamDeleteError) throw teamDeleteError;
        db.events=db.events.filter(e=>String(e.teamId)!==String(t.id)&&String(e.teamId)!==String(t.dbId));
        db.matches=(db.matches||[]).filter(m=>String(m.homeId)!==String(t.id)&&String(m.awayId)!==String(t.id)&&String(m.homeId)!==String(t.dbId)&&String(m.awayId)!==String(t.dbId));
        await loadSupabaseTeams();
-       alert('Equipe e atletas vinculados foram excluídos do Supabase.');
+       alert('Equipe removida. Os atletas não foram excluídos pelo site.');
      }catch(error){
        console.error('Erro ao excluir equipe no Supabase:',error);
        alert('Não foi possível excluir no Supabase. Confira as políticas DELETE de ATLETAS e EQUIPES. Detalhe: '+(error?.message||'erro desconhecido'));
@@ -1190,7 +1188,34 @@ function renderCompetitionManager(){
  const comps=db.competitions||[];
  list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}${c.groupCount?` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup||'—')} equipe(s)`:''}${c.regulationUrl?` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`:''}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="secondary" data-edit-comp="${esc(c.id)}">Editar</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
  document.querySelectorAll('[data-activate-comp]').forEach(b=>b.onclick=()=>{db.activeCompetitionId=b.dataset.activateComp;const c=comps.find(x=>x.id===db.activeCompetitionId);if(c){db.competition=c.name;if($('competitionName'))$('competitionName').value=c.name}saveDb();});
- document.querySelectorAll('[data-delete-comp]').forEach(b=>b.onclick=()=>{if(!confirm('Excluir esta competição? Os atletas e equipes não serão apagados.'))return;db.competitions=db.competitions.filter(c=>c.id!==b.dataset.deleteComp);if(db.activeCompetitionId===b.dataset.deleteComp)db.activeCompetitionId=db.competitions[0]?.id||'';saveDb();});
+ document.querySelectorAll('[data-delete-comp]').forEach(b=>b.onclick=async()=>{
+   const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.deleteComp));
+   if(!c)return;
+   if(!confirm('Excluir a competição '+c.name+'? Serão removidos somente os vínculos desta competição. O cadastro geral das equipes e dos atletas será preservado.'))return;
+   b.disabled=true;
+   try{
+     if(c._remote && c.dbId!==undefined && typeof supabaseClient!=='undefined'){
+       const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+       if(sessionError)throw sessionError;
+       if(!sessionData?.session){alert('Entre como administrador antes de excluir uma competição.');return;}
+       const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
+       if(adminError||adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return;}
+       // A função SQL faz a exclusão em transação e preserva equipes/atletas
+       // que ainda tenham vínculo com outras competições.
+       const {data:deleteData,error:deleteError}=await supabaseClient.rpc('bid_excluir_competicao',{p_competicao_id:c.dbId});
+       if(deleteError)throw deleteError;
+       if(!deleteData || deleteData.ok!==true)throw new Error('O Supabase não confirmou a exclusão da competição.');
+     }
+     db.competitions=(db.competitions||[]).filter(x=>String(x.id)!==String(c.id));
+     if(String(db.activeCompetitionId)===String(c.id))db.activeCompetitionId=db.competitions[0]?.id||'';
+     if(db.competitions[0])db.competition=db.competitions[0].name;
+     saveDb();
+     alert('Competição excluída. Equipes e atletas que ainda participam de outras competições foram preservados.');
+   }catch(error){
+     console.error('Erro ao excluir competição:',error);
+     alert('Não foi possível excluir a competição no Supabase. Execute primeiro o SQL de correção e confira as permissões DELETE. Detalhe: '+(error?.message||error));
+   }finally{b.disabled=false;}
+ });
 }
 function updateCompetitionFormatFields(){
  const format=$('newCompetitionFormat')?.value||'grupos';
