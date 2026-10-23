@@ -655,6 +655,44 @@ button.gold, .gold button { color:#111!important; }
   margin-left:auto!important;
   margin-right:auto!important;
 }
+</style><style id="idcard-reference-model">
+#profileContent .idcard-wrap{display:block!important;overflow-x:auto!important;padding:5px!important}
+#profileContent #athleteIdCard{display:flex!important;flex-direction:row!important;gap:2mm!important;width:142mm!important;height:100mm!important;min-height:100mm!important;max-width:none!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;color:#111!important}
+#profileContent #athleteIdCard:before{display:none!important}
+#profileContent .idcard-front,#profileContent .idcard-back{position:relative;box-sizing:border-box;width:70mm!important;height:100mm!important;min-width:70mm!important;max-width:70mm!important;overflow:hidden;border:1mm solid #111;border-radius:1.5mm;background:#f7f6f2;color:#111;box-shadow:0 1mm 2mm #0004}
+#profileContent .idcard-front{background:linear-gradient(145deg,#f7f5ef,#fff 55%,#ece8df);border-color:#8b1717}
+#profileContent .idcard-front:before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,transparent 60%,#b6000012),repeating-linear-gradient(135deg,transparent 0 8px,#00000008 8px 9px);pointer-events:none}
+#profileContent .idcard-front-top{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:2mm;height:38mm;padding:2mm;background:linear-gradient(135deg,#970c0c,#2b0303 65%,#d3a62a);box-sizing:border-box}
+#profileContent .idcard-team-crest{display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden}
+#profileContent .idcard-brandmark{width:100%!important;height:100%!important;max-width:31mm;object-fit:contain!important;background:#fff;border:1mm solid #d6ad36;border-radius:2mm;padding:1mm;box-sizing:border-box}
+#profileContent .idcard-front-photo{width:100%;height:100%;max-height:34mm;object-fit:cover;border:1mm solid #d6ad36;border-radius:2mm;background:#eee;box-sizing:border-box}
+#profileContent .idcard-front .idcard-photo-placeholder{display:grid;place-items:center;color:#444;font-size:8pt;background:#eee}
+#profileContent .idcard-field{position:relative;margin:1.3mm 2mm 0;text-align:center;z-index:1}
+#profileContent .idcard-field label{display:block;font-size:8pt;font-weight:1000;line-height:1.05;color:#111;margin-bottom:.6mm}
+#profileContent .idcard-field div{box-sizing:border-box;min-height:5mm;padding:.7mm 1mm;border:.35mm solid #555;border-radius:1.5mm;background:#fff;color:#741818;font-size:7.2pt;font-weight:900;line-height:1.1;overflow-wrap:anywhere}
+#profileContent .idcard-front-footer{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(90deg,#8b0909,#1c0505,#b58a20);color:#fff;text-shadow:0 1px 1px #000;text-align:center;font-size:17pt;font-weight:1000;font-style:italic;padding:1.5mm 0;border-top:1mm solid #d6ad36;letter-spacing:.5px}
+#profileContent .idcard-back{display:flex;flex-direction:column;background:linear-gradient(145deg,#fff,#ececec);border-color:#111}
+#profileContent .idcard-back-competition{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1mm;height:31mm;padding:2mm;background:linear-gradient(135deg,#eee,#fff 55%,#ddd);border-bottom:2mm solid #111;box-sizing:border-box;position:relative}
+#profileContent .idcard-competition-mark{width:22mm!important;height:22mm!important;object-fit:contain;background:#fff;border:1mm solid #c49a2d;border-radius:2mm;padding:1mm;box-sizing:border-box}
+#profileContent .idcard-comp-title{text-align:center;display:flex;flex-direction:column;gap:1mm;font-size:9pt;color:#111;max-width:100%;overflow-wrap:anywhere}
+#profileContent .idcard-comp-title b{font-size:10pt;text-transform:uppercase}
+#profileContent .idcard-comp-title span{font-size:7pt;color:#555}
+#profileContent .idcard-back-section{margin:1.5mm 2mm 0;border:.4mm solid #b58a20;border-radius:1.5mm;overflow:hidden;background:#fff;position:relative}
+#profileContent .idcard-back-section> b{display:block;background:#171717;color:#f5d36a;text-align:center;font-size:7pt;line-height:1.1;padding:1.3mm}
+#profileContent .idcard-back-data{display:flex;flex-wrap:wrap;gap:1mm;padding:1.5mm;font-size:6.3pt;line-height:1.2;color:#222}
+#profileContent .idcard-back-data span{flex:1 1 45%;min-width:0;overflow-wrap:anywhere}
+#profileContent .idcard-sign{margin:2mm 2mm 0;border:.4mm solid #b58a20;border-radius:1.5mm;overflow:hidden;background:#fff;position:relative}
+#profileContent .idcard-sign b{display:block;background:#171717;color:#fff;text-align:center;font-size:6.2pt;line-height:1.1;padding:1.2mm}
+#profileContent .idcard-sign div{height:8mm;position:relative}
+#profileContent .idcard-sign div:after{content:"";position:absolute;left:3mm;right:3mm;bottom:2mm;border-bottom:.35mm solid #222}
+#profileContent .idcard-back-footer{margin-top:auto;padding:1.5mm .8mm;background:linear-gradient(90deg,#111,#444,#111);border-top:1mm solid #c59a2b;color:#f5d36a;text-align:center;font-size:6.1pt;font-weight:900}
+@media print{
+ body *{visibility:hidden!important}
+ #profileContent #athleteIdCard,#profileContent #athleteIdCard *{visibility:visible!important}
+ #profileContent #athleteIdCard{position:absolute!important;left:0!important;top:0!important;width:142mm!important;height:100mm!important;margin:0!important}
+ #profileContent .idcard-actions{display:none!important}
+ @page{size:142mm 100mm;margin:0}
+}
 </style></head>
 <body>
 <header>
@@ -844,14 +882,31 @@ function renderProfile(id){
  const personSlots=Array.from({length:5},(_,i)=>{const d=people[i];return `<div class="idcard-person">${d?.photo?`<img src="${d.photo}" alt="" style="width:100%;height:10mm;object-fit:cover">`:`<div style="height:10mm;display:grid;place-items:center;color:#888">👤</div>`}<b>DIRETOR ${i+1}</b><span>${d?esc(d.sportsName||d.name):'Não cadastrado'}</span></div>`}).join('');
  $('profileContent').innerHTML=`<div class="idcard-wrap">
  <div class="idcard idcard-role-${role}" id="athleteIdCard">
-  <div class="idcard-top"><div class="idcard-top-marks">${cardLogo}${competitionMark}</div><div><div class="idcard-title">BID GERAL FUTEBOL AMADOR</div><div class="idcard-subtitle">2026 · TVFP ESPORTES</div><div class="idcard-subtitle">${esc(competition?.name||competition?.nome||'COMPETIÇÃO NÃO SELECIONADA')}</div></div></div>
-  <div class="idcard-body">${photoBlock}<div class="idcard-info"><div class="idcard-name">${esc(p.name)}</div>${p.sportsName?`<div class="idcard-row"><strong>NOME ESPORTIVO:</strong> ${esc(p.sportsName)}</div>`:''}<div class="idcard-role">${roleLabel}</div><div class="idcard-row idcard-bid"><strong>Nº BID:</strong> <b>${esc(p.id)}</b></div><div class="idcard-row"><strong>EQUIPE:</strong> ${esc(t.name)}</div><div class="idcard-row"><strong>CIDADE:</strong> ${esc(p.city||'—')}</div><div class="idcard-row"><strong>NASCIMENTO:</strong> ${dateBR(p.birth)}</div><div class="idcard-row"><strong>INSCRIÇÃO:</strong> ${dateBR(p.registered)}</div><div class="idcard-row"><strong>DOCUMENTO:</strong> ${esc(cpfMask(p.cpf))}</div></div></div>
-  <div class="idcard-section"><div class="idcard-section-title">Estatísticas ${roleLabel.toLowerCase()}</div><div class="idcard-section-content">${role==='jogador'?`<span class="idcard-chip">⚽ Gols: <b>${p.goals||0}</b></span><span class="idcard-chip">🟨 Amarelos: <b>${p.yellow||0}</b></span><span class="idcard-chip">🟥 Vermelhos: <b>${p.red||0}</b></span><span class="idcard-chip">Participou: <b>${p.played?'Sim':'Não'}</b></span>`:role==='diretor'?`<span class="idcard-chip">Função: <b>Diretoria</b></span><span class="idcard-chip">Equipe: <b>${esc(t.name)}</b></span><span class="idcard-chip">Situação: <b>Credenciado</b></span>`:`<span class="idcard-chip">Função: <b>Musa da equipe</b></span><span class="idcard-chip">Equipe: <b>${esc(t.name)}</b></span><span class="idcard-chip">Situação: <b>Credenciada</b></span>`}</div></div>
-  <div class="idcard-section"><div class="idcard-section-title">Diretoria da equipe · até 5 diretores</div><div class="idcard-management">${personSlots}</div></div>
-  <div class="idcard-musa"><b>MUSA DA EQUIPE:</b> ${muse?esc(muse.name):'Não cadastrada'}${muse?.photo?`<img src="${muse.photo}" alt="Foto da musa" style="float:right;width:13mm;height:13mm;object-fit:cover;border:0.5mm solid #d6ad36">`:''}<div style="clear:both"></div></div>
-  <div class="idcard-footer">DOCUMENTO OFICIAL · PESSOAL E INTRANSFERÍVEL</div>
+  <div class="idcard-front">
+   <div class="idcard-front-top">
+    <div class="idcard-team-crest">${cardLogo}</div>
+    ${photo?`<img class="idcard-front-photo" src="${photo}" alt="Foto de ${esc(p.name)}">`:`<div class="idcard-front-photo idcard-photo-placeholder">FOTO DO ATLETA</div>`}
+   </div>
+   <div class="idcard-field"><label>NOME:</label><div>${esc(p.name)}</div></div>
+   <div class="idcard-field"><label>NOME ESPORTIVO:</label><div>${esc(p.sportsName||'—')}</div></div>
+   <div class="idcard-field"><label>DATA DE NASCIMENTO:</label><div>${dateBR(p.birth)}</div></div>
+   <div class="idcard-field"><label>DOCUMENTO:</label><div>${esc(cpfMask(p.cpf))}</div></div>
+   <div class="idcard-front-footer">${roleLabel}</div>
+  </div>
+  <div class="idcard-back">
+   <div class="idcard-back-competition">${competitionMark}<div class="idcard-comp-title"><b>${esc(competition?.name||competition?.nome||'COMPETIÇÃO')}</b><span>2026 · TVFP ESPORTES</span></div></div>
+   <div class="idcard-back-section"><b>INFORMAÇÕES DO ${roleLabel}</b>
+    <div class="idcard-back-data"><span><strong>Nº BID:</strong> ${esc(p.id)}</span><span><strong>EQUIPE:</strong> ${esc(t.name)}</span><span><strong>CIDADE:</strong> ${esc(p.city||'—')}</span><span><strong>INSCRIÇÃO:</strong> ${dateBR(p.registered)}</span></div>
+   </div>
+   <div class="idcard-back-section"><b>ESTATÍSTICAS ${roleLabel}</b>
+    <div class="idcard-back-data">${role==='jogador'?`<span>GOLS: ${p.goals||0}</span><span>AMARELOS: ${p.yellow||0}</span><span>VERMELHOS: ${p.red||0}</span><span>PARTICIPOU: ${p.played?'SIM':'NÃO'}</span>`:role==='diretor'?`<span>FUNÇÃO: DIRETOR</span><span>STATUS: CREDENCIADO</span>`:`<span>FUNÇÃO: MUSA</span><span>STATUS: CREDENCIADA</span>`}</div>
+   </div>
+   <div class="idcard-sign"><b>ASSINATURA DO ${role==='diretor'?'DIRETOR':'ATLETA'}</b><div></div></div>
+   <div class="idcard-sign"><b>ASSINATURA DO DIRETOR DA EQUIPE</b><div></div></div>
+   <div class="idcard-back-footer">DOCUMENTO OFICIAL · PESSOAL E INTRANSFERÍVEL</div>
+  </div>
  </div>
- <div class="actions idcard-actions"><button class="gold" id="printAthleteCard" type="button">Imprimir / Salvar carteirinha 10 × 7 cm em PDF</button><button class="secondary" id="downloadAthleteCard" type="button">Baixar imagem da ficha</button>${role==='jogador'?`<button class="secondary" onclick="prepareEvent('${esc(p.id)}','${esc(t.id)}')">Registrar evento</button>`:''}</div>
+ <div class="actions idcard-actions"><button class="gold" id="printAthleteCard" type="button">Imprimir / Salvar carteirinha frente e verso em PDF</button><button class="secondary" id="downloadAthleteCard" type="button">Baixar imagem da ficha</button>${role==='jogador'?`<button class="secondary" onclick="prepareEvent('${esc(p.id)}','${esc(t.id)}')">Registrar evento</button>`:''}</div>
  <p class="small muted">Impressão em formato horizontal de 10 × 7 cm. Atletas mostram gols e cartões; diretores e musa mostram a função de credenciamento. O símbolo da competição e o escudo da equipe aparecem no cabeçalho.</p>
  </div>
  <div class="profile" style="margin-top:16px"><div class="box"><h4>Dados do cadastro</h4>${[['Tipo',roleLabel],['Número BID',p.id],['Equipe',t.name],['Nascimento',dateBR(p.birth)],['CPF mascarado',cpfMask(p.cpf)],['Data de inscrição',dateBR(p.registered)]].map(([a,b])=>`<div class="detail"><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div><div class="box"><h4>Estatísticas</h4><div class="chips">${role==='jogador'?`<span class="chip">🟨 Amarelos: ${p.yellow||0}</span><span class="chip">🟥 Vermelhos: ${p.red||0}</span><span class="chip">⚽ Gols: ${p.goals||0}</span>`:`<span class="chip">Função: ${roleLabel}</span><span class="chip">Equipe: ${esc(t.name)}</span>`}</div></div></div>`;
