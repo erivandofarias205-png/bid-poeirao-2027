@@ -978,7 +978,11 @@ $('saveTeam').addEventListener('click', async ()=>{
      if(uploadError) throw new Error('Escudo não enviado. Confira se o bucket bid-fotos existe e as permissões de upload. '+uploadError.message);
      logoUrl=supabaseClient.storage.from('bid-fotos').getPublicUrl(path).data?.publicUrl||null;
    }
-   const {data:created,error}=await supabaseClient.from('EQUIPES').insert({nome:name,escudo_url:logoUrl}).select('id,nome,escudo_url').single();
+   conconst competitionId = $('teamCompetition')?.value;
+if (!competitionId) {
+  alert('Selecione a competição antes de cadastrar a equipe.');
+  return;
+}st {data:created,error}=await supabaseClient.from('EQUIPES').insert({nome:name,escudo_url:logoUrl}).select('id,nome,escudo_url').single();
    if(error) throw error;
    const t={id:'dbteam-'+String(created.id),dbId:created.id,name:created.nome,initials,logo:created.escudo_url||'',players:[],_remote:true};
    db.teams=db.teams.filter(x=>String(x.dbId)!==String(created.id));
