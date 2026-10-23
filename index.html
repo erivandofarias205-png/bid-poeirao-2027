@@ -759,6 +759,28 @@ button.gold, .gold button { color:#111!important; }
 #profileContent .idcard-role-musa .idcard-back-data,
 #profileContent .idcard-role-jogador .idcard-back-data { color:#111 !important; }
 </style>
+
+<style id="bid-role-card-colors-final">
+#profileContent .idcard.idcard-role-diretor,
+#profileContent .idcard.idcard-role-diretor .idcard-front,
+#profileContent .idcard.idcard-role-diretor .idcard-back{background:#ffdf35!important;color:#171717!important}
+#profileContent .idcard.idcard-role-musa,
+#profileContent .idcard.idcard-role-musa .idcard-front,
+#profileContent .idcard.idcard-role-musa .idcard-back{background:#f5a0c5!important;color:#24101a!important}
+#profileContent .idcard.idcard-role-jogador,
+#profileContent .idcard.idcard-role-jogador .idcard-front,
+#profileContent .idcard.idcard-role-jogador .idcard-back{background:#fff!important;color:#171717!important}
+#profileContent .idcard.idcard-role-diretor .idcard-field,
+#profileContent .idcard.idcard-role-musa .idcard-field,
+#profileContent .idcard.idcard-role-jogador .idcard-field{color:#171717!important}
+#profileContent .idcard.idcard-role-diretor .idcard-field label{color:#6a5100!important}
+#profileContent .idcard.idcard-role-musa .idcard-field label{color:#8b1749!important}
+#profileContent .idcard.idcard-role-jogador .idcard-field label{color:#555!important}
+#profileContent .idcard.idcard-role-diretor .idcard-front:before,
+#profileContent .idcard.idcard-role-musa .idcard-front:before,
+#profileContent .idcard.idcard-role-jogador .idcard-front:before{background:repeating-linear-gradient(135deg,transparent 0 8px,#00000006 8px 9px)!important}
+</style>
+
 </head>
 <body>
 <header>
@@ -1095,9 +1117,14 @@ $('saveAthlete').addEventListener('click', async ()=>{
  const team=findTeam($('athTeam').value),name=$('athName').value.trim(),birth=$('athBirth').value,city=$('athCity')?.value.trim()||'',cpf=cpfDigits($('athCpf').value),registered=$('athReg').value||new Date().toISOString().slice(0,10),role=$('athRole')?.value||'jogador',sportsName=$('athSportsName')?.value.trim()||'';
  if(!team||!name){alert('Selecione a equipe e informe o nome do atleta.');return}
  if(cpf&&cpf.length!==11){alert('O CPF deve ter 11 dígitos, ou deixe o campo vazio.');return}
- const id=$('athBid').value.trim()||'BID-'+String(db.nextBid++).padStart(4,'0');
- if(findAth(id)){alert('Esse número BID já existe. Informe outro.');return}
  const extraKey='tvfp_team_personnel_v1';let extraPeople=[];try{extraPeople=JSON.parse(localStorage.getItem(extraKey)||'[]')}catch(e){}
+ const requestedBid=$('athBid').value.trim();
+ let id=requestedBid;
+ if(!id){
+   const isUsedBid=candidate=>!!findAth(candidate)||extraPeople.some(p=>String(p.id)===String(candidate));
+   do{id='BID-'+String(db.nextBid++).padStart(4,'0')}while(isUsedBid(id));
+ }
+ if(findAth(id)||extraPeople.some(p=>String(p.id)===String(id))){alert('Esse número BID já existe. Informe outro.');return}
  const peopleForTeam=[...(team.players||[]),...extraPeople.filter(x=>String(x.teamId)===String(team.id))];
  if(role==='diretor'&&peopleForTeam.filter(x=>x.role==='diretor').length>=5){alert('Esta equipe já tem 5 diretores cadastrados. O limite é de 5 por equipe.');return}
  if(role==='musa'&&peopleForTeam.some(x=>x.role==='musa')){alert('Esta equipe já tem uma musa cadastrada. O limite é de 1 por equipe.');return}
@@ -1239,6 +1266,7 @@ function renderMatches(){
 }
 $('saveCompetition')?.addEventListener('click',()=>{const n=$('competitionName').value.trim();if(!n){alert('Digite o nome da competição.');return}db.competition=n;saveDb();alert('Nome da competição salvo nesta prévia.')});
 $('saveMatch')?.addEventListener('click',async()=>{
+ if(window.__BID_ADMIN_VERIFIED!==true){alert('Somente o administrador autenticado pode cadastrar ou alterar jogos.');return}
  const button=$('saveMatch');
  const home=findTeam($('matchHome').value),away=findTeam($('matchAway').value);
  if(!home||!away){alert('Selecione a equipe mandante e a visitante.');return}
@@ -1649,7 +1677,7 @@ async function loadSupabaseTeams() {
 
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
-      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf')
+      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url')
       .order('nome');
     if (athleteError) throw athleteError;
 
@@ -1661,7 +1689,7 @@ async function loadSupabaseTeams() {
       const assocTeamId = athleteCompetitionTeams.get(String(row.id));
       athletesByTeam.get(key).push({
         id: row.numero_inscricao || ('BID-' + String(row.id)), dbId: row.id,
-        name: row.nome, birth: row.data_nascimento || '', cpf: row.cpf || '', registered: '', role:'jogador', sportsName:'',
+        name: row.nome, birth: row.data_nascimento || '', cpf: '', registered: '', role:'jogador', sportsName:'',
         foto_url: row.foto_url || '', photo: row.foto_url || '',
         played: row.status === 'Atuou', yellow: row.cartoes_amarelos || 0,
         red: row.cartoes_vermelhos || 0, goals: row.gols || 0,
