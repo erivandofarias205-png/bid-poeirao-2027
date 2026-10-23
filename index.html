@@ -717,6 +717,10 @@ button.gold, .gold button { color:#111!important; }
 #frontFixtures .versus{font-size:17px!important;color:var(--gold)!important;white-space:nowrap}
 #frontFixtures .front-fixture-status{text-align:center;font-size:10px;color:#c7d2e6;padding:0 8px 8px}
 @media(max-width:520px){#frontFixtures.fixtures{grid-template-columns:1fr!important;max-height:390px}#frontFixtures .fixture{font-size:13px!important}}
+#frontFixtures .fixture-competition{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px;background:#101010;border-bottom:1px solid rgba(220,177,48,.35);color:#f5d45b;font-size:11px;font-weight:800;text-align:center}
+#frontFixtures .fixture-competition img{width:30px;height:30px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex:0 0 auto}
+#frontFixtures .fixture-competition .fixture-competition-name{overflow-wrap:anywhere}
+
 </style></head>
 <body>
 <header>
@@ -883,16 +887,7 @@ function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.t
 function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));['public','admin','games','game','profile'].forEach(x=>$(x+'View').classList.toggle('hidden',x!==name))}
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 function renderTeams(){
- const activeCompetition=(db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId)===String(db.activeCompetitionId));
- const activeDbId=activeCompetition?.dbId??activeCompetition?.id;
- const hasCompetition=!!activeDbId;
- const teamsForCompetition=hasCompetition?db.teams.filter(t=>(t.competitionIds||[]).some(id=>String(id)===String(activeDbId)||String(id)===String(activeCompetition.id))):[];
- if(!hasCompetition){
-   $('teamList').innerHTML='<div class="empty">Selecione uma competição na área de competições para consultar as equipes.</div>';
-   return;
- }
- $('teamList').innerHTML=teamsForCompetition.map(t=>`<button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}"><span class="crest">${t.logo?`<img src="${t.logo}" alt="">`:esc(t.initials||'⚽')}</span><span><span class="teamname">${esc(t.name)}</span><span class="teammeta">${t.players.length} atleta(s) · Grupo ${esc(t.group||'—')} · abrir boletim</span></span></button>`).join('')||'<div class="empty">Nenhuma equipe está vinculada a esta competição. Cadastre ou vincule uma equipe pela Administração.</div>';
- if(!teamsForCompetition.some(t=>t.id===selectedTeam)) selectedTeam='';
+ $('teamList').innerHTML=db.teams.map(t=>`<button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}"><span class="crest">${t.logo?`<img src="${t.logo}" alt="">`:esc(t.initials||'⚽')}</span><span><span class="teamname">${esc(t.name)}</span><span class="teammeta">${t.players.length} atleta(s) · Grupo ${esc(t.group||'—')} · abrir boletim</span></span></button>`).join('')||'<div class="empty">Cadastre a primeira equipe na aba Administração.</div>';
  document.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.team;renderAll()});
 }
 function renderRoster(){
@@ -1157,14 +1152,15 @@ $('saveMatch')?.addEventListener('click',()=>{
  const status=$('matchStatus').value,hs=$('matchHomeScore').value,as=$('matchAwayScore').value;
  if(status==='Finalizado'&&(hs===''||as==='')){alert('Informe os dois placares para jogo finalizado.');return}
  const id=$('saveMatch').dataset.editId||Date.now();
- const m={id,date:$('matchDate').value,round:$('matchRound').value.trim(),venue:$('matchVenue').value.trim(),homeId:home.id,homeName:home.name,awayId:away.id,awayName:away.name,homeScore:hs===''?null:Number(hs),awayScore:as===''?null:Number(as),status,time:$('matchTime').value};
+ const activeCompetition=(db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId))||null;
+ const m={id,date:$('matchDate').value,round:$('matchRound').value.trim(),venue:$('matchVenue').value.trim(),homeId:home.id,homeName:home.name,awayId:away.id,awayName:away.name,homeScore:hs===''?null:Number(hs),awayScore:as===''?null:Number(as),status,time:$('matchTime').value,competitionId:activeCompetition?.id||'',competitionName:activeCompetition?.name||db.competition||'',competitionLogo:activeCompetition?.logo||activeCompetition?.escudo_url||''};
  const idx=(db.matches||[]).findIndex(x=>String(x.id)===String(id));if(idx>=0)db.matches[idx]=m;else{if(!db.matches)db.matches=[];db.matches.push(m)}
  delete $('saveMatch').dataset.editId;$('saveMatch').textContent='Adicionar jogo à tabela';saveDb();showTab('games');alert('Jogo salvo na tabela offline.');
 });
 $('exportMatches')?.addEventListener('click',()=>{const lines=[['Data','Horário','Rodada','Mandante','Gols mandante','Visitante','Gols visitante','Local','Status'],...(db.matches||[]).map(m=>[m.date,m.time,m.round,m.homeName,m.homeScore,m.awayName,m.awayScore,m.venue,m.status])];download('tabela-jogos-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8')});
 function renderFrontPage(){
  const fixtures=[...(db.matches||[])].sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||(a.time||'').localeCompare(b.time||''));
- $('frontFixtures').innerHTML=fixtures.length?fixtures.map(m=>{const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';const finished=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';return `<div class="front-fixture-card"><div class="fixture-date">${esc(date)}${m.time?' · '+esc(m.time):''}${m.round?' · '+esc(m.round):''}</div><div class="fixture"><span class="fixture-team">${esc(m.homeName||'EQUIPE XX')}</span><span class="versus">${finished?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</span><span class="fixture-team">${esc(m.awayName||'EQUIPE XX')}</span></div><div class="front-fixture-status">${esc(m.status||'Agendado')}${m.venue?' · '+esc(m.venue):''}</div></div>`}).join(''):'<div class="empty">Nenhum jogo cadastrado. O administrador pode cadastrar jogos na aba Tabela de Jogos.</div>';
+ $('frontFixtures').innerHTML=fixtures.length?fixtures.map(m=>{const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';const finished=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';const competition=(db.competitions||[]).find(c=>String(c.id)===String(m.competitionId))||null;const compName=m.competitionName||competition?.name||db.competition||'Competição não informada';const compLogo=m.competitionLogo||competition?.logo||competition?.escudo_url||'';return `<div class="front-fixture-card"><div class="fixture-competition">${compLogo?`<img src="${esc(compLogo)}" alt="Logo da competição">`:''}<span class="fixture-competition-name">${esc(compName)}</span></div><div class="fixture-date">${esc(date)}${m.time?' · '+esc(m.time):''}${m.round?' · '+esc(m.round):''}</div><div class="fixture"><span class="fixture-team">${esc(m.homeName||'EQUIPE XX')}</span><span class="versus">${finished?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</span><span class="fixture-team">${esc(m.awayName||'EQUIPE XX')}</span></div><div class="front-fixture-status">${esc(m.status||'Agendado')}${m.venue?' · '+esc(m.venue):''}</div></div>`}).join(''):'<div class="empty">Nenhum jogo cadastrado. O administrador pode cadastrar jogos na aba Tabela de Jogos.</div>';
  const stats={};db.teams.forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
  (db.matches||[]).filter(m=>m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
  const standings=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
@@ -1220,7 +1216,7 @@ function renderPublicCompetitions(){
    db.activeCompetitionId=b.dataset.publicActivateComp;
    const c=comps.find(x=>x.id===db.activeCompetitionId);
    if(c)db.competition=c.name;
-   selectedTeam='';saveDb();renderAll();
+   saveDb();renderAll();
  });
 }
 function renderCompetitionManager(){
@@ -1448,16 +1444,6 @@ async function loadSupabaseTeams() {
   try {
     const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
-    const { data: associationRows, error: associationError } = await supabaseClient
-      .from('competicao_equipes')
-      .select('competicao_id,equipe_id,grupo,status');
-    if (associationError) throw new Error('Não foi possível consultar os vínculos entre equipes e competições. Confira a permissão SELECT da tabela competicao_equipes: '+associationError.message);
-    const associationsByTeam = new Map();
-    (associationRows || []).forEach(row => {
-      const key = String(row.equipe_id);
-      if (!associationsByTeam.has(key)) associationsByTeam.set(key, []);
-      associationsByTeam.get(key).push({competitionId:row.competicao_id,group:row.grupo||'',status:row.status||'ativa'});
-    });
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
       .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url')
@@ -1479,16 +1465,13 @@ async function loadSupabaseTeams() {
     const remoteTeams = (data || []).map(row => ({
       id: 'dbteam-' + String(row.id), dbId: row.id, name: row.nome,
       initials: String(row.nome || '').split(/\s+/).map(part => part[0] || '').join('').slice(0,4).toUpperCase(),
-      logo: row.escudo_url || '', players: athletesByTeam.get(String(row.id)) || [],
-      competitionIds: (associationsByTeam.get(String(row.id)) || []).map(a=>a.competitionId),
-      group: (associationsByTeam.get(String(row.id)) || []).find(a=>String(a.competitionId)===String(db.activeCompetitionId)||String(a.competitionId)===String((db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId))?.dbId))?.group || '',
-      _remote: true
+      logo: row.escudo_url || '', players: athletesByTeam.get(String(row.id)) || [], _remote: true
     }));
     // A consulta pública deve mostrar somente equipes e atletas vindos do Supabase.
     // Registros antigos de demonstração no localStorage não entram no boletim.
     try{const extraPeople=JSON.parse(localStorage.getItem('tvfp_team_personnel_v1')||'[]');extraPeople.forEach(person=>{const t=remoteTeams.find(x=>String(x.id)===String(person.teamId)||String(x.dbId)===String(person.teamDbId));if(t){if(!t.players)t.players=[];if(!t.players.some(p=>String(p.id)===String(person.id)))t.players.push(person)}})}catch(e){console.warn('Não foi possível recuperar diretores/musa locais',e)}
     db.teams = remoteTeams;
-    if (!findTeam(selectedTeam)) selectedTeam = '';
+    if (!findTeam(selectedTeam)) selectedTeam = db.teams[0]?.id || '';
     saveDb();
     if (typeof renderAll === 'function') renderAll();
   } catch (error) {
