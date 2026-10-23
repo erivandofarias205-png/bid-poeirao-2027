@@ -745,6 +745,31 @@ button.gold, .gold button { color:#111!important; }
 .idcard-section *{color:#111!important}
 @media print{.idcard,.idcard *{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}}
 </style>
+
+<style id="idcard-yellow-background-update">
+/* Atualização solicitada: trocar os fundos brancos da carteirinha por amarelo, mantendo alto contraste. */
+#profileContent .idcard-front,
+#profileContent .idcard-back { background:#f4c542 !important; color:#111 !important; border-color:#a97800 !important; }
+#profileContent .idcard-front { background:linear-gradient(145deg,#ffe783 0%,#f4c542 58%,#e8b82e 100%) !important; }
+#profileContent .idcard-front:before { background:repeating-linear-gradient(135deg,transparent 0 8px,#6b4c0010 8px 9px) !important; }
+#profileContent .idcard-front-top { background:linear-gradient(135deg,#b8860b,#f4c542 62%,#ffe783) !important; }
+#profileContent .idcard-front-photo,
+#profileContent .idcard-front .idcard-photo-placeholder { background:#fff3bf !important; color:#111 !important; }
+#profileContent .idcard-field label { color:#111 !important; text-shadow:none !important; }
+#profileContent .idcard-field div { background:#fff0a8 !important; color:#4a1800 !important; border-color:#755300 !important; }
+#profileContent .idcard-back-section { background:#ffe783 !important; border-color:#8a6500 !important; }
+#profileContent .idcard-back-data,
+#profileContent .idcard-back-data span { color:#111 !important; }
+#profileContent .idcard-sign { background:#ffe783 !important; color:#111 !important; }
+#profileContent .idcard-sign div { border-color:#333 !important; }
+#profileContent .idcard-back-competition { background:#fff0a8 !important; color:#111 !important; }
+#profileContent .idcard-comp-title,
+#profileContent .idcard-comp-title span { color:#111 !important; }
+#profileContent .idcard-back-footer { background:#a97800 !important; color:#fff !important; }
+#profileContent .idcard-role-diretor .idcard-front-footer { background:linear-gradient(90deg,#9b7100,#f4c542,#9b7100) !important; color:#111 !important; text-shadow:none !important; }
+#profileContent .idcard-role-musa .idcard-front-footer { background:linear-gradient(90deg,#c2185b,#f4c542,#c2185b) !important; color:#fff !important; }
+@media print { #profileContent .idcard-front, #profileContent .idcard-back, #profileContent .idcard-field div, #profileContent .idcard-back-section, #profileContent .idcard-back-competition { print-color-adjust:exact !important; -webkit-print-color-adjust:exact !important; } }
+</style>
 </head>
 <body>
 <header>
