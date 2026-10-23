@@ -1236,13 +1236,17 @@ $('addCompetition')?.addEventListener('click',async()=>{
      regulationUrl=regUrlData?.publicUrl||null;
    }
    const payload={nome:name,temporada:Number.isInteger(season)?season:new Date().getFullYear(),formato:format||null,logo_url:logoUrl,status:'ativa',quantidade_grupos:groupCount,equipes_por_grupo:teamsPerGroup,regulamento_url:regulationUrl};
+   const basePayload={nome:payload.nome,temporada:payload.temporada,formato:payload.formato,logo_url:payload.logo_url,status:payload.status};
    let result=await supabaseClient.from('competicoes').insert(payload).select('id,nome,temporada,formato,logo_url,status,quantidade_grupos,equipes_por_grupo,regulamento_url').single();
-   if(result.error && /column .* does not exist|schema cache|could not find the .* column/i.test(result.error.message||'')){
-     const basePayload={nome:payload.nome,temporada:payload.temporada,formato:payload.formato,logo_url:payload.logo_url,status:payload.status};
+   let optionalFieldsSaved=true;
+   const missingOptionalColumn=err=>/column .* does not exist|schema cache|could not find the .* column/i.test(err?.message||'');
+   if(result.error && missingOptionalColumn(result.error)){
+     optionalFieldsSaved=false;
      result=await supabaseClient.from('competicoes').insert(basePayload).select('id,nome,temporada,formato,logo_url,status').single();
    }
    if(result.error && /schema cache|could not find the table|does not exist/i.test(result.error.message||'')){
-     result=await supabaseClient.from('COMPETICOES').insert(payload).select('id,nome,temporada,formato,logo_url,status').single();
+     result=await supabaseClient.from('COMPETICOES').insert(basePayload).select('id,nome,temporada,formato,logo_url,status').single();
+     optionalFieldsSaved=false;
    }
    const {data:created,error}=result;
    if(error) throw error;
@@ -1257,7 +1261,7 @@ $('addCompetition')?.addEventListener('click',async()=>{
    if($('newCompetitionLogo'))$('newCompetitionLogo').value='';
    if($('newCompetitionRegulation'))$('newCompetitionRegulation').value='';
    updateCompetitionFormatFields();
-   saveDb();alert('Competição cadastrada no Supabase com sucesso.');
+   saveDb();alert('Competição cadastrada no Supabase com sucesso.'+(optionalFieldsSaved?'':'\n\nATENÇÃO: o banco ainda não possui todas as colunas opcionais. Nome, temporada e formato foram salvos; quantidade de grupos, equipes por grupo e/ou regulamento precisam de colunas no Supabase para ficarem gravados permanentemente.'));
  }catch(e){console.error(e);alert('Não foi possível salvar a competição no Supabase. Detalhe: '+(e?.message||e));}
 });
 function renderAll(){renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();$('nTeams').textContent=db.teams.length;$('nPlayers').textContent=db.teams.reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · 2026 - TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
@@ -1629,7 +1633,7 @@ async function loadSupabaseTeams() {
      ev.preventDefault(); if(!await requireAdmin())return;
      const id=athleteBtn.dataset.editAthlete;
      let athlete=null,team=null;
-     for(const t of (window.db?.teams||[])){const p=(t.players||[]).find(x=>String(x.id)===String(id));if(p){athlete=p;team=t;break}}
+     for(const t of (db?.teams||[])){const p=(t.players||[]).find(x=>String(x.id)===String(id));if(p){athlete=p;team=t;break}}
      if(!athlete){alert('Atleta não encontrado na lista administrativa.');return}
      const name=prompt('Nome completo:',athlete.name||'');if(name===null)return;
      const birth=prompt('Data de nascimento (AAAA-MM-DD):',athlete.birth||'');if(birth===null)return;
@@ -1654,7 +1658,7 @@ async function loadSupabaseTeams() {
    const compBtn=ev.target.closest('[data-edit-comp]');
    if(compBtn){
      ev.preventDefault();if(!await requireAdmin())return;
-     const c=(window.db?.competitions||[]).find(x=>String(x.id)===String(compBtn.dataset.editComp));if(!c){alert('Competição não encontrada.');return}
+     const c=(db?.competitions||[]).find(x=>String(x.id)===String(compBtn.dataset.editComp));if(!c){alert('Competição não encontrada.');return}
      const name=prompt('Nome da competição:',c.name||'');if(name===null)return;
      const season=prompt('Temporada:',c.season||'');if(season===null)return;
      const formats=[['grupos','Fase de grupos'],['mata-mata','Mata-mata'],['pontos-corridos','Pontos corridos'],['mista','Mista (grupos + mata-mata)']];
