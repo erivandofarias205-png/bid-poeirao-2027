@@ -978,18 +978,32 @@ $('saveTeam').addEventListener('click', async ()=>{
      if(uploadError) throw new Error('Escudo não enviado. Confira se o bucket bid-fotos existe e as permissões de upload. '+uploadError.message);
      logoUrl=supabaseClient.storage.from('bid-fotos').getPublicUrl(path).data?.publicUrl||null;
    }
-   conconst competitionId = $('teamCompetition')?.value;
-if (!competitionId) {
-  alert('Selecione a competição antes de cadastrar a equipe.');
-  return;
-}st {data:created,error}=await supabaseClient.from('EQUIPES').insert({nome:name,escudo_url:logoUrl}).select('id,nome,escudo_url').single();
+   const competitionId = $('teamCompetition')?.value;
+   if (!competitionId) {
+     alert('Selecione a competição antes de cadastrar a equipe.');
+     return;
+   }
+   const competition = (db.competitions || []).find(c => String(c.id) === String(competitionId) || String(c.dbId) === String(competitionId));
+   const competitionDbId = competition?.dbId || competition?.id;
+   if (!competitionDbId) throw new Error('Não foi possível identificar a competição selecionada no Supabase.');
+   const {data:created,error}=await supabaseClient.from('EQUIPES').insert({nome:name,escudo_url:logoUrl}).select('id,nome,escudo_url').single();
    if(error) throw error;
+   const {error:associationError}=await supabaseClient.from('competicao_equipes').insert({
+     competicao_id: competitionDbId,
+     equipe_id: created.id,
+     grupo: $('teamGroup')?.value.trim() || null,
+     status: 'ativa'
+   });
+   if(associationError) {
+     console.error('Equipe criada, mas o vínculo com a competição falhou:', associationError);
+     alert('A equipe foi criada no cadastro geral, mas não foi vinculada à competição. Não tente cadastrar novamente. Detalhe: '+associationError.message);
+   }
    const t={id:'dbteam-'+String(created.id),dbId:created.id,name:created.nome,initials,logo:created.escudo_url||'',players:[],_remote:true};
    db.teams=db.teams.filter(x=>String(x.dbId)!==String(created.id));
    db.teams.push(t);selectedTeam=t.id;
    $('teamName').value='';$('teamInitials').value='';if($('teamGroup'))$('teamGroup').value='';$('teamLogo').value='';
-   saveDb();showTab('admin');
-   alert('Equipe cadastrada no Supabase com sucesso!');
+   saveDb();await loadSupabaseTeams();showTab('admin');
+   if(!associationError) alert('Equipe cadastrada e vinculada à competição selecionada com sucesso!');
  } catch(error) {
    console.error('Erro ao cadastrar equipe no Supabase:',error);
    alert('Não foi possível salvar no Supabase. Confira as políticas RLS e os nomes da tabela/colunas. Detalhe: '+(error?.message||'erro desconhecido'));
