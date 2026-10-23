@@ -725,50 +725,15 @@ button.gold, .gold button { color:#111!important; }
 #frontFixtures .fixture-competition .comp-dash{color:#f5d45b;padding:0 2px}
 
 </style>
-<style id="bid-idcard-high-contrast">
-/* Contraste reforçado das carteirinhas: texto legível em tela e impressão. */
-.idcard{background:#fff!important;color:#111!important;border-color:#111!important}
-.idcard:before{display:none!important}
-.idcard-top{background:#111!important;color:#fff!important;border-bottom:2mm solid #d6ad36!important}
-.idcard-title{color:#fff!important;text-shadow:none!important}
-.idcard-subtitle{color:#fff!important}
-.idcard-body,.idcard-info,.idcard-section{color:#111!important}
-.idcard-name{color:#111!important;font-size:12pt!important;font-weight:900!important}
-.idcard-row{color:#111!important;font-size:8.2pt!important;font-weight:700!important}
-.idcard-row strong{color:#111!important;font-weight:900!important}
-.idcard-role{background:#111!important;color:#fff!important;border:1px solid #111!important;font-weight:900!important}
-.idcard-role-diretor .idcard-role{background:#ffdf00!important;color:#111!important;border:1px solid #111!important}
-.idcard-role-musa .idcard-role{background:#ff4fa3!important;color:#111!important;border:1px solid #111!important}
-.idcard-role-jogador .idcard-role{background:#d6ad36!important;color:#111!important;border:1px solid #111!important}
-.idcard-footer{background:#111!important;color:#fff!important;font-weight:900!important}
-.idcard-section{background:#fff!important;border-color:#111!important}
-.idcard-section *{color:#111!important}
-@media print{.idcard,.idcard *{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}}
-</style>
-
-<style id="idcard-yellow-background-update">
-/* Atualização solicitada: trocar os fundos brancos da carteirinha por amarelo, mantendo alto contraste. */
-#profileContent .idcard-front,
-#profileContent .idcard-back { background:#f4c542 !important; color:#111 !important; border-color:#a97800 !important; }
-#profileContent .idcard-front { background:linear-gradient(145deg,#ffe783 0%,#f4c542 58%,#e8b82e 100%) !important; }
-#profileContent .idcard-front:before { background:repeating-linear-gradient(135deg,transparent 0 8px,#6b4c0010 8px 9px) !important; }
-#profileContent .idcard-front-top { background:linear-gradient(135deg,#b8860b,#f4c542 62%,#ffe783) !important; }
-#profileContent .idcard-front-photo,
-#profileContent .idcard-front .idcard-photo-placeholder { background:#fff3bf !important; color:#111 !important; }
-#profileContent .idcard-field label { color:#111 !important; text-shadow:none !important; }
-#profileContent .idcard-field div { background:#fff0a8 !important; color:#4a1800 !important; border-color:#755300 !important; }
-#profileContent .idcard-back-section { background:#ffe783 !important; border-color:#8a6500 !important; }
-#profileContent .idcard-back-data,
-#profileContent .idcard-back-data span { color:#111 !important; }
-#profileContent .idcard-sign { background:#ffe783 !important; color:#111 !important; }
-#profileContent .idcard-sign div { border-color:#333 !important; }
-#profileContent .idcard-back-competition { background:#fff0a8 !important; color:#111 !important; }
-#profileContent .idcard-comp-title,
-#profileContent .idcard-comp-title span { color:#111 !important; }
-#profileContent .idcard-back-footer { background:#a97800 !important; color:#fff !important; }
-#profileContent .idcard-role-diretor .idcard-front-footer { background:linear-gradient(90deg,#9b7100,#f4c542,#9b7100) !important; color:#111 !important; text-shadow:none !important; }
-#profileContent .idcard-role-musa .idcard-front-footer { background:linear-gradient(90deg,#c2185b,#f4c542,#c2185b) !important; color:#fff !important; }
-@media print { #profileContent .idcard-front, #profileContent .idcard-back, #profileContent .idcard-field div, #profileContent .idcard-back-section, #profileContent .idcard-back-competition { print-color-adjust:exact !important; -webkit-print-color-adjust:exact !important; } }
+<style id="bid-idcard-function-colors-final">
+/* Cores da carteirinha inteira por função, com letras de alto contraste. */
+.idcard.idcard-role-diretor { background:#ffdf35!important; color:#171717!important; border-color:#a98500!important; }
+.idcard.idcard-role-diretor .idcard-title,.idcard.idcard-role-diretor .idcard-section-content,.idcard.idcard-role-diretor .idcard-label,.idcard.idcard-role-diretor .idcard-value { color:#171717!important; }
+.idcard.idcard-role-musa { background:#f5a0c5!important; color:#24101a!important; border-color:#b8326b!important; }
+.idcard.idcard-role-musa .idcard-title,.idcard.idcard-role-musa .idcard-section-content,.idcard.idcard-role-musa .idcard-label,.idcard.idcard-role-musa .idcard-value { color:#24101a!important; }
+.idcard.idcard-role-jogador { background:#fff!important; color:#171717!important; border-color:#b8b8b8!important; }
+.idcard.idcard-role-jogador .idcard-title,.idcard.idcard-role-jogador .idcard-section-content,.idcard.idcard-role-jogador .idcard-label,.idcard.idcard-role-jogador .idcard-value { color:#171717!important; }
+@media print { .idcard { print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; } }
 </style>
 </head>
 <body>
@@ -805,7 +770,7 @@ button.gold, .gold button { color:#111!important; }
 <label>Gols do visitante<input id="matchAwayScore" type="number" min="0" placeholder="—"></label>
 <label>Status<select id="matchStatus"><option value="Agendado">Agendado</option><option value="Finalizado">Finalizado</option><option value="Adiado">Adiado</option><option value="Cancelado">Cancelado</option></select></label>
 <label>Horário<input id="matchTime" type="time"></label>
-</div><div class="actions"><button id="saveMatch" class="gold">Adicionar jogo à tabela</button><button id="exportMatches" class="secondary">Baixar tabela (CSV)</button><button id="syncLegacyMatches" class="secondary">Recuperar jogos antigos do computador</button></div><p class="small muted">A recuperação usa uma cópia de segurança local e envia somente partidas que ainda não existam no Supabase.</p></div>
+</div><div class="actions"><button id="saveMatch" class="gold">Adicionar jogo à tabela</button><button id="exportMatches" class="secondary">Baixar tabela (CSV)</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>Data</th><th>Rodada</th><th>Jogo</th><th>Placar</th><th>Local</th><th>Status</th><th>Ação</th></tr></thead><tbody id="matchRows"></tbody></table></div><div id="noMatches" class="empty">Nenhum jogo cadastrado ainda.</div>
 </div>
 <div class="panel"><div class="ph"><h3>Classificação demonstrativa</h3><span class="pill">Atualização manual nesta prévia</span></div><div class="tablewrap"><table><thead><tr><th>Pos.</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th></tr></thead><tbody id="standingRows"></tbody></table></div><div class="pad small muted">A classificação será calculada a partir dos jogos finalizados cadastrados nesta prévia.</div></div>
@@ -914,9 +879,6 @@ button.gold, .gold button { color:#111!important; }
 </footer>
 <script>
 const KEY='bidPoeiraoOfflineV1';
-// Cópia de segurança automática e não destrutiva dos dados locais anteriores à sincronização.
-const LEGACY_BACKUP_KEY='bidPoeiraoLegacyBackupV1';
-try{if(!localStorage.getItem(LEGACY_BACKUP_KEY)){const originalLocal=localStorage.getItem(KEY);if(originalLocal)localStorage.setItem(LEGACY_BACKUP_KEY,originalLocal);}}catch(e){console.warn('Não foi possível criar cópia de segurança automática dos dados locais.',e)}
 const starter={competition:'BID Futebol Amador',competitions:[],activeCompetitionId:'',matches:[],teams:[],events:[],nextBid:1};
 let db=loadDb(), selectedTeam=db.teams[0]?.id||'';
 function loadDb(){try{const raw=localStorage.getItem(KEY);if(raw){const x=JSON.parse(raw);if(x&&Array.isArray(x.teams)&&Array.isArray(x.events)){if(!Array.isArray(x.matches))x.matches=[];if(!Array.isArray(x.competitions))x.competitions=[];if(!x.activeCompetitionId)x.activeCompetitionId=x.competitions[0]?.id||'';if(!x.competition)x.competition='BID Futebol Amador';return x}}}catch(e){}return structuredClone(starter)}
@@ -1110,14 +1072,15 @@ $('saveAthlete').addEventListener('click', async ()=>{
  if(!team||!name){alert('Selecione a equipe e informe o nome do atleta.');return}
  if(cpf&&cpf.length!==11){alert('O CPF deve ter 11 dígitos, ou deixe o campo vazio.');return}
  const id=$('athBid').value.trim()||'BID-'+String(db.nextBid++).padStart(4,'0');
- if(findAth(id)){alert('Esse número BID já existe. Informe outro.');return}
+ // Número BID é obrigatório/único apenas para jogadores. Diretores e musas não entram no cadastro de ATLETAS.
+ if(role==='jogador' && findAth(id)){alert('Esse número BID já existe. Informe outro.');return}
  const extraKey='tvfp_team_personnel_v1';let extraPeople=[];try{extraPeople=JSON.parse(localStorage.getItem(extraKey)||'[]')}catch(e){}
  const peopleForTeam=[...(team.players||[]),...extraPeople.filter(x=>String(x.teamId)===String(team.id))];
  if(role==='diretor'&&peopleForTeam.filter(x=>x.role==='diretor').length>=5){alert('Esta equipe já tem 5 diretores cadastrados. O limite é de 5 por equipe.');return}
  if(role==='musa'&&peopleForTeam.some(x=>x.role==='musa')){alert('Esta equipe já tem uma musa cadastrada. O limite é de 1 por equipe.');return}
  if(role!=='jogador'){
    const photoFile=$('athPhoto')?.files?.[0]||null;
-   const savePerson=(photo='')=>{const person={id,name,birth,city,cpf,registered,photo,photo_url:photo,played:false,transferAllowed:false,yellow:0,red:0,goals:0,role,sportsName,teamId:team.id};extraPeople.push(person);localStorage.setItem(extraKey,JSON.stringify(extraPeople));if(!team.players)team.players=[];team.players.push(person);selectedTeam=team.id;['athName','athBirth','athCity','athCpf','athReg','athBid','athSportsName'].forEach(x=>{if($(x))$(x).value=''});if($('athPhoto'))$('athPhoto').value='';if($('athRole'))$('athRole').value='jogador';saveDb();renderAll();showTab('admin');alert((role==='diretor'?'Diretor': 'Musa')+' cadastrada para '+team.name+'. Observação: esse cadastro complementar fica salvo neste navegador; para sincronizar entre dispositivos, será necessário adicionar suporte a esses perfis no Supabase.');};
+   const savePerson=(photo='')=>{const person={id:(role==='jogador'?id:('PESSOAL-'+Date.now()+'-'+Math.random().toString(36).slice(2,7))),bidInformado:$('athBid').value.trim()||'',name,birth,city,cpf,registered,photo,photo_url:photo,played:false,transferAllowed:false,yellow:0,red:0,goals:0,role,sportsName,teamId:team.id,teamDbId:team.dbId||null,teamName:team.name};extraPeople.push(person);localStorage.setItem(extraKey,JSON.stringify(extraPeople));if(!team.players)team.players=[];team.players.push(person);selectedTeam=team.id;['athName','athBirth','athCity','athCpf','athReg','athBid','athSportsName'].forEach(x=>{if($(x))$(x).value=''});if($('athPhoto'))$('athPhoto').value='';if($('athRole'))$('athRole').value='jogador';saveDb();renderAll();showTab('admin');alert((role==='diretor'?'Diretor': 'Musa')+' salva neste navegador para '+team.name+'. Este ajuste evita o conflito de número BID, mas a sincronização com Supabase ainda depende da integração de gravação na tabela equipe_pessoal.');};
    const pf=$('athPhoto')?.files?.[0];if(pf){if(pf.size>1500000){alert('A foto deve ter até 1,5 MB nesta etapa.');return}const rd=new FileReader();rd.onload=()=>savePerson(String(rd.result||''));rd.onerror=()=>alert('Não foi possível ler a foto.');rd.readAsDataURL(pf)}else savePerson();return;
  }
  if(team.dbId){
@@ -1553,8 +1516,10 @@ async function loadSupabaseMatches(){
    const comp=(db.competitions||[]).find(c=>String(c.dbId||c.id)===String(r.competicao_id));
    return {id:String(r.id),dbId:r.id,date,time,round:r.fase||r.rodada||'',venue:r.local_jogo||'',homeId:home?.id||String(r.equipe_mandante_id),homeName:home?.name||'Equipe',awayId:away?.id||String(r.equipe_visitante_id),awayName:away?.name||'Equipe',homeScore:r.gols_mandante,awayScore:r.gols_visitante,status:r.status||'Agendado',competitionId:String(r.competicao_id),competitionDbId:r.competicao_id,competitionName:comp?.name||'',competitionLogo:comp?.logo||'',_remote:true};
   });
-  const localOnly=(db.matches||[]).filter(m=>!m._remote&&!m.dbId);
-  db.matches=[...remote,...localOnly];
+  // Preserva jogos antigos do navegador; dbId local não prova que esteja no banco.
+  const remoteIds = new Set(remote.map(m => String(m.dbId ?? m.id)));
+  const localOnly = (db.matches || []).filter(m => !remoteIds.has(String(m.dbId ?? m.id)));
+  db.matches = [...remote, ...localOnly];
   saveDb();
   // Atualiza a consulta pública, tabela de jogos e classificação após receber os dados remotos.
   if(typeof renderAll==='function') renderAll();
@@ -1681,13 +1646,17 @@ async function loadSupabaseTeams() {
       });
     });
 
+    // Recupera diretores/musas locais usando ID antigo ou nome da equipe.
     try {
       const extraPeople = JSON.parse(localStorage.getItem('tvfp_team_personnel_v1') || '[]');
       extraPeople.forEach(person => {
-        const t = remoteTeams.find(x => String(x.id) === String(person.teamId) || String(x.dbId) === String(person.teamDbId));
-        if (t && (!t.players || !t.players.some(p => String(p.id) === String(person.id)))) {
+        const localTeam = (db.teams || []).find(x => String(x.id) === String(person.teamId) || String(x.dbId || '') === String(person.teamDbId));
+        const teamName = String(person.teamName || localTeam?.name || localTeam?.nome || '').trim().toLowerCase();
+        const t = remoteTeams.find(x => String(x.id) === String(person.teamId) || String(x.dbId) === String(person.teamDbId))
+          || (teamName ? remoteTeams.find(x => String(x.name || '').trim().toLowerCase() === teamName) : null);
+        if (t && !(t.players || []).some(p => String(p.id) === String(person.id))) {
           if (!t.players) t.players = [];
-          t.players.push(person);
+          t.players.push({ ...person, teamId: t.id, teamDbId: t.dbId, teamName: t.name });
         }
       });
     } catch(e) { console.warn('Não foi possível recuperar diretores/musa locais', e); }
@@ -1996,71 +1965,6 @@ document.addEventListener('DOMContentLoaded',function(){
    else alert('A aba Tabela de Jogos não foi encontrada.');
  });
 });
-</script>
-<script id="bid-legacy-match-recovery">
-(function(){
- const btn=document.getElementById('syncLegacyMatches');
- if(!btn)return;
- const backupKey='bidPoeiraoLegacyBackupV1';
- const byId=(id)=>document.getElementById(id);
- btn.addEventListener('click',async()=>{
-  if(!window.supabaseClient){alert('A conexão com o Supabase ainda não está pronta. Atualize a página e tente novamente.');return;}
-  let legacy;
-  try{const raw=localStorage.getItem(backupKey);if(!raw)throw new Error('Não encontrei a cópia de segurança local.');legacy=JSON.parse(raw);}
-  catch(e){alert('Não foi possível ler a cópia de segurança local. '+(e.message||''));return;}
-  const oldMatches=Array.isArray(legacy.matches)?legacy.matches:[];
-  if(!oldMatches.length){alert('A cópia de segurança não contém partidas para recuperar. Nenhum dado foi alterado.');return;}
-  const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
-  if(sessionError||!sessionData?.session){alert('Entre primeiro na Administração com a conta administradora. Nenhum jogo foi enviado.');return;}
-  const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
-  if(adminError||adminCheck!==true){alert('O Supabase não confirmou a conta como administradora. Nenhum jogo foi enviado.');return;}
-  const confirmed=confirm('A cópia local contém '+oldMatches.length+' partidas. Vou conferir competição, equipes, data e horário e inserir somente as que não existam no Supabase. A cópia original será mantida. Continuar?');
-  if(!confirmed)return;
-  btn.disabled=true;const originalText=btn.textContent;btn.textContent='Conferindo partidas…';
-  try{
-   const [{data:teams,error:teamsError},{data:competitions,error:compsError},{data:remoteRows,error:gamesError}]=await Promise.all([
-    supabaseClient.from('EQUIPES').select('id,nome'),
-    supabaseClient.from('COMPETICOES').select('id,nome'),
-    supabaseClient.from('jogos').select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,data_hora')
-   ]);
-   if(teamsError)throw teamsError;if(compsError)throw compsError;if(gamesError)throw gamesError;
-   const localTeams=Array.isArray(legacy.teams)?legacy.teams:[];
-   const localComps=Array.isArray(legacy.competitions)?legacy.competitions:[];
-   const findRemoteTeam=(localId,localName)=>{
-    const local=localTeams.find(t=>String(t.id)===String(localId)||String(t.dbId)===String(localId));
-    if(local?.dbId){const byDb=(teams||[]).find(t=>String(t.id)===String(local.dbId));if(byDb)return byDb;}
-    const name=String(local?.name||localName||'').trim().toLocaleLowerCase('pt-BR');
-    return (teams||[]).find(t=>String(t.nome||'').trim().toLocaleLowerCase('pt-BR')===name)||null;
-   };
-   const findRemoteCompetition=(m)=>{
-    const local=localComps.find(c=>String(c.id)===String(m.competitionId)||String(c.dbId)===String(m.competitionId))||localComps.find(c=>String(c.id)===String(legacy.activeCompetitionId));
-    if(local?.dbId){const byDb=(competitions||[]).find(c=>String(c.id)===String(local.dbId));if(byDb)return byDb;}
-    const name=String(m.competitionName||local?.name||legacy.competition||'').trim().toLocaleLowerCase('pt-BR');
-    return (competitions||[]).find(c=>String(c.nome||'').trim().toLocaleLowerCase('pt-BR')===name)||null;
-   };
-   const timeKey=(v)=>{if(!v)return '';const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toISOString().slice(0,16);};
-   const existing=new Set((remoteRows||[]).map(r=>[String(r.competicao_id),String(r.equipe_mandante_id),String(r.equipe_visitante_id),timeKey(r.data_hora)].join('|')));
-   const pending=[];const skipped=[];
-   for(const m of oldMatches){
-    const home=findRemoteTeam(m.homeId,m.homeName),away=findRemoteTeam(m.awayId,m.awayName),comp=findRemoteCompetition(m);
-    if(!home||!away||!comp){skipped.push({m,why:'Não foi possível relacionar equipe/competição'});continue;}
-    if(!m.date){skipped.push({m,why:'Partida sem data'});continue;}
-    const dt=new Date(String(m.date)+'T'+String(m.time||'12:00')+':00');
-    if(Number.isNaN(dt.getTime())){skipped.push({m,why:'Data/horário inválido'});continue;}
-    const key=[String(comp.id),String(home.id),String(away.id),timeKey(dt.toISOString())].join('|');
-    if(existing.has(key)){continue;}
-    const payload={competicao_id:comp.id,equipe_mandante_id:home.id,equipe_visitante_id:away.id,rodada:parseInt(String(m.round||''),10)||null,fase:m.round||null,data_hora:dt.toISOString(),local_jogo:m.venue||null,gols_mandante:m.homeScore===''||m.homeScore===null||m.homeScore===undefined?null:Number(m.homeScore),gols_visitante:m.awayScore===''||m.awayScore===null||m.awayScore===undefined?null:Number(m.awayScore),status:m.status||'Agendado'};
-    pending.push(payload);existing.add(key);
-   }
-   if(!pending.length){alert('Não encontrei partidas novas para inserir. '+(skipped.length?skipped.length+' partida(s) precisam de revisão por falta de vínculo de equipe/competição ou data.':'As partidas já estão no Supabase.'));return;}
-   const {data:inserted,error:insertError}=await supabaseClient.from('jogos').insert(pending).select('id');
-   if(insertError)throw insertError;
-   if(typeof loadSupabaseMatches==='function')await loadSupabaseMatches();
-   alert('Recuperação concluída: '+(inserted||[]).length+' partida(s) inseridas no Supabase. '+(skipped.length?skipped.length+' partida(s) ficaram de fora para revisão.':'Todas as partidas foram verificadas.')+' A cópia de segurança local foi mantida.');
-  }catch(e){console.error('Erro ao recuperar jogos antigos:',e);alert('Não foi possível concluir a recuperação. A cópia local foi preservada. Detalhe: '+(e?.message||e));}
-  finally{btn.disabled=false;btn.textContent=originalText;}
- });
-})();
 </script>
 </body>
 </html>
