@@ -883,7 +883,16 @@ function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.t
 function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));['public','admin','games','game','profile'].forEach(x=>$(x+'View').classList.toggle('hidden',x!==name))}
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 function renderTeams(){
- $('teamList').innerHTML=db.teams.map(t=>`<button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}"><span class="crest">${t.logo?`<img src="${t.logo}" alt="">`:esc(t.initials||'⚽')}</span><span><span class="teamname">${esc(t.name)}</span><span class="teammeta">${t.players.length} atleta(s) · Grupo ${esc(t.group||'—')} · abrir boletim</span></span></button>`).join('')||'<div class="empty">Cadastre a primeira equipe na aba Administração.</div>';
+ const activeCompetition=(db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId)===String(db.activeCompetitionId));
+ const activeDbId=activeCompetition?.dbId??activeCompetition?.id;
+ const hasCompetition=!!activeDbId;
+ const teamsForCompetition=hasCompetition?db.teams.filter(t=>(t.competitionIds||[]).some(id=>String(id)===String(activeDbId)||String(id)===String(activeCompetition.id))):[];
+ if(!hasCompetition){
+   $('teamList').innerHTML='<div class="empty">Selecione uma competição na área de competições para consultar as equipes.</div>';
+   return;
+ }
+ $('teamList').innerHTML=teamsForCompetition.map(t=>`<button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}"><span class="crest">${t.logo?`<img src="${t.logo}" alt="">`:esc(t.initials||'⚽')}</span><span><span class="teamname">${esc(t.name)}</span><span class="teammeta">${t.players.length} atleta(s) · Grupo ${esc(t.group||'—')} · abrir boletim</span></span></button>`).join('')||'<div class="empty">Nenhuma equipe está vinculada a esta competição. Cadastre ou vincule uma equipe pela Administração.</div>';
+ if(!teamsForCompetition.some(t=>t.id===selectedTeam)) selectedTeam='';
  document.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.team;renderAll()});
 }
 function renderRoster(){
@@ -1211,7 +1220,7 @@ function renderPublicCompetitions(){
    db.activeCompetitionId=b.dataset.publicActivateComp;
    const c=comps.find(x=>x.id===db.activeCompetitionId);
    if(c)db.competition=c.name;
-   saveDb();renderAll();
+   selectedTeam='';saveDb();renderAll();
  });
 }
 function renderCompetitionManager(){
@@ -1439,6 +1448,16 @@ async function loadSupabaseTeams() {
   try {
     const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
+    const { data: associationRows, error: associationError } = await supabaseClient
+      .from('competicao_equipes')
+      .select('competicao_id,equipe_id,grupo,status');
+    if (associationError) throw new Error('Não foi possível consultar os vínculos entre equipes e competições. Confira a permissão SELECT da tabela competicao_equipes: '+associationError.message);
+    const associationsByTeam = new Map();
+    (associationRows || []).forEach(row => {
+      const key = String(row.equipe_id);
+      if (!associationsByTeam.has(key)) associationsByTeam.set(key, []);
+      associationsByTeam.get(key).push({competitionId:row.competicao_id,group:row.grupo||'',status:row.status||'ativa'});
+    });
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
       .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url')
@@ -1460,13 +1479,16 @@ async function loadSupabaseTeams() {
     const remoteTeams = (data || []).map(row => ({
       id: 'dbteam-' + String(row.id), dbId: row.id, name: row.nome,
       initials: String(row.nome || '').split(/\s+/).map(part => part[0] || '').join('').slice(0,4).toUpperCase(),
-      logo: row.escudo_url || '', players: athletesByTeam.get(String(row.id)) || [], _remote: true
+      logo: row.escudo_url || '', players: athletesByTeam.get(String(row.id)) || [],
+      competitionIds: (associationsByTeam.get(String(row.id)) || []).map(a=>a.competitionId),
+      group: (associationsByTeam.get(String(row.id)) || []).find(a=>String(a.competitionId)===String(db.activeCompetitionId)||String(a.competitionId)===String((db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId))?.dbId))?.group || '',
+      _remote: true
     }));
     // A consulta pública deve mostrar somente equipes e atletas vindos do Supabase.
     // Registros antigos de demonstração no localStorage não entram no boletim.
     try{const extraPeople=JSON.parse(localStorage.getItem('tvfp_team_personnel_v1')||'[]');extraPeople.forEach(person=>{const t=remoteTeams.find(x=>String(x.id)===String(person.teamId)||String(x.dbId)===String(person.teamDbId));if(t){if(!t.players)t.players=[];if(!t.players.some(p=>String(p.id)===String(person.id)))t.players.push(person)}})}catch(e){console.warn('Não foi possível recuperar diretores/musa locais',e)}
     db.teams = remoteTeams;
-    if (!findTeam(selectedTeam)) selectedTeam = db.teams[0]?.id || '';
+    if (!findTeam(selectedTeam)) selectedTeam = '';
     saveDb();
     if (typeof renderAll === 'function') renderAll();
   } catch (error) {
