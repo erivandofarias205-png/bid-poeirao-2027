@@ -63,7 +63,7 @@ button.gold, .tab.active { background:#d6ad36; color:#171717; }
 
 /* Carteirinha vertical 10 x 15 cm — frente com dados e estatísticas */
 .idcard-wrap{display:grid;gap:14px;justify-items:start}
-.idcard{width:100mm;height:150mm;min-height:150mm;max-width:100%;box-sizing:border-box;border:1.3mm solid #d6ad36;border-radius:3mm;overflow:hidden;background:linear-gradient(160deg,#fff 0%,#f4f4f4 55%,#fff 100%);color:#111;font-family:Arial,sans-serif;box-shadow:0 4px 18px #0004;position:relative;display:flex;flex-direction:column}
+.idcard{width:100mm;height:150mm;min-height:150mm;max-width:100%;box-sizing:border-box;border:1.3mm solid #d6ad36;border-radius:3mm;overflow:hidden;.team-list:linear-gradient(160deg,#fff 0%,#f4f4f4 55%,#fff 100%);color:#111;font-family:Arial,sans-serif;box-shadow:0 4px 18px #0004;position:relative;display:flex;flex-direction:column}
 .idcard:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,#d6ad3618,transparent 45%),repeating-linear-gradient(135deg,transparent 0 18px,#00000005 18px 19px);pointer-events:none}
 .idcard-top{position:relative;display:flex;align-items:center;gap:3mm;padding:3mm;background:linear-gradient(120deg,#111,#272727);border-bottom:1.2mm solid #d6ad36;color:#fff;min-height:23mm;box-sizing:border-box}
 .idcard-top-marks{display:flex;align-items:center;gap:1.5mm;flex-shrink:0}
@@ -2036,15 +2036,6 @@ document.addEventListener('DOMContentLoaded',function(){
    if(tab)tab.click();
    else alert('A aba Tabela de Jogos não foi encontrada.');
 
-  <style>
-/* Fundo vermelho na área principal dos diretores */
-#profileContent {
-  background: #c62828 !important;
-  background-image: none !important;
-}
-</style>
- });
-});
 </script>
 </body>
 </html>
