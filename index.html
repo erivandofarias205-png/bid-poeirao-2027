@@ -922,7 +922,7 @@ const $=id=>document.getElementById(id);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateBR(s){if(!s)return '—';let p=s.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s}
 function cpfDigits(s){return String(s||'').replace(/\D/g,'')}
-function cpfMask(s){const d=cpfDigits(s);if(d.length<11)return 'xxx.***.***-**';return 'xxx.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11)}
+function cpfMask(s){const d=cpfDigits(s);if(d.length<11)return 'XXX.***.***-**';return 'XXX.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11)}
 function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))}
 function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
 function teamBelongsToActiveCompetition(t){
