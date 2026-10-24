@@ -2183,7 +2183,7 @@ const update={nome:name.trim(),data_nascimento:birth||null,cpf:digits||null,nome
        }
        athlete.name=name.trim();athlete.birth=birth;athlete.city=city;athlete.naturalidade=city;athlete.cpf=digits;athlete.sportsName=sportsName.trim();
        if(typeof saveDb==='function')saveDb();if(typeof renderAll==='function')renderAll();
-       alert('Dados do atleta atualizados.'+(team?.dbId?' Se a naturalidade não existir como coluna no Supabase, ela ficará apenas nesta versão até criarmos essa coluna.':''));
+      alert('Dados do atleta atualizados com sucesso!');
      }catch(err){console.error(err);alert('Não foi possível salvar a alteração no banco: '+(err?.message||err))}
      return;
    }
