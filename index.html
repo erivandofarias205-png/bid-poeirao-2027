@@ -1677,7 +1677,7 @@ async function loadSupabaseTeams() {
 
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
-      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url')
+      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade')
       .order('nome');
     if (athleteError) throw athleteError;
 
