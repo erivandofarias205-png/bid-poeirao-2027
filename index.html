@@ -157,6 +157,24 @@ header,.hero,.topbar,.banner,.brand-header{background:#050505!important;backgrou
 .idcard-wrap{justify-items:start!important;gap:8px!important}
 .idcard-actions{margin-top:8px!important}
 @media print{#profileContent .idcard{width:120mm!important;height:80mm!important;min-height:80mm!important;max-width:none!important;box-shadow:none!important;break-inside:avoid!important;print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}@page{size:120mm 80mm;margin:0}}
+
+/* Cabeçalhos dos painéis ligados à competição: símbolo + título + símbolo centralizados */
+.ph.comp-themed-header{position:relative;justify-content:center;min-height:58px;padding:12px 100px;background:var(--tvfp-gold,#d6ad36)!important;color:#080808!important}
+.ph.comp-themed-header .comp-title-group{display:flex;align-items:center;justify-content:center;gap:9px;min-width:0;max-width:100%;margin:0 auto;text-align:center}
+.ph.comp-themed-header .comp-title-group h3{margin:0;text-align:center;overflow-wrap:anywhere;font-weight:900}
+.ph.comp-themed-header .comp-title-mark{width:30px;height:30px;object-fit:contain;background:#fff;border:1px solid #d6ad36;border-radius:5px;padding:2px;flex:0 0 auto}
+.ph.comp-themed-header .pill{position:absolute;right:12px;top:50%;transform:translateY(-50%);max-width:95px;white-space:normal;text-align:center}
+@media(max-width:600px){.ph.comp-themed-header{padding:10px 8px;min-height:52px}.ph.comp-themed-header .comp-title-group{gap:6px}.ph.comp-themed-header .comp-title-mark{width:24px;height:24px}.ph.comp-themed-header .comp-title-group h3{font-size:13px}.ph.comp-themed-header .pill{display:none}}
+
+/* Correção de proporção dos escudos e painéis públicos */
+.next-match-panel img, #frontFixtures img, .fixture img, .fixture-team img {
+  width: 42px !important; height: 42px !important; max-width: 42px !important;
+  max-height: 42px !important; object-fit: contain !important; display: inline-block;
+}
+.next-match-panel .panel-logo, #frontFixtures .panel-logo {width:42px!important;height:42px!important;object-fit:contain!important}
+.next-match-panel .ph {min-height:52px;padding:12px 16px}
+.next-match-panel .ph h3 {font-size:18px;margin:0}
+@media(max-width:600px){.next-match-panel img,#frontFixtures img,.fixture img,.fixture-team img{width:30px!important;height:30px!important;max-width:30px!important;max-height:30px!important}}
 </style>
 <style>
 
@@ -892,6 +910,7 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 }
 </style>
 
+
 </head>
 <body>
 <header>
@@ -1626,7 +1645,33 @@ $('addCompetition')?.addEventListener('click',async()=>{
    saveDb();alert(extrasSaved?'Competição cadastrada com sucesso! Formato, quantidade de grupos, equipes por grupo e endereço do regulamento foram enviados ao Supabase.':'A competição foi cadastrada, mas os campos adicionais não foram salvos. Detalhe: '+(optionalError?.message||'erro desconhecido')+'. Confira as permissões e os nomes das colunas da tabela COMPETICOES.');
  }catch(e){console.error(e);alert('Não foi possível salvar a competição no Supabase. Detalhe: '+(e?.message||e));}
 });
-function renderAll(){renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();$('nTeams').textContent=activeCompetitionTeams().length;$('nPlayers').textContent=activeCompetitionTeams().reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).filter(matchBelongsToActiveCompetition).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · 2026 - TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
+
+function decorateCompetitionPanelHeaders(){
+ const comp=typeof activeCompetition==='function'?activeCompetition():null;
+ const logo=comp?(comp.logo||comp.logo_url||comp.escudo_url||comp.escudoUrl||''):'';
+ const targets=/^(PRÓXIMA PARTIDA|CLASSIFICAÇÃO|ARTILHARIA|EQUIPES DA COMPETIÇÃO|BOLETIM DA EQUIPE|TABELA OFICIAL DE JOGOS|CLASSIFICAÇÃO DEMONSTRATIVA|GERENCIAR TABELA DE JOGOS|PÓS-JOGO \/ SÚMULA|SÚMULA PRONTA DO JOGO|EVENTOS DA COMPETIÇÃO|EVENTOS REGISTRADOS|ARTILHEIROS|TABELA DE JOGOS)$/i;
+ document.querySelectorAll('.panel .ph').forEach(ph=>{
+   if(ph.closest('#game-promo-panel'))return;
+   const h=ph.querySelector('h3');if(!h)return;
+   const raw=(h.dataset.compOriginalTitle||h.textContent||'').trim();
+   if(!targets.test(raw))return;
+   h.dataset.compOriginalTitle=raw;
+   ph.classList.add('comp-themed-header');
+   let group=ph.querySelector('.comp-title-group');
+   if(!group){
+     group=document.createElement('div');group.className='comp-title-group';
+     const parent=h.parentNode;parent.insertBefore(group,h);group.appendChild(h);
+   }
+   group.querySelectorAll('.comp-title-mark').forEach(img=>img.remove());
+   if(logo){
+     const left=document.createElement('img');left.className='comp-title-mark';left.src=logo;left.alt='Símbolo da competição';left.onerror=function(){this.style.display='none'};
+     const right=document.createElement('img');right.className='comp-title-mark';right.src=logo;right.alt='Símbolo da competição';right.onerror=function(){this.style.display='none'};
+     group.insertBefore(left,h);group.appendChild(right);
+   }
+ });
+}
+
+function renderAll(){renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();decorateCompetitionPanelHeaders();$('nTeams').textContent=activeCompetitionTeams().length;$('nPlayers').textContent=activeCompetitionTeams().reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).filter(matchBelongsToActiveCompetition).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · 2026 - TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
 $('q').addEventListener('input',renderRoster);$('filter').addEventListener('change',renderRoster);
 $('athCpf').addEventListener('input',e=>{let d=cpfDigits(e.target.value).slice(0,11);if(d.length>9)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);else if(d.length>6)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);else if(d.length>3)d=d.slice(0,3)+'.'+d.slice(3);e.target.value=d});
 $('export').addEventListener('click',()=>download('bid-poeirao-backup.json',JSON.stringify(db,null,2),'application/json'));
