@@ -2032,8 +2032,8 @@ photo: row.foto_url || '',
          const {error}=await supabaseClient.from('ATLETAS').update(update).eq('numero_inscricao',id);
          if(error)throw error;
          // city needs a matching column in the Supabase table to persist across devices.
-         const {error:cityError}=await supabaseClient.from('ATLETAS').update({naturalidade:city||null}).eq('numero_inscricao',id);
-         if(cityError && !/column .* does not exist|schema cache|could not find/i.test(cityError.message||''))throw cityError;
+         const {error:cityError}=await supabaseClient.from('ATLETAS').update({naturalidade:city.trim()||null}).eq('numero_inscricao',id);
+        if(cityError) throw cityError;
        }
        athlete.name=name.trim();athlete.birth=birth;athlete.city=city;athlete.naturalidade=city;athlete.cpf=digits;
        if(typeof saveDb==='function')saveDb();if(typeof renderAll==='function')renderAll();
