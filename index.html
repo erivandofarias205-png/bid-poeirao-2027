@@ -1689,8 +1689,16 @@ async function loadSupabaseTeams() {
       const assocTeamId = athleteCompetitionTeams.get(String(row.id));
       athletesByTeam.get(key).push({
         id: row.numero_inscricao || ('BID-' + String(row.id)), dbId: row.id,
-        name: row.nome, birth: row.data_nascimento || '', cpf: '', registered: '', role:'jogador', sportsName:'',
-        foto_url: row.foto_url || '', photo: row.foto_url || '',
+      name: row.nome,
+birth: row.data_nascimento || '',
+cpf: row.cpf || '',
+city: row.naturalidade || '',
+naturalidade: row.naturalidade || '',
+registered: row.numero_inscricao || '',
+role: 'jogador',
+sportsName: '',
+foto_url: row.foto_url || '',
+photo: row.foto_url || '',
         played: row.status === 'Atuou', yellow: row.cartoes_amarelos || 0,
         red: row.cartoes_vermelhos || 0, goals: row.gols || 0,
         apto: row.apto_jogar, competitionIds: compIds,
