@@ -665,7 +665,7 @@ button.gold, .gold button { color:#111!important; }
 #profileContent .idcard-front-top{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:2mm;height:29mm;padding:2mm;background:linear-gradient(135deg,#970c0c,#2b0303 65%,#d3a62a);box-sizing:border-box}
 #profileContent .idcard-team-crest{display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden}
 #profileContent .idcard-brandmark{width:100%!important;height:100%!important;max-width:31mm;object-fit:contain!important;background:#fff;border:1mm solid #d6ad36;border-radius:2mm;padding:1mm;box-sizing:border-box}
-#profileContent .idcard-front-photo{width:100%;height:100%;max-height:25mm;object-fit:cover;border:1mm solid #d6ad36;border-radius:2mm;background:#eee;box-sizing:border-box}
+#profileContent .idcard-front-photo{width:100%;height:100%;max-height:25mm;object-fit:contain;border:1mm solid #d6ad36;border-radius:2mm;background:#eee;box-sizing:border-box}
 #profileContent .idcard-front .idcard-photo-placeholder{display:grid;place-items:center;color:#444;font-size:8pt;background:#eee}
 #profileContent .idcard-field{position:relative;margin:1.3mm 2mm 0;text-align:center;z-index:1}
 #profileContent .idcard-field label{display:block;font-size:8pt;font-weight:1000;line-height:1.05;color:#111;margin-bottom:.6mm}
@@ -779,6 +779,117 @@ button.gold, .gold button { color:#111!important; }
 #profileContent .idcard.idcard-role-diretor .idcard-front:before,
 #profileContent .idcard.idcard-role-musa .idcard-front:before,
 #profileContent .idcard.idcard-role-jogador .idcard-front:before{background:repeating-linear-gradient(135deg,transparent 0 8px,#00000006 8px 9px)!important}
+</style>
+
+
+<style id="bid-ficha-visual-final">
+/* Tela da ficha: diferente da tabela de jogadores */
+body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 48%,#172d48 100%)!important}
+#profileContent{background:linear-gradient(135deg,#102d43,#1d4357 55%,#20324d)!important;border:1px solid #2b8290!important;border-radius:16px!important;padding:18px!important}
+#profileContent .idcard-wrap{padding:8px!important}
+#profileContent .idcard-front,#profileContent .idcard-back{flex-shrink:0!important}
+#profileContent .idcard-front-top{height:24mm!important;grid-template-columns:1fr 1fr!important}
+#profileContent .idcard-front-photo{object-fit:contain!important;object-position:center!important;background:#fff!important;padding:1mm!important}
+#profileContent .idcard-field{margin:1mm 2mm 0!important}
+#profileContent .idcard-field label{font-size:7pt!important;margin-bottom:.4mm!important}
+#profileContent .idcard-field div{min-height:4.4mm!important;padding:.45mm 1mm!important;font-size:7pt!important;line-height:1.05!important}
+#profileContent .idcard-front-footer{font-size:13pt!important;padding:1mm 0!important}
+#profileContent .idcard-back-competition{height:17mm!important;min-height:17mm!important;flex-direction:row!important;gap:3mm!important;padding:1mm 3mm!important;justify-content:center!important}
+#profileContent .idcard-competition-mark{width:13mm!important;height:13mm!important;flex-shrink:0!important}
+#profileContent .idcard-comp-title b{font-size:9pt!important}
+#profileContent .idcard-back-section{margin:1.2mm 2mm 0!important}
+#profileContent .idcard-back-section> b{font-size:7.2pt!important;padding:1mm!important}
+#profileContent .idcard-back-data{display:grid!important;grid-template-columns:1fr 1fr!important;gap:1.4mm 3mm!important;padding:1.6mm 2mm!important}
+#profileContent .idcard-back-data span{display:block!important;min-width:0!important;font-size:7.2pt!important;line-height:1.25!important;overflow-wrap:anywhere!important;white-space:normal!important}
+#profileContent .idcard-back-footer{font-size:6pt!important;padding:1.1mm!important}
+@media print{body:has(#profileContent){background:#fff!important}#profileContent{background:transparent!important;border:0!important;padding:0!important}}
+</style>
+
+<style id="bid-card-portrait-duplex-final">
+/* Carteirinha em pé: 8 cm de largura x 12 cm de altura por face */
+#profileContent .idcard-wrap{display:block!important;overflow:visible!important;padding:10px!important}
+#profileContent #athleteIdCard{display:flex!important;flex-direction:column!important;gap:8mm!important;width:80mm!important;height:auto!important;min-height:0!important;max-width:80mm!important;margin:0 auto!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;color:#111!important}
+#profileContent .idcard-front,#profileContent .idcard-back{position:relative!important;display:flex!important;flex:0 0 120mm!important;flex-direction:column!important;box-sizing:border-box!important;width:80mm!important;height:120mm!important;min-width:80mm!important;min-height:120mm!important;max-width:80mm!important;max-height:120mm!important;overflow:hidden!important;border:1mm solid #111!important;border-radius:2mm!important;box-shadow:0 1mm 3mm #0003!important}
+#profileContent .idcard-front{background:linear-gradient(145deg,#f7f5ef,#fff 55%,#ece8df)!important;border-color:#8b1717!important}
+#profileContent .idcard-front-top{height:39mm!important;min-height:39mm!important;grid-template-columns:1fr 1fr!important;gap:2mm!important;padding:3mm!important;flex:0 0 39mm!important}
+#profileContent .idcard-brandmark{max-width:30mm!important;max-height:32mm!important;object-fit:contain!important}
+#profileContent .idcard-front-photo{width:100%!important;height:100%!important;max-height:33mm!important;object-fit:contain!important;object-position:center!important;background:#fff!important;padding:1mm!important}
+#profileContent .idcard-field{margin:2mm 3mm 0!important}
+#profileContent .idcard-field label{font-size:8pt!important;line-height:1.15!important;margin-bottom:.8mm!important}
+#profileContent .idcard-field div{min-height:6mm!important;padding:1mm 1.5mm!important;font-size:8pt!important;line-height:1.2!important;overflow-wrap:anywhere!important;white-space:normal!important}
+#profileContent .idcard-front-footer{font-size:15pt!important;padding:2mm 0!important}
+#profileContent .idcard-back{background:linear-gradient(145deg,#fff,#ececec)!important;border-color:#111!important}
+#profileContent .idcard-back-competition{height:27mm!important;min-height:27mm!important;flex:0 0 27mm!important;flex-direction:row!important;gap:3mm!important;padding:2mm 3mm!important;justify-content:center!important}
+#profileContent .idcard-competition-mark{width:20mm!important;height:20mm!important;flex:0 0 20mm!important;object-fit:contain!important}
+#profileContent .idcard-comp-title b{font-size:10pt!important;line-height:1.2!important}
+#profileContent .idcard-comp-title span{font-size:8pt!important;line-height:1.2!important}
+#profileContent .idcard-back-section{margin:2.5mm 3mm 0!important;flex-shrink:0!important}
+#profileContent .idcard-back-section>b{font-size:8pt!important;padding:1.8mm!important}
+#profileContent .idcard-back-data{display:grid!important;grid-template-columns:1fr!important;gap:1.6mm!important;padding:2mm 2.5mm!important}
+#profileContent .idcard-back-data span{display:block!important;min-width:0!important;font-size:8pt!important;line-height:1.25!important;overflow-wrap:anywhere!important;white-space:normal!important}
+#profileContent .idcard-sign{margin:2.5mm 3mm 0!important;flex-shrink:0!important}
+#profileContent .idcard-sign b{font-size:7.5pt!important;padding:1.7mm!important}
+#profileContent .idcard-sign div{height:7mm!important}
+#profileContent .idcard-back-footer{font-size:7pt!important;padding:2mm 1mm!important;margin-top:auto!important}
+/* Diretores e musa: apresentação amarela, incluindo as duas faces */
+#profileContent .idcard.idcard-role-diretor,
+#profileContent .idcard.idcard-role-diretor .idcard-front,
+#profileContent .idcard.idcard-role-diretor .idcard-back,
+#profileContent .idcard.idcard-role-musa,
+#profileContent .idcard.idcard-role-musa .idcard-front,
+#profileContent .idcard.idcard-role-musa .idcard-back{background:#fff0a8!important;color:#171717!important}
+#profileContent .idcard.idcard-role-diretor .idcard-front-top,
+#profileContent .idcard.idcard-role-musa .idcard-front-top{background:linear-gradient(135deg,#f2cf45,#fff0a8 65%,#d6ad36)!important}
+#profileContent .idcard.idcard-role-diretor .idcard-front-footer,
+#profileContent .idcard.idcard-role-musa .idcard-front-footer{background:#d6ad36!important;color:#171717!important;text-shadow:none!important}
+#profileContent .idcard.idcard-role-diretor .idcard-back-competition,
+#profileContent .idcard.idcard-role-musa .idcard-back-competition{background:#fff8d6!important}
+@media print{
+ @page{size:80mm 120mm;margin:0}
+ html,body{width:80mm!important;margin:0!important;padding:0!important;background:#fff!important}
+ body *{visibility:hidden!important}
+ #profileContent,#profileContent .idcard-wrap,#profileContent #athleteIdCard,
+ #profileContent #athleteIdCard *{visibility:visible!important}
+ #profileContent{position:static!important;width:80mm!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important}
+ #profileContent .idcard-wrap{position:static!important;width:80mm!important;margin:0!important;padding:0!important;overflow:visible!important}
+ #profileContent #athleteIdCard{position:static!important;display:block!important;width:80mm!important;height:auto!important;margin:0!important;padding:0!important;gap:0!important;overflow:visible!important}
+ #profileContent .idcard-front,#profileContent .idcard-back{position:relative!important;display:flex!important;width:80mm!important;height:120mm!important;min-width:80mm!important;min-height:120mm!important;max-width:80mm!important;max-height:120mm!important;margin:0!important;border-radius:0!important;box-shadow:none!important;break-inside:avoid!important;page-break-inside:avoid!important;print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
+ #profileContent .idcard-back{break-before:page!important;page-break-before:always!important}
+ #profileContent .idcard-actions{display:none!important}
+}
+</style>
+
+
+<style id="bid-card-side-by-side-role-highlight">
+/* Apresentação: frente e verso lado a lado, cada face vertical 8 x 12 cm */
+#profileContent .idcard-wrap{display:flex!important;justify-content:flex-start!important;align-items:flex-start!important;overflow-x:auto!important;padding:12px!important}
+#profileContent #athleteIdCard{display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:flex-start!important;gap:4mm!important;width:max-content!important;max-width:none!important;height:120mm!important;margin:0!important;padding:0!important;overflow:visible!important}
+#profileContent .idcard-front,#profileContent .idcard-back{flex:0 0 80mm!important;width:80mm!important;height:120mm!important;min-width:80mm!important;min-height:120mm!important;max-width:80mm!important;max-height:120mm!important;margin:0!important;box-sizing:border-box!important}
+/* Destaque evidente para diretores e musa, sem alterar jogadores */
+#profileContent .idcard.idcard-role-diretor .idcard-front,
+#profileContent .idcard.idcard-role-diretor .idcard-back,
+#profileContent .idcard.idcard-role-musa .idcard-front,
+#profileContent .idcard.idcard-role-musa .idcard-back{background:linear-gradient(160deg,#fff8c9 0%,#ffe36a 42%,#fff0a8 100%)!important;border:1.2mm solid #c18a00!important;color:#231900!important;box-shadow:0 0 0 1mm #ffdf45,0 2mm 5mm #0004!important}
+#profileContent .idcard.idcard-role-diretor .idcard-front-top,
+#profileContent .idcard.idcard-role-musa .idcard-front-top{background:linear-gradient(135deg,#b8860b,#ffdf45 45%,#fff3a6)!important;border-bottom:1mm solid #c18a00!important}
+#profileContent .idcard.idcard-role-diretor .idcard-front-footer,
+#profileContent .idcard.idcard-role-musa .idcard-front-footer{background:linear-gradient(90deg,#a87900,#ffdf45,#a87900)!important;color:#211700!important;font-weight:900!important;text-shadow:none!important}
+#profileContent .idcard.idcard-role-diretor .idcard-back-competition,
+#profileContent .idcard.idcard-role-musa .idcard-back-competition{background:#fff7c2!important;border-bottom:1mm solid #c18a00!important}
+#profileContent .idcard.idcard-role-diretor .idcard-back-section>b,
+#profileContent .idcard.idcard-role-musa .idcard-back-section>b{background:#9c7100!important;color:#fff7cf!important}
+@media print{
+ @page{size:160mm 120mm;margin:0}
+ html,body{width:160mm!important;height:120mm!important;margin:0!important;padding:0!important;background:#fff!important}
+ body *{visibility:hidden!important}
+ #profileContent,#profileContent .idcard-wrap,#profileContent #athleteIdCard,#profileContent #athleteIdCard *{visibility:visible!important}
+ #profileContent{position:static!important;width:160mm!important;height:120mm!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;overflow:visible!important}
+ #profileContent .idcard-wrap{position:static!important;display:flex!important;width:160mm!important;height:120mm!important;margin:0!important;padding:0!important;overflow:visible!important}
+ #profileContent #athleteIdCard{position:static!important;display:flex!important;flex-direction:row!important;gap:0!important;width:160mm!important;height:120mm!important;margin:0!important;padding:0!important;overflow:hidden!important}
+ #profileContent .idcard-front,#profileContent .idcard-back{display:flex!important;position:relative!important;flex:0 0 80mm!important;width:80mm!important;height:120mm!important;min-width:80mm!important;min-height:120mm!important;max-width:80mm!important;max-height:120mm!important;margin:0!important;border-radius:0!important;box-shadow:none!important;break-inside:avoid!important;page-break-inside:avoid!important;print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
+ #profileContent .idcard-back{break-before:auto!important;page-break-before:auto!important}
+ #profileContent .idcard-actions{display:none!important}
+}
 </style>
 
 </head>
@@ -1010,6 +1121,7 @@ function renderProfile(id){
    <div class="idcard-field"><label>NOME:</label><div>${esc(p.name)}</div></div>
    <div class="idcard-field"><label>NOME ESPORTIVO:</label><div>${esc(p.sportsName||'—')}</div></div>
    <div class="idcard-field"><label>DATA DE NASCIMENTO:</label><div>${dateBR(p.birth)}</div></div>
+   <div class="idcard-field"><label>CIDADE / NATURALIDADE:</label><div>${esc(p.city||p.naturalidade||'NÃO INFORMADA')}</div></div>
    <div class="idcard-field"><label>DOCUMENTO:</label><div>${esc(cpfMask(p.cpf))}</div></div>
    <div class="idcard-front-footer">${roleLabel}</div>
   </div>
