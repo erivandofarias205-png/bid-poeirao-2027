@@ -1268,7 +1268,8 @@ $('saveAthlete').addEventListener('click', async ()=>{
     numero_inscricao:id,
     cpf:cpf||null,
     naturalidade:$('#athCity').value.trim()||null,
-    foto_url:photoUrl,
+    nome_esportivo:$('#athSportsName').value.trim()||null,
+      foto_url:photoUrl,
     equipe_id:team.dbId,
     status:'Inscrito',
     gols:0,
@@ -1798,7 +1799,7 @@ async function loadSupabaseTeams() {
 
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
-      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade')
+      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo')
       .order('nome');
     if (athleteError) throw athleteError;
 
@@ -2169,7 +2170,9 @@ Confira os dados antes de continuar.')){ev.preventDefault();ev.stopImmediateProp
      const city=prompt('Naturalidade / cidade:',athlete.city||athlete.naturalidade||'');if(city===null)return;
      const cpf=prompt('CPF (11 dígitos, ou deixe vazio):',athlete.cpf||'');if(cpf===null)return;
      const digits=cpf.replace(/\D/g,'');if(digits&&digits.length!==11){alert('O CPF deve ter 11 dígitos.');return}
-     const update={nome:name.trim(),data_nascimento:birth||null,cpf:digits||null};
+     const sportsName=prompt('Nome esportivo / apelido:',athlete.sportsName||'');
+if(sportsName===null)return;
+const update={nome:name.trim(),data_nascimento:birth||null,cpf:digits||null,nome_esportivo:sportsName.trim()||null};
      try{
        if(athlete._remote||team?.dbId){
          const {error}=await supabaseClient.from('ATLETAS').update(update).eq('numero_inscricao',id);
@@ -2178,7 +2181,7 @@ Confira os dados antes de continuar.')){ev.preventDefault();ev.stopImmediateProp
          const {error:cityError}=await supabaseClient.from('ATLETAS').update({naturalidade:city.trim()||null}).eq('numero_inscricao',id);
         if(cityError) throw cityError;
        }
-       athlete.name=name.trim();athlete.birth=birth;athlete.city=city;athlete.naturalidade=city;athlete.cpf=digits;
+       athlete.name=name.trim();athlete.birth=birth;athlete.city=city;athlete.naturalidade=city;athlete.cpf=digits;athlete.sportsName=sportsName.trim();
        if(typeof saveDb==='function')saveDb();if(typeof renderAll==='function')renderAll();
        alert('Dados do atleta atualizados.'+(team?.dbId?' Se a naturalidade não existir como coluna no Supabase, ela ficará apenas nesta versão até criarmos essa coluna.':''));
      }catch(err){console.error(err);alert('Não foi possível salvar a alteração no banco: '+(err?.message||err))}
