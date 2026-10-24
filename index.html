@@ -905,6 +905,29 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 @media(max-width:700px){.hero-with-admin{grid-template-columns:1fr!important}.hero-with-admin .hero-management,.hero-with-admin .admin-quick-access{padding:16px 12px}}
 </style>
 
+
+<style id="active-competition-highlight">
+/* Destaque para a competição em vigor, sem alterar a gestão */
+.competition-choice{
+  min-height:112px!important;padding:16px!important;gap:16px!important;
+  border:2px solid #d6ad36!important;border-left:8px solid #d6ad36!important;
+  border-radius:16px!important;background:linear-gradient(110deg,#17294a 0%,#0b1428 100%)!important;
+  box-shadow:0 0 0 2px #d6ad3622,0 8px 22px #0005!important;
+}
+.competition-choice img{
+  width:84px!important;height:84px!important;min-width:84px!important;
+  border:2px solid #d6ad36!important;border-radius:12px!important;padding:4px!important;
+  background:#fff!important;box-shadow:0 0 14px #d6ad3655!important;
+}
+.competition-choice .grow{font-size:16px!important;font-weight:900!important;line-height:1.35!important}
+.competition-choice button,.competition-choice .button{font-weight:900!important}
+@media(max-width:600px){
+ .competition-choice{min-height:92px!important;padding:10px!important;gap:10px!important}
+ .competition-choice img{width:64px!important;height:64px!important;min-width:64px!important}
+ .competition-choice .grow{font-size:14px!important}
+}
+</style>
+
 </head>
 <body>
 <header>
@@ -919,7 +942,7 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
   </div>
 </div>
 <div class="panel" id="game-promo-panel"><div class="ph"><h3>DIVULGUE SEU JOGO AQUI!</h3></div><div class="pad"><p class="game-promo-callout">Envie as informações do seu jogo no WhatsApp disponível no rodapé da página.</p><div id="gamePromoViewport" class="game-promo-viewport"><div id="gamePromoTrack" class="game-promo-track"><div class="game-promo-empty">As divulgações de jogos aparecerão aqui.</div></div></div></div></div>
-<div class="panel"><div class="ph"><h3>Consulta de competições</h3><span class="pill">Selecione uma competição</span></div><div class="pad"><div id="publicCompetitionList" class="small" aria-live="polite"></div></div></div>
+<div class="panel"><div class="ph"><h3>CONSULTAR AS COMPETIÇÕES ADMINISTRADAS</h3><span class="pill">Selecione uma competição</span></div><div class="pad"><div id="publicCompetitionList" class="small" aria-live="polite"></div></div></div>
 
 
 <div class="stats"><div class="stat"><small>Equipes cadastradas</small><strong id="nTeams">0</strong></div><div class="stat"><small>Atletas cadastrados</small><strong id="nPlayers">0</strong></div><div class="stat"><small>Partidas com eventos</small><strong id="nMatches">0</strong></div></div>
