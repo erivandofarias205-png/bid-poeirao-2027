@@ -1263,10 +1263,19 @@ $('saveAthlete').addEventListener('click', async ()=>{
        photoUrl=supabaseClient.storage.from('bid-fotos').getPublicUrl(path).data?.publicUrl||null;
      }
      const {error}=await supabaseClient.from('ATLETAS').insert({
-       nome:name, data_nascimento:birth||null, numero_inscricao:id, cpf:cpf||null,
-       foto_url:photoUrl, equipe_id:team.dbId, status:'Inscrito', gols:0,
-       cartoes_amarelos:0, cartoes_vermelhos:0, apto_jogar:false
-     });
+    nome:name,
+    data_nascimento:birth||null,
+    numero_inscricao:id,
+    cpf:cpf||null,
+    naturalidade:$('#athCity').value.trim()||null,
+    foto_url:photoUrl,
+    equipe_id:team.dbId,
+    status:'Inscrito',
+    gols:0,
+    cartoes_amarelos:0,
+    cartoes_vermelhos:0,
+         apto_jogar:false
+});
      if(error) throw error;
       ['athName','athBirth','athCity','athCpf','athReg','athBid'].forEach(x=>$(x).value='');
       if($('athPhoto')) $('athPhoto').value='';
