@@ -2172,14 +2172,12 @@ Confira os dados antes de continuar.')){ev.preventDefault();ev.stopImmediateProp
      const digits=cpf.replace(/\D/g,'');if(digits&&digits.length!==11){alert('O CPF deve ter 11 dígitos.');return}
      const sportsName=prompt('Nome esportivo / apelido:',athlete.sportsName||'');
 if(sportsName===null)return;
-const update={nome:name.trim(),data_nascimento:birth||null,cpf:digits||null,nome_esportivo:sportsName.trim()||null};
+const update={nome:name.trim(),data_nascimento:birth||null,cpf:digits||null,nome_esportivo:sportsName.trim()||null,naturalidade:city.trim()||null};
      try{
        if(athlete._remote||team?.dbId){
          const {error}=await supabaseClient.from('ATLETAS').update(update).eq('numero_inscricao',id);
          if(error)throw error;
          // city needs a matching column in the Supabase table to persist across devices.
-         const {error:cityError}=await supabaseClient.from('ATLETAS').update({naturalidade:city.trim()||null}).eq('numero_inscricao',id);
-        if(cityError) throw cityError;
        }
        athlete.name=name.trim();athlete.birth=birth;athlete.city=city;athlete.naturalidade=city;athlete.cpf=digits;athlete.sportsName=sportsName.trim();
        if(typeof saveDb==='function')saveDb();if(typeof renderAll==='function')renderAll();
