@@ -1531,8 +1531,8 @@ $('saveAthlete').addEventListener('click', async ()=>{
     data_nascimento:birth||null,
     numero_inscricao:id,
     cpf:cpf||null,
-    naturalidade:$('#athCity').value.trim()||null,
-    nome_esportivo:$('#athSportsName').value.trim()||null,
+    naturalidade:$('#athCity')?.value?.trim()||null,
+    nome_esportivo:$('#athSportsName')?.value?.trim()||null,
       foto_url:photoUrl,
     equipe_id:team.dbId,
     status:'Inscrito',
@@ -1542,7 +1542,7 @@ $('saveAthlete').addEventListener('click', async ()=>{
          apto_jogar:false
 });
      if(error) throw error;
-      ['athName','athBirth','athCity','athCpf','athReg','athBid'].forEach(x=>$(x).value='');
+      ['athName','athBirth','athCity','athCpf','athReg','athBid'].forEach(x=>{if($(x)) $(x).value=''});
       if($('athPhoto')) $('athPhoto').value='';
       await loadSupabaseTeams();showTab('admin');
       alert('Atleta cadastrado no Supabase'+(cpf?' com CPF salvo':'')+(photoUrl?' e foto enviada':'')+'.');
