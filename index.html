@@ -1984,12 +1984,35 @@ function renderFrontPage(){
    return {...x,photo:player.photo||player.foto_url||'',logo:team.logo||team.escudo_url||''};
  });
  $('frontScorers').innerHTML=allScorers.length?allScorers.map((x,i)=>`<div class="scorer"><span class="scorer-rank">${i+1}</span>${x.photo?`<img class="scorer-photo" src="${esc(x.photo)}" alt="Foto de ${esc(x.name)}">`:`<span class="scorer-photo" style="display:grid;place-items:center">⚽</span>`}<div class="scorer-info"><b>${esc(x.name)}</b><small>${esc(x.team)}</small></div>${x.logo?`<img class="scorer-crest" src="${esc(x.logo)}" alt="Símbolo de ${esc(x.team)}">`:`<span class="scorer-crest" style="display:grid;place-items:center">⚽</span>`}<span class="scorer-goals">${x.goals} gol${x.goals===1?'':'s'}</span></div>`).join(''):'<div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div>';
- const discipline={yellow:[],red:[]};
- compTeams.forEach(t=>(t.players||[]).forEach(p=>{
-   const yellow=Number(p.yellow||0),red=Number(p.red||0);
-   if(yellow>0)discipline.yellow.push({p,t,count:yellow});
-   if(red>0)discipline.red.push({p,t,count:red});
- }));
+  
+const discipline={yellow:[],red:[]};
+
+const cardEvents=(db.events||[]).filter(e=>
+  (e.type==='yellow'||e.type==='red') &&
+  (compTeamIds.has(String(e.teamId))||
+   compTeamDbIds.has(String(e.teamId))||
+   compTeams.some(t=>String(t.name||'').trim().toLowerCase()===String(e.team||'').trim().toLowerCase()))
+);
+
+compTeams.forEach(t=>(t.players||[]).forEach(p=>{
+  const playerEvents=cardEvents.filter(e=>{
+    const sameTeam=
+      String(e.teamId||'')===String(t.id||'')||
+      String(e.teamId||'')===String(t.dbId||'')||
+      String(e.team||'').trim().toLowerCase()===String(t.name||'').trim().toLowerCase();
+    const samePlayer=
+      (e.playerId!=null&&String(e.playerId)===String(p.id))||
+      String(e.player||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase();
+    return sameTeam&&samePlayer;
+  });
+
+  ['yellow','red'].forEach(type=>{
+    const saved=Number(p[type]||0);
+    const fromEvents=playerEvents.filter(e=>e.type===type).length;
+    const count=Math.max(saved,fromEvents);
+    if(count>0)discipline[type].push({p,t,count});
+  });
+}));
  const cardMarkup=(items,color)=>items.sort((a,b)=>b.count-a.count||String(a.p.name).localeCompare(String(b.p.name))).map(({p,t,count})=>`<div class="card-leader">${(p.photo||p.foto_url)?`<img class="player-photo" src="${esc(p.photo||p.foto_url)}" alt="Foto de ${esc(p.name)}">`:`<span class="player-photo" style="display:grid;place-items:center">👤</span>`}<div class="player-data"><b>${esc(p.name)}</b><small>${t.logo||t.escudo_url?`<img class="scorer-crest" src="${esc(t.logo||t.escudo_url)}" alt="" style="vertical-align:middle;margin-right:5px">`:''}${esc(t.name)}</small></div><span class="card-count" style="color:${color}">${count}</span></div>`).join('')||'<div class="empty">Nenhum cartão registrado.</div>';
  $('yellowCardsList').innerHTML=cardMarkup(discipline.yellow,'#f4d46a');
  $('redCardsList').innerHTML=cardMarkup(discipline.red,'#ff7777');
