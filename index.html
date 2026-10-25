@@ -1068,6 +1068,30 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 @media(max-width:700px){.tabs .regulation-tab{flex:1 1 calc(50% - 8px);min-height:42px}}
 </style>
 
+<style id="classification-redesign">
+/* Tabela da competição em largura total, com escudos e painéis empilhados */
+main{max-width:none!important;width:100%!important;margin:16px auto!important;padding-left:clamp(10px,2vw,28px)!important;padding-right:clamp(10px,2vw,28px)!important}
+#publicView{width:100%;max-width:none}
+#classificationPanel,#scorersPanel,#cardControlPanel{width:100%;max-width:none;margin:0 0 16px}
+#classificationPanel .tablewrap{width:100%;overflow-x:auto}
+#classificationPanel .front-table{width:100%;min-width:780px}
+.classification-team{display:flex;align-items:center;gap:10px;min-width:150px}
+.classification-crest,.classification-crest-placeholder{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:50%;padding:3px;flex:0 0 34px;border:1px solid #d6ad36}
+.classification-crest-placeholder{display:grid;place-items:center;color:#111}
+.classification-subtable{margin:0 0 16px;border:1px solid #383838;border-radius:10px;overflow:hidden}
+.classification-subtitle{background:#d6ad36;color:#111;font-weight:900;padding:13px 16px;text-transform:uppercase;letter-spacing:.04em}
+.classification-subtable:last-child{margin-bottom:0}
+#scorersPanel .scorers{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0 20px}
+#cardControlPanel .front-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.knockout-matches{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;padding:12px}
+.knockout-match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px;border:1px solid #444;border-radius:10px;background:#101010}
+.knockout-team{display:flex;align-items:center;gap:7px;min-width:0}
+.knockout-team b{overflow-wrap:anywhere;font-size:12px}
+.knockout-team img{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:50%;padding:3px;flex:0 0 34px}
+.knockout-score{white-space:nowrap;color:#d6ad36;font-size:17px}
+.knockout-match small{grid-column:1/-1;color:#aaa;text-align:center}
+@media(max-width:700px){#cardControlPanel .front-grid{grid-template-columns:1fr}.knockout-matches{grid-template-columns:1fr}.classification-crest,.classification-crest-placeholder{width:28px;height:28px;flex-basis:28px}}
+</style>
 </head>
 <body>
 <header>
@@ -1087,10 +1111,8 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 <div class="tabs"><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="classification">Classificação</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button></div>
 <section id="publicView">
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMA PARTIDA</h3><span class="pill">Próximo confronto</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
-<div class="front-grid" id="classificationPanel">
-<div class="panel"><div class="ph"><h3>CLASSIFICAÇÃO</h3><span class="pill">Tabela geral</span></div><div class="tablewrap"><table class="front-table"><thead><tr><th>Foto</th><th>#</th><th>Equipe</th><th>J</th><th>SG</th><th>Pts</th></tr></thead><tbody id="frontStandings"></tbody></table></div><div class="pad"><button class="secondary" data-open-games="">Ver tabela completa</button></div></div>
+<div class="panel classification-full" id="classificationPanel"><div class="ph"><h3>CLASSIFICAÇÃO / TABELAS DA COMPETIÇÃO</h3><span class="pill" id="classificationFormatLabel">Tabela oficial</span></div><div id="classificationTables"><div class="tablewrap"><table class="front-table"><thead><tr><th>Pos.</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody id="frontStandings"></tbody></table></div></div><div class="pad"><button class="secondary" data-open-games="">Ver tabela completa de jogos</button></div></div>
 <div class="panel" id="scorersPanel"><div class="ph"><h3>ARTILHARIA · TODOS OS ARTILHEIROS</h3><span class="pill">Gols</span></div><div class="scorers" id="frontScorers"><div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div></div></div>
-</div>
 <div class="panel" id="cardControlPanel"><div class="ph"><h3>CONTROLE DE CARTÕES</h3><span class="pill">Amarelos e vermelhos por atleta</span></div><div class="pad"><div class="front-grid"><div class="box"><h4>🟨 Cartões amarelos</h4><div class="scorers" id="yellowCardsList"><div class="empty">Nenhum cartão amarelo registrado.</div></div></div><div class="box"><h4>🟥 Cartões vermelhos</h4><div class="scorers" id="redCardsList"><div class="empty">Nenhum cartão vermelho registrado.</div></div></div></div><p class="small muted">Os totais são exibidos a partir dos cartões registrados nas fichas dos atletas.</p></div></div>
 <div class="panel" id="teamPanel"><div class="ph"><h3>Equipes da competição</h3><span class="pill">Clique para abrir</span></div><div class="teams" id="teamList"></div></div>
 <div class="panel" id="rosterPanel"><div class="ph"><h3 id="rosterTitle">Boletim da equipe</h3><span class="pill" id="rosterDataStatus">Dados do Supabase</span></div><div class="search"><input id="q" placeholder="Buscar atleta ou número BID"/><select id="filter"><option value="">Todas as situações</option><option value="free">Pode transferir</option><option value="played">Já atuou</option></select></div><div class="tablewrap"><table><thead><tr><th>Foto</th><th>Nº BID</th><th>Atleta</th><th>Nascimento</th><th>Naturalidade / Cidade</th><th>CPF mascarado</th><th>Atuou?</th><th>Transferência</th><th>🟨</th><th>🟥</th><th>Gols</th><th>Ficha</th></tr></thead><tbody id="rows"></tbody></table></div><div class="empty hidden" id="noRows">Nenhum atleta encontrado.</div></div>
@@ -1112,7 +1134,7 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 </div><div class="actions"><button class="gold" id="saveMatch">Adicionar jogo à tabela</button><button class="secondary" id="exportMatches">Baixar tabela (CSV)</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>Data</th><th>Rodada</th><th>Jogo</th><th>Placar</th><th>Local</th><th>Status</th><th>Ação</th></tr></thead><tbody id="matchRows"></tbody></table></div><div class="empty" id="noMatches">Nenhum jogo cadastrado ainda.</div>
 </div>
-<div class="panel"><div class="ph"><h3>Classificação demonstrativa</h3><span class="pill">Atualização manual nesta prévia</span></div><div class="tablewrap"><table><thead><tr><th>Pos.</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th></tr></thead><tbody id="standingRows"></tbody></table></div><div class="pad small muted">A classificação será calculada a partir dos jogos finalizados cadastrados nesta prévia.</div></div>
+<div class="panel"><div class="ph"><h3>Classificação demonstrativa</h3><span class="pill">Atualização manual nesta prévia</span></div><div class="tablewrap"><table><thead><tr><th>Pos.</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody id="standingRows"></tbody></table></div><div class="pad small muted">A classificação será calculada a partir dos jogos finalizados cadastrados nesta prévia.</div></div>
 </section>
 <section class="hidden" id="adminView">
 <div class="panel" id="adminLoginPanel">
@@ -1272,7 +1294,7 @@ function showTab(name){
 document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 (function setupDedicatedViews(){
  const classification=$('classificationView'),teams=$('teamsView');
- ['classificationPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
+ ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
  ['teamPanel','rosterPanel'].forEach(id=>{const el=$(id);if(el)teams.appendChild(el)});
  showTab('games');
 })();
@@ -1745,7 +1767,26 @@ function renderFrontPage(){
  const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
  (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
  const standings=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
- $('frontStandings').innerHTML=standings.length?standings.slice(0,6).map((x,i)=>`<tr><td>${i+1}</td><td><b>${esc(x.team.name)}</b></td><td>${x.j}</td><td>${x.gp-x.gc}</td><td><b>${x.pts}</b></td></tr>`).join(''):'<tr><td colspan="5">Cadastre equipes.</td></tr>';
+ const comp=activeCompetition()||{};
+ const fmt=String(comp.format||comp.formato||'').toLowerCase();
+ const isLeague=fmt.includes('pontos-corridos')||fmt.includes('pontos corridos');
+ const isKnockout=fmt.includes('mata-mata')||fmt.includes('mata mata');
+ const logoOf=t=>t.logo||t.escudo_url||t.escudoUrl||'';
+ const tableRows=list=>list.map((x,i)=>{const pct=x.j?((x.pts/(x.j*3))*100):0;return `<tr><td>${i+1}</td><td><span class="classification-team">${logoOf(x.team)?`<img class="classification-crest" src="${esc(logoOf(x.team))}" alt="Escudo ${esc(x.team.name)}" onerror="this.style.display='none'">`:`<span class="classification-crest-placeholder">⚽</span>`}<b>${esc(x.team.name||x.team.nome||'Equipe')}</b></span></td><td><b>${x.pts}</b></td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.gp-x.gc}</td><td>${pct.toFixed(1).replace('.',',')}%</td></tr>`}).join('');
+ const tableHTML=(title,list)=>`<div class="classification-subtable"><div class="classification-subtitle">${esc(title)}</div><div class="tablewrap"><table class="front-table"><thead><tr><th>#</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody>${list.length?tableRows(list):'<tr><td colspan="11">Nenhuma equipe neste grupo.</td></tr>'}</tbody></table></div></div>`;
+ const tables=$('classificationTables');
+ if(tables){
+   $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
+   if(isKnockout){
+     const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
+     tables.innerHTML=rounds.length?rounds.map(round=>{const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.round||m.fase||'Fase a definir')===round).sort((a,b)=>(a.date||'').localeCompare(b.date||''));return `<div class="classification-subtable"><div class="classification-subtitle">${esc(round)}</div><div class="knockout-matches">${ms.map(m=>{const h=teamForMatch(m,'home'),a=teamForMatch(m,'away'),hl=logoOf(h),al=logoOf(a),done=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';return `<div class="knockout-match"><span class="knockout-team">${hl?`<img src="${esc(hl)}" alt="">`:''}<b>${esc(m.homeName||h.name||'A definir')}</b></span><strong class="knockout-score">${done?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</strong><span class="knockout-team">${al?`<img src="${esc(al)}" alt="">`:''}<b>${esc(m.awayName||a.name||'A definir')}</b></span><small>${esc(m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir')} ${esc(m.time||'')}</small></div>`}).join('')||'<div class="empty">Nenhum confronto cadastrado nesta fase.</div>'}</div></div>`}).join(''):'<div class="empty">Cadastre os jogos e informe a fase/rodada para montar as tabelas do mata-mata.</div>';
+   }else if(!isLeague){
+     const groups=new Map();standings.forEach(x=>{const g=String(x.team.group||x.team.grupo||'Sem grupo').trim()||'Sem grupo';if(!groups.has(g))groups.set(g,[]);groups.get(g).push(x)});
+     tables.innerHTML=[...groups.entries()].map(([g,list])=>tableHTML(g==='Sem grupo'?'Classificação geral':`Grupo ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
+   }else{
+     tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
+   }
+ }
  const scorers=[];
  const compTeams=activeCompetitionTeams();
  const compTeamIds=new Set(compTeams.map(t=>String(t.id)));
