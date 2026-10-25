@@ -1105,6 +1105,10 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
 @media(max-width:600px){#competitionPhaseManager .phase-group-cards{grid-template-columns:repeat(2,minmax(0,1fr))}#competitionPhaseManager .phase-group-summary{align-items:flex-start;flex-direction:column}}
 </style>
 </style>
+
+<style id="match-event-editor-style">
+.match-event-editor{border:1px solid #d6ad36;border-radius:12px;padding:14px;margin:14px 0;background:#0d1425}.match-event-editor h4{margin:0 0 10px;color:#f1cc61}.match-event-editor .formgrid{margin-top:10px}.match-event-editor .help{font-size:12px;color:#c7cbd4;line-height:1.5}.match-event-editor .event-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.match-event-editor .event-status{font-size:12px;margin-top:8px;color:#f1cc61}
+</style>
 </head>
 <body>
 <header>
@@ -1146,6 +1150,21 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
 <label>Horário<input id="matchTime" type="time"/></label>
 </div><div class="actions"><button class="gold" id="saveMatch">Adicionar jogo à tabela</button><button class="secondary" id="exportMatches">Baixar tabela (CSV)</button></div></div>
 <div class="tablewrap"><table><thead><tr><th>Data</th><th>Rodada</th><th>Jogo</th><th>Placar</th><th>Local</th><th>Status</th><th>Ação</th></tr></thead><tbody id="matchRows"></tbody></table></div><div class="empty" id="noMatches">Nenhum jogo cadastrado ainda.</div>
+<div class="match-event-editor" id="matchEventEditor">
+ <h4>⚽ REGISTRAR GOLS E CARTÕES DESTE JOGO</h4>
+ <p class="help">Escolha a partida, a equipe e o atleta. Registre cada gol ou cartão separadamente, informando o minuto se desejar.</p>
+ <div class="formgrid">
+  <label>Partida<select id="matchEventMatch"><option value="">Selecione um jogo</option></select></label>
+  <label>Equipe<select id="matchEventTeam"><option value="">Selecione a equipe</option></select></label>
+  <label>Atleta<select id="matchEventAthlete"><option value="">Selecione o atleta</option></select></label>
+  <label>Evento<select id="matchEventType"><option value="goal">⚽ Gol</option><option value="yellow">🟨 Cartão amarelo</option><option value="red">🟥 Cartão vermelho</option><option value="played">🏃 Participou da partida</option></select></label>
+  <label>Minuto<input id="matchEventMinute" type="number" min="0" max="130" placeholder="Ex.: 37"/></label>
+  <label>Observação<input id="matchEventNote" placeholder="Ex.: gol de falta, segundo amarelo"/></label>
+ </div>
+ <div class="event-actions"><button class="gold" id="addMatchEvent" type="button">Registrar evento</button><button class="secondary" id="showMatchEvents" type="button">Ver eventos desta partida</button></div>
+ <div class="event-status" id="matchEventStatus" aria-live="polite">Os eventos registrados aparecerão na súmula e nos totais de gols/cartões.</div>
+ <div class="events" id="matchEventList"></div>
+</div>
 </div>
 <div class="panel"><div class="ph"><h3>Classificação demonstrativa</h3><span class="pill">Atualização manual nesta prévia</span></div><div class="tablewrap"><table><thead><tr><th>Pos.</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody id="standingRows"></tbody></table></div><div class="pad small muted">A classificação será calculada a partir dos jogos finalizados cadastrados nesta prévia.</div></div>
 </section>
@@ -1684,7 +1703,7 @@ $('saveAthlete').addEventListener('click', async ()=>{
 }
 function renderMatches(){
  const sorted=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
- $('matchRows').innerHTML=sorted.map(m=>`<tr><td>${dateBR(m.date)}${m.time?' · '+esc(m.time):''}</td><td>${esc(m.round||'—')}</td><td><b>${esc(m.homeName)} × ${esc(m.awayName)}</b></td><td><b>${m.homeScore===null||m.homeScore===undefined?'—':m.homeScore} : ${m.awayScore===null||m.awayScore===undefined?'—':m.awayScore}</b></td><td>${esc(m.venue||'—')}</td><td><span class="status ${m.status==='Finalizado'?'ok':'info'}">${esc(m.status)}</span></td><td><button class="secondary" data-edit-match="${m.id}">Editar</button> <button class="danger" data-delete-match="${m.id}">Excluir</button></td></tr>`).join('');
+ $('matchRows').innerHTML=sorted.map(m=>`<tr><td>${dateBR(m.date)}${m.time?' · '+esc(m.time):''}</td><td>${esc(m.round||'—')}</td><td><b>${esc(m.homeName)} × ${esc(m.awayName)}</b></td><td><b>${m.homeScore===null||m.homeScore===undefined?'—':m.homeScore} : ${m.awayScore===null||m.awayScore===undefined?'—':m.awayScore}</b></td><td>${esc(m.venue||'—')}</td><td><span class="status ${m.status==='Finalizado'?'ok':'info'}">${esc(m.status)}</span></td><td><button class="secondary" data-edit-match="${m.id}">Editar</button> <button class="gold" data-match-events="${m.id}">Gols/cartões</button> <button class="danger" data-delete-match="${m.id}">Excluir</button></td></tr>`).join('');
  $('noMatches').classList.toggle('hidden',sorted.length>0);
  document.querySelectorAll('[data-delete-match]').forEach(b=>b.onclick=async()=>{
    if(window.__BID_ADMIN_VERIFIED!==true){alert('Somente o administrador autenticado pode excluir partidas. Entre pela área Administração.');return}
@@ -2066,6 +2085,43 @@ $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if
 $('exportEvents').addEventListener('click',()=>{const lines=[['Partida','Equipe','Atleta','BID','Evento','Minuto','Observação','Data'],...db.events.map(e=>[e.match,e.team,e.player,e.playerId,e.label,e.minute,e.note,e.at])];download('sumula-bid-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8')});
 function download(name,data,type){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 $('reset').addEventListener('click',()=>{if(confirm('Isso apaga as equipes, atletas e eventos guardados neste navegador. Deseja continuar?')){localStorage.removeItem(KEY);db=structuredClone(starter);selectedTeam=db.teams[0]?.id||'';saveDb();alert('Prévia restaurada com os dados demonstrativos.')}});
+// Editor de eventos diretamente na tabela de jogos: gols, cartões e participação.
+function refreshMatchEventChoices(preferredMatchId='', preferredTeamId=''){
+ const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+ const matchSel=$('matchEventMatch');if(!matchSel)return;const oldMatch=preferredMatchId||matchSel.value;
+ matchSel.innerHTML='<option value="">Selecione um jogo</option>'+ms.map(m=>`<option value="${esc(m.id)}">${esc(dateBR(m.date))} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
+ if(ms.some(m=>String(m.id)===String(oldMatch)))matchSel.value=String(oldMatch);
+ const m=ms.find(x=>String(x.id)===String(matchSel.value));const teamSel=$('matchEventTeam');const athleteSel=$('matchEventAthlete');
+ const prevTeam=preferredTeamId||teamSel.value;
+ const sides=m?[findTeam(m.homeId),findTeam(m.awayId)].filter(Boolean):[];
+ teamSel.innerHTML='<option value="">Selecione a equipe</option>'+sides.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+ if(sides.some(t=>String(t.id)===String(prevTeam)))teamSel.value=String(prevTeam);
+ const team=findTeam(teamSel.value);const players=team?(team.players||[]):[];const oldPlayer=athleteSel.value;
+ athleteSel.innerHTML='<option value="">Selecione o atleta</option>'+players.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}${p.id?' · BID '+esc(p.id):''}</option>`).join('');
+ if(players.some(p=>String(p.id)===String(oldPlayer)))athleteSel.value=oldPlayer;
+ renderMatchEventList();
+}
+function renderMatchEventList(){
+ const list=$('matchEventList'),sel=$('matchEventMatch');if(!list||!sel)return;const id=sel.value;
+ const items=(db.events||[]).filter(e=>String(e.matchId||'')===String(id));
+ list.innerHTML=items.map(e=>`<div class="event"><span>${esc(e.icon||'⚽')}</span><div><b>${esc(e.label||e.type)} · ${esc(e.player||'Atleta')}</b><span>${esc(e.team||'')} ${e.minute!==''&&e.minute!=null?'· '+esc(e.minute)+' min':''}${e.note?' · '+esc(e.note):''}</span><small>${esc(e.match||'')}</small></div></div>`).join('')||'<div class="empty">Nenhum evento registrado para esta partida ainda.</div>';
+}
+$('matchEventMatch')?.addEventListener('change',()=>refreshMatchEventChoices());
+$('matchEventTeam')?.addEventListener('change',()=>refreshMatchEventChoices($('matchEventMatch').value,$('matchEventTeam').value));
+$('addMatchEvent')?.addEventListener('click',()=>{
+ if(window.__BID_ADMIN_VERIFIED!==true){alert('Somente o administrador autenticado pode registrar eventos. Entre pela Administração.');return}
+ const match=(db.matches||[]).find(m=>String(m.id)===String($('matchEventMatch').value));if(!match){alert('Selecione a partida.');return}
+ const team=findTeam($('matchEventTeam').value);if(!team||![String(match.homeId),String(match.awayId)].includes(String(team.id))){alert('Selecione uma das equipes que disputam esta partida.');return}
+ const player=(team.players||[]).find(p=>String(p.id)===String($('matchEventAthlete').value));if(!player){alert('Selecione o atleta que marcou o gol ou recebeu o cartão.');return}
+ const type=$('matchEventType').value;const labels={played:'Participou da partida',goal:'Gol',yellow:'Cartão amarelo',red:'Cartão vermelho'},icons={played:'🏃',goal:'⚽',yellow:'🟨',red:'🟥'};
+ player.played=true;if(type==='goal')player.goals=(Number(player.goals)||0)+1;if(type==='yellow')player.yellow=(Number(player.yellow)||0)+1;if(type==='red')player.red=(Number(player.red)||0)+1;
+ const ev={id:Date.now()+Math.floor(Math.random()*1000),matchId:match.id,match:`${match.homeName} × ${match.awayName}`,team:team.name,teamId:team.id,player:player.name,playerId:player.id,type,label:labels[type],icon:icons[type],minute:$('matchEventMinute').value,note:$('matchEventNote').value.trim(),at:new Date().toLocaleString('pt-BR')};
+ db.events.unshift(ev);saveDb();$('matchEventMinute').value='';$('matchEventNote').value='';$('matchEventStatus').textContent='Evento registrado nesta prévia local. Exporte uma cópia de segurança para guardar; a sincronização dos eventos com o Supabase ainda precisa ser ligada.';refreshMatchEventChoices(match.id,team.id);renderEvents();renderFrontPage();
+});
+$('showMatchEvents')?.addEventListener('click',renderMatchEventList);
+// Mantém o editor sincronizado com os jogos existentes e com o botão Gols/cartões.
+const originalRenderMatchesForEvents=renderMatches;
+renderMatches=function(){originalRenderMatchesForEvents();refreshMatchEventChoices();document.querySelectorAll('[data-match-events]').forEach(b=>b.onclick=()=>{const m=(db.matches||[]).find(x=>String(x.id)===String(b.dataset.matchEvents));if(!m)return;showTab('games');refreshMatchEventChoices(m.id);$('matchEventEditor').scrollIntoView({behavior:'smooth',block:'center'});});};
 renderAll();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
