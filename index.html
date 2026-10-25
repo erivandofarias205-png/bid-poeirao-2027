@@ -1137,7 +1137,7 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 <label>Símbolo da competição<input accept="image/*" id="newCompetitionLogo" type="file"/></label>
 <label class="wide">Regulamento da competição (PDF)<input accept=".pdf,application/pdf" id="newCompetitionRegulation" type="file"/><small class="muted">Opcional. O regulamento poderá ser consultado na competição.</small></label></div><div class="actions"><button class="gold" id="addCompetition" type="button">Adicionar competição</button></div><div aria-live="polite" class="small" id="competitionList"></div><p class="small">As competições devem ser gravadas no Supabase. Se o cadastro falhar, confira a mensagem exibida e as permissões da tabela.</p></div></div>
 <div class="panel"><div class="ph"><h3>Cadastrar equipe</h3><span class="pill">1 · Equipes</span></div><div class="pad"><div class="formgrid"> <label>Competição<select id="teamCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Nome da equipe<input id="teamName" placeholder="Ex.: Português de Águas Belas"/></label><label>Sigla para o escudo<input id="teamInitials" maxlength="5" placeholder="Ex.: PAB"/></label><label>Grupo da equipe (opcional)<input id="teamGroup" placeholder="Ex.: A, B, C"/></label><label>Escudo da equipe (opcional)<input accept="image/*" id="teamLogo" type="file"/></label><label>Vídeo da equipe (opcional)<input accept="video/*" id="teamVideo" type="file"/></label><label>Patrocinadores da equipe<input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona"/></label></div><div class="actions"><button class="gold" id="saveTeam">Cadastrar equipe</button></div></div></div>
-<div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"> <label>Competição<select id="athCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"/></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"/></label><label>Data de nascimento<input id="athBirth" type="date"/></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"/></label><label>CPF (jogador ou diretor)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00"/></label><label>Data da inscrição<input id="athReg" type="date"/></label><label>Foto do atleta (opcional)<input accept="image/*" id="athPhoto" type="file"/></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"/></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button class="gold" id="saveAthlete">Cadastrar pessoa</button></div></div></div>
+<div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"> <label>CPF (comece por aqui)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="Digite o CPF: 000.000.000-00" autocomplete="off"/></label><label>Competição<select id="athCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"/></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"/></label><label>Data de nascimento<input id="athBirth" type="date"/></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"/></label><label>Data da inscrição<input id="athReg" type="date"/></label><label>Foto do atleta (opcional)<input accept="image/*" id="athPhoto" type="file"/></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"/></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button class="gold" id="saveAthlete">Cadastrar pessoa</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
 <div class="panel" id="adminGamePromoPanel"><div class="ph"><h3>Divulgação de jogos</h3><span class="pill">Adicionar / remover artes</span></div><div class="pad"><p class="small">Envie uma ou várias artes promocionais. Elas serão exibidas no mural público em sequência e podem ser removidas depois que o jogo passar. Use imagens horizontais na proporção 7 × 4.</p><div class="formgrid"><label class="wide">Selecionar artes dos jogos<input accept="image/*" id="gamePromoUpload" multiple="" type="file"/></label></div><div class="actions"><button class="gold" id="uploadGamePromoBtn" type="button">Enviar artes para o mural</button><button class="secondary" id="refreshGamePromoBtn" type="button">Atualizar lista</button></div><p aria-live="polite" class="small" id="gamePromoAdminStatus" role="status">As artes serão carregadas do armazenamento do site quando disponível.</p><div class="game-promo-admin-list" id="gamePromoAdminList"></div></div></div>
 <div class="panel"><div class="ph"><h3>Mídias e patrocínios</h3><span class="pill">Prévia local</span></div><div class="pad"><p class="small">Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.</p><div class="formgrid" id="mediaPreview"></div></div></div>
@@ -1432,10 +1432,73 @@ $('saveTeam').addEventListener('click', async ()=>{
    alert('Não foi possível salvar no Supabase. Confira as políticas RLS e os nomes da tabela/colunas. Detalhe: '+(error?.message||'erro desconhecido'));
  } finally {button.disabled=false}
 });
+
+ // Cadastro por CPF: busca o atleta na base central antes de permitir novo registro.
+ let athleteMatchedByCpf = null;
+ async function lookupAthleteByCpf(){
+   const cpf=cpfDigits($('athCpf')?.value||'');
+   athleteMatchedByCpf=null;
+   if(cpf.length!==11 || ($('athRole')?.value||'jogador')!=='jogador') return;
+   if(typeof supabaseClient!=='undefined' && supabaseClient){
+     try{
+       const {data,error}=await supabaseClient.from('ATLETAS')
+         .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo')
+         .eq('cpf',cpf).limit(2);
+       if(error) throw error;
+       if(data?.length>1){alert('ATENÇÃO: este CPF aparece em mais de um cadastro. Não cadastre novamente; peça ao administrador para corrigir os duplicados.');return}
+       if(data?.length===1){
+         const row=data[0]; athleteMatchedByCpf={...row,_remote:true};
+         $('athName').value=row.nome||'';
+         $('athSportsName').value=row.nome_esportivo||'';
+         $('athBirth').value=row.data_nascimento||'';
+         $('athCity').value=row.naturalidade||'';
+         $('athBid').value=row.numero_inscricao||'';
+         const compId=$('athCompetition')?.value;
+         let already=false;
+         if(compId){
+           const a=await supabaseClient.from('competicao_atletas').select('atleta_id')
+             .eq('atleta_id',row.id).eq('competicao_id',compId).limit(1);
+           already=!a.error && !!a.data?.length;
+         }
+         if(already){
+           const keep=confirm('ATENÇÃO: este CPF já está cadastrado nesta competição.\n\nClique em OK para manter os dados e poder trocar o atleta de equipe. Clique em Cancelar para limpar os dados e digitar outro atleta.');
+           if(!keep){
+             ['athName','athSportsName','athBirth','athCity','athBid','athReg','athCpf'].forEach(x=>{if($(x))$(x).value=''});
+             if($('athPhoto'))$('athPhoto').value='';
+             athleteMatchedByCpf=null;
+             $('athCpf')?.focus();
+           }
+         }else{
+           alert('Atleta encontrado no BID! Os dados foram preenchidos automaticamente. Escolha a equipe desta competição e salve para vincular o mesmo atleta, sem duplicá-lo.');
+         }
+         return;
+       }
+     }catch(err){console.warn('Não foi possível consultar CPF no Supabase:',err)}
+   }
+   const matches=[];
+   (db.teams||[]).forEach(t=>(t.players||[]).forEach(p=>{if(cpfDigits(p.cpf)===cpf)matches.push({p,t})}));
+   if(matches.length){
+     const {p}=matches[0]; athleteMatchedByCpf={...p,_local:true};
+     $('athName').value=p.name||''; $('athSportsName').value=p.sportsName||'';
+     $('athBirth').value=p.birth||''; $('athCity').value=p.city||'';
+     $('athBid').value=p.id||'';
+     alert('Este CPF já existe na base local. Os dados foram preenchidos. Não cadastre novamente; para reutilizar entre competições, o atleta precisa estar no banco central do Supabase.');
+   }
+ }
+ $('athCpf')?.addEventListener('change',lookupAthleteByCpf);
+ $('athCpf')?.addEventListener('blur',lookupAthleteByCpf);
+
 $('saveAthlete').addEventListener('click', async ()=>{
  const team=findTeam($('athTeam').value),name=$('athName').value.trim(),birth=$('athBirth').value,city=$('athCity')?.value.trim()||'',cpf=cpfDigits($('athCpf').value),registered=$('athReg').value||new Date().toISOString().slice(0,10),role=$('athRole')?.value||'jogador',sportsName=$('athSportsName')?.value.trim()||'';
  if(!team||!name){alert('Selecione a equipe e informe o nome do atleta.');return}
  if(cpf&&cpf.length!==11){alert('O CPF deve ter 11 dígitos, ou deixe o campo vazio.');return}
+  if(cpf && athleteMatchedByCpf && cpfDigits(athleteMatchedByCpf.cpf)!==cpf) athleteMatchedByCpf=null;
+  if(cpf && !athleteMatchedByCpf && typeof supabaseClient!=='undefined' && supabaseClient && team?.dbId && role==='jogador'){
+    try{
+      const dup=await supabaseClient.from('ATLETAS').select('id,nome,cpf').eq('cpf',cpf).limit(1);
+      if(!dup.error && dup.data?.length){await lookupAthleteByCpf();return}
+    }catch(e){console.warn('Verificação final de CPF:',e)}
+  }
  const extraKey='tvfp_team_personnel_v1';let extraPeople=[];try{extraPeople=JSON.parse(localStorage.getItem(extraKey)||'[]')}catch(e){}
  const requestedBid=$('athBid').value.trim();
  let id=requestedBid;
@@ -1459,6 +1522,30 @@ $('saveAthlete').addEventListener('click', async ()=>{
      if(!sessionData?.session){alert('Entre com o login de administrador antes de cadastrar um atleta.');return}
      const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
      if(adminError||adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return}
+     const compChoice=$('athCompetition')?.value||activeCompetition()?.id||'';
+     const compRecord=(db.competitions||[]).find(c=>String(c.id)===String(compChoice)||String(c.dbId)===String(compChoice));
+     const compDbId=compRecord?.dbId||compRecord?.id||compChoice;
+     if(athleteMatchedByCpf?._remote){
+       const existing=athleteMatchedByCpf;
+       const {data:links,error:linksError}=await supabaseClient.from('competicao_atletas').select('atleta_id,competicao_id,equipe_id').eq('atleta_id',existing.id).eq('competicao_id',compDbId).limit(1);
+       if(linksError) throw new Error('Não foi possível verificar o vínculo da competição: '+linksError.message);
+       if(links?.length){
+         if(String(links[0].equipe_id)===String(team.dbId)){
+           alert('Este atleta já está inscrito nesta competição e nesta equipe. Não foi criado cadastro duplicado.');return;
+         }
+         const mudar=confirm('Este atleta já está inscrito nesta competição por outra equipe. Deseja transferi-lo para a equipe selecionada?');
+         if(!mudar)return;
+         const {error:updateError}=await supabaseClient.from('competicao_atletas').update({equipe_id:team.dbId,status:'Inscrito'}).eq('atleta_id',existing.id).eq('competicao_id',compDbId);
+         if(updateError) throw new Error('Não foi possível mudar o atleta de equipe: '+updateError.message);
+       }else{
+         const {error:linkError}=await supabaseClient.from('competicao_atletas').insert({competicao_id:compDbId,atleta_id:existing.id,equipe_id:team.dbId,status:'Inscrito'});
+         if(linkError) throw new Error('Atleta encontrado, mas não foi possível vinculá-lo à competição. Confira as permissões/colunas da tabela competicao_atletas: '+linkError.message);
+       }
+       ['athName','athBirth','athCity','athCpf','athReg','athBid','athSportsName'].forEach(x=>{if($(x))$(x).value=''});
+       if($('athPhoto'))$('athPhoto').value='';
+       athleteMatchedByCpf=null; await loadSupabaseTeams();showTab('admin');
+       alert('Atleta existente vinculado à nova competição/equipe, sem criar cadastro duplicado.');return;
+     }
      const photoFile=$('athPhoto')?.files?.[0]||null;
      let photoUrl=null;
      if(photoFile){
@@ -1890,7 +1977,7 @@ $('addCompetition')?.addEventListener('click',async()=>{
 });
 function renderAll(){renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();$('nTeams').textContent=activeCompetitionTeams().length;$('nPlayers').textContent=activeCompetitionTeams().reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).filter(matchBelongsToActiveCompetition).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · 2026 - TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
 $('q').addEventListener('input',renderRoster);$('filter').addEventListener('change',renderRoster);
-$('athCpf').addEventListener('input',e=>{let d=cpfDigits(e.target.value).slice(0,11);if(d.length>9)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);else if(d.length>6)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);else if(d.length>3)d=d.slice(0,3)+'.'+d.slice(3);e.target.value=d});
+$('athCpf').addEventListener('input',e=>{let d=cpfDigits(e.target.value).slice(0,11);if(d.length>9)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);else if(d.length>6)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);else if(d.length>3)d=d.slice(0,3)+'.'+d.slice(3);e.target.value=d;if(cpfDigits(d).length===11 && typeof lookupAthleteByCpf==='function')lookupAthleteByCpf()});
 $('export').addEventListener('click',()=>download('bid-poeirao-backup.json',JSON.stringify(db,null,2),'application/json'));
 $('importBtn').addEventListener('click',()=>$('importFile').click());
 $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.teams)||!Array.isArray(x.events))throw Error();if(!Array.isArray(x.matches))x.matches=[];if(!x.competition)x.competition='Copa Poeirão 2026';db=x;selectedTeam=db.teams[0]?.id||'';saveDb();alert('Cópia importada.')}catch(err){alert('Arquivo de cópia inválido.')}e.target.value=''});
