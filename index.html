@@ -1096,7 +1096,7 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
 <style id="phase-group-cards-style">
 #competitionPhaseManager .phase-group-summary{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 12px;padding:10px;border:1px solid #6b5720;border-radius:10px;background:#15130d;color:#f6df8a;font-size:12px}
 #competitionPhaseManager .phase-group-summary span{padding:5px 8px;border:1px solid #51431e;border-radius:99px;background:#0b0b0b;color:#f5f5f5}
-#competitionPhaseManager .phase-group-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:10px 0 16px}
+#competitionPhaseManager .phase-group-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:row;gap:8px;margin:10px 0 16px;align-items:stretch} @media(max-width:700px){#competitionPhaseManager .phase-group-cards{grid-template-columns:repeat(2,minmax(0,1fr))}} @media(max-width:430px){#competitionPhaseManager .phase-group-cards{grid-template-columns:1fr}}
 #competitionPhaseManager .phase-group-card{border:1px solid #6b5720;border-radius:10px;overflow:hidden;background:#101010;min-width:0}
 #competitionPhaseManager .phase-group-card-head{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#d6ad36;color:#111;padding:9px 10px;font-size:12px}
 #competitionPhaseManager .phase-group-members{display:grid;gap:5px;padding:9px;font-size:12px;color:#f5f5f5;overflow-wrap:anywhere}
@@ -1803,8 +1803,27 @@ function renderFrontPage(){
      const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
      tables.innerHTML=rounds.length?rounds.map(round=>{const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.round||m.fase||'Fase a definir')===round).sort((a,b)=>(a.date||'').localeCompare(b.date||''));return `<div class="classification-subtable"><div class="classification-subtitle">${esc(round)}</div><div class="knockout-matches">${ms.map(m=>{const h=teamForMatch(m,'home'),a=teamForMatch(m,'away'),hl=logoOf(h),al=logoOf(a),done=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';return `<div class="knockout-match"><span class="knockout-team">${hl?`<img src="${esc(hl)}" alt="">`:''}<b>${esc(m.homeName||h.name||'A definir')}</b></span><strong class="knockout-score">${done?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</strong><span class="knockout-team">${al?`<img src="${esc(al)}" alt="">`:''}<b>${esc(m.awayName||a.name||'A definir')}</b></span><small>${esc(m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir')} ${esc(m.time||'')}</small></div>`}).join('')||'<div class="empty">Nenhum confronto cadastrado nesta fase.</div>'}</div></div>`}).join(''):'<div class="empty">Cadastre os jogos e informe a fase/rodada para montar as tabelas do mata-mata.</div>';
    }else if(!isLeague){
-     const groups=new Map();standings.forEach(x=>{const g=String(x.team.group||x.team.grupo||'Sem grupo').trim()||'Sem grupo';if(!groups.has(g))groups.set(g,[]);groups.get(g).push(x)});
-     tables.innerHTML=[...groups.entries()].map(([g,list])=>tableHTML(g==='Sem grupo'?'Classificação geral':`Grupo ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
+     // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
+     // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
+     const groupCount=Math.max(1,Math.min(32,Number(comp.groupCount||comp.group_count||comp.quantidadeGrupos)||0));
+     const labels=Array.from({length:groupCount},(_,i)=>String.fromCharCode(65+i));
+     const groupOfPublic=team=>{
+       const map=comp.teamGroups||comp.team_groups||{};
+       let g=String(map[String(team.id)]??map[String(team.dbId||team.db_id||'')]??team.group??team.grupo??'').trim().toUpperCase();
+       if(/^\d+$/.test(g)){const n=Number(g);if(n>=1&&n<=26)g=String.fromCharCode(64+n)}
+       return g;
+     };
+     const byGroup=new Map(labels.map(g=>[g,[]]));
+     standings.forEach(x=>{
+       const g=groupOfPublic(x.team);
+       if(g && !byGroup.has(g))byGroup.set(g,[]);
+       if(g)byGroup.get(g).push(x);
+     });
+     const orderedGroups=[...byGroup.entries()].sort((a,b)=>{
+       if(a[0]==='Sem grupo')return 1;if(b[0]==='Sem grupo')return -1;
+       return a[0].localeCompare(b[0],'pt-BR',{numeric:true});
+     });
+     tables.innerHTML=orderedGroups.map(([g,list])=>tableHTML(g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
    }else{
      tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
    }
@@ -2936,8 +2955,8 @@ document.addEventListener('click',function(e){
   return false;
  }
  function teams(c=comp()){return c?(db.teams||[]).filter(t=>teamInComp(t,c)):[]}
- function groupLabels(c){return Array.from({length:Math.max(1,Math.min(32,Number(c?.groupCount)||1))},(_,i)=>String.fromCharCode(65+i))}
- function groupOf(t,c){const groups=c?.teamGroups||{};return String(groups[String(t.id)]??groups[String(t.dbId??'')]??t.group??'').trim().toUpperCase()}
+ function groupLabels(c){return Array.from({length:Math.max(1,Math.min(32,Number(c?.groupCount)||1))},(_,i)=>String.fromCharCode(65+i)).sort((a,b)=>a.localeCompare(b,'pt-BR'))}
+ function groupOf(t,c){const groups=c?.teamGroups||{};let g=String(groups[String(t.id)]??groups[String(t.dbId??'')]??t.group??'').trim().toUpperCase();if(/^\\d+$/.test(g)){const n=Number(g);if(n>=1&&n<=26)g=String.fromCharCode(64+n)}return g}
  function matches(c=comp()){
   return (db.matches||[]).filter(m=>{
    const ids=[m.competitionId,m.competicao_id,m.competitionDbId].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
