@@ -2617,7 +2617,8 @@ photo: row.foto_url || '',
 
 
   function showSignedOut(text) {
-    protectedArea.classList.add('hidden');
+    window.__BID_ADMIN_VERIFIED = false;
+   protectedArea.classList.add('hidden');
     panel.classList.remove('hidden');
     loginBtn.classList.remove('hidden');
     logoutBtn.classList.add('hidden');
@@ -2634,7 +2635,7 @@ photo: row.foto_url || '',
       showSignedOut('A conta entrou, mas não foi reconhecida como administradora. Confira a tabela ADMINISTRADOR e a função is_admin().');
       return false;
     }
-    window.__BID_ADMIN_VERIFIED = true;
+   window.__BID_ADMIN_VERIFIED = true;
     panel.classList.remove('hidden');
     protectedArea.classList.remove('hidden');
     loginBtn.classList.add('hidden');
