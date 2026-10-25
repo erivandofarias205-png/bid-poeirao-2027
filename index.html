@@ -1081,7 +1081,7 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
 .classification-subtable{margin:0 0 16px;border:1px solid #383838;border-radius:10px;overflow:hidden}
 .classification-subtitle{background:#d6ad36;color:#111;font-weight:900;padding:13px 16px;text-transform:uppercase;letter-spacing:.04em}
 .classification-subtable:last-child{margin-bottom:0}
-#scorersPanel .scorers{display:grid;grid-template-columns:1fr;gap:0}
+#scorersPanel .scorers{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0 20px}
 #cardControlPanel .front-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .knockout-matches{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;padding:12px}
 .knockout-match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px;border:1px solid #444;border-radius:10px;background:#101010}
@@ -1470,7 +1470,8 @@ function renderRoster(){
  if(!t){$('rows').innerHTML='';$('noRows').classList.remove('hidden');return}
  const q=$('q').value.trim().toLowerCase(),f=$('filter').value;
  const ps=t.players.filter(p=>(!q||(p.name+' '+p.id).toLowerCase().includes(q))&&(!f||(f==='free'?!p.played:p.played)));
- $('rows').innerHTML=ps.map(p=>`<tr><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button></td></tr>`).join('');
+ const NAO_ATLETAS=new Set(['BID-0020','BID-0021','BID-0022','BID-0023']);
+ $('rows').innerHTML=ps.map(p=>`<tr class="${NAO_ATLETAS.has(String(p.id).trim().toUpperCase())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button></td></tr>`).join('');
  $('noRows').classList.toggle('hidden',ps.length>0);
  document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>renderProfile(b.dataset.profile));
 }
@@ -1774,7 +1775,7 @@ $('saveAthlete').addEventListener('click', async ()=>{
   $('emptyEvents').classList.toggle('hidden',visibleEvents.length>0);
  }
  function renderAdminList(){
-  $('adminList').innerHTML=activeCompetitionTeams().map(t=>`<div style="padding:12px 0;border-bottom:1px solid #eee"><div style="display:flex;align-items:center;gap:10px;min-width:0"><img src="${esc(t.logo||t.escudo_url||'')}" alt="Escudo ${esc(t.name)}" onerror="this.style.display='none'" style="width:42px;height:42px;object-fit:contain;flex:0 0 42px;border-radius:7px;background:#fff;padding:3px;border:1px solid #d6dce8;${(t.logo||t.escudo_url)?'':'display:none;'}"><div style="min-width:0"><b>${esc(t.name)}</b> <span class="muted small">(${t.players.length} atleta(s))</span></div></div><div class="small muted" style="margin-top:8px">${t.players.map(p=>`<span style="display:inline-flex;gap:6px;align-items:center;margin:3px 8px 3px 0">${esc(p.id)} · ${esc(p.name)} <button type="button" class="secondary" data-edit-athlete="${esc(p.id)}" style="padding:4px 8px;font-size:11px">Editar</button> <button type="button" class="secondary" data-transfer-athlete="${esc(p.id)}" data-from-team="${esc(t.id)}" style="padding:4px 8px;font-size:11px">Transferir</button> <button type="button" class="danger" data-delete-athlete="${esc(p.id)}" data-from-team="${esc(t.id)}" style="padding:4px 8px;font-size:11px">Excluir</button></span>`).join('')||'Sem atletas cadastrados'}</div><div class="actions"><button class="secondary" data-select-team="${esc(t.id)}">Abrir equipe</button><button class="danger" data-delete-team="${esc(t.id)}">Excluir equipe</button></div></div>`).join('')||'<p class="muted">Nenhuma equipe cadastrada.</p>';
+  $('adminList').innerHTML=activeCompetitionTeams().map(t=>`<div style="padding:12px 0;border-bottom:1px solid #eee"><div style="display:flex;align-items:center;gap:10px;min-width:0"><img src="${esc(t.logo||t.escudo_url||'')}" alt="Escudo ${esc(t.name)}" onerror="this.style.display='none'" style="width:42px;height:42px;object-fit:contain;flex:0 0 42px;border-radius:7px;background:#fff;padding:3px;border:1px solid #d6dce8;${(t.logo||t.escudo_url)?'':'display:none;'}"><div style="min-width:0"><b>${esc(t.name)}</b> <span class="muted small">(${t.players.length} atleta(s))</span></div></div><div class="small muted" style="margin-top:8px">${t.players.map(p=>`<span style="display:inline-flex;gap:6px;align-items:center;margin:3px 8px 3px 0">${esc(p.id)} · ${esc(p.name)} <button type="button" class="secondary" data-edit-athlete="${esc(p.id)}" style="padding:4px 8px;font-size:11px">Editar</button></span>`).join('')||'Sem atletas cadastrados'}</div><div class="actions"><button class="secondary" data-select-team="${esc(t.id)}">Abrir equipe</button><button class="danger" data-delete-team="${esc(t.id)}">Excluir equipe</button></div></div>`).join('')||'<p class="muted">Nenhuma equipe cadastrada.</p>';
   document.querySelectorAll('[data-select-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.selectTeam;renderAll();showTab('public')});
   document.querySelectorAll('[data-delete-team]').forEach(b=>b.onclick=async()=>{
     const t=findTeam(b.dataset.deleteTeam);
@@ -2489,7 +2490,7 @@ photo: row.foto_url || '',
     remoteTeams.forEach(team => {
       team.players = (team.players || []).filter(player => {
         const ids = (player.competitionIds || []).map(String);
-        if (!ids.length) return true; // Atletas sem vínculo explícito continuam visíveis no elenco da equipe.
+        if (!ids.length) return athleteCompetitionRows.length === 0;
         const comp = activeCompetition();
         if (!comp) return true;
         const compIds = [comp.id, comp.dbId].filter(v => v !== undefined && v !== null && v !== '').map(String);
@@ -3203,51 +3204,6 @@ document.addEventListener('click',function(e){
  });
 })();
 </script>
-
-<script id="bid-athlete-transfer-delete-fix">
-(function(){
- document.addEventListener('click', async function(ev){
-  const transfer=ev.target.closest('[data-transfer-athlete]');
-  const del=ev.target.closest('[data-delete-athlete]');
-  if(!transfer&&!del)return;
-  ev.preventDefault();
-  if(window.__BID_ADMIN_VERIFIED!==true){alert('Entre pela Administração com a conta de administrador antes de alterar atletas.');return;}
-  const btn=transfer||del; const athleteId=btn.dataset.transferAthlete||btn.dataset.deleteAthlete;
-  let athlete=null,from=null;
-  for(const t of (db.teams||[])){const p=(t.players||[]).find(x=>String(x.id)===String(athleteId));if(p){athlete=p;from=t;break;}}
-  if(!athlete||!from){alert('Atleta não encontrado. Atualize a página e tente novamente.');return;}
-  try{
-   const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();if(sessionError)throw sessionError;
-   if(!sessionData?.session)throw new Error('Sua sessão expirou. Entre novamente.');
-   const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');if(adminError||adminCheck!==true)throw new Error('A conta não foi confirmada como administradora.');
-   if(transfer){
-    const choices=(db.teams||[]).filter(t=>t.dbId&&String(t.dbId)!==String(from.dbId)&&teamBelongsToActiveCompetition(t));
-    if(!choices.length){alert('Não há outra equipe vinculada à competição ativa.');return;}
-    const menu=choices.map((t,i)=>(i+1)+'. '+t.name).join('\n');
-    const answer=prompt('Transferir '+athlete.name+' para qual equipe? Digite o número:\n'+menu);if(answer===null)return;
-    const dest=choices[Number(answer)-1];if(!dest){alert('Número de equipe inválido.');return;}
-    const {error:updateError}=await supabaseClient.from('ATLETAS').update({equipe_id:dest.dbId}).eq('id',athlete.dbId);
-    if(updateError)throw updateError;
-    const comp=activeCompetition();const compDbId=comp?.dbId||comp?.id;
-    if(compDbId!==undefined&&compDbId!==null&&compDbId!==''){
-      const {data:links,error:linksError}=await supabaseClient.from('competicao_atletas').select('competicao_id,atleta_id').eq('atleta_id',athlete.dbId).eq('competicao_id',compDbId);
-      if(linksError)throw new Error('Atleta movido na base geral, mas não foi possível verificar o vínculo da competição: '+linksError.message);
-      if(links&&links.length){const {error:linkUpdateError}=await supabaseClient.from('competicao_atletas').update({equipe_id:dest.dbId,status:'Inscrito'}).eq('atleta_id',athlete.dbId).eq('competicao_id',compDbId);if(linkUpdateError)throw new Error('Atleta movido na base geral, mas o vínculo da competição precisa ser corrigido: '+linkUpdateError.message);}
-      else {const {error:linkInsertError}=await supabaseClient.from('competicao_atletas').insert({competicao_id:compDbId,atleta_id:athlete.dbId,equipe_id:dest.dbId,status:'Inscrito'});if(linkInsertError)throw new Error('Atleta movido na base geral, mas não foi possível inscrevê-lo na competição: '+linkInsertError.message);}
-    }
-    alert('Transferência concluída.');
-   } else {
-    if(!confirm('Excluir definitivamente '+athlete.name+' (BID '+athlete.id+')? Esta ação pode ser bloqueada se houver súmulas ou outros registros vinculados.'))return;
-    const {error:deleteError}=await supabaseClient.from('ATLETAS').delete().eq('id',athlete.dbId);
-    if(deleteError)throw new Error('O banco não permitiu excluir o atleta. Ele pode estar vinculado a jogos ou registros. Detalhe: '+deleteError.message);
-    alert('Atleta excluído da base geral.');
-   }
-   await loadSupabaseTeams();if(typeof renderAll==='function')renderAll();
-  }catch(err){console.error('Operação de atleta falhou:',err);alert('Não foi possível concluir a operação. Nenhum outro cadastro foi recriado. Detalhe: '+(err?.message||err));}
- });
-})();
-</script>
-
 </body>
 </html>
 
@@ -3266,4 +3222,9 @@ document.addEventListener('click',function(e){
 #finishedFixtures .fixture-competition img{width:24px;height:24px;object-fit:contain;border-radius:5px;background:#fff;padding:2px;flex:0 0 auto}
 #finishedFixtures .fixture-competition-name{overflow-wrap:anywhere}
 @media(max-width:520px){#finishedFixtures.fixtures{grid-template-columns:1fr!important;max-height:390px}}
+
+/* Dirigentes / Musa (não atletas): cor diferente na tabela do BID */
+tbody tr.row-staff,tbody tr.row-staff:nth-child(odd),tbody tr.row-staff:nth-child(even){background:#3b1659!important;box-shadow:inset 5px 0 0 #b26bff}
+tbody tr.row-staff td{background:#3b1659!important;border-color:#6d2fa0!important}
+tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
 </style>
