@@ -1109,6 +1109,112 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
 <style id="match-event-editor-style">
 .match-event-editor{border:1px solid #d6ad36;border-radius:12px;padding:14px;margin:14px 0;background:#0d1425}.match-event-editor h4{margin:0 0 10px;color:#f1cc61}.match-event-editor .formgrid{margin-top:10px}.match-event-editor .help{font-size:12px;color:#c7cbd4;line-height:1.5}.match-event-editor .event-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.match-event-editor .event-status{font-size:12px;margin-top:8px;color:#f1cc61}
 </style>
+
+<style id="fixturesPanelsUpdate">
+.front-fixture-card{min-width:0;border:1px solid #b88e1d;border-radius:11px;overflow:hidden;background:#050d22;color:#f5f5f5}
+.fixture-competition{display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 8px;background:#101010;color:#f4cd50;font-size:11px;font-weight:900;text-align:center}
+.fixture-competition img{width:25px;height:25px;object-fit:contain;background:#fff;border-radius:5px;padding:2px;flex:0 0 25px}
+.fixture-competition-name{min-width:0}
+#frontFixtures,#finishedFixtures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px}
+.front-fixture-card .fixture{border:0;border-radius:0;padding:12px 8px;background:#050d22;color:#f5f5f5;gap:8px}
+.front-fixture-card .fixture-team{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0}
+.front-fixture-card .team-crest{width:36px;height:36px;object-fit:contain;background:#fff;border-radius:6px;padding:2px}
+.front-fixture-card .team-name{font-weight:900;overflow-wrap:anywhere}
+.front-fixture-card .fixture-date{font-size:11px;padding:8px 5px}
+.front-fixture-status{text-align:center;font-size:9px;padding:0 8px 10px;color:#c9d2e3;text-transform:uppercase}
+.finished-match-panel .ph{background:#202020!important;color:#f4cd50!important;border-bottom:2px solid #d6ad36}
+.finished-match-panel .ph h3{color:#f4cd50!important}
+@media(max-width:800px){#frontFixtures,#finishedFixtures{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){#frontFixtures,#finishedFixtures{grid-template-columns:1fr}}
+</style>
+
+<style id="tvfp-black-gold-match-panels">
+/* Padronização dos painéis de partidas: preto e dourado */
+#publicView .next-match-panel,
+#publicView .finished-match-panel {
+  background:#050505 !important;
+  border:1px solid #d6ad36 !important;
+  color:#f5f5f5 !important;
+}
+#publicView .next-match-panel > .ph,
+#publicView .finished-match-panel > .ph {
+  background:linear-gradient(90deg,#b88e1d 0%,#f1cf55 50%,#b88e1d 100%) !important;
+  color:#050505 !important;
+  border-bottom:1px solid #d6ad36 !important;
+}
+#publicView .next-match-panel > .ph h3,
+#publicView .finished-match-panel > .ph h3 {
+  color:#050505 !important;
+}
+#publicView .next-match-panel > .ph .pill,
+#publicView .finished-match-panel > .ph .pill {
+  background:#111 !important;
+  color:#f1cc61 !important;
+  border:1px solid #d6ad36 !important;
+}
+#publicView #frontFixtures,
+#publicView #finishedFixtures {
+  background:#050505 !important;
+  color:#f5f5f5 !important;
+}
+#publicView #frontFixtures .fixture,
+#publicView #finishedFixtures .fixture {
+  background:#080b13 !important;
+  color:#f5f5f5 !important;
+  border:1px solid #b88e1d !important;
+}
+#publicView #frontFixtures .fixture-competition,
+#publicView #finishedFixtures .fixture-competition {
+  background:#101010 !important;
+  color:#f1cc61 !important;
+  border-bottom:1px solid #d6ad36 !important;
+}
+#publicView #frontFixtures .fixture-date,
+#publicView #finishedFixtures .fixture-date {
+  background:linear-gradient(90deg,#b88e1d 0%,#f1cf55 50%,#b88e1d 100%) !important;
+  color:#050505 !important;
+}
+#publicView #frontFixtures .versus,
+#publicView #finishedFixtures .versus,
+#publicView #finishedFixtures .score { color:#f1cc61 !important; }
+#publicView .finished-match-panel .empty {
+  background:#080808 !important; color:#c9c9c9 !important;
+}
+</style>
+
+<style id="fix-finished-panel-gold-black">
+/* Correção solicitada: cabeçalho de PARTIDAS FINALIZADAS no mesmo padrão dourado/preto. */
+.panel.finished-match-panel > .ph,
+.panel.finished-match-panel .ph {
+  background: linear-gradient(90deg, #b88e1d 0%, #f1cf55 50%, #b88e1d 100%) !important;
+  color: #050505 !important;
+  border-bottom: 1px solid #d6ad36 !important;
+}
+.panel.finished-match-panel > .ph h3,
+.panel.finished-match-panel > .ph .pill {
+  color: #050505 !important;
+}
+.panel.finished-match-panel > .ph .pill {
+  background: #f1cf55 !important;
+  border: 1px solid #050505 !important;
+}
+</style>
+<style id="finished-panel-match-upcoming-style">
+/* Painel PARTIDAS FINALIZADAS segue exatamente o padrão do painel PRÓXIMAS PARTIDAS. */
+.finished-match-panel > .ph {
+  background: linear-gradient(90deg, #b88e1d 0%, #f1cf55 50%, #b88e1d 100%) !important;
+  color: #050505 !important;
+  border-bottom: 1px solid #d6ad36 !important;
+}
+.finished-match-panel > .ph h3,
+.finished-match-panel > .ph .pill {
+  color: #050505 !important;
+}
+.finished-match-panel > .ph .pill {
+  background: #f1cf55 !important;
+  border: 1px solid #050505 !important;
+}
+</style>
 </head>
 <body>
 <header>
@@ -1127,7 +1233,8 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
 <div class="stats"><div class="stat"><small>Equipes cadastradas</small><strong id="nTeams">0</strong></div><div class="stat"><small>Atletas cadastrados</small><strong id="nPlayers">0</strong></div><div class="stat"><small>Partidas com eventos</small><strong id="nMatches">0</strong></div></div>
 <div class="tabs"><button class="tab" data-tab="classification">Classificação</button><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button></div>
 <section id="publicView">
-<div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMA PARTIDA</h3><span class="pill">Próximo confronto</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
+<div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMAS PARTIDAS</h3><span class="pill">Próximos confrontos</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
+<div class="panel finished-match-panel"><div class="ph"><h3>PARTIDAS FINALIZADAS</h3><span class="pill">Resultados oficiais</span></div><div class="fixtures" id="finishedFixtures"><div class="empty">Nenhuma partida finalizada ainda.</div></div></div>
 <div class="panel classification-full" id="classificationPanel"><div class="ph"><h3>CLASSIFICAÇÃO / TABELAS DA COMPETIÇÃO</h3><span class="pill" id="classificationFormatLabel">Tabela oficial</span></div><div id="classificationTables"><div class="tablewrap"><table class="front-table"><thead><tr><th>Pos.</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody id="frontStandings"></tbody></table></div></div><div class="pad"><button class="secondary" data-open-games="">Ver tabela completa de jogos</button></div></div>
 <div class="panel" id="scorersPanel"><div class="ph"><h3>ARTILHARIA · TODOS OS ARTILHEIROS</h3><span class="pill">Gols</span></div><div class="scorers" id="frontScorers"><div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div></div></div>
 <div class="panel" id="cardControlPanel"><div class="ph"><h3>CONTROLE DE CARTÕES</h3><span class="pill">Amarelos e vermelhos por atleta</span></div><div class="pad"><div class="front-grid"><div class="box"><h4>🟨 Cartões amarelos</h4><div class="scorers" id="yellowCardsList"><div class="empty">Nenhum cartão amarelo registrado.</div></div></div><div class="box"><h4>🟥 Cartões vermelhos</h4><div class="scorers" id="redCardsList"><div class="empty">Nenhum cartão vermelho registrado.</div></div></div></div><p class="small muted">Os totais são exibidos a partir dos cartões registrados nas fichas dos atletas.</p></div></div>
@@ -1154,12 +1261,12 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
  <h4>⚽ REGISTRAR GOLS E CARTÕES DESTE JOGO</h4>
  <p class="help">Escolha a partida, a equipe e o atleta. Registre cada gol ou cartão separadamente, informando o minuto se desejar.</p>
  <div class="formgrid">
-  <label>Partida<select id="matchEventMatch"><option value="">Selecione um jogo</option></select></label>
-  <label>Equipe<select id="matchEventTeam"><option value="">Selecione a equipe</option></select></label>
-  <label>Atleta<select id="matchEventAthlete"><option value="">Selecione o atleta</option></select></label>
-  <label>Evento<select id="matchEventType"><option value="goal">⚽ Gol</option><option value="yellow">🟨 Cartão amarelo</option><option value="red">🟥 Cartão vermelho</option><option value="played">🏃 Participou da partida</option></select></label>
-  <label>Minuto<input id="matchEventMinute" type="number" min="0" max="130" placeholder="Ex.: 37"/></label>
-  <label>Observação<input id="matchEventNote" placeholder="Ex.: gol de falta, segundo amarelo"/></label>
+ <label>Partida<select id="matchEventMatch"><option value="">Selecione um jogo</option></select></label>
+ <label>Equipe<select id="matchEventTeam"><option value="">Selecione a equipe</option></select></label>
+ <label>Atleta<select id="matchEventAthlete"><option value="">Selecione o atleta</option></select></label>
+ <label>Evento<select id="matchEventType"><option value="goal">⚽ Gol</option><option value="yellow">🟨 Cartão amarelo</option><option value="red">🟥 Cartão vermelho</option><option value="played">🏃 Participou da partida</option></select></label>
+ <label>Minuto<input id="matchEventMinute" type="number" min="0" max="130" placeholder="Ex.: 37"/></label>
+ <label>Observação<input id="matchEventNote" placeholder="Ex.: gol de falta, segundo amarelo"/></label>
  </div>
  <div class="event-actions"><button class="gold" id="addMatchEvent" type="button">Registrar evento</button><button class="secondary" id="showMatchEvents" type="button">Ver eventos desta partida</button></div>
  <div class="event-status" id="matchEventStatus" aria-live="polite">Os eventos registrados aparecerão na súmula e nos totais de gols/cartões.</div>
@@ -1789,9 +1896,10 @@ function renderFrontPage(){
    return (db.teams||[]).find(t=>String(t.id)===String(id)||String(t.dbId)===String(id)) || (db.teams||[]).find(t=>String(t.name||t.nome||'').trim().toLowerCase()===String(name).trim().toLowerCase()) || {};
  };
  const crest=(team)=>team.logo||team.escudo_url||team.escudoUrl||'';
- $('frontFixtures').innerHTML=fixtures.length?fixtures.map(m=>{
+ const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
+ const renderFixtureCard=(m)=>{
    const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';
-   const finished=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';
+   const finished=isFinished(m);
    const competition=(db.competitions||[]).find(c=>String(c.id)===String(m.competitionId))||null;
    const compName=m.competitionName||competition?.name||db.competition||'Copa Poeirão';
    const season=competition?.season||competition?.temporada||m.season||m.temporada||((String(compName).match(/20\d{2}/)||[])[0])||'2026';
@@ -1799,10 +1907,21 @@ function renderFrontPage(){
    const compLogo=m.competitionLogo||competition?.logo||competition?.logo_url||competition?.escudo_url||'';
    const home=teamForMatch(m,'home'), away=teamForMatch(m,'away');
    const homeLogo=crest(home), awayLogo=crest(away);
-   return `<div class="front-fixture-card"><div class="fixture-competition">${compLogo?`<img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}<span class="fixture-competition-name">${esc(compTitle)}</span>${compLogo?`<span class="comp-dash">—</span><img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}</div><div class="fixture-date">${esc(date)}${m.time?' · '+esc(m.time):''}${m.round?' · '+esc(m.round):''}</div><div class="fixture"><span class="fixture-team">${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="Escudo ${esc(m.homeName||'equipe mandante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.homeName||'EQUIPE XX')}</span></span><span class="versus">${finished?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</span><span class="fixture-team">${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="Escudo ${esc(m.awayName||'equipe visitante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.awayName||'EQUIPE XX')}</span></span></div><div class="front-fixture-status">${esc(m.status||'Agendado')}${m.venue?' · '+esc(m.venue):''}</div></div>`
- }).join(''):'<div class="empty">Nenhum jogo cadastrado. O administrador pode cadastrar jogos na aba Tabela de Jogos.</div>';
-
-
+   return `<div class="front-fixture-card"><div class="fixture-competition">${compLogo?`<img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}<span class="fixture-competition-name">${esc(compTitle)}</span>${compLogo?`<img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}</div><div class="fixture-date">${esc(date)}${m.time?' · '+esc(m.time):''}${m.round?' · '+esc(m.round):''}</div><div class="fixture"><span class="fixture-team">${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="Escudo ${esc(m.homeName||'equipe mandante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.homeName||'EQUIPE XX')}</span></span><span class="versus">${finished?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</span><span class="fixture-team">${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="Escudo ${esc(m.awayName||'equipe visitante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.awayName||'EQUIPE XX')}</span></span></div><div class="front-fixture-status">${esc(m.status||'Agendado')}${m.venue?' · '+esc(m.venue):''}</div></div>`;
+ };
+ const upcomingFixtures=fixtures.filter(m=>!isFinished(m)).slice().sort((a,b)=>{
+   const da=String(a.date||'9999-12-31')+' '+String(a.time||'23:59');
+   const dbb=String(b.date||'9999-12-31')+' '+String(b.time||'23:59');
+   return da.localeCompare(dbb);
+ });
+ const finishedFixtures=fixtures.filter(isFinished).slice().sort((a,b)=>{
+   const da=String(a.date||'')+' '+String(a.time||'');
+   const dbb=String(b.date||'')+' '+String(b.time||'');
+   return dbb.localeCompare(da);
+ });
+ $('frontFixtures').innerHTML=upcomingFixtures.length?upcomingFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma próxima partida cadastrada.</div>';
+ const finishedPanel=$('finishedFixtures');
+ if(finishedPanel) finishedPanel.innerHTML=finishedFixtures.length?finishedFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma partida finalizada ainda.</div>';
 
 
  const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
@@ -2807,8 +2926,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* A aba Tabela de jogos mostra os confrontos já cadastrados, no formato de cartões. */
   const nextMatchPanel = publicView.querySelector('.next-match-panel');
+  const finishedMatchPanel = publicView.querySelector('.finished-match-panel');
   if (nextMatchPanel) {
     gamesView.insertBefore(nextMatchPanel, gamesView.firstChild);
+  }
+  /* O painel de partidas finalizadas fica imediatamente abaixo das próximas partidas. */
+  if (finishedMatchPanel) {
+    if (nextMatchPanel && nextMatchPanel.parentElement === gamesView) {
+      nextMatchPanel.insertAdjacentElement('afterend', finishedMatchPanel);
+    } else {
+      gamesView.insertBefore(finishedMatchPanel, gamesView.firstChild);
+    }
   }
 
   /* O formulário de cadastro e a tabela de administração só ficam disponíveis após login. */
@@ -3077,3 +3205,20 @@ document.addEventListener('click',function(e){
 </script>
 </body>
 </html>
+
+<style id="finished-panel-layout-fix">
+#gamesView .finished-match-panel{display:block!important;margin-top:14px!important;clear:both}
+#finishedFixtures.fixtures{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr))!important;gap:8px!important;padding:10px!important;max-height:440px;overflow-y:auto;align-content:start}
+#finishedFixtures .front-fixture-card{min-width:0;border:1px solid rgba(220,177,48,.55);border-radius:10px;overflow:hidden;background:rgba(5,12,28,.6)}
+#finishedFixtures .fixture-date{text-align:center;font-size:11px!important;letter-spacing:.02em!important;padding:7px 8px!important;line-height:1.3;background:#d6ad36;color:#111;font-weight:900}
+#finishedFixtures .fixture{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;align-items:center;gap:7px!important;max-width:none!important;margin:0!important;padding:10px 8px!important;font-size:clamp(12px,1.4vw,16px)!important;border:0!important;background:transparent!important;color:#f7f7f7!important}
+#finishedFixtures .fixture-team{text-align:center;overflow-wrap:anywhere;line-height:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0}
+#finishedFixtures .fixture-team .team-crest{width:34px;height:34px;object-fit:contain;border-radius:5px;background:#fff;padding:2px;flex:0 0 auto}
+#finishedFixtures .fixture-team .team-name{display:block;overflow-wrap:anywhere;font-weight:900}
+#finishedFixtures .versus{font-size:17px!important;color:var(--gold)!important;white-space:nowrap}
+#finishedFixtures .front-fixture-status{text-align:center;font-size:10px;color:#c7d2e6;padding:0 8px 8px}
+#finishedFixtures .fixture-competition{display:flex;align-items:center;justify-content:center;gap:7px;padding:6px 8px;background:#101010;border-bottom:1px solid rgba(220,177,48,.35);color:#f5d45b;font-size:11px;font-weight:800;text-align:center}
+#finishedFixtures .fixture-competition img{width:24px;height:24px;object-fit:contain;border-radius:5px;background:#fff;padding:2px;flex:0 0 auto}
+#finishedFixtures .fixture-competition-name{overflow-wrap:anywhere}
+@media(max-width:520px){#finishedFixtures.fixtures{grid-template-columns:1fr!important;max-height:390px}}
+</style>
