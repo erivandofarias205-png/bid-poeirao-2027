@@ -1122,6 +1122,60 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
  #matchSheet .sheet-page-two *{print-color-adjust:economy!important;-webkit-print-color-adjust:economy!important}
 }
 </style>
+
+<style id="sumula-mobile-legibility-fix">
+/* Tela pequena: melhorar leitura da súmula; impressão continua em A4 */
+#matchSheet .official-sheet{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#matchSheet .sheet-page{max-width:100%;margin:0 auto 14px}
+#matchSheet .sheet-team{min-width:0}
+#matchSheet .sheet-team table{width:100%;table-layout:fixed}
+#matchSheet .sheet-team th,#matchSheet .sheet-team td{overflow-wrap:anywhere;word-break:normal}
+#matchSheet .sheet-director-line{display:flex;align-items:center;gap:5px;min-height:6mm;white-space:normal;overflow-wrap:anywhere}
+#matchSheet .sheet-director-line b{white-space:nowrap}
+@media screen and (max-width:700px){
+  #matchSheet{padding:6px!important}
+  #matchSheet .official-sheet{font-size:10px!important;padding:0!important}
+  #matchSheet .sheet-page{padding:8px!important;margin-bottom:10px!important}
+  #matchSheet .sheet-heading h2{font-size:16px!important;line-height:1.25!important}
+  #matchSheet .sheet-meta{gap:4px!important;flex-wrap:wrap!important}
+  #matchSheet .sheet-rosters.two-rosters{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+  #matchSheet .sheet-team h3{font-size:12px!important;line-height:1.3!important;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  #matchSheet .sheet-team-logo{width:24px!important;height:24px!important;object-fit:contain}
+  #matchSheet .sheet-team table{font-size:9px!important}
+  #matchSheet .sheet-team th,#matchSheet .sheet-team td{padding:3px 2px!important}
+  #matchSheet .sheet-player-photo img{width:22px!important;height:26px!important;object-fit:cover}
+  #matchSheet .sheet-staff{font-size:9px!important;padding:5px!important}
+  #matchSheet .sheet-director-line{font-size:8.5px!important;min-height:22px!important}
+  #matchSheet .sheet-sign-row{font-size:8px!important;gap:6px!important;flex-wrap:wrap!important}
+  #matchSheet .sheet-control-grid{grid-template-columns:minmax(0,1fr)!important}
+}
+@media print{
+  #matchSheet .official-sheet{overflow:visible!important}
+  #matchSheet .sheet-page{max-width:none!important}
+  #matchSheet .sheet-rosters.two-rosters{grid-template-columns:1fr 1fr!important}
+}
+</style>
+
+
+<style id="sumula-dirigentes-foto-funcao-fix">
+#matchSheet .sheet-director-line{display:grid!important;grid-template-columns:7mm minmax(25mm,42%) minmax(0,1fr)!important;align-items:center!important;gap:1.2mm!important;min-height:6mm!important;line-height:normal!important;padding:0 1mm!important;border-bottom:1px solid #888!important;white-space:normal!important}
+#matchSheet .sheet-director-photo{display:block;width:5.5mm;height:5.5mm;object-fit:cover;border:0.25mm solid #777;background:#fff;box-sizing:border-box}
+#matchSheet .sheet-director-photo-empty{border-color:transparent}
+#matchSheet .sheet-director-name{min-width:0;overflow-wrap:anywhere;font-size:6.5pt}
+#matchSheet .sheet-director-function{display:block;min-width:0;width:100%;font-size:6.5pt;white-space:nowrap}
+@media(max-width:600px) and (not print){
+ #matchSheet .sheet-director-line{grid-template-columns:9mm minmax(0,1fr)!important;gap:2mm!important;min-height:9mm!important;padding:1mm!important}
+ #matchSheet .sheet-director-photo{width:8mm;height:8mm}
+ #matchSheet .sheet-director-name{font-size:10px}
+ #matchSheet .sheet-director-function{grid-column:2;width:100%;font-size:10px;white-space:normal;border-bottom:1px solid #777;padding-bottom:2px}
+}
+@media print{
+ #matchSheet .sheet-director-line{grid-template-columns:7mm minmax(25mm,42%) minmax(0,1fr)!important;min-height:6mm!important}
+ #matchSheet .sheet-director-photo{width:5.5mm;height:5.5mm}
+ #matchSheet .sheet-director-function{white-space:nowrap!important}
+}
+</style>
+
 </head>
 <body>
 <header>
@@ -1790,14 +1844,16 @@ function buildMatchSheet(){
    if(keys.some(k=>['director','dirigente','president','presidente','representative'].includes(k))){const ds=(team?.players||[]).filter(p=>{const r=String(p?.role||p?.funcao||p?.function||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente');}).map(p=>p.name||p.nome).filter(Boolean);if(ds.length)return esc(ds.join(', '));}
    return '________________________________';};
  const roster=(team,side,fallback)=>{
-   const isNonPlayerRole=p=>{const r=String(p?.role||p?.funcao||p?.function||'jogador').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();return ['musa','diretor','diretora','dirigente','representante','presidente','vice-presidente','vice presidente','delegado','tecnico','tecnico auxiliar','auxiliar','massagista','roupeiro','comissao tecnica'].includes(r)||r.includes('dirigente')||r.includes('diretor')||r.includes('representante')||r.includes('musa');};
+   const roleText=p=>[p?.role,p?.funcao,p?.function,p?.tipo,p?.tipoCadastro,p?.categoria,p?.position,p?.cargo,p?.perfil].filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+   const isMusa=p=>{const r=roleText(p);const bid=String(p?.id||p?.bid||p?.bidNumber||p?.numero_bid||'').replace(/[^0-9]/g,'');return r.includes('musa')||bid==='23'||bid==='023'||bid==='0023';};
+   const isNonPlayerRole=p=>{const r=roleText(p);return isMusa(p)||['diretor','diretora','dirigente','representante','presidente','vice-presidente','vice presidente','delegado','tecnico','tecnico auxiliar','auxiliar','massagista','roupeiro','comissao tecnica'].some(x=>r===x)||r.includes('dirigente')||r.includes('diretor')||r.includes('representante')||r.includes('comissao tecnica');};
    const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
    let body='';
    for(let i=0;i<30;i++){
      const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
      body+=`<tr><td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td><td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td><td class="player-name">${p?esc(p.name||p.nome||''):''}</td><td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td></tr>`;
    }
-   return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div><div class="sheet-directors"><b>DIRIGENTES / REPRESENTANTES</b>${Array.from({length:5},(_,i)=>`<div class="sheet-director-line">${(()=>{const ds=(team?.players||[]).filter(p=>{const r=String(p?.role||p?.funcao||p?.function||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente');}).map(p=>p.name||p.nome).filter(Boolean);return ds[i]?esc(ds[i]):'____________________________________________';})()}</div>`).join('')}</div></div></section>`;
+   return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div><div class="sheet-directors"><b>DIRIGENTES / REPRESENTANTES</b>${Array.from({length:5},(_,i)=>`<div class="sheet-director-line">${(()=>{const ds=(team?.players||[]).filter(p=>{const r=roleText(p);return !isMusa(p)&&(r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente'));});const p=ds[i];const nm=p?(p.name||p.nome||''):'';const photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');return `${photo?`<img class="sheet-director-photo" src="${esc(photo)}" alt="">`:'<span class="sheet-director-photo sheet-director-photo-empty"> </span>'}<span class="sheet-director-name">${esc(nm)}</span><span class="sheet-director-function">FUNÇÃO: ______________________________</span>`;})()}</div>`).join('')}</div></div></section>`;
  };
  const safeDate=dateBR(m.date);
  out.innerHTML=`<div class="official-sheet">
