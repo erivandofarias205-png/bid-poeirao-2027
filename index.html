@@ -1760,15 +1760,18 @@ function buildMatchSheet(){
  const teamName=(team,fallback)=>team?.name||fallback||'Equipe';
  const compLogo=comp?.logo||comp?.symbol||comp?.escudo||'';
  const teamLogo=team=>team?.logo||team?.escudo_url||team?.escudoUrl||team?.crest||'';
- const staffNames=(team,keys)=>{for(const k of keys){const v=team?.[k];if(typeof v==='string'&&v.trim())return esc(v);if(Array.isArray(v)&&v.length)return esc(v.map(x=>typeof x==='string'?x:(x.name||x.nome||'')).filter(Boolean).join(', '));}return '________________________________';};
+ const staffNames=(team,keys)=>{for(const k of keys){const v=team?.[k];if(typeof v==='string'&&v.trim())return esc(v);if(Array.isArray(v)&&v.length)return esc(v.map(x=>typeof x==='string'?x:(x.name||x.nome||'')).filter(Boolean).join(', '));}
+   if(keys.some(k=>['director','dirigente','president','presidente','representative'].includes(k))){const ds=(team?.players||[]).filter(p=>{const r=String(p?.role||p?.funcao||p?.function||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente');}).map(p=>p.name||p.nome).filter(Boolean);if(ds.length)return esc(ds.join(', '));}
+   return '________________________________';};
  const roster=(team,side,fallback)=>{
-   const ps=(team?.players||[]).filter(p=>p && (p.role||'jogador').toLowerCase()!=='musa').slice(0,30);
+   const isNonPlayerRole=p=>{const r=String(p?.role||p?.funcao||p?.function||'jogador').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();return ['musa','diretor','diretora','dirigente','representante','presidente','vice-presidente','vice presidente','delegado','tecnico','tecnico auxiliar','auxiliar','massagista','roupeiro','comissao tecnica'].includes(r)||r.includes('dirigente')||r.includes('diretor')||r.includes('representante')||r.includes('musa');};
+   const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
    let body='';
    for(let i=0;i<30;i++){
      const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
      body+=`<tr><td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td><td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td><td class="player-name">${p?esc(p.name||p.nome||''):''}</td><td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td></tr>`;
    }
-   return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______<br><b>TÉCNICO:</b> ${staffNames(team,['coach','tecnico','técnico'])}<br><b>AUXILIAR:</b> ${staffNames(team,['assistant','auxiliar'])}<br><b>MASSAGISTA:</b> ${staffNames(team,['masseur','massagista'])}<br><b>ROUPEIRO:</b> ${staffNames(team,['kitManager','roupeiro'])}<br><b>DIRIGENTE / REPRESENTANTE:</b> ${staffNames(team,['director','dirigente','president','presidente','representative'])}</div><div class="sheet-subs"><b>SUBSTITUÍDOS (SAI):</b> _________________________________<br><b>SUBSTITUTOS (ENTRA):</b> ________________________________<br><b>TEMPO:</b> __________</div></section>`;
+   return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______<br><b>TÉCNICO:</b> ${staffNames(team,['coach','tecnico','técnico'])}<br><b>AUXILIAR:</b> ${staffNames(team,['assistant','auxiliar'])}<br><b>MASSAGISTA:</b> ${staffNames(team,['masseur','massagista'])}<br><b>ROUPEIRO:</b> ${staffNames(team,['kitManager','roupeiro'])}<br><b>DIRIGENTE / REPRESENTANTE:</b> ${staffNames(team,['director','dirigente','president','presidente','representative'])}</div></section>`;
  };
  const safeDate=dateBR(m.date);
  out.innerHTML=`<div class="official-sheet">
@@ -1791,6 +1794,7 @@ function buildMatchSheet(){
  <section><h3>CARTÕES VERMELHOS — MANDANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
  <section><h3>CARTÕES VERMELHOS — VISITANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
  </div>
+ <div class="sheet-substitution-grid"><section><h3>SUBSTITUIÇÕES — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section><section><h3>SUBSTITUIÇÕES — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section></div>
  <section class="sheet-referee-grid"><h3>ARBITRAGEM / OFICIAIS</h3><div><b>Árbitro central:</b> ${esc($('sheetReferee')?.value||'____________________________________________')}</div><div><b>Assistente 1:</b> ________________________________________________</div><div><b>Assistente 2:</b> ________________________________________________</div><div><b>4º árbitro:</b> __________________________________________________</div><div><b>Delegado:</b> ${esc($('sheetDelegate')?.value||'____________________________________________')}</div></section>
  <section class="sheet-report"><h3>RELATÓRIO DO ÁRBITRO / OCORRÊNCIAS</h3>${Array.from({length:12},()=>'<div></div>').join('')}</section>
  <div class="sheet-sign-row"><span>Assinatura do árbitro: ______________________________</span><span>Data: ____/____/________</span></div>
@@ -2787,6 +2791,48 @@ document.addEventListener('DOMContentLoaded', function () {
  .sheet-page-one .official-sheet table{font-size:6.5pt!important}
  .official-sheet th,.official-sheet td{height:6mm!important;padding:.7mm!important}
  button,.actions{display:none!important}
+}
+</style>
+
+
+<style id="sumula-white-print-fix">
+/* Súmula: fundo branco econômico e cabeçalhos destacados */
+#matchSheet, #matchSheet .official-sheet, #matchSheet .sheet-page,
+#matchSheet .sheet-team, #matchSheet .sheet-staff, #matchSheet .sheet-heading,
+#matchSheet .sheet-referee-grid, #matchSheet .sheet-report,
+#matchSheet .sheet-event-grid, #matchSheet .sheet-substitution-grid,
+#matchSheet .sheet-sign-row {background:#fff!important;color:#111!important;background-image:none!important;box-shadow:none!important}
+#matchSheet .sheet-team h3, #matchSheet .sheet-page-title,
+#matchSheet .sheet-event-grid h3, #matchSheet .sheet-substitution-grid h3,
+#matchSheet .sheet-referee-grid h3, #matchSheet .sheet-report h3 {
+ background:#f2c94c!important;color:#111!important;border:1px solid #111!important;
+ font-weight:900!important;padding:2mm!important;text-align:center!important;
+}
+#matchSheet .sheet-heading h2 {color:#111!important;font-weight:900!important}
+#matchSheet .sheet-subtitle {color:#111!important;font-weight:900!important}
+#matchSheet .sheet-meta {background:#fff!important;color:#111!important;border-color:#111!important}
+#matchSheet .sheet-team table, #matchSheet .sheet-team th, #matchSheet .sheet-team td {
+ background:#fff!important;color:#111!important;border-color:#555!important;
+}
+#matchSheet .sheet-team th {background:#f2c94c!important;color:#111!important}
+#matchSheet .sheet-staff, #matchSheet .sheet-sign-row {color:#111!important}
+#matchSheet .sheet-photo-empty {background:#fff!important;border:1px solid #aaa!important}
+#matchSheet .sheet-team-logo, #matchSheet .sheet-competition-logo {background:#fff!important}
+#matchSheet .sheet-substitution-grid {display:grid!important;grid-template-columns:1fr 1fr;gap:3mm!important;margin:2mm 0!important}
+#matchSheet .sheet-substitution-grid .event-line {background:#fff!important;color:#111!important;border-bottom:1px solid #bbb!important}
+@media print {
+ html,body {background:#fff!important;color:#111!important}
+ #matchSheet .sheet-page {background:#fff!important;color:#111!important;box-shadow:none!important}
+ #matchSheet .sheet-page-one {break-after:page!important;page-break-after:always!important}
+ #matchSheet .sheet-page-two {break-before:page!important;page-break-before:always!important}
+ #matchSheet .sheet-page-one .sheet-subs {display:none!important}
+ #matchSheet .sheet-page-two {background:#fff!important}
+ #matchSheet .sheet-page-two .sheet-event-grid h3,
+ #matchSheet .sheet-page-two .sheet-substitution-grid h3,
+ #matchSheet .sheet-page-two .sheet-referee-grid h3,
+ #matchSheet .sheet-page-two .sheet-report h3,
+ #matchSheet .sheet-page-title {background:#f2c94c!important;color:#111!important}
+ #matchSheet .sheet-page-two .sheet-substitution-grid {display:grid!important}
 }
 </style>
 
