@@ -2665,5 +2665,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+
+<script>
+/* Ajuste de painéis: jogos públicos somente para consulta; cadastro restrito ao administrador. */
+document.addEventListener('DOMContentLoaded', function () {
+  const $id = id => document.getElementById(id);
+  const gamesView = $id('gamesView');
+  const publicView = $id('publicView');
+  const adminProtected = $id('adminProtected');
+  if (!gamesView || !publicView || !adminProtected) return;
+
+  /* A aba Tabela de jogos mostra os confrontos já cadastrados, no formato de cartões. */
+  const nextMatchPanel = publicView.querySelector('.next-match-panel');
+  if (nextMatchPanel) {
+    gamesView.insertBefore(nextMatchPanel, gamesView.firstChild);
+  }
+
+  /* O formulário de cadastro e a tabela de administração só ficam disponíveis após login. */
+  const gamePanels = Array.from(gamesView.querySelectorAll(':scope > .panel'));
+  gamePanels.forEach(function (panel) {
+    if (panel.querySelector('#matchDate') || panel.querySelector('#matchRows')) {
+      adminProtected.appendChild(panel);
+    }
+  });
+
+  /* Remover da área pública a classificação demonstrativa duplicada; a classificação pública
+     oficial fica na aba própria, junto da artilharia e dos cartões. */
+  gamesView.querySelectorAll(':scope > .panel').forEach(function (panel) {
+    if (panel.querySelector('#standingRows')) adminProtected.appendChild(panel);
+  });
+
+  /* Se o painel público de jogos estiver vazio, apresentar mensagem clara. */
+  if (!gamesView.querySelector('.next-match-panel')) {
+    const empty = document.createElement('div');
+    empty.className = 'panel';
+    empty.innerHTML = '<div class="ph"><h3>TABELA DE JOGOS</h3></div><div class="empty">Os jogos cadastrados aparecerão aqui.</div>';
+    gamesView.appendChild(empty);
+  }
+
+  /* A aba de equipes continua pública para consulta; formulários de cadastro permanecem protegidos. */
+  const style = document.createElement('style');
+  style.textContent = `
+    #gamesView .next-match-panel { display:block!important; }
+    #gamesView .next-match-panel .fixtures { display:grid; gap:10px; }
+    #gamesView .next-match-panel .fixture { min-height:92px; }
+    #adminProtected #matchDate,
+    #adminProtected #matchRound,
+    #adminProtected #matchVenue { color-scheme:dark; }
+  `;
+  document.head.appendChild(style);
+});
+</script>
 </body>
 </html>
