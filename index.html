@@ -1096,6 +1096,32 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 .tabs .tab{transition:transform .16s ease,box-shadow .16s ease}
 .tabs .tab:hover{transform:translateY(-2px);box-shadow:0 5px 16px #d6ad3630}
 </style>
+
+<style id="sumula-ajustes-dirigentes-branca">
+/* Súmula econômica: dirigentes em linhas individuais e sem cargos técnicos */
+#matchSheet .sheet-staff{background:#fff!important;color:#111!important;border:1px solid #777!important;padding:2mm!important;line-height:1.25!important}
+#matchSheet .sheet-captain-line{padding-bottom:1mm;margin-bottom:1mm;border-bottom:1px solid #bbb}
+#matchSheet .sheet-directors{display:block!important;background:#fff!important;color:#111!important}
+#matchSheet .sheet-directors> b{display:block;text-align:center;font-size:7pt;margin-bottom:1mm}
+#matchSheet .sheet-director-line{display:block;min-height:5mm;line-height:5mm;padding:0 1mm;border-bottom:1px solid #999;background:#fff!important;color:#111!important;font-size:7pt;overflow-wrap:anywhere}
+#matchSheet .sheet-page-two,#matchSheet .sheet-page-two *{background-image:none!important;box-shadow:none!important}
+#matchSheet .sheet-page-two,
+#matchSheet .sheet-page-two section,
+#matchSheet .sheet-page-two .sheet-event-grid,
+#matchSheet .sheet-page-two .sheet-substitution-grid,
+#matchSheet .sheet-page-two .sheet-referee-grid,
+#matchSheet .sheet-page-two .sheet-report,
+#matchSheet .sheet-page-two .event-line,
+#matchSheet .sheet-page-two .sheet-referee-grid div,
+#matchSheet .sheet-page-two .sheet-report div{background-color:#fff!important;color:#111!important}
+#matchSheet .sheet-page-two .sheet-page-title,
+#matchSheet .sheet-page-two h3{background:#f2c94c!important;color:#111!important;border:1px solid #111!important;font-weight:900!important}
+#matchSheet .sheet-page-two .event-line{border-bottom:1px solid #aaa!important}
+@media print{
+ #matchSheet .sheet-page-one,#matchSheet .sheet-page-two{background:#fff!important;color:#111!important}
+ #matchSheet .sheet-page-two *{print-color-adjust:economy!important;-webkit-print-color-adjust:economy!important}
+}
+</style>
 </head>
 <body>
 <header>
@@ -1771,7 +1797,7 @@ function buildMatchSheet(){
      const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
      body+=`<tr><td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td><td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td><td class="player-name">${p?esc(p.name||p.nome||''):''}</td><td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td></tr>`;
    }
-   return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______<br><b>TÉCNICO:</b> ${staffNames(team,['coach','tecnico','técnico'])}<br><b>AUXILIAR:</b> ${staffNames(team,['assistant','auxiliar'])}<br><b>MASSAGISTA:</b> ${staffNames(team,['masseur','massagista'])}<br><b>ROUPEIRO:</b> ${staffNames(team,['kitManager','roupeiro'])}<br><b>DIRIGENTE / REPRESENTANTE:</b> ${staffNames(team,['director','dirigente','president','presidente','representative'])}</div></section>`;
+   return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div><div class="sheet-directors"><b>DIRIGENTES / REPRESENTANTES</b>${Array.from({length:5},(_,i)=>`<div class="sheet-director-line">${(()=>{const ds=(team?.players||[]).filter(p=>{const r=String(p?.role||p?.funcao||p?.function||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente');}).map(p=>p.name||p.nome).filter(Boolean);return ds[i]?esc(ds[i]):'____________________________________________';})()}</div>`).join('')}</div></div></section>`;
  };
  const safeDate=dateBR(m.date);
  out.innerHTML=`<div class="official-sheet">
