@@ -1084,7 +1084,7 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 <div class="panel" id="game-promo-panel"><div class="ph"><h3>DIVULGUE SEU JOGO AQUI!</h3></div><div class="pad"><p class="game-promo-callout">Envie as informações do seu jogo no WhatsApp disponível no rodapé da página.</p><div class="game-promo-viewport" id="gamePromoViewport"><div class="game-promo-track" id="gamePromoTrack"><div class="game-promo-empty">As divulgações de jogos aparecerão aqui.</div></div></div></div></div>
 <div class="panel"><div class="ph"><h3>CONSULTAR AS COMPETIÇÕES ADMINISTRADAS</h3><span class="pill">Selecione uma competição</span></div><div class="pad"><div aria-live="polite" class="small" id="publicCompetitionList"></div></div></div>
 <div class="stats"><div class="stat"><small>Equipes cadastradas</small><strong id="nTeams">0</strong></div><div class="stat"><small>Atletas cadastrados</small><strong id="nPlayers">0</strong></div><div class="stat"><small>Partidas com eventos</small><strong id="nMatches">0</strong></div></div>
-<div class="tabs"><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="classification">Classificação</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">📖 REGULAMENTO</button></div>
+<div class="tabs"><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="classification">Classificação</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button></div>
 <section id="publicView">
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMA PARTIDA</h3><span class="pill">Próximo confronto</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
 <div class="front-grid" id="classificationPanel">
@@ -2751,20 +2751,30 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 </script>
 
+
+
+
+<script>
 document.addEventListener('click',function(e){
- const b=e.target.closest('[data-public-regulation-tab]');
- if(!b)return;
- if(document.getElementById('regulationViewer')?.classList.contains('open')){
-   document.getElementById('regulationViewer').classList.remove('open');
-   document.getElementById('regulationFrame').src='about:blank';
+ const button=e.target.closest('[data-public-regulation-tab]');
+ if(!button)return;
+ if(typeof activeCompetition!=='function' || typeof window.openCompetitionRegulation!=='function'){
+   alert('Não foi possível carregar o regulamento. Atualize a página e tente novamente.');
    return;
  }
- const activeId=(window.db&&window.db.activeCompetitionId)||(window.state&&window.state.activeCompetitionId);
- const comps=(window.db&&window.db.competitions)||(window.state&&window.state.competitions)||[];
- const comp=comps.find(c=>String(c.id)===String(activeId)||String(c.dbId||'')===String(activeId));
- if(comp&&comp.regulationUrl&&window.openCompetitionRegulation){window.openCompetitionRegulation(comp.regulationUrl,comp.name);}
- else {alert('O regulamento ainda não foi cadastrado para a competição selecionada.');}
+ const competition=activeCompetition();
+ const url=competition && (competition.regulationUrl || competition.regulamento_url);
+ if(!url){
+   alert('O PDF do regulamento ainda não está vinculado à competição selecionada. Entre na Administração, edite/cadastre a competição e envie o arquivo PDF do regulamento.');
+   return;
+ }
+ window.openCompetitionRegulation(url,competition.name || competition.nome || 'COMPETIÇÃO');
 });
+</script>
+
+
+
+
 
 </body>
 </html>
