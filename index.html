@@ -22,6 +22,8 @@ footer{max-width:1200px;margin:auto;padding:0 16px 30px;color:#667085;font-size:
 .next-match-panel{margin-bottom:14px}.front-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.fixture-date{text-align:center;font-size:13px;font-weight:900;letter-spacing:.08em;color:#171717;background:var(--gold);padding:12px 10px}.next-match-panel .fixture{max-width:760px;margin:0 auto 12px;padding:22px 14px;font-size:clamp(15px,2.4vw,22px);border:2px solid var(--gold);background:#fff;color:#171717}.next-match-panel .fixture .versus{font-size:28px}.fixtures{display:grid;gap:8px;padding:12px}.fixture{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 10px;border:1px solid var(--gold);border-radius:12px;background:#fff;font-weight:850;text-align:center;color:#171717}.fixture .versus{color:#9b7725;font-size:18px;font-weight:950}.fixture .fixture-team{flex:1}.front-table{min-width:0}.front-table th,.front-table td{padding:9px 8px}.scorers{padding:8px 13px}.scorer{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.scorer:last-child{border-bottom:0}.scorer-rank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:#171717;font-weight:900}.scorer-info{flex:1;min-width:0}.scorer-info b,.scorer-info small{display:block}.scorer-info small{color:var(--muted);margin-top:3px}.scorer-goals{font-size:19px;font-weight:950;color:#171717;background:#fff0bd;padding:5px 9px;border-radius:8px}@media(max-width:800px){.front-grid{grid-template-columns:1fr}}
 
 
+
+
 /* Visual update: fundo branco, títulos dourados e texto preto */
 body, main, footer, section { background-color:#fff; }
 .panel .ph, .panel > .ph { background:#d6ad36; color:#171717; }
@@ -33,10 +35,18 @@ button.gold, .tab.active { background:#d6ad36; color:#171717; }
 
 
 
+
+
+
+
 /* Identidade visual TVFP Esportes */
 .tvfp-brand-logo{width:86px;height:86px;object-fit:contain;border-radius:14px;border:2px solid #d9a81e;background:#111;padding:2px;flex:0 0 auto}
 .brand-title-wrap{display:flex;align-items:center;gap:16px}
 @media(max-width:640px){.tvfp-brand-logo{width:58px;height:58px}.brand-title-wrap{gap:9px}}
+
+
+
+
 
 
 
@@ -64,6 +74,10 @@ button.gold, .tab.active { background:#d6ad36; color:#171717; }
  #profileContent .idcard{box-shadow:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
  @page{size:A4;margin:15mm}
 }
+
+
+
+
 
 
 
@@ -105,6 +119,8 @@ button.gold, .tab.active { background:#d6ad36; color:#171717; }
 }
 
 
+
+
 /* TVFP visual refresh: solid black, gold and red; no leather/texture */
 :root{--tvfp-black:#050505;--tvfp-gold:#d6ad36;--tvfp-red:#c62828}
 html,body{background:#050505!important;background-image:none!important;color:#f5f5f5}
@@ -124,6 +140,10 @@ button.danger,.red,.danger{background:#b71c1c!important;color:#fff!important}
 
 
 
+
+
+
+
 /* Painel de gestão TVFP: preto sólido, dourado e vermelho */
 :root{--tvfp-black:#050505;--tvfp-gold:#d6ad36;--tvfp-red:#bd2424}
 html,body{background:#050505!important;background-image:none!important;color:#f5f5f5}
@@ -138,6 +158,10 @@ header,.hero,.topbar,.banner,.brand-header{background:#050505!important;backgrou
 .competition-choice img{width:42px;height:42px;object-fit:contain;background:#fff;border-radius:5px}
 .competition-choice .grow{flex:1}
 @media print{.roster-thumb{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+
+
+
+
 
 
 
@@ -169,8 +193,27 @@ header,.hero,.topbar,.banner,.brand-header{background:#050505!important;backgrou
 .idcard-wrap{justify-items:start!important;gap:8px!important}
 .idcard-actions{margin-top:8px!important}
 @media print{#profileContent .idcard{width:120mm!important;height:80mm!important;min-height:80mm!important;max-width:none!important;box-shadow:none!important;break-inside:avoid!important;print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}@page{size:120mm 80mm;margin:0}}
+
+/* Navegação rápida para classificação, artilharia e equipes */
+.tabs .tab{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.tabs .tab:hover{transform:translateY(-2px);box-shadow:0 5px 16px #d6ad3630;border-color:#d6ad36}
+.tabs .tab:focus-visible{outline:3px solid #f4d46a;outline-offset:2px}
+#classificationPanel,#teamPanel,#rosterPanel,#scorersPanel,#cardControlPanel{scroll-margin-top:18px}
+.scorer{gap:10px}
+.scorer-photo{width:44px;height:44px;object-fit:cover;border-radius:50%;border:2px solid #d6ad36;background:#222;flex:0 0 44px}
+.scorer-crest{width:30px;height:30px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex:0 0 30px}
+.card-leader{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #333}
+.card-leader:last-child{border-bottom:0}
+.card-leader .player-photo{width:36px;height:36px;object-fit:cover;border-radius:50%;border:1px solid #d6ad36;background:#222}
+.card-leader .player-data{flex:1;min-width:0}
+.card-leader .player-data b,.card-leader .player-data small{display:block}
+.card-leader .player-data small{color:#aaa;margin-top:3px}
+.card-count{font-weight:900;padding:5px 9px;border-radius:8px;background:#242424;color:#f5d46a}
+@media(max-width:700px){.tabs .tab{flex:1 1 calc(50% - 8px)}.scorer-photo{width:38px;height:38px;flex-basis:38px}}
 </style>
 <style>
+
+
 
 
 /* Tema preto e dourado — BID Poeirão */
@@ -201,7 +244,13 @@ footer#creditsFooter img { box-shadow:0 8px 28px #000; }
 a { color:#e5c45b; }
 
 
+
+
 </style>
+
+
+
+
 
 
 
@@ -237,6 +286,10 @@ main, section, article, .card, .panel, .box, .container, .content {
   object-fit: contain;
 }
 </style>
+
+
+
+
 
 
 
@@ -306,6 +359,8 @@ body > div, #app, #root {
 </style>
 
 
+
+
 <style id="fullWidthCreditsArtwork">
 html, body { margin:0; padding:0; }
 #creditsFooter { width:100vw !important; max-width:100vw !important; margin-left:0 !important; margin-right:0 !important; }
@@ -313,9 +368,13 @@ html, body { margin:0; padding:0; }
 </style>
 
 
+
+
 <style>
 .match-sheet{margin-top:16px;color:#111;background:#fff;border-radius:8px;padding:14px;overflow-x:auto}.sheet-heading{text-align:center;border-bottom:2px solid #222;padding-bottom:12px}.sheet-heading h2{margin:4px 0 10px}.sheet-score{display:flex;align-items:center;justify-content:space-around;gap:10px;border:1px solid #777;padding:12px;margin:10px 0;font-size:1.1rem}.sheet-rosters{display:grid;grid-template-columns:1fr;gap:18px}.sheet-team h3{background:#eee;color:#111;padding:8px;margin:12px 0 4px}.sheet-team table{width:100%;border-collapse:collapse;font-size:12px}.sheet-team th,.sheet-team td{border:1px solid #777;padding:5px;text-align:left}.sheet-team th{background:#eee;color:#111}.sheet-mini{width:42px;max-width:42px}.sheet-sign{display:block;min-width:70px;height:18px}.sheet-subs{padding:12px 0}.sheet-footer{margin-top:18px}.sheet-lines{height:90px;border-bottom:1px solid #777;background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,#aaa 28px)}.sheet-signatures{display:grid;gap:18px;margin-top:18px}.sheet-signatures span{padding-top:8px}.small{font-size:.9em}.match-sheet input{color:#111}@media print{body *{visibility:hidden!important}#matchSheet,#matchSheet *{visibility:visible!important}.match-sheet{position:absolute;left:0;top:0;width:100%;margin:0;padding:0;border:0;overflow:visible;font-size:10px}.sheet-rosters{display:block}.sheet-team{break-inside:avoid;margin-bottom:12px}.sheet-team table{font-size:9px}.sheet-team th,.sheet-team td{padding:3px}.sheet-team h3{padding:4px}.sheet-heading h2{font-size:16px}.sheet-score{padding:6px}.sheet-footer{break-inside:avoid}@page{size:A4 portrait;margin:10mm}}
 </style>
+
+
 
 
 <style>
@@ -359,11 +418,19 @@ html, body { margin:0; padding:0; }
 
 
 
+
+
+
+
 <style id="tvfp-header-fix">
 header .wrap.brand{display:flex;align-items:center;gap:16px}
 header .wrap.brand > img.logo{width:86px;height:86px;object-fit:contain;flex:0 0 auto}
 @media(max-width:640px){header .wrap.brand > img.logo{width:58px;height:58px}}
 </style>
+
+
+
+
 
 
 
@@ -386,6 +453,10 @@ header>*{position:relative;z-index:1}
 .tvfp-contact-copy a:before{content:"● ";color:#25d366}
 @media(max-width:720px){.tvfp-contact-grid{grid-template-columns:1fr}.tvfp-contact-card{gap:12px;padding:12px}.tvfp-contact-logo{width:90px;height:76px;flex-basis:90px}.tvfp-footer-banner img{max-height:130px}}
 </style>
+
+
+
+
 
 
 
@@ -472,6 +543,10 @@ header .season {
 
 
 
+
+
+
+
 <style id="bid-tvfp-champions-grass-theme">
 /* Tema de estádio: substitui as texturas escuras tipo couro por gramado de futebol */
 :root {
@@ -527,6 +602,10 @@ button, .button, .btn {
 
 
 
+
+
+
+
 <style id="tvfpModernRefresh">
 /* REDESIGN VISUAL: LETRAS MAIUSCULAS, PRETO/DOURADO E CURVAS MODERNAS */
 :root{--gold:#e0b83f;--line:#353535;--ink:#f7f4eb;--muted:#c2c2c2}
@@ -555,6 +634,10 @@ label{color:#d9c98f!important}.team{background:#101010!important;color:#f7f4eb!i
 table{color:#f5f2e9!important}th{background:#d6ad36!important;color:#14110a!important}td{border-color:#303030!important}tbody tr:nth-child(even){background:#151515!important}.box{background:#111!important;border-color:#373737!important}.detail{border-color:#303030!important}.detail span:first-child,.muted,.teammeta{color:#bbb5a8!important}.chip{background:#262318!important;color:#f0d77f!important}.fixture{background:linear-gradient(145deg,#171717,#0a0a0a)!important;color:#f7f4eb!important;border:1px solid #645020!important}.fixture .versus{color:#e4bd45!important}.fixture-date{border-radius:12px 12px 0 0;background:linear-gradient(90deg,#b98b20,#f0d268,#b98b20)!important;color:#14110a!important}.note{background:#211b0c!important;border-color:#66501d!important;color:#f2d98e!important}.pill{border-radius:999px!important}.danger,button.danger{background:linear-gradient(135deg,#d43a32,#9e1717)!important;color:white!important}.green,button.green{background:linear-gradient(135deg,#268457,#155a3a)!important;color:white!important}footer{color:#aaa596!important}
 @media(max-width:700px){header .wrap{padding:0 14px}.brand{gap:12px!important;align-items:center}.brand .logo,.tvfp-brand-logo{width:60px!important;height:60px!important;border-radius:16px!important}.season{display:none}.hero{padding:17px;border-radius:19px}.panel .ph{padding:14px 16px!important}.pad{padding:14px!important}main{padding:0 12px 30px!important;margin-top:16px!important}.tabs{gap:7px}.tab{padding:10px 12px!important;font-size:12px}}
 </style>
+
+
+
+
 
 
 
@@ -637,6 +720,12 @@ footer{color:#b7c4df!important}
  .panel,.card,.box,.section{border-radius:14px!important}
 }
 </style>
+
+
+
+
+
+
 
 
 
@@ -761,6 +850,8 @@ button.gold, .gold button { color:#111!important; }
 #frontFixtures .fixture-competition .comp-dash{color:#f5d45b;padding:0 2px}
 
 
+
+
 </style>
 <style id="tvfp-card-role-colors-fix">
 /* Cores completas por função: frente e verso */
@@ -798,6 +889,8 @@ button.gold, .gold button { color:#111!important; }
 </style>
 
 
+
+
 <style id="bid-role-card-colors-final">
 #profileContent .idcard.idcard-role-diretor,
 #profileContent .idcard.idcard-role-diretor .idcard-front,
@@ -818,6 +911,10 @@ button.gold, .gold button { color:#111!important; }
 #profileContent .idcard.idcard-role-musa .idcard-front:before,
 #profileContent .idcard.idcard-role-jogador .idcard-front:before{background:repeating-linear-gradient(135deg,transparent 0 8px,#00000006 8px 9px)!important}
 </style>
+
+
+
+
 
 
 
@@ -844,6 +941,8 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 #profileContent .idcard-back-footer{font-size:6pt!important;padding:1.1mm!important}
 @media print{body:has(#profileContent){background:#fff!important}#profileContent{background:transparent!important;border:0!important;padding:0!important}}
 </style>
+
+
 
 
 <style id="bid-card-portrait-duplex-final">
@@ -903,6 +1002,10 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 
 
 
+
+
+
+
 <style id="bid-card-side-by-side-role-highlight">
 /* Apresentação: frente e verso lado a lado, cada face vertical 8 x 12 cm */
 #profileContent .idcard-wrap{display:flex!important;justify-content:flex-start!important;align-items:flex-start!important;overflow-x:auto!important;padding:12px!important}
@@ -938,6 +1041,10 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 
 
 
+
+
+
+
 <style id="admin-side-panel-style">
 .hero-with-admin{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(260px,320px);gap:14px!important;align-items:stretch!important;text-align:center!important}
 .hero-with-admin .hero-management{width:auto!important;min-width:0;background:#0b1c3d;border:1px solid #477ed0;border-bottom:4px solid #477ed0;border-radius:22px;padding:24px 16px;color:#f5f5f5}
@@ -949,6 +1056,10 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 .hero-with-admin .admin-quick-access button{width:100%;max-width:240px}
 @media(max-width:700px){.hero-with-admin{grid-template-columns:1fr!important}.hero-with-admin .hero-management,.hero-with-admin .admin-quick-access{padding:16px 12px}}
 </style>
+
+
+
+
 
 
 
@@ -976,6 +1087,15 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 </style>
 
 
+
+
+<style id="exclusive-navigation-style">
+#classificationView,#teamsView,#gamesView,#gameView,#profileView{min-height:1px}
+#athleteSearchResults .team{width:100%;color:#f5f5f5;background:#101010;border-color:#393939}
+#athleteSearchResults .team:hover{border-color:#d6ad36;transform:translateY(-1px)}
+.tabs .tab{transition:transform .16s ease,box-shadow .16s ease}
+.tabs .tab:hover{transform:translateY(-2px);box-shadow:0 5px 16px #d6ad3630}
+</style>
 </head>
 <body>
 <header>
@@ -995,21 +1115,32 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 
 
 
+
+
+
+
 <div class="stats"><div class="stat"><small>Equipes cadastradas</small><strong id="nTeams">0</strong></div><div class="stat"><small>Atletas cadastrados</small><strong id="nPlayers">0</strong></div><div class="stat"><small>Partidas com eventos</small><strong id="nMatches">0</strong></div></div>
-<div class="tabs"><button class="tab" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="game">Pós-jogo / súmula</button><button class="tab" data-tab="profile">Ficha do atleta</button></div>
+<div class="tabs"><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="classification">Classificação</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button></div>
 <section id="publicView">
 
 
 
 
+
+
+
+
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMA PARTIDA</h3><span class="pill">Próximo confronto</span></div><div id="frontFixtures" class="fixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
-<div class="front-grid">
+<div class="front-grid" id="classificationPanel">
  <div class="panel"><div class="ph"><h3>CLASSIFICAÇÃO</h3><span class="pill">Tabela geral</span></div><div class="tablewrap"><table class="front-table"><thead><tr><th>Foto</th><th>#</th><th>Equipe</th><th>J</th><th>SG</th><th>Pts</th></tr></thead><tbody id="frontStandings"></tbody></table></div><div class="pad"><button class="secondary" data-open-games>Ver tabela completa</button></div></div>
- <div class="panel"><div class="ph"><h3>ARTILHARIA</h3><span class="pill">Gols</span></div><div id="frontScorers" class="scorers"><div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div></div></div>
+ <div class="panel" id="scorersPanel"><div class="ph"><h3>ARTILHARIA · TODOS OS ARTILHEIROS</h3><span class="pill">Gols</span></div><div id="frontScorers" class="scorers"><div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div></div></div>
 </div>
-<div class="panel"><div class="ph"><h3>Equipes da competição</h3><span class="pill">Clique para abrir</span></div><div class="teams" id="teamList"></div></div>
-<div class="panel"><div class="ph"><h3 id="rosterTitle">Boletim da equipe</h3><span class="pill" id="rosterDataStatus">Dados do Supabase</span></div><div class="search"><input id="q" placeholder="Buscar atleta ou número BID"><select id="filter"><option value="">Todas as situações</option><option value="free">Pode transferir</option><option value="played">Já atuou</option></select></div><div class="tablewrap"><table><thead><tr><th>Foto</th><th>Nº BID</th><th>Atleta</th><th>Nascimento</th><th>Naturalidade / Cidade</th><th>CPF mascarado</th><th>Atuou?</th><th>Transferência</th><th>🟨</th><th>🟥</th><th>Gols</th><th>Ficha</th></tr></thead><tbody id="rows"></tbody></table></div><div id="noRows" class="empty hidden">Nenhum atleta encontrado.</div></div>
+<div class="panel" id="cardControlPanel"><div class="ph"><h3>CONTROLE DE CARTÕES</h3><span class="pill">Amarelos e vermelhos por atleta</span></div><div class="pad"><div class="front-grid"><div class="box"><h4>🟨 Cartões amarelos</h4><div id="yellowCardsList" class="scorers"><div class="empty">Nenhum cartão amarelo registrado.</div></div></div><div class="box"><h4>🟥 Cartões vermelhos</h4><div id="redCardsList" class="scorers"><div class="empty">Nenhum cartão vermelho registrado.</div></div></div></div><p class="small muted">Os totais são exibidos a partir dos cartões registrados nas fichas dos atletas.</p></div></div>
+<div class="panel" id="teamPanel"><div class="ph"><h3>Equipes da competição</h3><span class="pill">Clique para abrir</span></div><div class="teams" id="teamList"></div></div>
+<div class="panel" id="rosterPanel"><div class="ph"><h3 id="rosterTitle">Boletim da equipe</h3><span class="pill" id="rosterDataStatus">Dados do Supabase</span></div><div class="search"><input id="q" placeholder="Buscar atleta ou número BID"><select id="filter"><option value="">Todas as situações</option><option value="free">Pode transferir</option><option value="played">Já atuou</option></select></div><div class="tablewrap"><table><thead><tr><th>Foto</th><th>Nº BID</th><th>Atleta</th><th>Nascimento</th><th>Naturalidade / Cidade</th><th>CPF mascarado</th><th>Atuou?</th><th>Transferência</th><th>🟨</th><th>🟥</th><th>Gols</th><th>Ficha</th></tr></thead><tbody id="rows"></tbody></table></div><div id="noRows" class="empty hidden">Nenhum atleta encontrado.</div></div>
 </section>
+<section id="classificationView" class="hidden"></section>
+<section id="teamsView" class="hidden"></section>
 <section id="gamesView" class="hidden">
 <div class="panel"><div class="ph"><h3>Tabela oficial de jogos</h3><span class="pill">Calendário e resultados</span></div>
 <div class="pad"><div class="formgrid">
@@ -1062,10 +1193,16 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 <div class="panel"><div class="ph"><h3>Registrar evento da partida</h3><span class="pill">3 · Súmula</span></div><div class="pad"><div class="formgrid"><label>Nome da partida<input id="gameName" placeholder="Ex.: Português x Grêmio — 1ª rodada"></label><label>Equipe<select id="gameTeam"></select></label><label>Atleta<select id="gameAthlete"></select></label><label>Evento<select id="gameEvent"><option value="played">Participou da partida</option><option value="goal">Gol</option><option value="yellow">Cartão amarelo</option><option value="red">Cartão vermelho</option></select></label><label>Minuto (opcional)<input id="minute" type="number" min="0" max="130" placeholder="Ex.: 37"></label><label>Observação (opcional)<input id="eventNote" placeholder="Ex.: gol de falta"></label></div><div class="actions"><button id="addEvent" class="gold">Registrar evento</button><button id="exportEvents" class="secondary">Baixar súmula (CSV)</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Eventos registrados</h3><span class="pill" id="eventTotal">0 eventos</span></div><div class="pad"><div id="eventList" class="events"></div><div id="emptyEvents" class="empty">Nenhum evento registrado.</div></div></div>
 </section>
-<section id="profileView" class="hidden"><div class="panel"><div class="ph"><h3>Ficha individual do atleta</h3><span class="pill">BID 2026</span></div><div class="pad" id="profileContent"><p class="muted">Escolha “Ficha” ao lado de um atleta na consulta pública.</p></div></div></section>
+<section id="profileView" class="hidden">
+<div class="panel" id="athleteSearchPanel"><div class="ph"><h3>PESQUISA DE ATLETA</h3><span class="pill">CPF · BID · Nome</span></div><div class="pad"><label>Buscar atleta por CPF, número BID ou nome<input id="athleteSearchInput" type="search" placeholder="Digite o CPF, BID ou nome do atleta"></label><div id="athleteSearchResults" class="teams" style="padding:12px 0"><div class="empty">Digite acima para localizar um atleta e abrir sua carteirinha.</div></div></div></div>
+<div class="panel"><div class="ph"><h3>Ficha individual do atleta</h3><span class="pill">BID 2026</span></div><div class="pad" id="profileContent"><p class="muted">Escolha “Ficha” ao lado de um atleta na consulta pública.</p></div></div></section>
+
+
 
 
 </main>
+
+
 
 
 <style id="game-promo-style">
@@ -1093,6 +1230,8 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 #tvfp-sponsors .sponsor-logo-card{height:112px;width:170px;flex:0 0 170px;min-width:0;padding:8px;box-sizing:border-box;background:#fff;border:1px solid rgba(214,173,54,.65);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 #tvfp-sponsors .sponsor-logo-card img{display:block;width:100%;height:100%;object-fit:contain}
 #tvfp-sponsors:hover .sponsors-row{animation:none}
+
+
 
 
 @media(max-width:700px){#tvfp-sponsors{padding:14px 8px}#tvfp-sponsors .sponsors-row{gap:8px;justify-content:center}#tvfp-sponsors .sponsor-logo-card{height:68px;width:112px;flex-basis:112px;padding:3px;border-radius:6px}}
@@ -1124,6 +1263,8 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
  row.style.justifyContent='center';
 })();
 </script>
+
+
 
 
 <footer id="tvfp-contact-footer" class="tvfp-contact-footer">
@@ -1180,8 +1321,32 @@ function matchBelongsToActiveCompetition(m){
 }
 function findAth(id){for(const t of db.teams){const p=t.players.find(p=>p.id===id);if(p)return {p,t}}return null}
 function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
-function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));['public','admin','games','game','profile'].forEach(x=>$(x+'View').classList.toggle('hidden',x!==name))}
-document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function showTab(name){
+ const views=['public','admin','games','game','profile','classification','teams'];
+ views.forEach(x=>{const el=$(x+'View');if(el)el.classList.toggle('hidden',x!==name)});
+ document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+}
+document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+(function setupDedicatedViews(){
+ const classification=$('classificationView'),teams=$('teamsView');
+ ['classificationPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
+ ['teamPanel','rosterPanel'].forEach(id=>{const el=$(id);if(el)teams.appendChild(el)});
+ showTab('games');
+})();
+function normalizeAthleteSearch(value){return String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function searchAthletes(){
+ const input=$('athleteSearchInput');if(!input)return;
+ const query=normalizeAthleteSearch(input.value),results=$('athleteSearchResults');
+ if(!query){results.innerHTML='<div class="empty">Digite CPF, BID ou nome para pesquisar.</div>';return}
+ const found=[];
+ (db.teams||[]).forEach(t=>(t.players||[]).forEach(p=>{
+   const fields=[p.name,p.id,p.cpf,p.sportsName].map(normalizeAthleteSearch);
+   if(fields.some(v=>v.includes(query)))found.push({p,t});
+ }));
+ results.innerHTML=found.length?found.map(({p,t})=>`<button class="team" type="button" data-search-athlete="${esc(p.id)}"><span class="crest">${(t.logo||t.escudo_url)?`<img src="${esc(t.logo||t.escudo_url)}" alt="">`:'⚽'}</span><span style="min-width:0;flex:1"><span class="teamname">${esc(p.name)}</span><span class="teammeta">BID ${esc(p.id)} · ${esc(t.name)} · CPF ${esc(cpfMask(p.cpf))}</span></span><span class="status info">Abrir ficha</span></button>`).join(''):'<div class="empty">Nenhum atleta encontrado com esses dados.</div>';
+ results.querySelectorAll('[data-search-athlete]').forEach(b=>b.addEventListener('click',()=>{renderProfile(b.dataset.searchAthlete);$('profileContent').scrollIntoView({behavior:'smooth',block:'start'})}));
+}
+$('athleteSearchInput')?.addEventListener('input',searchAthletes);
 function renderTeams(){
  $('teamList').innerHTML=activeCompetitionTeams().map(t=>`<button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}"><span class="crest">${t.logo?`<img src="${t.logo}" alt="">`:esc(t.initials||'⚽')}</span><span><span class="teamname">${esc(t.name)}</span><span class="teammeta">${t.players.length} atleta(s) · Grupo ${esc(t.group||'—')} · abrir boletim</span></span></button>`).join('')||'<div class="empty">Cadastre a primeira equipe na aba Administração.</div>';
  document.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.team;renderAll()});
@@ -1545,6 +1710,8 @@ function renderFrontPage(){
  }).join(''):'<div class="empty">Nenhum jogo cadastrado. O administrador pode cadastrar jogos na aba Tabela de Jogos.</div>';
 
 
+
+
  const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
  (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
  const standings=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
@@ -1560,7 +1727,21 @@ function renderFrontPage(){
    compTeams.forEach(t=>t.players.forEach(p=>{const goals=Number(p.goals||0);if(goals>0)scorers.push({name:p.name,team:t.name,goals})}));
  }
  scorers.sort((a,b)=>b.goals-a.goals||a.name.localeCompare(b.name));
- $('frontScorers').innerHTML=scorers.length?scorers.slice(0,5).map((x,i)=>`<div class="scorer"><span class="scorer-rank">${i+1}</span><div class="scorer-info"><b>${esc(x.name)}</b><small>${esc(x.team)}</small></div><span class="scorer-goals">${x.goals}</span></div>`).join(''):'<div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div>';
+ const allScorers=scorers.map(x=>{
+   const team=compTeams.find(t=>String(t.id)===String(x.teamId)||String(t.dbId||'')===String(x.teamId)||String(t.name||'')===String(x.team||''))||compTeams.find(t=>String(t.name||'').trim().toLowerCase()===String(x.team||'').trim().toLowerCase())||{};
+   const player=(team.players||[]).find(p=>String(p.id)===String(x.playerId)||String(p.name||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase())||{};
+   return {...x,photo:player.photo||player.foto_url||'',logo:team.logo||team.escudo_url||''};
+ });
+ $('frontScorers').innerHTML=allScorers.length?allScorers.map((x,i)=>`<div class="scorer"><span class="scorer-rank">${i+1}</span>${x.photo?`<img class="scorer-photo" src="${esc(x.photo)}" alt="Foto de ${esc(x.name)}">`:`<span class="scorer-photo" style="display:grid;place-items:center">⚽</span>`}<div class="scorer-info"><b>${esc(x.name)}</b><small>${esc(x.team)}</small></div>${x.logo?`<img class="scorer-crest" src="${esc(x.logo)}" alt="Símbolo de ${esc(x.team)}">`:`<span class="scorer-crest" style="display:grid;place-items:center">⚽</span>`}<span class="scorer-goals">${x.goals} gol${x.goals===1?'':'s'}</span></div>`).join(''):'<div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div>';
+ const discipline={yellow:[],red:[]};
+ compTeams.forEach(t=>(t.players||[]).forEach(p=>{
+   const yellow=Number(p.yellow||0),red=Number(p.red||0);
+   if(yellow>0)discipline.yellow.push({p,t,count:yellow});
+   if(red>0)discipline.red.push({p,t,count:red});
+ }));
+ const cardMarkup=(items,color)=>items.sort((a,b)=>b.count-a.count||String(a.p.name).localeCompare(String(b.p.name))).map(({p,t,count})=>`<div class="card-leader">${(p.photo||p.foto_url)?`<img class="player-photo" src="${esc(p.photo||p.foto_url)}" alt="Foto de ${esc(p.name)}">`:`<span class="player-photo" style="display:grid;place-items:center">👤</span>`}<div class="player-data"><b>${esc(p.name)}</b><small>${t.logo||t.escudo_url?`<img class="scorer-crest" src="${esc(t.logo||t.escudo_url)}" alt="" style="vertical-align:middle;margin-right:5px">`:''}${esc(t.name)}</small></div><span class="card-count" style="color:${color}">${count}</span></div>`).join('')||'<div class="empty">Nenhum cartão registrado.</div>';
+ $('yellowCardsList').innerHTML=cardMarkup(discipline.yellow,'#f4d46a');
+ $('redCardsList').innerHTML=cardMarkup(discipline.red,'#ff7777');
  document.querySelectorAll('[data-open-games]').forEach(b=>b.onclick=()=>showTab('games'));
 }
 function renderMatchSheet(){
@@ -1596,6 +1777,10 @@ function buildMatchSheet(){
 $('loadSheet')?.addEventListener('click',buildMatchSheet);
 $('sheetMatch')?.addEventListener('change',buildMatchSheet);
 $('printSheet')?.addEventListener('click',()=>{if(!$('sheetMatch')?.value){alert('Selecione um jogo primeiro.');return;}if(!$('matchSheet')?.querySelector('.sheet-heading'))buildMatchSheet();window.print();});
+
+
+
+
 
 
 
@@ -1757,8 +1942,28 @@ renderAll();
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+
+
 
 
 // Recursos extras da versão de teste: competições múltiplas e prévia de mídia.
@@ -1805,14 +2010,20 @@ function addLocalMedia(kind,file,sponsors){
 }
 
 
+
+
 const SUPABASE_URL = "https://lsenoxeiqzceodvzmbnl.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_lDnODTcqGCPz9WH-KZbWHA_RIBG-iMN";
+
+
 
 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
+
+
 
 
 // Carrega partidas da tabela public.jogos para que apareçam igualmente em celular e computador.
@@ -1843,6 +2054,8 @@ async function loadSupabaseMatches(){
   if(/permission|row-level|RLS|schema cache|does not exist|not find/i.test(msg)) console.warn('Confira a permissão SELECT da tabela public.jogos e a exposição da tabela na API:',msg);
  }
 }
+
+
 
 
 // Carrega competições: tenta o nome padrão em minúsculas e, se necessário, a tabela em maiúsculas.
@@ -1880,11 +2093,15 @@ async function loadSupabaseCompetitions() {
 }
 
 
+
+
 // Carrega equipes, vínculos de competição e atletas do Supabase.
 async function loadSupabaseTeams() {
   try {
     const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
+
+
 
 
     let associationRows = [];
@@ -1893,10 +2110,14 @@ async function loadSupabaseTeams() {
     associationRows = assoc.data || [];
 
 
+
+
     let athleteCompetitionRows = [];
     const athleteAssoc = await supabaseClient.from('competicao_atletas').select('competicao_id,atleta_id,equipe_id,status,numero_camisa');
     if (athleteAssoc.error) throw new Error('Não foi possível ler competicao_atletas: ' + athleteAssoc.error.message);
     athleteCompetitionRows = athleteAssoc.data || [];
+
+
 
 
     const competitionIdsByTeam = new Map();
@@ -1909,6 +2130,8 @@ async function loadSupabaseTeams() {
     });
 
 
+
+
     const athleteCompetitionIds = new Map();
     const athleteCompetitionTeams = new Map();
     athleteCompetitionRows.forEach(a => {
@@ -1919,11 +2142,15 @@ async function loadSupabaseTeams() {
     });
 
 
+
+
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
       .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo')
       .order('nome');
     if (athleteError) throw athleteError;
+
+
 
 
     const athletesByTeam = new Map();
@@ -1954,6 +2181,8 @@ photo: row.foto_url || '',
     });
 
 
+
+
     const remoteTeams = (data || []).map(row => ({
       id: 'dbteam-' + String(row.id), dbId: row.id, name: row.nome,
       initials: String(row.nome || '').split(/\s+/).map(part => part[0] || '').join('').slice(0,4).toUpperCase(),
@@ -1962,6 +2191,8 @@ photo: row.foto_url || '',
       competitionId: (competitionIdsByTeam.get(String(row.id)) || [])[0] || '',
       group: competitionGroupsByTeam.get(String(row.id)) || '', _remote: true
     }));
+
+
 
 
     // Mantém apenas atletas associados à competição ativa quando há vínculos explícitos.
@@ -1978,11 +2209,15 @@ photo: row.foto_url || '',
     });
 
 
+
+
    
     // Busca diretores e musa salvos no Supabase.
     const { data: personnelRows, error: personnelError } = await supabaseClient
       .from('equipe_pessoal')
       .select('id,equipe_id,nome,funcao,data_nascimento,cidade,cpf,numero_inscricao,nome_esportivo,foto_url');
+
+
 
 
     if (personnelError) {
@@ -1993,7 +2228,11 @@ photo: row.foto_url || '',
         if (!team) return;
 
 
+
+
         if (!team.players) team.players = [];
+
+
 
 
         const personId = String(person.numero_inscricao || ('PESSOAL-' + person.id));
@@ -2001,6 +2240,8 @@ photo: row.foto_url || '',
           String(p.id) === personId ||
           (p._remotePersonnel && String(p.dbId) === String(person.id))
         );
+
+
 
 
         if (!alreadyExists) {
@@ -2023,6 +2264,8 @@ photo: row.foto_url || '',
     }
 
 
+
+
    try {
       const extraPeople = JSON.parse(localStorage.getItem('tvfp_team_personnel_v1') || '[]');
       extraPeople.forEach(person => {
@@ -2033,6 +2276,8 @@ photo: row.foto_url || '',
         }
       });
     } catch(e) { console.warn('Não foi possível recuperar diretores/musa locais', e); }
+
+
 
 
     db.teams = remoteTeams;
@@ -2054,6 +2299,8 @@ photo: row.foto_url || '',
   const logoutBtn = document.getElementById('adminLogoutBtn');
   const message = document.getElementById('adminAuthMessage');
   if (!panel || !protectedArea || !loginBtn) return;
+
+
 
 
   function showSignedOut(text) {
@@ -2085,6 +2332,8 @@ photo: row.foto_url || '',
   }
 
 
+
+
   loginBtn.addEventListener('click', async function(){
     const email = emailInput.value.trim();
     const password = passwordInput.value;
@@ -2114,6 +2363,8 @@ photo: row.foto_url || '',
   });
 
 
+
+
   const { data } = await supabaseClient.auth.getSession();
   if (data && data.session) await verifyAdmin(data.session);
   else showSignedOut();
@@ -2126,6 +2377,8 @@ photo: row.foto_url || '',
   await loadSupabaseMatches();
 })();
 </script>
+
+
 
 
 <script id="bid-operation-confirmations">
@@ -2146,10 +2399,14 @@ photo: row.foto_url || '',
   if(!window.confirm('Confirma a operação: '+action+'?
 
 
+
+
 Confira os dados antes de continuar.')){ev.preventDefault();ev.stopImmediatePropagation();}
  },true);
 })();
 </script>
+
+
 
 
 <script id="bid-admin-write-guard">
@@ -2187,6 +2444,8 @@ Confira os dados antes de continuar.')){ev.preventDefault();ev.stopImmediateProp
   }, true);
 })();
 </script>
+
+
 
 
 <script id="game-promo-script">
@@ -2284,6 +2543,10 @@ Confira os dados antes de continuar.')){ev.preventDefault();ev.stopImmediateProp
 
 
 
+
+
+
+
 <script id="bid-admin-edit-tools">
 (function(){
  const $=id=>document.getElementById(id);
@@ -2362,6 +2625,8 @@ const update={nome:name.trim(),data_nascimento:birth||null,cpf:digits||null,nome
 </script>
 
 
+
+
 <script id="admin-games-shortcut-script">
 document.addEventListener('DOMContentLoaded',function(){
  const b=document.getElementById('adminOpenGames');
@@ -2371,7 +2636,11 @@ document.addEventListener('DOMContentLoaded',function(){
    else alert('A aba Tabela de Jogos não foi encontrada.');
 
 
+
+
 </script>
+
+
 
 
 <script id="admin-side-panel-action">
@@ -2392,6 +2661,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 </script>
+
+
 
 
 </body>
