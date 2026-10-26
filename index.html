@@ -1300,49 +1300,46 @@ overflow: visible !important;
 <label id="teamsPerGroupWrap">Equipes por grupo<input id="newCompetitionTeamsPerGroup" max="32" min="2" placeholder="Ex.: 4" type="number" value="4"/></label>
 <label>Símbolo da competição<input accept="image/*" id="newCompetitionLogo" type="file"/></label>
 <label class="wide">Regulamento da competição (PDF)<input accept=".pdf,application/pdf" id="newCompetitionRegulation" type="file"/><small class="muted">Opcional. O regulamento poderá ser consultado na competição.</small></label></div><div class="actions"><button class="gold" id="addCompetition" type="button">Adicionar competição</button></div><div aria-live="polite" class="small" id="competitionList"></div><p class="small">As competições devem ser gravadas no Supabase. Se o cadastro falhar, confira a mensagem exibida e as permissões da tabela.</p></div></div>
-<div class="panel" id="competitionPhaseManager"><div class="ph"><h3>FASES, GRUPOS E CONFRONTOS</h3><span class="pill">Gestão editável</span></div><div class="pad">
-<p class="small muted">Selecione a competição ativa. Distribua as equipes nos grupos, confira a classificação calculada pelos jogos finalizados e monte manualmente os confrontos do mata-mata. As configurações ficam salvas neste navegador.</p>
-<div class="formgrid"><label>Competição ativa<select id="phaseCompetitionSelect"></select></label><label>Classificam por grupo<input id="phaseTopPerGroup" type="number" min="0" max="32" value="2"></label><label>Melhores terceiros classificados<input id="phaseBestThirds" type="number" min="0" max="32" value="3"></label><label>Vagas extras / convite (para completar a chave)<input id="phaseExtraSlots" type="number" min="0" max="32" value="1"></label><label>Nome da fase eliminatória<input id="phaseKnockoutName" value="Oitavas de final"></label></div>
-<div class="actions"><button class="gold" id="phaseSaveRules" type="button">Salvar regras de classificação</button><button class="secondary" id="phaseAssignEvenly" type="button">Distribuir equipes automaticamente</button></div>
-<h4 style="margin-top:22px">1. Distribuição das equipes nos grupos</h4><div id="phaseTeamGroups" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseSaveGroups" type="button">Salvar grupos</button></div>
-<h4 style="margin-top:22px">2. Classificação dos grupos</h4><div id="phaseStandings" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseBuildQualifiers" type="button">Gerar classificados</button></div><div id="phaseQualifiers" class="tablewrap"></div>
+<div class="panel" id="competitionPhaseManager">
+  <div class="ph">
+    <h3>GESTÃO DE FASES E CONFRONTOS</h3>
+    <span class="pill">Tabela de jogos</span>
+  </div>
 
-<h4 style="margin-top:22px">3. Gerenciar fases e confrontos</h4>
+  <div class="pad">
+    <div class="formgrid">
+      <label>Competição ativa
+        <select id="phaseCompetitionSelect"></select>
+      </label>
 
-<p class="small muted">
-  Configure qualquer fase eliminatória. Escolha as equipes, o formato e os dados de cada jogo. Serve para competições com grupos ou mata-mata desde o início.
-</p>
+      <label>Fase da competição
+        <select id="phaseRoundName">
+          <option value="16 avos de final">16 avos de final</option>
+          <option value="Oitavas de final" selected>Oitavas de final</option>
+          <option value="Quartas de final">Quartas de final</option>
+          <option value="Semifinal">Semifinal</option>
+          <option value="Disputa de terceiro lugar">Disputa de terceiro lugar</option>
+          <option value="Final">Final</option>
+        </select>
+      </label>
 
-<div class="formgrid">
-  <label>Fase
-    <select id="phaseRoundName">
-      <option value="16 avos de final">16 avos de final</option>
-      <option value="Oitavas de final" selected>Oitavas de final</option>
-      <option value="Quartas de final">Quartas de final</option>
-      <option value="Semifinal">Semifinal</option>
-      <option value="Disputa de terceiro lugar">Disputa de terceiro lugar</option>
-      <option value="Final">Final</option>
-    </select>
-  </label>
+      <label>Quantidade de confrontos
+        <input id="phaseTieCount" type="number" min="1" max="32" value="8">
+      </label>
+    </div>
 
-  <label>Quantidade de confrontos
-    <input id="phaseTieCount" type="number" min="1" max="32" value="8">
-  </label>
+    <div class="actions">
+      <button class="secondary" id="phaseMakeTieSlots" type="button">
+        PREPARAR CONFRONTOS
+      </button>
+      <button class="gold" id="phaseSaveTies" type="button">
+        SALVAR CONFRONTOS
+      </button>
+    </div>
+
+    <div id="phaseTies" class="tablewrap"></div>
+  </div>
 </div>
-
-<div class="actions">
-  <button class="secondary" id="phaseMakeTieSlots" type="button">
-    Preparar confrontos
-  </button>
-  <button class="gold" id="phaseSaveTies" type="button">
-    Salvar confrontos
-  </button>
-</div>
-
-<div id="phaseTies" class="tablewrap"></div>
-<div class="note">A classificação é calculada com os jogos marcados como Finalizado. Os grupos e a chave eliminatória desta ferramenta são gravados no armazenamento local do navegador; para compartilhar automaticamente entre aparelhos, será necessária a sincronização dessas configurações com o Supabase.</div>
-</div></div>
-
 <div class="panel"><div class="ph"><h3>Cadastrar equipe</h3><span class="pill">1 · Equipes</span></div><div class="pad"><div class="formgrid"> <label>Competição<select id="teamCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Nome da equipe<input id="teamName" placeholder="Ex.: Português de Águas Belas"/></label><label>Sigla para o escudo<input id="teamInitials" maxlength="5" placeholder="Ex.: PAB"/></label><label>Grupo da equipe (opcional)<input id="teamGroup" placeholder="Ex.: A, B, C"/></label><label>Escudo da equipe (opcional)<input accept="image/*" id="teamLogo" type="file"/></label><label>Vídeo da equipe (opcional)<input accept="video/*" id="teamVideo" type="file"/></label><label>Patrocinadores da equipe<input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona"/></label></div><div class="actions"><button class="gold" id="saveTeam">Cadastrar equipe</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"> <label>CPF (comece por aqui)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="Digite o CPF: 000.000.000-00" autocomplete="off"/></label><label>Competição<select id="athCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"/></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"/></label><label>Data de nascimento<input id="athBirth" type="date"/></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"/></label><label>Data da inscrição<input id="athReg" type="date"/></label><label>Foto do atleta (opcional)<input accept="image/*" id="athPhoto" type="file"/></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"/></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button class="gold" id="saveAthlete">Cadastrar pessoa</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
@@ -3286,21 +3283,47 @@ document.addEventListener('click',function(e){
   return Object.values(st).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
  }
  function save(){saveDb()}
- function renderPhase(){
-  const c=comp();if(!c)return;
-  const labs=groupLabels(c),ts=teams(c),groupMap=c.teamGroups||(c.teamGroups={});
-  $p('phaseTopPerGroup').value=c.phaseRules?.topPerGroup??2;$p('phaseBestThirds').value=c.phaseRules?.bestThirds??3;$p('phaseExtraSlots').value=c.phaseRules?.extraSlots??1;$p('phaseKnockoutName').value=c.phaseRules?.knockoutName||'Oitavas de final';
-  const assigned=ts.filter(t=>labs.includes(groupOf(t,c))).length;
-  const cards=labs.map(g=>{const members=ts.filter(t=>groupOf(t,c)===g);return `<div class="phase-group-card"><div class="phase-group-card-head"><b>GRUPO ${g}</b><span>${members.length} equipe(s)</span></div><div class="phase-group-members">${members.length?members.map(t=>`<span>${esc(t.name)}</span>`).join(''):'<span class="muted">Nenhuma equipe atribuída</span>'}</div></div>`}).join('');
-  $p('phaseTeamGroups').innerHTML=ts.length?`<div class="phase-group-summary"><b>${ts.length} equipe(s) cadastrada(s)</b><span>${assigned} distribuída(s)</span><span>${ts.length-assigned} sem grupo</span><span>${labs.length} grupos configurados</span></div><div class="phase-group-cards">${cards}</div><table><thead><tr><th>Equipe cadastrada</th><th>Grupo atual</th><th>Alterar grupo</th></tr></thead><tbody>${ts.map(t=>{const g=groupOf(t,c);return `<tr><td><b>${esc(t.name)}</b></td><td>${g?`Grupo ${esc(g)}`:'<span class="muted">Sem grupo</span>'}</td><td><select class="phase-group-select" data-phase-team="${esc(t.id)}">   <option value="" ${!g?'selected':''}>Sem grupo</option>   ${labs.map(x=>`<option value="${x}" ${g===x?'selected':''}>Grupo ${x}</option>`).join('')}   <option value="CLASSIFICADA" ${g==='CLASSIFICADA'?'selected':''}>Classificada</option> </select></td></tr>`}).join('')}</tbody></table>`:'<div class="empty">Nenhuma equipe vinculada a esta competição. Confira se as equipes estão cadastradas e associadas à competição selecionada.</div>';
-  const st=standings(c);$p('phaseStandings').innerHTML=st.length?`<table><thead><tr><th>Grupo</th><th>Pos.</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th></tr></thead><tbody>${labs.map(g=>st.filter(x=>x.group===g).map((x,i)=>`<tr><td>${g}</td><td>${i+1}º</td><td>${esc(x.team.name)}</td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.gp-x.gc}</td><td><b>${x.pts}</b></td></tr>`).join('')).join('')||'<tr><td colspan="11">Ainda não há equipes distribuídas em grupos.</td></tr>'}</tbody></table>`:'<div class="empty">Sem equipes cadastradas.</div>';
-  const q=[...new Map([
-  ...(c.qualifiers||[]).map(id=>ts.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))).filter(Boolean),
-  ...ts.filter(t=>c.teamQualifications?.[String(t.id)]||c.teamQualifications?.[String(t.dbId||'')])
-].map(t=>[String(t.id),t])).values()];
-  $p('phaseQualifiers').innerHTML=q.length?q.map((t,i)=>`<div class="phase-qualifier"><b>${i+1}.</b> ${esc(t.name)} <span class="muted">Grupo ${esc(groupOf(t,c)||'—')}</span><button class="danger" type="button" data-remove-qualifier="${esc(t.id)}">Retirar</button></div>`).join(''):'<div class="empty">Ainda não foram gerados os classificados.</div>';
-  const ties=c.knockoutTies||[],opts=`<option value="">— Escolher equipe —</option>`+q.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
-   $p('phaseTies').innerHTML = ties.length ? `
+function renderPhase(){
+  const c = comp();
+  const tiesBox = $p('phaseTies');
+  if (!tiesBox) return;
+
+  if (!c) {
+    tiesBox.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  const ts = teams(c) || [];
+  const allTeams = [...new Map(
+    ts.map(t => [String(t.id), t])
+  ).values()];
+
+  const roundSelect = $p('phaseRoundName');
+  const countInput = $p('phaseTieCount');
+
+  if (roundSelect && c.knockoutTies?.length) {
+    const savedRound = c.knockoutTies[0].round;
+    if (savedRound && [...roundSelect.options].some(o => o.value === savedRound)) {
+      roundSelect.value = savedRound;
+    }
+  }
+
+  const round = roundSelect?.value || 'Oitavas de final';
+  const ties = c.knockoutTies || [];
+
+  if (countInput && ties.length) {
+    countInput.value = ties.length;
+  }
+
+  const options = (selected) =>
+    '<option value="">Escolher equipe</option>' +
+    allTeams.map(t =>
+      `<option value="${esc(t.id)}" ${
+        String(selected ?? '') === String(t.id) ? 'selected' : ''
+      }>${esc(t.name)}</option>`
+    ).join('');
+
+  tiesBox.innerHTML = ties.length ? `
     <table>
       <thead>
         <tr>
@@ -3319,35 +3342,33 @@ document.addEventListener('click',function(e){
         </tr>
       </thead>
       <tbody>
-        ${ties.map((m,i) => `
+        ${ties.map((m, i) => `
           <tr>
-            <td>${esc(m.round || c.phaseRules?.knockoutName || 'Mata-mata')} ${i+1}</td>
+            <td>${esc(m.round || round)} ${i + 1}</td>
             <td>
               <select data-tie-side="a" data-tie-index="${i}">
-                <option value="">Escolher equipe</option>
-                ${q.map(t => `<option value="${esc(t.id)}" ${String(m.a)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}
+                ${options(m.a)}
               </select>
             </td>
             <td>
               <select data-tie-side="b" data-tie-index="${i}">
-                <option value="">Escolher equipe</option>
-                ${q.map(t => `<option value="${esc(t.id)}" ${String(m.b)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}
+                ${options(m.b)}
               </select>
             </td>
             <td>
               <select data-tie-field="format" data-tie-index="${i}">
-                <option value="unico" ${(m.format||'unico')==='unico'?'selected':''}>Jogo único</option>
-                <option value="ida_volta" ${m.format==='ida_volta'?'selected':''}>Ida e volta</option>
+                <option value="unico" ${(m.format || 'unico') === 'unico' ? 'selected' : ''}>Jogo único</option>
+                <option value="ida_volta" ${m.format === 'ida_volta' ? 'selected' : ''}>Ida e volta</option>
               </select>
             </td>
-            ${['date1','time1','venue1','score1','date2','time2','venue2','score2'].map((field,j) => `
+            ${['date1','time1','venue1','score1','date2','time2','venue2','score2'].map((field, j) => `
               <td>
                 <input
                   data-tie-field="${field}"
                   data-tie-index="${i}"
-                  type="${['date1','date2'].includes(field)?'date':['time1','time2'].includes(field)?'time':'text'}"
+                  type="${['date1','date2'].includes(field) ? 'date' : ['time1','time2'].includes(field) ? 'time' : 'text'}"
                   value="${esc(m[field] || '')}"
-                  placeholder="${['Local','Placar'][j%4] || ''}"
+                  placeholder="${['Local','Placar'][j % 4] || ''}"
                 >
               </td>
             `).join('')}
@@ -3355,8 +3376,8 @@ document.addEventListener('click',function(e){
         `).join('')}
       </tbody>
     </table>
-  ` : '<div class="empty">Prepare os confrontos para escolher quem pega quem.</div>';
-   }
+  ` : '<div class="empty">Clique em PREPARAR CONFRONTOS para montar a fase.</div>';
+}
  function refreshCompetitionSelect(){const sel=$p('phaseCompetitionSelect');if(!sel)return;const comps=db.competitions||[];sel.innerHTML=comps.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(db.activeCompetitionId)?'selected':''}>${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');if(!comps.some(c=>String(c.id)===String(sel.value))&&comps.length)sel.value=String(comp()?.id||comps[0].id)}
  async function saveGroupsToSupabase(c,ts){
   if(typeof supabaseClient==='undefined'||!supabaseClient||!c._remote&&!c.dbId)return {failed:0,skipped:ts.length};
@@ -3837,11 +3858,6 @@ tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
   }
 }
  <style>
-#competitionPhaseManager {
-  display: none !important;
-}
-</style>
- 
 <style id="phase-manager-compact-style">
 /* Gestão de fases — visual compacto no padrão da Tabela Oficial */
 #competitionPhaseManager {
