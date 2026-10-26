@@ -3586,12 +3586,24 @@ $p('phaseBuildQualifiers')?.addEventListener('click', async () => {
     );
   }
 });
-  const b=ev.target.closest('[data-remove-qualifier]');
-  if(!b)return;
-  const c=comp();
-  c.qualifiers=(c.qualifiers||[]).filter(id=>String(id)!==String(b.dataset.removeQualifier));
+ document.addEventListener('click', function(ev) {
+  const b = ev.target.closest('[data-remove-qualifier]');
+  if (!b) return;
+
+  const c = comp();
+  if (!c) return;
+
+  c.qualifiers = (c.qualifiers || []).filter(
+    id => String(id) !== String(b.dataset.removeQualifier)
+  );
+
   save();
   renderPhase();
+
+  saveCompetitionPhaseConfig(c).catch(error => {
+    console.error('Erro ao salvar classificados:', error);
+    alert('A alteração foi feita localmente, mas o Supabase não confirmou o salvamento.');
+  });
 });
  $p('phaseMakeTieSlots')?.addEventListener('click',()=>{
   const c=comp();
@@ -3672,11 +3684,9 @@ $p('phaseSaveTies')?.addEventListener('click', async () => {
 });
   const originalRenderAll=window.renderAll;const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase()};window.renderAll=wrapped;
   setTimeout(()=>{refreshCompetitionSelect();renderPhase()},300);
- });
 })();
 </script>
-</body>
-</html>
+
 
 <style id="finished-panel-layout-fix">
 #gamesView .finished-match-panel{display:block!important;margin-top:14px!important;clear:both}
@@ -3693,9 +3703,11 @@ $p('phaseSaveTies')?.addEventListener('click', async () => {
 #finishedFixtures .fixture-competition img{width:24px;height:24px;object-fit:contain;border-radius:5px;background:#fff;padding:2px;flex:0 0 auto}
 #finishedFixtures .fixture-competition-name{overflow-wrap:anywhere}
 @media(max-width:520px){#finishedFixtures.fixtures{grid-template-columns:1fr!important;max-height:390px}}
-
 /* Dirigentes / Musa (não atletas): cor diferente na tabela do BID */
 tbody tr.row-staff,tbody tr.row-staff:nth-child(odd),tbody tr.row-staff:nth-child(even){background:#3b1659!important;box-shadow:inset 5px 0 0 #b26bff}
 tbody tr.row-staff td{background:#3b1659!important;border-color:#6d2fa0!important}
 tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
 </style>
+</body>
+</html>
+
