@@ -2374,17 +2374,17 @@ async function loadSupabaseCompetitions() {
     try {
       let queryResult = await supabaseClient
         .from(tableName)
-        .select('id,nome,temporada,formato,logo_url,status,regulamento_url,configuracao_fases')
+        .select('id,nome,temporada,formato,logo_url,status,regulamento_url,configuracao_fases,quantidade_grupos,equipes_por_grupo')
         .order('temporada', { ascending: false });
 
       if (queryResult.error) {
         const msg = queryResult.error.message || '';
 
-        if (/configuracao_fases|regulamento_url|column .* does not exist|schema cache|could not find/i.test(msg)) {
+        if (/configuracao_fases|regulamento_url|quantidade_grupos|equipes_por_grupo|column .* does not exist|schema cache|could not find/i.test(msg)) {
           queryResult = await supabaseClient
-            .from(tableName)
-            .select('id,nome,temporada,formato,logo_url,status')
-            .order('temporada', { ascending: false });
+  .from(tableName)
+  .select('id,nome,temporada,formato,logo_url,status,regulamento_url,quantidade_grupos,equipes_por_grupo')
+  .order('temporada', { ascending: false });
         }
       }
 
@@ -2415,7 +2415,9 @@ async function loadSupabaseCompetitions() {
           name: row.nome,
           season: String(row.temporada || ''),
           format: row.formato || '',
-          logo: row.logo_url || '',
+          groupCount: Number(row.quantidade_grupos) || 4,
+          teamsPerGroup: Number(row.equipes_por_grupo) || 4,
+         logo: row.logo_url || '',
           regulationUrl: row.regulamento_url || '',
           status: row.status || 'ativa',
           phaseRules: cfg.phaseRules || {},
@@ -3305,9 +3307,86 @@ async function saveCompetitionPhaseConfig(c) {
  document.addEventListener('DOMContentLoaded',()=>{
   const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
   document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;updateCompetitionFormatFields();add.style.display='none';saveEdit.style.display='inline-block';$p('newCompetitionName').scrollIntoView({behavior:'smooth',block:'center'});});
-  saveEdit.addEventListener('click',async()=>{const c=(db.competitions||[]).find(x=>String(x.id)===String(editCompId));if(!c)return;const name=$p('newCompetitionName').value.trim();if(!name){alert('Informe o nome da competição.');return}c.name=name;c.season=$p('newCompetitionSeason').value.trim()||c.season;c.format=$p('newCompetitionFormat').value;c.groupCount=['grupos','mista'].includes(c.format)?Number($p('newCompetitionGroupCount').value)||1:null;c.teamsPerGroup=['grupos','mista'].includes(c.format)?Number($p('newCompetitionTeamsPerGroup').value)||2:null;
-   if(c._remote&&c.dbId&&typeof supabaseClient!=='undefined'){try{let r=await supabaseClient.from('competicoes').update({nome:c.name,temporada:Number(c.season)||new Date().getFullYear(),formato:c.format,quantidade_grupos:c.groupCount,equipes_por_grupo:c.teamsPerGroup}).eq('id',c.dbId);if(r.error&&/relation .* does not exist|schema cache|not found/i.test(r.error.message||''))r=await supabaseClient.from('COMPETICOES').update({nome:c.name,temporada:Number(c.season)||new Date().getFullYear(),formato:c.format,quantidade_grupos:c.groupCount,equipes_por_grupo:c.teamsPerGroup}).eq('id',c.dbId);if(r.error)throw r.error}catch(e){alert('As alterações locais foram feitas, mas o Supabase não confirmou a atualização: '+e.message)}}
-   editCompId=null;add.style.display='';saveEdit.style.display='none';save();refreshCompetitionSelect();renderPhase();alert('Configurações da competição atualizadas.');});
+ saveEdit.addEventListener('click', async () => {
+  const c = (db.competitions || []).find(
+    x => String(x.id) === String(editCompId)
+  );
+
+  if (!c) return;
+
+  const name = $p('newCompetitionName').value.trim();
+
+  if (!name) {
+    alert('Informe o nome da competição.');
+    return;
+  }
+
+  const season =
+    $p('newCompetitionSeason').value.trim() || c.season;
+
+  const format = $p('newCompetitionFormat').value;
+
+  const groupCount = ['grupos', 'mista'].includes(format)
+    ? Number($p('newCompetitionGroupCount').value) || 1
+    : null;
+
+  const teamsPerGroup = ['grupos', 'mista'].includes(format)
+    ? Number($p('newCompetitionTeamsPerGroup').value) || 2
+    : null;
+
+  if (c._remote && c.dbId && typeof supabaseClient !== 'undefined') {
+    const dados = {
+      nome: name,
+      temporada: Number(season) || new Date().getFullYear(),
+      formato: format,
+      quantidade_grupos: groupCount,
+      equipes_por_grupo: teamsPerGroup
+    };
+
+    let result = await supabaseClient
+      .from('COMPETICOES')
+      .update(dados)
+      .eq('id', c.dbId)
+      .select('id');
+
+    if (result.error) {
+      console.error('Erro ao atualizar COMPETICOES:', result.error);
+      alert(
+        'O Supabase não confirmou a alteração. Nada foi confirmado como salvo. Erro: ' +
+        result.error.message
+      );
+      return;
+    }
+
+    if (!result.data || result.data.length === 0) {
+      alert(
+        'Nenhuma competição foi atualizada. Confira o ID e as permissões UPDATE da tabela COMPETICOES.'
+      );
+      return;
+    }
+  } else {
+    alert(
+      'Esta competição não possui vínculo confirmado com o Supabase. A alteração não foi enviada ao banco.'
+    );
+    return;
+  }
+
+  c.name = name;
+  c.season = String(season);
+  c.format = format;
+  c.groupCount = groupCount;
+  c.teamsPerGroup = teamsPerGroup;
+
+  editCompId = null;
+  add.style.display = '';
+  saveEdit.style.display = 'none';
+
+  save();
+  refreshCompetitionSelect();
+  renderPhase();
+
+  alert('Competição atualizada e confirmada pelo Supabase!');
+});
   $p('phaseCompetitionSelect')?.addEventListener('change',()=>{db.activeCompetitionId=$p('phaseCompetitionSelect').value;const c=activeCompetition();if(c)db.competition=c.name;save();refreshCompetitionSelect();renderPhase()});
  
 $p('phaseSaveRules')?.addEventListener('click',async()=>{
