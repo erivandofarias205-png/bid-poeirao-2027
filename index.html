@@ -3841,6 +3841,82 @@ tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
   display: none !important;
 }
 </style>
+ 
+<style id="phase-manager-compact-style">
+/* Gestão de fases — visual compacto no padrão da Tabela Oficial */
+#competitionPhaseManager {
+  display: block !important;
+  margin: 14px 0 !important;
+  border: 1px solid rgba(214,173,54,.65) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  background: #07152f !important;
+  box-shadow: 0 5px 18px rgba(0,0,0,.22);
+}
+
+#competitionPhaseManager > .ph {
+  min-height: 42px;
+  padding: 12px 16px !important;
+  background: linear-gradient(90deg,#edc84e,#b98b1c) !important;
+  color: #101010 !important;
+}
+
+#competitionPhaseManager > .ph h3 {
+  margin: 0 !important;
+  color: #101010 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+}
+
+#competitionPhaseManager > .pad {
+  padding: 14px !important;
+}
+
+#competitionPhaseManager .formgrid {
+  gap: 10px !important;
+}
+
+#competitionPhaseManager h4 {
+  margin: 16px 0 8px !important;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: #17396f;
+  color: #f4d46a;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+#competitionPhaseManager .actions {
+  gap: 8px !important;
+  margin: 10px 0 !important;
+}
+
+#competitionPhaseManager .tablewrap {
+  max-width: 100%;
+  overflow-x: auto !important;
+  border-radius: 8px;
+}
+
+#competitionPhaseManager .note {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 650px) {
+  #competitionPhaseManager > .pad {
+    padding: 9px !important;
+  }
+
+  #competitionPhaseManager .formgrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #competitionPhaseManager .actions button {
+    flex: 1 1 100%;
+  }
+}
+</style>
 </body>
 </html>
 
