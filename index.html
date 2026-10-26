@@ -2366,44 +2366,105 @@ async function loadSupabaseMatches(){
 
 
 // Carrega competições: tenta o nome padrão em minúsculas e, se necessário, a tabela em maiúsculas.
+
 async function loadSupabaseCompetitions() {
   let lastError = null;
-  // A tabela existente no projeto é public."COMPETICOES"; consulte-a primeiro.
+
   for (const tableName of ['COMPETICOES']) {
     try {
-      let queryResult = await supabaseClient.from(tableName)
-        .select('id,nome,temporada,formato,logo_url,status,regulamento_url')
+      let queryResult = await supabaseClient
+        .from(tableName)
+        .select('id,nome,temporada,formato,logo_url,status,regulamento_url,configuracao_fases')
         .order('temporada', { ascending: false });
-      if (queryResult.error && /regulamento_url|column .* does not exist|schema cache|could not find/i.test(queryResult.error.message||'')) {
-        queryResult = await supabaseClient.from(tableName)
-          .select('id,nome,temporada,formato,logo_url,status')
-          .order('temporada', { ascending: false });
+
+      if (queryResult.error) {
+        const msg = queryResult.error.message || '';
+
+        if (/configuracao_fases|regulamento_url|column .* does not exist|schema cache|could not find/i.test(msg)) {
+          queryResult = await supabaseClient
+            .from(tableName)
+            .select('id,nome,temporada,formato,logo_url,status')
+            .order('temporada', { ascending: false });
+        }
       }
+
       const { data, error } = queryResult;
-      if (error) { lastError = error; continue; }
+
+      if (error) {
+        lastError = error;
+        continue;
+      }
+
       const rows = data || [];
-      // Não considerar uma tabela vazia como sucesso se a alternativa ainda pode conter os dados.
       if (!rows.length) continue;
-      const remote = rows.map(row => ({
-        id: String(row.id), dbId: row.id, name: row.nome, season: String(row.temporada || ''),
-        format: row.formato || '', logo: row.logo_url || '', regulationUrl: row.regulamento_url || '', status: row.status || 'ativa', _remote: true
-      }));
-      const localOnly = (db.competitions || []).filter(c => !c._remote && !c.dbId);
+
+      const remote = rows.map(row => {
+        let cfg = row.configuracao_fases || {};
+
+        if (typeof cfg === 'string') {
+          try {
+            cfg = JSON.parse(cfg);
+          } catch {
+            cfg = {};
+          }
+        }
+
+        return {
+          id: String(row.id),
+          dbId: row.id,
+          name: row.nome,
+          season: String(row.temporada || ''),
+          format: row.formato || '',
+          logo: row.logo_url || '',
+          regulationUrl: row.regulamento_url || '',
+          status: row.status || 'ativa',
+          phaseRules: cfg.phaseRules || {},
+          phaseOptions: cfg.phaseOptions || {},
+          teamGroups: cfg.teamGroups || {},
+          teamQualifications: cfg.teamQualifications || {},
+          qualifiers: cfg.qualifiers || [],
+          knockoutTies: cfg.knockoutTies || [],
+          phaseWinners: cfg.phaseWinners || [],
+          _remote: true
+        };
+      });
+
+      const localOnly = (db.competitions || [])
+        .filter(c => !c._remote && !c.dbId);
+
       db.competitions = [...remote, ...localOnly];
-      if (!db.activeCompetitionId || !db.competitions.some(c => String(c.id) === String(db.activeCompetitionId))) {
+
+      if (
+        !db.activeCompetitionId ||
+        !db.competitions.some(
+          c => String(c.id) === String(db.activeCompetitionId)
+        )
+      ) {
         db.activeCompetitionId = remote[0].id;
       }
-      const active = db.competitions.find(c => String(c.id) === String(db.activeCompetitionId));
+
+      const active = db.competitions.find(
+        c => String(c.id) === String(db.activeCompetitionId)
+      );
+
       if (active) db.competition = active.name;
+
       saveDb();
+
       if (typeof renderAll === 'function') renderAll();
+
       return;
-    } catch (error) { lastError = error; }
+    } catch (error) {
+      lastError = error;
+    }
   }
-  console.error('Não foi possível carregar competições do Supabase:', lastError);
-  const detail = lastError?.message || String(lastError || 'nenhuma tabela retornou competições');
-  alert(`Não foi possível carregar public.\"COMPETICOES\" no Supabase. Detalhe: ${detail}. Confira a permissão SELECT para anon/authenticated e se a tabela está exposta na API.`);
+
+  console.error(
+    'Não foi possível carregar competições do Supabase:',
+    lastError
+  );
 }
+  
 
 
 
@@ -3212,6 +3273,35 @@ document.addEventListener('click',function(e){
   }
   return {failed,skipped};
  }
+ 
+async function saveCompetitionPhaseConfig(c) {
+  if (!c || !c.dbId || typeof supabaseClient === 'undefined' || !supabaseClient) {
+    throw new Error('Competição sem vínculo com o Supabase.');
+  }
+
+  const configuracao = {
+    phaseRules: c.phaseRules || {},
+    phaseOptions: c.phaseOptions || {},
+    teamGroups: c.teamGroups || {},
+    teamQualifications: c.teamQualifications || {},
+    qualifiers: c.qualifiers || [],
+    knockoutTies: c.knockoutTies || [],
+    phaseWinners: c.phaseWinners || []
+  };
+
+  const { error } = await supabaseClient
+    .from('COMPETICOES')
+    .update({ configuracao_fases: configuracao })
+    .eq('id', c.dbId);
+
+  if (error) {
+    console.error('Erro ao salvar configurações das fases:', error);
+    throw error;
+  }
+
+  Object.assign(c, configuracao);
+  return true;
+}
  document.addEventListener('DOMContentLoaded',()=>{
   const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
   document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;updateCompetitionFormatFields();add.style.display='none';saveEdit.style.display='inline-block';$p('newCompetitionName').scrollIntoView({behavior:'smooth',block:'center'});});
@@ -3219,7 +3309,29 @@ document.addEventListener('click',function(e){
    if(c._remote&&c.dbId&&typeof supabaseClient!=='undefined'){try{let r=await supabaseClient.from('competicoes').update({nome:c.name,temporada:Number(c.season)||new Date().getFullYear(),formato:c.format,quantidade_grupos:c.groupCount,equipes_por_grupo:c.teamsPerGroup}).eq('id',c.dbId);if(r.error&&/relation .* does not exist|schema cache|not found/i.test(r.error.message||''))r=await supabaseClient.from('COMPETICOES').update({nome:c.name,temporada:Number(c.season)||new Date().getFullYear(),formato:c.format,quantidade_grupos:c.groupCount,equipes_por_grupo:c.teamsPerGroup}).eq('id',c.dbId);if(r.error)throw r.error}catch(e){alert('As alterações locais foram feitas, mas o Supabase não confirmou a atualização: '+e.message)}}
    editCompId=null;add.style.display='';saveEdit.style.display='none';save();refreshCompetitionSelect();renderPhase();alert('Configurações da competição atualizadas.');});
   $p('phaseCompetitionSelect')?.addEventListener('change',()=>{db.activeCompetitionId=$p('phaseCompetitionSelect').value;const c=activeCompetition();if(c)db.competition=c.name;save();refreshCompetitionSelect();renderPhase()});
-  $p('phaseSaveRules')?.addEventListener('click',()=>{const c=comp();if(!c)return;c.phaseRules={topPerGroup:Math.max(0,+$p('phaseTopPerGroup').value||0),bestThirds:Math.max(0,+$p('phaseBestThirds').value||0),extraSlots:Math.max(0,+$p('phaseExtraSlots').value||0),knockoutName:$p('phaseKnockoutName').value.trim()||'Mata-mata'};save();renderPhase();alert('Regras de classificação salvas nesta competição.');});
+ 
+$p('phaseSaveRules')?.addEventListener('click',async()=>{
+  const c=comp();
+  if(!c)return;
+
+  c.phaseRules={
+    topPerGroup:Math.max(0,+$p('phaseTopPerGroup').value||0),
+    bestThirds:Math.max(0,+$p('phaseBestThirds').value||0),
+    extraSlots:Math.max(0,+$p('phaseExtraSlots').value||0),
+    knockoutName:$p('phaseKnockoutName').value.trim()||'Mata-mata'
+  };
+
+  save();
+  renderPhase();
+
+  try {
+    await saveCompetitionPhaseConfig(c);
+    alert('Regras salvas no Supabase e nesta competição.');
+  } catch(e) {
+    console.error(e);
+    alert('As regras ficaram salvas localmente, mas o Supabase não confirmou o salvamento. Verifique o acesso e as permissões.');
+  }
+});
   $p('phaseAssignEvenly')?.addEventListener('click',()=>{const c=comp();if(!c)return;const ts=teams(c),labs=groupLabels(c);if(!ts.length){alert('Não encontrei equipes vinculadas à competição selecionada. Selecione a competição correta ou confira os vínculos das equipes.');return}c.teamGroups=c.teamGroups||{};ts.forEach((t,i)=>{const g=labs[i%labs.length];c.teamGroups[String(t.id)]=g;if(t.dbId)c.teamGroups[String(t.dbId)]=g;t.group=g});save();renderPhase();alert(`Distribuição preparada: ${ts.length} equipe(s) divididas entre ${labs.length} grupo(s). Confira e clique em “Salvar grupos” para gravar.`);});
   $p('phaseSaveGroups')?.addEventListener('click',async()=>{const c=comp();if(!c)return;const ts=teams(c);c.teamGroups=c.teamGroups||{};document.querySelectorAll('[data-phase-team]').forEach(sel=>{const t=ts.find(x=>String(x.id)===String(sel.dataset.phaseTeam));
 if(t){
@@ -3242,11 +3354,98 @@ if(t){
     t.group=g;
   }
 }
-});save();renderPhase();const result=await saveGroupsToSupabase(c,ts);if(result.failed)alert('Os grupos foram salvos neste navegador, mas o Supabase recusou '+result.failed+' atualização(ões). Confira as permissões UPDATE da tabela competicao_equipes.');else if(result.skipped)alert('Grupos salvos neste navegador. Não foi possível sincronizar todos com o Supabase; confira os vínculos das equipes.');else alert('Grupos salvos! As alterações foram gravadas no navegador e enviadas ao Supabase.');});
-  $p('phaseBuildQualifiers')?.addEventListener('click',()=>{const c=comp();if(!c)return;const st=standings(c),labs=groupLabels(c),top=Math.max(0,+$p('phaseTopPerGroup').value||0),thirds=Math.max(0,+$p('phaseBestThirds').value||0);let chosen=[];labs.forEach(g=>chosen.push(...st.filter(x=>x.group===g).slice(0,top)));const thirdCandidates=labs.map(g=>st.filter(x=>x.group===g)[top]).filter(Boolean).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp);chosen.push(...thirdCandidates.slice(0,thirds));c.qualifiers=[...new Set(chosen.map(x=>String(x.team.id)))];save();renderPhase();alert(`Classificados gerados: ${c.qualifiers.length} equipe(s). A classificação depende dos jogos finalizados e dos critérios definidos.`);});
-  $p('phaseQualifiers')?.addEventListener('click',ev=>{const b=ev.target.closest('[data-remove-qualifier]');if(!b)return;const c=comp();c.qualifiers=(c.qualifiers||[]).filter(id=>String(id)!==String(b.dataset.removeQualifier));save();renderPhase()});
-  $p('phaseMakeTieSlots')?.addEventListener('click',()=>{const c=comp();if(!c)return;const n=Math.max(1,Math.min(32,+$p('phaseTieCount').value||8)),round=$p('phaseRoundName').value.trim()||c.phaseRules?.knockoutName||'Mata-mata';c.knockoutTies=Array.from({length:n},(_,i)=>c.knockoutTies?.[i]||{round,a:'',b:''}).map(t=>({...t,round}));save();renderPhase()});
-  $p('phaseSaveTies')?.addEventListener('click',()=>{const c=comp();if(!c)return;document.querySelectorAll('[data-tie-index]').forEach(sel=>{const tie=c.knockoutTies[+sel.dataset.tieIndex];if(tie)tie[sel.dataset.tieSide]=sel.value});const used=[];for(const t of c.knockoutTies){if(t.a&&t.b&&t.a===t.b){alert('Um confronto não pode ter a mesma equipe dos dois lados.');return}for(const id of [t.a,t.b])if(id){if(used.includes(id)){alert('Uma equipe foi colocada em mais de um confronto. Confira a chave.');return}used.push(id)}}save();renderPhase();alert('Confrontos salvos nesta competição.');});
+});save();
+renderPhase();
+
+try {
+  const result = await saveGroupsToSupabase(c, ts);
+  await saveCompetitionPhaseConfig(c);
+
+  if (result.failed) {
+    alert('Configurações das fases salvas, mas o Supabase recusou ' + result.failed + ' atualização(ões) dos grupos. Confira as permissões UPDATE da tabela competicao_equipes.');
+  } else if (result.skipped) {
+    alert('Configurações das fases salvas. Confira os vínculos das equipes para sincronizar todos os grupos.');
+  } else {
+    alert('Grupos e classificações salvos no Supabase com sucesso!');
+  }
+} catch (error) {
+  console.error('Erro ao salvar grupos e configurações:', error);
+  alert('Não foi possível confirmar o salvamento completo no Supabase. Verifique a conexão e as permissões.');
+}
+});
+
+
+$p('phaseBuildQualifiers')?.addEventListener('click',()=>{
+  const c=comp();
+  if(!c)return;
+
+  const st=standings(c);
+  const labs=groupLabels(c);
+  const top=Math.max(0,+$p('phaseTopPerGroup').value||0);
+  const thirds=Math.max(0,+$p('phaseBestThirds').value||0);
+  let chosen=[];
+
+  labs.forEach(g=>chosen.push(...st.filter(x=>x.group===g).slice(0,top)));
+
+  const thirdCandidates=labs
+    .map(g=>st.filter(x=>x.group===g)[top])
+    .filter(Boolean)
+    .sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp);
+
+  chosen.push(...thirdCandidates.slice(0,thirds));
+  c.qualifiers=[...new Set(chosen.map(x=>String(x.team.id)))];
+
+  save();
+  renderPhase();
+
+  saveCompetitionPhaseConfig(c)
+    .then(()=>alert(`Classificados gerados e salvos no Supabase: ${c.qualifiers.length} equipe(s).`))
+    .catch(error=>{
+      console.error('Erro ao salvar classificados:',error);
+      alert('Classificados gerados localmente, mas o Supabase não confirmou o salvamento.');
+    });
+});
+
+$p('phaseQualifiers')?.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-remove-qualifier]');
+  if(!b)return;
+  const c=comp();
+  c.qualifiers=(c.qualifiers||[]).filter(id=>String(id)!==String(b.dataset.removeQualifier));
+  save();
+  renderPhase();
+});
+ $p('phaseMakeTieSlots')?.addEventListener('click',()=>{
+  const c=comp();
+  if(!c)return;
+
+  const n=Math.max(1,Math.min(32,+$p('phaseTieCount').value||8));
+  const round=$p('phaseRoundName').value.trim()||c.phaseRules?.knockoutName||'Mata-mata';
+
+  c.knockoutTies=Array.from(
+    {length:n},
+    (_,i)=>c.knockoutTies?.[i]||{round,a:'',b:''}
+  ).map(t=>({...t,round}));
+
+  save();
+  renderPhase();
+
+  saveCompetitionPhaseConfig(c)
+    .then(()=>alert('Confrontos preparados e salvos no Supabase!'))
+    .catch(error=>{
+      console.error('Erro ao preparar confrontos:',error);
+      alert('Os confrontos foram preparados localmente, mas o Supabase não confirmou o salvamento.');
+    });
+});
+  $p('phaseSaveTies')?.addEventListener('click',()=>{const c=comp();if(!c)return;document.querySelectorAll('[data-tie-index]').forEach(sel=>{const tie=c.knockoutTies[+sel.dataset.tieIndex];if(tie)tie[sel.dataset.tieSide]=sel.value});const used=[];for(const t of c.knockoutTies){if(t.a&&t.b&&t.a===t.b){alert('Um confronto não pode ter a mesma equipe dos dois lados.');return}for(const id of [t.a,t.b])if(id){if(used.includes(id)){alert('Uma equipe foi colocada em mais de um confronto. Confira a chave.');return}used.push(id)}}save();
+renderPhase();
+
+saveCompetitionPhaseConfig(c)
+  .then(()=>alert('Confrontos salvos no Supabase com sucesso!'))
+  .catch(error=>{
+    console.error('Erro ao salvar confrontos:',error);
+    alert('Os confrontos foram salvos localmente, mas o Supabase não confirmou o salvamento.');
+  });
+});
   const originalRenderAll=window.renderAll;const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase()};window.renderAll=wrapped;
   setTimeout(()=>{refreshCompetitionSelect();renderPhase()},300);
  });
