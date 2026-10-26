@@ -1306,7 +1306,41 @@ overflow: visible !important;
 <div class="actions"><button class="gold" id="phaseSaveRules" type="button">Salvar regras de classificação</button><button class="secondary" id="phaseAssignEvenly" type="button">Distribuir equipes automaticamente</button></div>
 <h4 style="margin-top:22px">1. Distribuição das equipes nos grupos</h4><div id="phaseTeamGroups" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseSaveGroups" type="button">Salvar grupos</button></div>
 <h4 style="margin-top:22px">2. Classificação dos grupos</h4><div id="phaseStandings" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseBuildQualifiers" type="button">Gerar classificados</button></div><div id="phaseQualifiers" class="tablewrap"></div>
-<h4 style="margin-top:22px">3. Montar os confrontos da fase seguinte</h4><p class="small muted">Escolha manualmente quem pega quem. Se houver 15 classificados, use uma vaga extra para completar 16 ou ajuste as regras.</p><div class="formgrid"><label>Quantidade de confrontos<input id="phaseTieCount" type="number" min="1" max="32" value="8"></label><label>Rodada<input id="phaseRoundName" value="Oitavas de final"></label></div><div class="actions"><button class="secondary" id="phaseMakeTieSlots" type="button">Preparar confrontos</button><button class="gold" id="phaseSaveTies" type="button">Salvar confrontos</button></div><div id="phaseTies" class="tablewrap"></div><div class="note">A classificação é calculada com os jogos marcados como Finalizado. Os grupos e a chave eliminatória desta ferramenta são gravados no armazenamento local do navegador; para compartilhar automaticamente entre aparelhos, será necessária a sincronização dessas configurações com o Supabase.</div>
+
+<h4 style="margin-top:22px">3. Gerenciar fases e confrontos</h4>
+
+<p class="small muted">
+  Configure qualquer fase eliminatória. Escolha as equipes, o formato e os dados de cada jogo. Serve para competições com grupos ou mata-mata desde o início.
+</p>
+
+<div class="formgrid">
+  <label>Fase
+    <select id="phaseRoundName">
+      <option value="16 avos de final">16 avos de final</option>
+      <option value="Oitavas de final" selected>Oitavas de final</option>
+      <option value="Quartas de final">Quartas de final</option>
+      <option value="Semifinal">Semifinal</option>
+      <option value="Disputa de terceiro lugar">Disputa de terceiro lugar</option>
+      <option value="Final">Final</option>
+    </select>
+  </label>
+
+  <label>Quantidade de confrontos
+    <input id="phaseTieCount" type="number" min="1" max="32" value="8">
+  </label>
+</div>
+
+<div class="actions">
+  <button class="secondary" id="phaseMakeTieSlots" type="button">
+    Preparar confrontos
+  </button>
+  <button class="gold" id="phaseSaveTies" type="button">
+    Salvar confrontos
+  </button>
+</div>
+
+<div id="phaseTies" class="tablewrap"></div>
+<div class="note">A classificação é calculada com os jogos marcados como Finalizado. Os grupos e a chave eliminatória desta ferramenta são gravados no armazenamento local do navegador; para compartilhar automaticamente entre aparelhos, será necessária a sincronização dessas configurações com o Supabase.</div>
 </div></div>
 
 <div class="panel"><div class="ph"><h3>Cadastrar equipe</h3><span class="pill">1 · Equipes</span></div><div class="pad"><div class="formgrid"> <label>Competição<select id="teamCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Nome da equipe<input id="teamName" placeholder="Ex.: Português de Águas Belas"/></label><label>Sigla para o escudo<input id="teamInitials" maxlength="5" placeholder="Ex.: PAB"/></label><label>Grupo da equipe (opcional)<input id="teamGroup" placeholder="Ex.: A, B, C"/></label><label>Escudo da equipe (opcional)<input accept="image/*" id="teamLogo" type="file"/></label><label>Vídeo da equipe (opcional)<input accept="video/*" id="teamVideo" type="file"/></label><label>Patrocinadores da equipe<input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona"/></label></div><div class="actions"><button class="gold" id="saveTeam">Cadastrar equipe</button></div></div></div>
@@ -3651,26 +3685,18 @@ $p('phaseSaveTies')?.addEventListener('click', async () => {
     }
   });
 
-  const used = [];
-
-  for (const tie of c.knockoutTies) {
-    if (tie.a && tie.b && tie.a === tie.b) {
-      alert('Um confronto não pode ter a mesma equipe dos dois lados.');
+    for (const tie of c.knockoutTies) {
+    if (
+      tie.a &&
+      tie.b &&
+      String(tie.a) === String(tie.b)
+    ) {
+      alert(
+        'Um confronto não pode ter a mesma equipe dos dois lados.'
+      );
       return;
     }
-
-    for (const id of [tie.a, tie.b]) {
-      if (!id) continue;
-
-      if (used.includes(String(id))) {
-        alert('Uma equipe foi colocada em mais de um confronto. Confira a chave.');
-        return;
-      }
-
-      used.push(String(id));
-    }
   }
-
   save();
   renderPhase();
 
