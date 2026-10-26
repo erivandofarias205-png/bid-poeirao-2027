@@ -3711,6 +3711,26 @@ tbody tr.row-staff,tbody tr.row-staff:nth-child(odd),tbody tr.row-staff:nth-chil
 tbody tr.row-staff td{background:#3b1659!important;border-color:#6d2fa0!important}
 tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
  <style id="finished-panel-taller">
+ /* CORREÇÃO CONFIRMADA: PAINEL DE FINALIZADOS SEM CORTE */
+#publicView #finishedFixtures {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+}
+
+#publicView .finished-match-panel {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+#publicView #gamesView {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
  /* AJUSTE DEFINITIVO DO PAINEL DE PARTIDAS FINALIZADAS */
 #publicView .finished-match-panel {
   height: auto !important;
