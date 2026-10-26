@@ -3263,8 +3263,63 @@ document.addEventListener('click',function(e){
 ].map(t=>[String(t.id),t])).values()];
   $p('phaseQualifiers').innerHTML=q.length?q.map((t,i)=>`<div class="phase-qualifier"><b>${i+1}.</b> ${esc(t.name)} <span class="muted">Grupo ${esc(groupOf(t,c)||'—')}</span><button class="danger" type="button" data-remove-qualifier="${esc(t.id)}">Retirar</button></div>`).join(''):'<div class="empty">Ainda não foram gerados os classificados.</div>';
   const ties=c.knockoutTies||[],opts=`<option value="">— Escolher equipe —</option>`+q.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
-  $p('phaseTies').innerHTML=ties.length?`<table><thead><tr><th>Confronto</th><th>Equipe 1</th><th>Equipe 2</th></tr></thead><tbody>${ties.map((m,i)=>`<tr><td>${esc(m.round||c.phaseRules?.knockoutName||'Mata-mata')} ${i+1}</td><td><select data-tie-side="a" data-tie-index="${i}"><option value="">— Escolher equipe —</option>${q.map(t=>`<option value="${esc(t.id)}" ${String(m.a)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}</select></td><td><select data-tie-side="b" data-tie-index="${i}"><option value="">— Escolher equipe —</option>${q.map(t=>`<option value="${esc(t.id)}" ${String(m.b)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table>`:'<div class="empty">Prepare os confrontos para escolher quem pega quem.</div>';
- }
+   $p('phaseTies').innerHTML = ties.length ? `
+    <table>
+      <thead>
+        <tr>
+          <th>Confronto</th>
+          <th>Equipe 1</th>
+          <th>Equipe 2</th>
+          <th>Formato</th>
+          <th>Data jogo 1</th>
+          <th>Horário jogo 1</th>
+          <th>Local jogo 1</th>
+          <th>Placar jogo 1</th>
+          <th>Data jogo 2</th>
+          <th>Horário jogo 2</th>
+          <th>Local jogo 2</th>
+          <th>Placar jogo 2</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${ties.map((m,i) => `
+          <tr>
+            <td>${esc(m.round || c.phaseRules?.knockoutName || 'Mata-mata')} ${i+1}</td>
+            <td>
+              <select data-tie-side="a" data-tie-index="${i}">
+                <option value="">Escolher equipe</option>
+                ${q.map(t => `<option value="${esc(t.id)}" ${String(m.a)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}
+              </select>
+            </td>
+            <td>
+              <select data-tie-side="b" data-tie-index="${i}">
+                <option value="">Escolher equipe</option>
+                ${q.map(t => `<option value="${esc(t.id)}" ${String(m.b)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}
+              </select>
+            </td>
+            <td>
+              <select data-tie-field="format" data-tie-index="${i}">
+                <option value="unico" ${(m.format||'unico')==='unico'?'selected':''}>Jogo único</option>
+                <option value="ida_volta" ${m.format==='ida_volta'?'selected':''}>Ida e volta</option>
+              </select>
+            </td>
+            ${['date1','time1','venue1','score1','date2','time2','venue2','score2'].map((field,j) => `
+              <td>
+                <input
+                  data-tie-field="${field}"
+                  data-tie-index="${i}"
+                  type="${['date1','date2'].includes(field)?'date':['time1','time2'].includes(field)?'time':'text'}"
+                  value="${esc(m[field] || '')}"
+                  placeholder="${['Local','Placar'][j%4] || ''}"
+                >
+              </td>
+            `).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  ` : '<div class="empty">Prepare os confrontos para escolher quem pega quem.</div>';
+   }
  function refreshCompetitionSelect(){const sel=$p('phaseCompetitionSelect');if(!sel)return;const comps=db.competitions||[];sel.innerHTML=comps.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(db.activeCompetitionId)?'selected':''}>${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');if(!comps.some(c=>String(c.id)===String(sel.value))&&comps.length)sel.value=String(comp()?.id||comps[0].id)}
  async function saveGroupsToSupabase(c,ts){
   if(typeof supabaseClient==='undefined'||!supabaseClient||!c._remote&&!c.dbId)return {failed:0,skipped:ts.length};
@@ -3276,6 +3331,7 @@ document.addEventListener('click',function(e){
   return {failed,skipped};
  }
  
+
 async function saveCompetitionPhaseConfig(c) {
   if (!c || !c.dbId || typeof supabaseClient === 'undefined' || !supabaseClient) {
     throw new Error('Competição sem vínculo com o Supabase.');
@@ -3291,21 +3347,25 @@ async function saveCompetitionPhaseConfig(c) {
     phaseWinners: c.phaseWinners || []
   };
 
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from('COMPETICOES')
     .update({ configuracao_fases: configuracao })
-    .eq('id', c.dbId);
+    .eq('id', c.dbId)
+    .select('id');
 
   if (error) {
     console.error('Erro ao salvar configurações das fases:', error);
     throw error;
   }
 
+  if (!data || data.length === 0) {
+    throw new Error('Nenhuma competição foi atualizada. Verifique as permissões UPDATE no Supabase.');
+  }
+
   Object.assign(c, configuracao);
   return true;
 }
- document.addEventListener('DOMContentLoaded',()=>{
-  const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
+ const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
   document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;updateCompetitionFormatFields();add.style.display='none';saveEdit.style.display='inline-block';$p('newCompetitionName').scrollIntoView({behavior:'smooth',block:'center'});});
  saveEdit.addEventListener('click', async () => {
   const c = (db.competitions || []).find(
@@ -3515,15 +3575,60 @@ $p('phaseQualifiers')?.addEventListener('click',ev=>{
       alert('Os confrontos foram preparados localmente, mas o Supabase não confirmou o salvamento.');
     });
 });
-  $p('phaseSaveTies')?.addEventListener('click',()=>{const c=comp();if(!c)return;document.querySelectorAll('[data-tie-index]').forEach(sel=>{const tie=c.knockoutTies[+sel.dataset.tieIndex];if(tie)tie[sel.dataset.tieSide]=sel.value});const used=[];for(const t of c.knockoutTies){if(t.a&&t.b&&t.a===t.b){alert('Um confronto não pode ter a mesma equipe dos dois lados.');return}for(const id of [t.a,t.b])if(id){if(used.includes(id)){alert('Uma equipe foi colocada em mais de um confronto. Confira a chave.');return}used.push(id)}}save();
-renderPhase();
+ 
+$p('phaseSaveTies')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
 
-saveCompetitionPhaseConfig(c)
-  .then(()=>alert('Confrontos salvos no Supabase com sucesso!'))
-  .catch(error=>{
-    console.error('Erro ao salvar confrontos:',error);
-    alert('Os confrontos foram salvos localmente, mas o Supabase não confirmou o salvamento.');
+  c.knockoutTies = c.knockoutTies || [];
+
+  document.querySelectorAll('[data-tie-index]').forEach(el => {
+    const i = Number(el.dataset.tieIndex);
+    const tie = c.knockoutTies[i];
+    if (!tie) return;
+
+    if (el.dataset.tieSide) {
+      tie[el.dataset.tieSide] = el.value;
+    }
+
+    if (el.dataset.tieField) {
+      tie[el.dataset.tieField] = el.value;
+    }
   });
+
+  const used = [];
+
+  for (const tie of c.knockoutTies) {
+    if (tie.a && tie.b && tie.a === tie.b) {
+      alert('Um confronto não pode ter a mesma equipe dos dois lados.');
+      return;
+    }
+
+    for (const id of [tie.a, tie.b]) {
+      if (!id) continue;
+
+      if (used.includes(String(id))) {
+        alert('Uma equipe foi colocada em mais de um confronto. Confira a chave.');
+        return;
+      }
+
+      used.push(String(id));
+    }
+  }
+
+  save();
+  renderPhase();
+
+  try {
+    await saveCompetitionPhaseConfig(c);
+    alert('Confrontos, formato, datas, horários, locais e placares salvos no Supabase!');
+  } catch (error) {
+    console.error('Erro ao salvar confrontos:', error);
+    alert(
+      'Os dados ficaram salvos localmente, mas o Supabase não confirmou o salvamento. Erro: ' +
+      (error.message || error)
+    );
+  }
 });
   const originalRenderAll=window.renderAll;const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase()};window.renderAll=wrapped;
   setTimeout(()=>{refreshCompetitionSelect();renderPhase()},300);
