@@ -3514,38 +3514,78 @@ try {
 });
 
 
-$p('phaseBuildQualifiers')?.addEventListener('click',()=>{
-  const c=comp();
-  if(!c)return;
 
-  const st=standings(c);
-  const labs=groupLabels(c);
-  const top=Math.max(0,+$p('phaseTopPerGroup').value||0);
-  const thirds=Math.max(0,+$p('phaseBestThirds').value||0);
-  let chosen=[];
+$p('phaseBuildQualifiers')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
 
-  labs.forEach(g=>chosen.push(...st.filter(x=>x.group===g).slice(0,top)));
+  const st = standings(c);
+  const labs = groupLabels(c);
+  const top = Math.max(0, +$p('phaseTopPerGroup').value || 0);
+  const thirds = Math.max(0, +$p('phaseBestThirds').value || 0);
+  const extra = Math.max(0, +$p('phaseExtraSlots').value || 0);
 
-  const thirdCandidates=labs
-    .map(g=>st.filter(x=>x.group===g)[top])
+  const chosen = [];
+
+  // Classificados pela posição dentro de cada grupo.
+  labs.forEach(g => {
+    chosen.push(...st.filter(x => x.group === g).slice(0, top));
+  });
+
+  // Melhores terceiros colocados.
+  const thirdCandidates = labs
+    .map(g => st.filter(x => x.group === g)[top])
     .filter(Boolean)
-    .sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp);
+    .sort((a, b) =>
+      b.pts - a.pts ||
+      (b.gp - b.gc) - (a.gp - a.gc) ||
+      b.gp - a.gp ||
+      a.team.name.localeCompare(b.team.name)
+    );
 
-  chosen.push(...thirdCandidates.slice(0,thirds));
-  c.qualifiers=[...new Set(chosen.map(x=>String(x.team.id)))];
+  chosen.push(...thirdCandidates.slice(0, thirds));
+
+  // Acrescenta equipes marcadas manualmente como classificadas,
+  // sem duplicar equipes já selecionadas.
+  const manual = tsForQualification(c);
+  chosen.push(...manual);
+
+  const unique = [...new Map(
+    chosen.map(x => [String(x.team.id), x])
+  ).values()];
+
+  // A vaga extra é um espaço reservado na quantidade desejada.
+  // Ela não escolhe automaticamente uma equipe.
+  const target = labs.length * top + thirds + extra;
+
+  c.qualifiers = unique.map(x => String(x.team.id));
+
+  // Cria espaços para confrontos suficientes para a fase seguinte.
+  const tieCount = Math.ceil(target / 2);
+  const round = c.phaseRules?.knockoutName || 'Oitavas de final';
+
+  c.knockoutTies = Array.from(
+    { length: tieCount },
+    (_, i) => c.knockoutTies?.[i] || { round, a: '', b: '' }
+  ).map(t => ({ ...t, round }));
 
   save();
   renderPhase();
 
-  saveCompetitionPhaseConfig(c)
-    .then(()=>alert(`Classificados gerados e salvos no Supabase: ${c.qualifiers.length} equipe(s).`))
-    .catch(error=>{
-      console.error('Erro ao salvar classificados:',error);
-      alert('Classificados gerados localmente, mas o Supabase não confirmou o salvamento.');
-    });
+  try {
+    await saveCompetitionPhaseConfig(c);
+    alert(
+      `Classificados salvos: ${c.qualifiers.length} equipe(s). ` +
+      `Quantidade prevista com a vaga extra: ${target}. ` +
+      `Confira os confrontos e escolha as equipes manualmente.`
+    );
+  } catch (error) {
+    console.error('Erro ao salvar classificados:', error);
+    alert(
+      'Os dados foram atualizados localmente, mas o Supabase não confirmou o salvamento.'
+    );
+  }
 });
-
-$p('phaseQualifiers')?.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-remove-qualifier]');
   if(!b)return;
   const c=comp();
