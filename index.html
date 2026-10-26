@@ -1251,7 +1251,13 @@ overflow: visible !important;
 <div class="pad"><div class="formgrid">
 <label>Data do jogo<input id="matchDate" type="date"/></label>
 <label>Rodada / fase<input id="matchRound" placeholder="Ex.: 1ª rodada"/></label>
-<label>Local<input id="matchVenue" placeholder="Ex.: Estádio Braizão"/></label>
+<label>Formato do confronto
+  <select id="matchFormat">
+    <option value="unico">Jogo único</option>
+    <option value="ida_volta">Ida e volta</option>
+  </select>
+</label>
+<label>Local<input id="matchVenue" placeholder="Ex.: Arena Aprijão"/></label>
 <label>Equipe mandante<select id="matchHome"></select></label>
 <label>Gols do mandante<input id="matchHomeScore" min="0" placeholder="—" type="number"/></label>
 <label>Equipe visitante<select id="matchAway"></select></label>
@@ -1878,7 +1884,7 @@ function renderMatches(){
    }catch(error){console.error('Erro ao excluir partida:',error);alert('Não foi possível excluir a partida. Ela foi mantida. Detalhe: '+(error?.message||error));}
    finally{b.disabled=false}
  });
- document.querySelectorAll('[data-edit-match]').forEach(b=>b.onclick=()=>{const m=db.matches.find(x=>String(x.id)===b.dataset.editMatch);if(!m)return;$('matchDate').value=m.date||'';$('matchRound').value=m.round||'';$('matchVenue').value=m.venue||'';$('matchHome').value=m.homeId||'';$('matchAway').value=m.awayId||'';$('matchHomeScore').value=m.homeScore??'';$('matchAwayScore').value=m.awayScore??'';$('matchStatus').value=m.status||'Agendado';$('matchTime').value=m.time||'';$('saveMatch').dataset.editId=m.id;$('saveMatch').textContent='Salvar alterações do jogo';showTab('games')});
+ document.querySelectorAll('[data-edit-match]').forEach(b=>b.onclick=()=>{const m=db.matches.find(x=>String(x.id)===b.dataset.editMatch);if(!m)return;$('matchDate').value=m.date||'';$('matchRound').value=m.round||'';$('matchFormat').value=m.formato||'unico';$('matchVenue').value=m.venue||'';$('matchHome').value=m.homeId||'';$('matchAway').value=m.awayId||'';$('matchHomeScore').value=m.homeScore??'';$('matchAwayScore').value=m.awayScore??'';$('matchStatus').value=m.status||'Agendado';$('matchTime').value=m.time||'';$('saveMatch').dataset.editId=m.id;$('saveMatch').textContent='Salvar alterações do jogo';showTab('games')});
  const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
  (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{
   const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);
@@ -1906,8 +1912,19 @@ $('saveMatch')?.addEventListener('click',async()=>{
  if(!date){alert('Informe a data da partida.');return}
  const localDateTime=new Date(`${date}T${time||'12:00'}:00`);
  if(Number.isNaN(localDateTime.getTime())){alert('Confira a data e o horário da partida.');return}
- const payload={competicao_id:comp.dbId||comp.id,equipe_mandante_id:home.dbId,equipe_visitante_id:away.dbId,rodada:parseInt($('matchRound').value,10)||null,fase:$('matchRound').value.trim()||null,data_hora:localDateTime.toISOString(),local_jogo:$('matchVenue').value.trim()||null,gols_mandante:hs===''?null:Number(hs),gols_visitante:as===''?null:Number(as),status};
- button.disabled=true;
+ const payload={
+   competicao_id:comp.dbId||comp.id,
+   equipe_mandante_id:home.dbId,
+   equipe_visitante_id:away.dbId,
+   rodada:parseInt($('matchRound').value,10)||null,
+   fase:$('matchRound').value.trim()||null,
+  formato:$('matchFormat').value,
+   data_hora:localDateTime.toISOString(),
+   local_jogo:$('matchVenue').value.trim()||null,
+   gols_mandante:hs===''?null:Number(hs),
+   gols_visitante:as===''?null:Number(as),
+   status
+ };
  try{
    const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
    if(sessionError)throw sessionError;
@@ -1915,10 +1932,23 @@ $('saveMatch')?.addEventListener('click',async()=>{
    const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
    if(adminError)throw adminError;
    if(adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return}
-   let result;
-   if(old?.dbId){result=await supabaseClient.from('jogos').update(payload).eq('id',old.dbId).select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,data_hora,local_jogo,gols_mandante,gols_visitante,status').single();}
-   else {result=await supabaseClient.from('jogos').insert(payload).select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,data_hora,local_jogo,gols_mandante,gols_visitante,status').single();}
-   if(result.error)throw result.error;
+let result;
+if(old?.dbId){
+  result=await supabaseClient
+    .from('jogos')
+    .update(payload)
+    .eq('id',old.dbId)
+    .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
+    .single();
+}
+else {
+  result=await supabaseClient
+    .from('jogos')
+    .insert(payload)
+    .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
+    .single();
+}
+    if(result.error)throw result.error;
    button.dataset.editId='';button.textContent='Adicionar jogo à tabela';
    await loadSupabaseMatches();showTab('games');
    alert(old?.dbId?'Partida atualizada no Supabase e disponível nos dispositivos.':'Partida salva no Supabase e disponível nos dispositivos.');
@@ -2373,7 +2403,7 @@ const supabaseClient = window.supabase.createClient(
 // Carrega partidas da tabela public.jogos para que apareçam igualmente em celular e computador.
 async function loadSupabaseMatches(){
  try{
-  const {data:rows,error}=await supabaseClient.from('jogos').select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,data_hora,local_jogo,gols_mandante,gols_visitante,status').order('data_hora',{ascending:true});
+  const {data:rows,error}=await supabaseClient.from('jogos').select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status').order('data_hora',{ascending:true});
   if(error)throw error;
   const teams=db.teams||[];
   const toLocalTeamId=(id)=>{const t=teams.find(x=>String(x.dbId)===String(id)||String(x.id)===String(id));return t?.id||String(id)};
@@ -2384,7 +2414,27 @@ async function loadSupabaseMatches(){
    const home=teams.find(t=>String(t.dbId)===String(r.equipe_mandante_id));
    const away=teams.find(t=>String(t.dbId)===String(r.equipe_visitante_id));
    const comp=(db.competitions||[]).find(c=>String(c.dbId||c.id)===String(r.competicao_id));
-   return {id:String(r.id),dbId:r.id,date,time,round:r.fase||r.rodada||'',venue:r.local_jogo||'',homeId:home?.id||String(r.equipe_mandante_id),homeName:home?.name||'Equipe',awayId:away?.id||String(r.equipe_visitante_id),awayName:away?.name||'Equipe',homeScore:r.gols_mandante,awayScore:r.gols_visitante,status:r.status||'Agendado',competitionId:String(r.competicao_id),competitionDbId:r.competicao_id,competitionName:comp?.name||'',competitionLogo:comp?.logo||'',_remote:true};
+  return {
+  id:String(r.id),
+  dbId:r.id,
+  date,
+  time,
+  round:r.fase||r.rodada||'',
+  formato:r.formato||'unico',
+  venue:r.local_jogo||'',
+  homeId:home?.id||String(r.equipe_mandante_id),
+  homeName:home?.name||'Equipe',
+  awayId:away?.id||String(r.equipe_visitante_id),
+  awayName:away?.name||'Equipe',
+  homeScore:r.gols_mandante,
+  awayScore:r.gols_visitante,
+  status:r.status||'Agendado',
+  competitionId:String(r.competicao_id),
+  competitionDbId:r.competicao_id,
+  competitionName:comp?.name||'',
+  competitionLogo:comp?.logo||'',
+  _remote:true
+};
   });
   const localOnly=(db.matches||[]).filter(m=>!m._remote&&!m.dbId);
   db.matches=[...remote,...localOnly];
