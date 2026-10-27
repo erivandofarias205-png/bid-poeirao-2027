@@ -2462,7 +2462,427 @@ else {
  }catch(error){console.error('Falha ao salvar partida no Supabase:',error);alert('Não foi possível salvar a partida no Supabase. Nenhuma confirmação foi dada. Detalhe: '+(error?.message||error));}
   finally{button.disabled=false}
 });
-$('exportMatches')?.addEventListener('click',()=>{
+
+
+let manualGroupDraft = [];
+let manualGroupCurrentRound = 1;
+let manualGroupFormatMode = 'unico';
+let manualGroupConfirmedRounds = {};
+
+function manualGroupGenerateRound() {
+ function manualGroupUpdateRounds() {
+  const c = comp();
+  const format = $p('manualGroupFormat')?.value || 'unico';
+  const roundSelect = $p('manualGroupRound');
+
+  if (!c || !roundSelect) return;
+
+  const labels = groupLabels(c);
+  const allTeams = teams(c);
+
+  let maxRounds = 0;
+
+  for (const group of labels) {
+    const count = allTeams.filter(
+      t => groupOf(t, c) === group
+    ).length;
+
+    if (count < 2) continue;
+
+    const teamsForRound = count % 2 === 0
+      ? count
+      : count + 1;
+
+    const roundsForGroup = teamsForRound - 1;
+    const totalRounds = format === 'ida_volta'
+      ? roundsForGroup * 2
+      : roundsForGroup;
+
+    maxRounds = Math.max(maxRounds, totalRounds);
+  }
+
+  const currentValue = roundSelect.value;
+  roundSelect.innerHTML = '';
+
+  for (let round = 1; round <= maxRounds; round++) {
+    const option = document.createElement('option');
+    option.value = `Rodada ${round}`;
+    option.textContent = `Rodada ${round}`;
+    roundSelect.appendChild(option);
+  }
+
+  if (maxRounds > 0) {
+    const previousRound = Number(
+      String(currentValue).replace(/\D/g, '')
+    );
+
+    roundSelect.value =
+      previousRound >= 1 && previousRound <= maxRounds
+        ? `Rodada ${previousRound}`
+        : 'Rodada 1';
+  }
+}
+  const c = comp();
+  if (!c) {
+    alert('Selecione uma competição primeiro.');
+    return;
+  }
+
+ const roundText = $p('manualGroupRound')?.value || 'Rodada 1';
+const round = Number(roundText.replace(/\D/g, '')) || 1;
+  const format = $p('manualGroupFormat')?.value || 'unico';
+  const labels = groupLabels(c);
+  const allTeams = teams(c);
+  const draft = [];
+
+  for (const group of labels) {
+    const members = allTeams.filter(t => groupOf(t, c) === group);
+
+    if (members.length < 2) continue;
+
+    const pairings = [];
+
+    
+if (members.length === 3) {
+  const order = [
+    [0, 1],
+    [2, 0],
+    [1, 2]
+  ];
+
+  const legRound = format === 'ida_volta'
+  ? ((round - 1) % 3) + 1
+  : round;
+
+const pair = order[legRound - 1];
+
+if (pair && round >= 1 && round <= (format === 'ida_volta' ? 6 : 3)) {
+  if (format === 'ida_volta' && round > 3) {
+    pairings.push([pair[1], pair[0]]);
+  } else {
+    pairings.push(pair);
+  }
+}
+}
+   } else {
+  const idaPool = [...members];
+
+  if (idaPool.length % 2 !== 0) {
+    idaPool.push(null);
+  }
+
+  const totalRoundsIda = idaPool.length - 1;
+  const totalRounds = format === 'ida_volta'
+    ? totalRoundsIda * 2
+    : totalRoundsIda;
+
+  if (round < 1 || round > totalRounds) continue;
+
+  const roundIda = format === 'ida_volta' && round > totalRoundsIda
+    ? round - totalRoundsIda
+    : round;
+
+  const pool = [...idaPool];
+  const half = pool.length / 2;
+  let pairs = [];
+
+  for (let r = 1; r <= roundIda; r++) {
+    pairs = [];
+
+    for (let i = 0; i < half; i++) {
+      const a = pool[i];
+      const b = pool[pool.length - 1 - i];
+
+      if (a && b) {
+        pairs.push([a, b]);
+      }
+    }
+
+    const fixed = pool[0];
+    const rest = pool.slice(1);
+    rest.unshift(rest.pop());
+    pool.splice(0, pool.length, fixed, ...rest);
+  }
+
+  if (format === 'ida_volta' && round > totalRoundsIda) {
+    pairs = pairs.map(([a, b]) => [b, a]);
+  }
+
+  pairings.push(
+    ...pairs.map(([a, b]) => [
+      members.indexOf(a),
+      members.indexOf(b)
+    ])
+  );
+}      const home = members[homeIndex];
+      const away = members[awayIndex];
+      if (!home || !away) continue;
+
+      draft.push({
+        group,
+        round,
+        format,
+        homeId: home.id,
+        awayId: away.id,
+        homeName: home.name,
+        awayName: away.name,
+        date: '',
+        time: '',
+        venue: ''
+      });
+    }
+  }
+
+  if (!draft.length) {
+    alert('Não há confrontos para esta rodada. Confira os grupos e a rodada selecionada.');
+    return;
+  }
+
+  manualGroupDraft = draft;
+  manualGroupCurrentRound = round;
+  manualGroupFormatMode = format;
+
+  const target = $p('manualGroupMatches');
+  if (!target) {
+    alert('Não encontrei a área da lista de confrontos no HTML.');
+    return;
+  }
+
+  target.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Grupo</th>
+          <th>Mandante</th>
+          <th>Visitante</th>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Local</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${draft.map((m, i) => `
+          <tr>
+            <td>${esc(m.group)}</td>
+            <td>
+              <select data-mg-field="homeId" data-mg-index="${i}">
+                ${allTeams.map(t => `
+                  <option value="${esc(t.id)}"
+                    ${String(t.id) === String(m.homeId) ? 'selected' : ''}>
+                    ${esc(t.name)}
+                  </option>
+                `).join('')}
+              </select>
+            </td>
+            <td>
+              <select data-mg-field="awayId" data-mg-index="${i}">
+                ${allTeams.map(t => `
+                  <option value="${esc(t.id)}"
+                    ${String(t.id) === String(m.awayId) ? 'selected' : ''}>
+                    ${esc(t.name)}
+                  </option>
+                `).join('')}
+              </select>
+            </td>
+            <td><input type="date" data-mg-field="date" data-mg-index="${i}"></td>
+            <td><input type="time" data-mg-field="time" data-mg-index="${i}"></td>
+            <td><input type="text" placeholder="Local"
+              data-mg-field="venue" data-mg-index="${i}"></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  target.querySelectorAll('[data-mg-field]').forEach(el => {
+    el.addEventListener('change', () => {
+      const index = Number(el.dataset.mgIndex);
+      const field = el.dataset.mgField;
+      const match = manualGroupDraft[index];
+      if (!match) return;
+
+      if (field === 'homeId' || field === 'awayId') {
+        const selected = allTeams.find(t =>
+          String(t.id) === String(el.value)
+        );
+        if (!selected) return;
+
+        match[field] = selected.id;
+        match[field === 'homeId' ? 'homeName' : 'awayName'] =
+          selected.name;
+      } else {
+        match[field] = el.value;
+      }
+    });
+  });
+}
+$p('manualGroupFormat')?.addEventListener('change', () => {
+  manualGroupUpdateRounds();
+});
+
+$p('phaseCompetitionSelect')?.addEventListener('change', () => {
+  manualGroupUpdateRounds();
+});
+
+manualGroupUpdateRounds();
+$p('manualGroupPrepare')?.addEventListener('click', () => {
+  manualGroupGenerateRound();
+});
+
+$p('manualGroupSave')?.addEventListener('click', async () => {
+  const c = comp();
+
+  if (!c) {
+    alert('Selecione uma competição.');
+    return;
+  }
+
+  if (!manualGroupDraft.length) {
+    alert('Gere os confrontos antes de salvar.');
+    return;
+  }
+
+  const { data: sessionData, error: sessionError } =
+    await supabaseClient.auth.getSession();
+
+  if (sessionError || !sessionData?.session) {
+    alert('Entre na Administração com sua conta.');
+    return;
+  }
+
+  const { data: adminCheck, error: adminError } =
+    await supabaseClient.rpc('is_admin');
+
+  if (adminError || adminCheck !== true) {
+    alert('Sua conta não foi reconhecida como administradora.');
+    return;
+  }
+
+  const compDbId = c.dbId || c.db_id || c.id;
+
+  if (!compDbId) {
+    alert('Não foi possível identificar a competição no banco.');
+    return;
+  }
+
+  const prepared = [];
+
+  for (const m of manualGroupDraft) {
+    const home = (db.teams || []).find(t =>
+      String(t.id) === String(m.homeId)
+    );
+    const away = (db.teams || []).find(t =>
+      String(t.id) === String(m.awayId)
+    );
+
+    if (!home?.dbId || !away?.dbId) {
+      alert('Uma equipe não possui ID do Supabase. Nenhum jogo foi salvo.');
+      return;
+    }
+
+    if (String(home.dbId) === String(away.dbId)) {
+      alert('Um confronto não pode ter a mesma equipe nos dois lados.');
+      return;
+    }
+
+    if (!m.date || !m.time) {
+      alert('Preencha data e horário de todos os jogos antes de salvar.');
+      return;
+    }
+
+    const dt = new Date(`${m.date}T${m.time}:00`);
+
+    if (Number.isNaN(dt.getTime())) {
+      alert('Confira a data e o horário dos confrontos.');
+      return;
+    }
+
+    prepared.push({
+      competicao_id: compDbId,
+      equipe_mandante_id: home.dbId,
+      equipe_visitante_id: away.dbId,
+    rodada: Number(m.round) || null,
+      fase: `Fase de grupos - Grupo ${m.group} - Rodada ${m.round}`,
+      formato: m.format,
+      data_hora: dt.toISOString(),
+      local_jogo: m.venue || null,
+      gols_mandante: null,
+      gols_visitante: null,
+      status: 'Agendado'
+    });
+  }
+
+  const confirmed = confirm(
+    `Você vai salvar ${prepared.length} jogo(s) na competição "${c.name}". Deseja continuar?`
+  );
+
+  if (!confirmed) return;
+ 
+const { data: existingGames, error: existingError } =
+  await supabaseClient
+    .from('jogos')
+    .select('equipe_mandante_id,equipe_visitante_id,fase,rodada,formato')
+    .eq('competicao_id', compDbId);
+
+if (existingError) {
+  alert('Não foi possível verificar os jogos existentes. Nenhum jogo foi salvo.');
+  console.error(existingError);
+  return;
+}
+
+const existingGroupGames = (existingGames || []).filter(m =>
+  /fase de grupos|fase de grupo/i.test(m.fase || '')
+);
+
+
+const duplicate = prepared.find(m =>
+  existingGroupGames.some(old => {
+    const sameTeams =
+      (
+        String(old.equipe_mandante_id) === String(m.equipe_mandante_id) &&
+        String(old.equipe_visitante_id) === String(m.equipe_visitante_id)
+      ) ||
+      (
+        String(old.equipe_mandante_id) === String(m.equipe_visitante_id) &&
+        String(old.equipe_visitante_id) === String(m.equipe_mandante_id)
+      );
+
+    const sameRound = Number(old.rodada) === Number(m.rodada);
+
+    return sameTeams && sameRound;
+  })
+);
+
+if (duplicate) {
+  alert(
+    'Já existe um confronto entre estas equipes nesta competição. ' +
+    'Confira os jogos cadastrados antes de tentar salvar novamente.'
+  );
+  return;
+}
+  const { error } = await supabaseClient
+    .from('jogos')
+    .insert(prepared);
+
+  if (error) {
+    console.error('Erro ao salvar jogos:', error);
+    alert('Falha ao salvar no Supabase: ' + error.message);
+    return;
+  }
+
+  manualGroupDraft = [];
+  manualGroupConfirmedRounds[
+    `${compDbId}-${manualGroupCurrentRound}-${manualGroupFormatMode}`
+  ] = true;
+
+  await loadSupabaseMatches();
+
+  const target = $p('manualGroupMatches');
+  if (target) target.innerHTML = '';
+
+  alert('Jogos salvos no Supabase com sucesso!');
+});
+ $('exportMatches')?.addEventListener('click',()=>{
  const lines=[['Data','Horário','Rodada','Mandante','Gols mandante','Visitante','Gols visitante','Local','Status'],...(db.matches||[]).map(m=>[m.date,m.time,m.round,m.homeName,m.homeScore,m.awayName,m.awayScore,m.venue,m.status])];
  download('tabela-jogos-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8');
 });
