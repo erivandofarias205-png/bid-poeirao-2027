@@ -2560,7 +2560,8 @@ const labels = groupLabels(c);
 
 const competitionTeams = teams(c);
 const allTeams = competitionTeams;
-
+ ? competitionTeams
+   
 if (!allTeams.length) {
   alert('Nenhuma equipe vinculada à competição selecionada. Verifique os grupos e o vínculo das equipes.');
   return;
