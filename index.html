@@ -4873,13 +4873,18 @@ const qualifiedIds = (c.quarterFinalTies || []).flatMap(m => {
 });
 
 
+
 const uniqueQualifiedIds = [...new Set(qualifiedIds)];
 
-const ts = uniqueQualifiedIds.length === 4
-  ? allTeams.filter(t =>
-      uniqueQualifiedIds.includes(String(t.id)) ||
-      uniqueQualifiedIds.includes(String(t.dbId || ''))
-    )
+const qualifiedTeams = uniqueQualifiedIds.map(id =>
+  allTeams.find(t =>
+    String(t.id) === String(id) ||
+    String(t.dbId || '') === String(id)
+  )
+).filter(Boolean);
+
+const ts = qualifiedTeams.length === 4
+  ? qualifiedTeams
   : [];
 
 
