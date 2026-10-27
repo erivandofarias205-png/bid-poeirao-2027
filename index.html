@@ -2471,38 +2471,26 @@ let manualGroupFormatMode = 'unico';
 let manualGroupConfirmedRounds = {};
 
 function manualGroupLoadTeams() {
+  const helpers = window.bidManualGroupHelpers;
+  if (!helpers) {
+    console.error('Auxiliares dos grupos não carregados.');
+    return;
+  }
+
+  const comp = helpers.comp;
+  const teams = helpers.teams;
+
   const homeSelect = document.getElementById('manualGroupHome');
   const awaySelect = document.getElementById('manualGroupAway');
-  const competitionSelect = document.getElementById('phaseCompetitionSelect');
 
   if (!homeSelect || !awaySelect) return;
 
-  const selectedCompetitionId = competitionSelect?.value;
-
-  const allTeams = Array.isArray(db?.teams) ? db.teams : [];
-  const competitions = Array.isArray(db?.competitions) ? db.competitions : [];
-
-  const competition = competitions.find(c =>
-    String(c.id) === String(selectedCompetitionId) ||
-    String(c.dbId) === String(selectedCompetitionId)
-  );
-
-  const linkedTeams = allTeams.filter(t => {
-    if (!competition) return false;
-
-    const ids = [
-      t.competitionId,
-      t.competicao_id,
-      t.competitionDbId
-    ].filter(v => v !== undefined && v !== null).map(String);
-
-    return ids.includes(String(competition.id)) ||
-      ids.includes(String(competition.dbId));
-  });
+  const c = comp();
+  const allTeams = c ? teams(c) : [];
 
   const options = [
     '<option value="">Selecione a equipe</option>',
-    ...linkedTeams.map(t => {
+    ...allTeams.map(t => {
       const id = t.id ?? t.dbId;
       const name = t.name || t.nome || 'Equipe sem nome';
       return `<option value="${esc(id)}">${esc(name)}</option>`;
@@ -2512,7 +2500,7 @@ function manualGroupLoadTeams() {
   homeSelect.innerHTML = options;
   awaySelect.innerHTML = options;
 
-  if (!linkedTeams.length) {
+  if (!allTeams.length) {
     console.warn('BID: nenhuma equipe vinculada à competição selecionada.');
   }
 }
@@ -4501,9 +4489,15 @@ document.addEventListener('click',function(e){
   return false;
  }
  function teams(c=comp()){return c?(db.teams||[]).filter(t=>teamInComp(t,c)):[]}
- function groupLabels(c){return Array.from({length:Math.max(1,Math.min(32,Number(c?.groupCount)||1))},(_,i)=>String.fromCharCode(65+i)).sort((a,b)=>a.localeCompare(b,'pt-BR'))}
+  function groupLabels(c){return Array.from({length:Math.max(1,Math.min(32,Number(c?.groupCount)||1))},(_,i)=>String.fromCharCode(65+i)).sort((a,b)=>a.localeCompare(b,'pt-BR'))}
  function groupOf(t,c){const groups=c?.teamGroups||{};let g=String(groups[String(t.id)]??groups[String(t.dbId??'')]??t.group??'').trim().toUpperCase();if(/^\\d+$/.test(g)){const n=Number(g);if(n>=1&&n<=26)g=String.fromCharCode(64+n)}return g}
- function matches(c=comp()){
+ window.bidManualGroupHelpers = {
+  comp,
+  teams,
+  groupLabels,
+  groupOf
+};
+function matches(c=comp()){
   return (db.matches||[]).filter(m=>{
    const ids=[m.competitionId,m.competicao_id,m.competitionDbId].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
    if(ids.length)return ids.some(id=>compIds(c).includes(id));
