@@ -2469,7 +2469,6 @@ let manualGroupCurrentRound = 1;
 let manualGroupFormatMode = 'unico';
 let manualGroupConfirmedRounds = {};
 
-function manualGroupGenerateRound() {
  function manualGroupUpdateRounds() {
   const c = comp();
   const format = $p('manualGroupFormat')?.value || 'unico';
@@ -2522,754 +2521,757 @@ function manualGroupGenerateRound() {
         : 'Rodada 1';
   }
 }
-  const c = comp();
-  if (!c) {
-    alert('Selecione uma competição primeiro.');
-    return;
-  }
-
- const roundText = $p('manualGroupRound')?.value || 'Rodada 1';
-const round = Number(roundText.replace(/\D/g, '')) || 1;
-  const format = $p('manualGroupFormat')?.value || 'unico';
-  const labels = groupLabels(c);
-  const allTeams = teams(c);
-  const draft = [];
-
-  for (const group of labels) {
-    const members = allTeams.filter(t => groupOf(t, c) === group);
-
-    if (members.length < 2) continue;
-
-    const pairings = [];
-
-    
-if (members.length === 3) {
-  const order = [
-    [0, 1],
-    [2, 0],
-    [1, 2]
-  ];
-
-  const legRound = format === 'ida_volta'
-  ? ((round - 1) % 3) + 1
-  : round;
-
-const pair = order[legRound - 1];
-
-if (pair && round >= 1 && round <= (format === 'ida_volta' ? 6 : 3)) {
-  if (format === 'ida_volta' && round > 3) {
-    pairings.push([pair[1], pair[0]]);
-  } else {
-    pairings.push(pair);
-  }
-}
-    } else {
-      const idaPool = [...members];
-
-      if (idaPool.length % 2 !== 0) {
-        idaPool.push(null);
-      }
-
-  const totalRoundsIda = idaPool.length - 1;
-  const totalRounds = format === 'ida_volta'
-    ? totalRoundsIda * 2
-    : totalRoundsIda;
-
-  if (round < 1 || round > totalRounds) continue;
-
-  const roundIda = format === 'ida_volta' && round > totalRoundsIda
-    ? round - totalRoundsIda
-    : round;
-
-  const pool = [...idaPool];
-  const half = pool.length / 2;
-  let pairs = [];
-
-  for (let r = 1; r <= roundIda; r++) {
-    pairs = [];
-
-    for (let i = 0; i < half; i++) {
-      const a = pool[i];
-      const b = pool[pool.length - 1 - i];
-
-      if (a && b) {
-        pairs.push([a, b]);
-      }
-    }
-
-    const fixed = pool[0];
-    const rest = pool.slice(1);
-    rest.unshift(rest.pop());
-    pool.splice(0, pool.length, fixed, ...rest);
-  }
-
-  if (format === 'ida_volta' && round > totalRoundsIda) {
-    pairs = pairs.map(([a, b]) => [b, a]);
-  }
-
-  pairings.push(
-    ...pairs.map(([a, b]) => [
-      members.indexOf(a),
-      members.indexOf(b)
-    ])
-  );
-}      const home = members[homeIndex];
-      const away = members[awayIndex];
-      if (!home || !away) continue;
-
-      draft.push({
-        group,
-        round,
-        format,
-        homeId: home.id,
-        awayId: away.id,
-        homeName: home.name,
-        awayName: away.name,
-        date: '',
-        time: '',
-        venue: ''
-      });
-    }
-  }
-
-  if (!draft.length) {
-    alert('Não há confrontos para esta rodada. Confira os grupos e a rodada selecionada.');
-    return;
-  }
-
-  manualGroupDraft = draft;
-  manualGroupCurrentRound = round;
-  manualGroupFormatMode = format;
-
-  const target = $p('manualGroupMatches');
-  if (!target) {
-    alert('Não encontrei a área da lista de confrontos no HTML.');
-    return;
-  }
-
-  target.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Grupo</th>
-          <th>Mandante</th>
-          <th>Visitante</th>
-          <th>Data</th>
-          <th>Horário</th>
-          <th>Local</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${draft.map((m, i) => `
-          <tr>
-            <td>${esc(m.group)}</td>
-            <td>
-              <select data-mg-field="homeId" data-mg-index="${i}">
-                ${allTeams.map(t => `
-                  <option value="${esc(t.id)}"
-                    ${String(t.id) === String(m.homeId) ? 'selected' : ''}>
-                    ${esc(t.name)}
-                  </option>
-                `).join('')}
-              </select>
-            </td>
-            <td>
-              <select data-mg-field="awayId" data-mg-index="${i}">
-                ${allTeams.map(t => `
-                  <option value="${esc(t.id)}"
-                    ${String(t.id) === String(m.awayId) ? 'selected' : ''}>
-                    ${esc(t.name)}
-                  </option>
-                `).join('')}
-              </select>
-            </td>
-            <td><input type="date" data-mg-field="date" data-mg-index="${i}"></td>
-            <td><input type="time" data-mg-field="time" data-mg-index="${i}"></td>
-            <td><input type="text" placeholder="Local"
-              data-mg-field="venue" data-mg-index="${i}"></td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-
-  target.querySelectorAll('[data-mg-field]').forEach(el => {
-    el.addEventListener('change', () => {
-      const index = Number(el.dataset.mgIndex);
-      const field = el.dataset.mgField;
-      const match = manualGroupDraft[index];
-      if (!match) return;
-
-      if (field === 'homeId' || field === 'awayId') {
-        const selected = allTeams.find(t =>
-          String(t.id) === String(el.value)
-        );
-        if (!selected) return;
-
-        match[field] = selected.id;
-        match[field === 'homeId' ? 'homeName' : 'awayName'] =
-          selected.name;
-      } else {
-        match[field] = el.value;
-      }
-    });
-  });
-}
-$p('manualGroupFormat')?.addEventListener('change', () => {
-  manualGroupUpdateRounds();
-});
-
-$p('phaseCompetitionSelect')?.addEventListener('change', () => {
-  manualGroupUpdateRounds();
-});
-
-manualGroupUpdateRounds();
-$p('manualGroupPrepare')?.addEventListener('click', () => {
-  manualGroupGenerateRound();
-});
-
-$p('manualGroupSave')?.addEventListener('click', async () => {
-  const c = comp();
-
-  if (!c) {
-    alert('Selecione uma competição.');
-    return;
-  }
-
-  if (!manualGroupDraft.length) {
-    alert('Gere os confrontos antes de salvar.');
-    return;
-  }
-
-  const { data: sessionData, error: sessionError } =
-    await supabaseClient.auth.getSession();
-
-  if (sessionError || !sessionData?.session) {
-    alert('Entre na Administração com sua conta.');
-    return;
-  }
-
-  const { data: adminCheck, error: adminError } =
-    await supabaseClient.rpc('is_admin');
-
-  if (adminError || adminCheck !== true) {
-    alert('Sua conta não foi reconhecida como administradora.');
-    return;
-  }
-
-  const compDbId = c.dbId || c.db_id || c.id;
-
-  if (!compDbId) {
-    alert('Não foi possível identificar a competição no banco.');
-    return;
-  }
-
-  const prepared = [];
-
-  for (const m of manualGroupDraft) {
-    const home = (db.teams || []).find(t =>
-      String(t.id) === String(m.homeId)
-    );
-    const away = (db.teams || []).find(t =>
-      String(t.id) === String(m.awayId)
-    );
-
-    if (!home?.dbId || !away?.dbId) {
-      alert('Uma equipe não possui ID do Supabase. Nenhum jogo foi salvo.');
-      return;
-    }
-
-    if (String(home.dbId) === String(away.dbId)) {
-      alert('Um confronto não pode ter a mesma equipe nos dois lados.');
-      return;
-    }
-
-    if (!m.date || !m.time) {
-      alert('Preencha data e horário de todos os jogos antes de salvar.');
-      return;
-    }
-
-    const dt = new Date(`${m.date}T${m.time}:00`);
-
-    if (Number.isNaN(dt.getTime())) {
-      alert('Confira a data e o horário dos confrontos.');
-      return;
-    }
-
-    prepared.push({
-      competicao_id: compDbId,
-      equipe_mandante_id: home.dbId,
-      equipe_visitante_id: away.dbId,
-    rodada: Number(m.round) || null,
-      fase: `Fase de grupos - Grupo ${m.group} - Rodada ${m.round}`,
-      formato: m.format,
-      data_hora: dt.toISOString(),
-      local_jogo: m.venue || null,
-      gols_mandante: null,
-      gols_visitante: null,
-      status: 'Agendado'
-    });
-  }
-
-  const confirmed = confirm(
-    `Você vai salvar ${prepared.length} jogo(s) na competição "${c.name}". Deseja continuar?`
-  );
-
-  if (!confirmed) return;
+  function manualGroupGenerateRound() {
+   const c = comp();
+   if (!c) {
+     alert('Selecione uma competição primeiro.');
+     return;
+   }
  
-const { data: existingGames, error: existingError } =
-  await supabaseClient
-    .from('jogos')
-    .select('equipe_mandante_id,equipe_visitante_id,fase,rodada,formato')
-    .eq('competicao_id', compDbId);
-
-if (existingError) {
-  alert('Não foi possível verificar os jogos existentes. Nenhum jogo foi salvo.');
-  console.error(existingError);
-  return;
-}
-
-const existingGroupGames = (existingGames || []).filter(m =>
-  /fase de grupos|fase de grupo/i.test(m.fase || '')
-);
-
-
-const duplicate = prepared.find(m =>
-  existingGroupGames.some(old => {
-    const sameTeams =
-      (
-        String(old.equipe_mandante_id) === String(m.equipe_mandante_id) &&
-        String(old.equipe_visitante_id) === String(m.equipe_visitante_id)
-      ) ||
-      (
-        String(old.equipe_mandante_id) === String(m.equipe_visitante_id) &&
-        String(old.equipe_visitante_id) === String(m.equipe_mandante_id)
-      );
-
-    const sameRound = Number(old.rodada) === Number(m.rodada);
-
-    return sameTeams && sameRound;
-  })
-);
-
-if (duplicate) {
-  alert(
-    'Já existe um confronto entre estas equipes nesta competição. ' +
-    'Confira os jogos cadastrados antes de tentar salvar novamente.'
-  );
-  return;
-}
-  const { error } = await supabaseClient
-    .from('jogos')
-    .insert(prepared);
-
-  if (error) {
-    console.error('Erro ao salvar jogos:', error);
-    alert('Falha ao salvar no Supabase: ' + error.message);
-    return;
+  const roundText = $p('manualGroupRound')?.value || 'Rodada 1';
+ const round = Number(roundText.replace(/\D/g, '')) || 1;
+   const format = $p('manualGroupFormat')?.value || 'unico';
+   const labels = groupLabels(c);
+   const allTeams = teams(c);
+   const draft = [];
+ 
+   for (const group of labels) {
+     const members = allTeams.filter(t => groupOf(t, c) === group);
+ 
+     if (members.length < 2) continue;
+ 
+     const pairings = [];
+ 
+     
+ if (members.length === 3) {
+   const order = [
+     [0, 1],
+     [2, 0],
+     [1, 2]
+   ];
+ 
+   const legRound = format === 'ida_volta'
+   ? ((round - 1) % 3) + 1
+   : round;
+ 
+ const pair = order[legRound - 1];
+ 
+ if (pair && round >= 1 && round <= (format === 'ida_volta' ? 6 : 3)) {
+   if (format === 'ida_volta' && round > 3) {
+     pairings.push([pair[1], pair[0]]);
+   } else {
+     pairings.push(pair);
+   }
+ }
+     else {
+       const idaPool = [...members];
+ 
+       if (idaPool.length % 2 !== 0) {
+         idaPool.push(null);
+       }
+ 
+   const totalRoundsIda = idaPool.length - 1;
+   const totalRounds = format === 'ida_volta'
+     ? totalRoundsIda * 2
+     : totalRoundsIda;
+ 
+   if (round < 1 || round > totalRounds) continue;
+ 
+   const roundIda = format === 'ida_volta' && round > totalRoundsIda
+     ? round - totalRoundsIda
+     : round;
+ 
+   const pool = [...idaPool];
+   const half = pool.length / 2;
+   let pairs = [];
+ 
+   for (let r = 1; r <= roundIda; r++) {
+     pairs = [];
+ 
+     for (let i = 0; i < half; i++) {
+       const a = pool[i];
+       const b = pool[pool.length - 1 - i];
+ 
+       if (a && b) {
+         pairs.push([a, b]);
+       }
+     }
+ 
+     const fixed = pool[0];
+     const rest = pool.slice(1);
+     rest.unshift(rest.pop());
+     pool.splice(0, pool.length, fixed, ...rest);
+   }
+ 
+   if (format === 'ida_volta' && round > totalRoundsIda) {
+     pairs = pairs.map(([a, b]) => [b, a]);
+   }
+ 
+   pairings.push(
+     ...pairs.map(([a, b]) => [
+       members.indexOf(a),
+       members.indexOf(b)
+     ])
+   );
   }
-
-  manualGroupDraft = [];
-  manualGroupConfirmedRounds[
-    `${compDbId}-${manualGroupCurrentRound}-${manualGroupFormatMode}`
-  ] = true;
-
-  await loadSupabaseMatches();
-
-  const target = $p('manualGroupMatches');
-  if (target) target.innerHTML = '';
-
-  alert('Jogos salvos no Supabase com sucesso!');
-});
- $('exportMatches')?.addEventListener('click',()=>{
- const lines=[['Data','Horário','Rodada','Mandante','Gols mandante','Visitante','Gols visitante','Local','Status'],...(db.matches||[]).map(m=>[m.date,m.time,m.round,m.homeName,m.homeScore,m.awayName,m.awayScore,m.venue,m.status])];
- download('tabela-jogos-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8');
-});
-function renderFrontPage(){
- const fixtures=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||(a.time||'').localeCompare(b.time||''));
- const teamForMatch=(m,side)=>{
-   const id=m[side+'Id']??m[side+'_id'];
-   const name=m[side+'Name']||m[side+'_name']||'';
-   return (db.teams||[]).find(t=>String(t.id)===String(id)||String(t.dbId)===String(id)) || (db.teams||[]).find(t=>String(t.name||t.nome||'').trim().toLowerCase()===String(name).trim().toLowerCase()) || {};
- };
- const crest=(team)=>team.logo||team.escudo_url||team.escudoUrl||'';
- const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
- const renderFixtureCard=(m)=>{
-   const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';
-   const finished=isFinished(m);
-   const competition=(db.competitions||[]).find(c=>String(c.id)===String(m.competitionId))||null;
-   const compName=m.competitionName||competition?.name||db.competition||'Copa Poeirão';
-   const season=competition?.season||competition?.temporada||m.season||m.temporada||((String(compName).match(/20\d{2}/)||[])[0])||'2026';
-   const compTitle=String(compName).match(/20\d{2}/)?String(compName):`${compName} — ${season}`;
-   const compLogo=m.competitionLogo||competition?.logo||competition?.logo_url||competition?.escudo_url||'';
-   const home=teamForMatch(m,'home'), away=teamForMatch(m,'away');
-   const homeLogo=crest(home), awayLogo=crest(away);
-   return `<div class="front-fixture-card"><div class="fixture-competition">${compLogo?`<img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}<span class="fixture-competition-name">${esc(compTitle)}</span>${compLogo?`<img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}</div><div class="fixture-date">${esc(date)}${m.time?' · '+esc(m.time):''}${m.round?' · '+esc(m.round):''}</div><div class="fixture"><span class="fixture-team">${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="Escudo ${esc(m.homeName||'equipe mandante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.homeName||'EQUIPE XX')}</span></span><span class="versus">${finished?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</span><span class="fixture-team">${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="Escudo ${esc(m.awayName||'equipe visitante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.awayName||'EQUIPE XX')}</span></span></div><div class="front-fixture-status">${esc(m.status||'Agendado')}${m.venue?' · '+esc(m.venue):''}</div></div>`;
- };
- const upcomingFixtures=fixtures.filter(m=>!isFinished(m)).slice().sort((a,b)=>{
-   const da=String(a.date||'9999-12-31')+' '+String(a.time||'23:59');
-   const dbb=String(b.date||'9999-12-31')+' '+String(b.time||'23:59');
-   return da.localeCompare(dbb);
- });
- const finishedFixtures=fixtures.filter(isFinished).slice().sort((a,b)=>{
-   const da=String(a.date||'')+' '+String(a.time||'');
-   const dbb=String(b.date||'')+' '+String(b.time||'');
-   return dbb.localeCompare(da);
- });
- $('frontFixtures').innerHTML=upcomingFixtures.length?upcomingFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma próxima partida cadastrada.</div>';
- const finishedPanel=$('finishedFixtures');
- if(finishedPanel) finishedPanel.innerHTML=finishedFixtures.length?finishedFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma partida finalizada ainda.</div>';
-
-
- const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
- (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
- const standings=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
- const comp=activeCompetition()||{};
- const fmt=String(comp.format||comp.formato||'').toLowerCase();
- const isLeague=fmt.includes('pontos-corridos')||fmt.includes('pontos corridos');
- const isKnockout=fmt.includes('mata-mata')||fmt.includes('mata mata');
- const logoOf=t=>t.logo||t.escudo_url||t.escudoUrl||'';
- const tableRows=list=>list.map((x,i)=>{const pct=x.j?((x.pts/(x.j*3))*100):0;return `<tr><td>${i+1}</td><td><span class="classification-team">${logoOf(x.team)?`<img class="classification-crest" src="${esc(logoOf(x.team))}" alt="Escudo ${esc(x.team.name)}" onerror="this.style.display='none'">`:`<span class="classification-crest-placeholder">⚽</span>`}<b>${esc(x.team.name||x.team.nome||'Equipe')}</b></span></td><td><b>${x.pts}</b></td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.gp-x.gc}</td><td>${pct.toFixed(1).replace('.',',')}%</td></tr>`}).join('');
- const tableHTML=(title,list)=>`<div class="classification-subtable"><div class="classification-subtitle">${esc(title)}</div><div class="tablewrap"><table class="front-table"><thead><tr><th>#</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody>${list.length?tableRows(list):'<tr><td colspan="11">Nenhuma equipe neste grupo.</td></tr>'}</tbody></table></div></div>`;
- const tables=$('classificationTables');
- if(tables){
-   $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
-   if(isKnockout){
-     const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
-     tables.innerHTML=rounds.length?rounds.map(round=>{const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.round||m.fase||'Fase a definir')===round).sort((a,b)=>(a.date||'').localeCompare(b.date||''));return `<div class="classification-subtable"><div class="classification-subtitle">${esc(round)}</div><div class="knockout-matches">${ms.map(m=>{const h=teamForMatch(m,'home'),a=teamForMatch(m,'away'),hl=logoOf(h),al=logoOf(a),done=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';return `<div class="knockout-match"><span class="knockout-team">${hl?`<img src="${esc(hl)}" alt="">`:''}<b>${esc(m.homeName||h.name||'A definir')}</b></span><strong class="knockout-score">${done?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</strong><span class="knockout-team">${al?`<img src="${esc(al)}" alt="">`:''}<b>${esc(m.awayName||a.name||'A definir')}</b></span><small>${esc(m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir')} ${esc(m.time||'')}</small></div>`}).join('')||'<div class="empty">Nenhum confronto cadastrado nesta fase.</div>'}</div></div>`}).join(''):'<div class="empty">Cadastre os jogos e informe a fase/rodada para montar as tabelas do mata-mata.</div>';
-   }else if(!isLeague){
-     // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
-     // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
-     const groupCount=Math.max(1,Math.min(32,Number(comp.groupCount||comp.group_count||comp.quantidadeGrupos)||0));
-     const labels=Array.from({length:groupCount},(_,i)=>String.fromCharCode(65+i));
-     const groupOfPublic=team=>{
-       const map=comp.teamGroups||comp.team_groups||{};
-       let g=String(map[String(team.id)]??map[String(team.dbId||team.db_id||'')]??team.group??team.grupo??'').trim().toUpperCase();
-       if(/^\d+$/.test(g)){const n=Number(g);if(n>=1&&n<=26)g=String.fromCharCode(64+n)}
-       return g;
-     };
-     const byGroup=new Map(labels.map(g=>[g,[]]));
-     standings.forEach(x=>{
-       const g=groupOfPublic(x.team);
-       if(g && !byGroup.has(g))byGroup.set(g,[]);
-       if(g)byGroup.get(g).push(x);
-     });
-     const orderedGroups=[...byGroup.entries()].sort((a,b)=>{
-       if(a[0]==='Sem grupo')return 1;if(b[0]==='Sem grupo')return -1;
-       return a[0].localeCompare(b[0],'pt-BR',{numeric:true});
-     });
-     tables.innerHTML=orderedGroups.map(([g,list])=>tableHTML(g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
-   }else{
-     tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
+     for (const [homeIndex, awayIndex] of pairings) {
+       const home = members[homeIndex];
+       const away = members[awayIndex];
+       if (!home || !away) continue;
+    
+       draft.push({
+         group,
+         round,
+         format,
+         homeId: home.id,
+         awayId: away.id,
+         homeName: home.name,
+         awayName: away.name,
+         date: '',
+         time: '',
+         venue: ''
+       });
+     }
    }
+ 
+   if (!draft.length) {
+  alert('Não há confrontos para esta rodada. Confira os grupos e a rodada selecionada.');
+  return;
+}
+      
+   manualGroupDraft = draft;
+   manualGroupCurrentRound = round;
+   manualGroupFormatMode = format;
+ 
+   const target = $p('manualGroupMatches');
+   if (!target) {
+     alert('Não encontrei a área da lista de confrontos no HTML.');
+     return;
+   }
+ 
+   target.innerHTML = `
+     <table>
+       <thead>
+         <tr>
+           <th>Grupo</th>
+           <th>Mandante</th>
+           <th>Visitante</th>
+           <th>Data</th>
+           <th>Horário</th>
+           <th>Local</th>
+         </tr>
+       </thead>
+       <tbody>
+         ${draft.map((m, i) => `
+           <tr>
+             <td>${esc(m.group)}</td>
+             <td>
+               <select data-mg-field="homeId" data-mg-index="${i}">
+                 ${allTeams.map(t => `
+                   <option value="${esc(t.id)}"
+                     ${String(t.id) === String(m.homeId) ? 'selected' : ''}>
+                     ${esc(t.name)}
+                   </option>
+                 `).join('')}
+               </select>
+             </td>
+             <td>
+               <select data-mg-field="awayId" data-mg-index="${i}">
+                 ${allTeams.map(t => `
+                   <option value="${esc(t.id)}"
+                     ${String(t.id) === String(m.awayId) ? 'selected' : ''}>
+                     ${esc(t.name)}
+                   </option>
+                 `).join('')}
+               </select>
+             </td>
+             <td><input type="date" data-mg-field="date" data-mg-index="${i}"></td>
+             <td><input type="time" data-mg-field="time" data-mg-index="${i}"></td>
+             <td><input type="text" placeholder="Local"
+               data-mg-field="venue" data-mg-index="${i}"></td>
+           </tr>
+         `).join('')}
+       </tbody>
+     </table>
+   `;
+ 
+   target.querySelectorAll('[data-mg-field]').forEach(el => {
+     el.addEventListener('change', () => {
+       const index = Number(el.dataset.mgIndex);
+       const field = el.dataset.mgField;
+       const match = manualGroupDraft[index];
+       if (!match) return;
+ 
+       if (field === 'homeId' || field === 'awayId') {
+         const selected = allTeams.find(t =>
+           String(t.id) === String(el.value)
+         );
+         if (!selected) return;
+ 
+         match[field] = selected.id;
+         match[field === 'homeId' ? 'homeName' : 'awayName'] =
+           selected.name;
+       } else {
+         match[field] = el.value;
+       }
+     });
+   });
  }
- const scorers=[];
- const compTeams=activeCompetitionTeams();
- const compTeamIds=new Set(compTeams.map(t=>String(t.id)));
- const compTeamDbIds=new Set(compTeams.map(t=>String(t.dbId||'')));
- const goalEvents=(db.events||[]).filter(e=>e.type==='goal'||String(e.label||'').toLowerCase()==='gol').filter(e=>compTeamIds.has(String(e.teamId))||compTeamDbIds.has(String(e.teamId))||compTeams.some(t=>t.name===e.team));
- if(goalEvents.length){
-   const totals=new Map();goalEvents.forEach(e=>{const key=String(e.playerId||e.player)+'|'+String(e.teamId||e.team);const prev=totals.get(key)||{name:e.player||'Atleta',team:e.team||'',goals:0};prev.goals++;totals.set(key,prev)});scorers.push(...totals.values());
- }else{
-   compTeams.forEach(t=>t.players.forEach(p=>{const goals=Number(p.goals||0);if(goals>0)scorers.push({name:p.name,team:t.name,goals})}));
- }
- scorers.sort((a,b)=>b.goals-a.goals||a.name.localeCompare(b.name));
- const allScorers=scorers.map(x=>{
-   const team=compTeams.find(t=>String(t.id)===String(x.teamId)||String(t.dbId||'')===String(x.teamId)||String(t.name||'')===String(x.team||''))||compTeams.find(t=>String(t.name||'').trim().toLowerCase()===String(x.team||'').trim().toLowerCase())||{};
-   const player=(team.players||[]).find(p=>String(p.id)===String(x.playerId)||String(p.name||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase())||{};
-   return {...x,photo:player.photo||player.foto_url||'',logo:team.logo||team.escudo_url||''};
+ $p('manualGroupFormat')?.addEventListener('change', () => {
+   manualGroupUpdateRounds();
  });
- $('frontScorers').innerHTML=allScorers.length?allScorers.map((x,i)=>`<div class="scorer"><span class="scorer-rank">${i+1}</span>${x.photo?`<img class="scorer-photo" src="${esc(x.photo)}" alt="Foto de ${esc(x.name)}">`:`<span class="scorer-photo" style="display:grid;place-items:center">⚽</span>`}<div class="scorer-info"><b>${esc(x.name)}</b><small>${esc(x.team)}</small></div>${x.logo?`<img class="scorer-crest" src="${esc(x.logo)}" alt="Símbolo de ${esc(x.team)}">`:`<span class="scorer-crest" style="display:grid;place-items:center">⚽</span>`}<span class="scorer-goals">${x.goals} gol${x.goals===1?'':'s'}</span></div>`).join(''):'<div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div>';
+ 
+ $p('phaseCompetitionSelect')?.addEventListener('change', () => {
+   manualGroupUpdateRounds();
+ });
+ 
+ manualGroupUpdateRounds();
+ $p('manualGroupPrepare')?.addEventListener('click', () => {
+   manualGroupGenerateRound();
+ });
+ 
+ $p('manualGroupSave')?.addEventListener('click', async () => {
+   const c = comp();
+ 
+   if (!c) {
+     alert('Selecione uma competição.');
+     return;
+   }
+ 
+   if (!manualGroupDraft.length) {
+     alert('Gere os confrontos antes de salvar.');
+     return;
+   }
+ 
+   const { data: sessionData, error: sessionError } =
+     await supabaseClient.auth.getSession();
+ 
+   if (sessionError || !sessionData?.session) {
+     alert('Entre na Administração com sua conta.');
+     return;
+   }
+ 
+   const { data: adminCheck, error: adminError } =
+     await supabaseClient.rpc('is_admin');
+ 
+   if (adminError || adminCheck !== true) {
+     alert('Sua conta não foi reconhecida como administradora.');
+     return;
+   }
+ 
+   const compDbId = c.dbId || c.db_id || c.id;
+ 
+   if (!compDbId) {
+     alert('Não foi possível identificar a competição no banco.');
+     return;
+   }
+ 
+   const prepared = [];
+ 
+   for (const m of manualGroupDraft) {
+     const home = (db.teams || []).find(t =>
+       String(t.id) === String(m.homeId)
+     );
+     const away = (db.teams || []).find(t =>
+       String(t.id) === String(m.awayId)
+     );
+ 
+     if (!home?.dbId || !away?.dbId) {
+       alert('Uma equipe não possui ID do Supabase. Nenhum jogo foi salvo.');
+       return;
+     }
+ 
+     if (String(home.dbId) === String(away.dbId)) {
+       alert('Um confronto não pode ter a mesma equipe nos dois lados.');
+       return;
+     }
+ 
+     if (!m.date || !m.time) {
+       alert('Preencha data e horário de todos os jogos antes de salvar.');
+       return;
+     }
+ 
+     const dt = new Date(`${m.date}T${m.time}:00`);
+ 
+     if (Number.isNaN(dt.getTime())) {
+       alert('Confira a data e o horário dos confrontos.');
+       return;
+     }
+ 
+     prepared.push({
+       competicao_id: compDbId,
+       equipe_mandante_id: home.dbId,
+       equipe_visitante_id: away.dbId,
+     rodada: Number(m.round) || null,
+       fase: `Fase de grupos - Grupo ${m.group} - Rodada ${m.round}`,
+       formato: m.format,
+       data_hora: dt.toISOString(),
+       local_jogo: m.venue || null,
+       gols_mandante: null,
+       gols_visitante: null,
+       status: 'Agendado'
+     });
+   }
+ 
+   const confirmed = confirm(
+     `Você vai salvar ${prepared.length} jogo(s) na competição "${c.name}". Deseja continuar?`
+   );
+ 
+   if (!confirmed) return;
   
-const discipline={yellow:[],red:[]};
-
-const cardEvents=(db.events||[]).filter(e=>
-  (e.type==='yellow'||e.type==='red') &&
-  (compTeamIds.has(String(e.teamId))||
-   compTeamDbIds.has(String(e.teamId))||
-   compTeams.some(t=>String(t.name||'').trim().toLowerCase()===String(e.team||'').trim().toLowerCase()))
-);
-
-compTeams.forEach(t=>(t.players||[]).forEach(p=>{
-  const playerEvents=cardEvents.filter(e=>{
-    const sameTeam=
-      String(e.teamId||'')===String(t.id||'')||
-      String(e.teamId||'')===String(t.dbId||'')||
-      String(e.team||'').trim().toLowerCase()===String(t.name||'').trim().toLowerCase();
-    const samePlayer=
-      (e.playerId!=null&&String(e.playerId)===String(p.id))||
-      String(e.player||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase();
-    return sameTeam&&samePlayer;
-  });
-
-  ['yellow','red'].forEach(type=>{
-    const saved=Number(p[type]||0);
-    const fromEvents=playerEvents.filter(e=>e.type===type).length;
-    const count=Math.max(saved,fromEvents);
-    if(count>0)discipline[type].push({p,t,count});
-  });
-}));
- const cardMarkup=(items,color)=>items.sort((a,b)=>b.count-a.count||String(a.p.name).localeCompare(String(b.p.name))).map(({p,t,count})=>`<div class="card-leader">${(p.photo||p.foto_url)?`<img class="player-photo" src="${esc(p.photo||p.foto_url)}" alt="Foto de ${esc(p.name)}">`:`<span class="player-photo" style="display:grid;place-items:center">👤</span>`}<div class="player-data"><b>${esc(p.name)}</b><small>${t.logo||t.escudo_url?`<img class="scorer-crest" src="${esc(t.logo||t.escudo_url)}" alt="" style="vertical-align:middle;margin-right:5px">`:''}${esc(t.name)}</small></div><span class="card-count" style="color:${color}">${count}</span></div>`).join('')||'<div class="empty">Nenhum cartão registrado.</div>';
- $('yellowCardsList').innerHTML=cardMarkup(discipline.yellow,'#f4d46a');
- $('redCardsList').innerHTML=cardMarkup(discipline.red,'#ff7777');
- document.querySelectorAll('[data-open-games]').forEach(b=>b.onclick=()=>showTab('games'));
-}
-function renderMatchSheet(){
- const sel=$('sheetMatch'); if(!sel)return;
- const old=sel.value;
- const matches=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
- sel.innerHTML='<option value="">Selecione um jogo cadastrado</option>'+matches.map(m=>`<option value="${esc(m.id)}">${dateBR(m.date)} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
- if(matches.some(m=>String(m.id)===old))sel.value=old;
-}
-function buildMatchSheet(){
- const id=$('sheetMatch')?.value;
- const m=(db.matches||[]).find(x=>String(x.id)===String(id));
- const out=$('matchSheet'); if(!out)return;
- if(!m){out.innerHTML='<p class="empty">Selecione um jogo cadastrado para puxar as equipes e os atletas.</p>';return;}
- const home=findTeam(m.homeId),away=findTeam(m.awayId),comp=activeCompetition();
- const teamName=(team,fallback)=>team?.name||fallback||'Equipe';
- const compLogo=comp?.logo||comp?.symbol||comp?.escudo||'';
- const teamLogo=team=>team?.logo||team?.escudo_url||team?.escudoUrl||team?.crest||'';
- const staffNames=(team,keys)=>{for(const k of keys){const v=team?.[k];if(typeof v==='string'&&v.trim())return esc(v);if(Array.isArray(v)&&v.length)return esc(v.map(x=>typeof x==='string'?x:(x.name||x.nome||'')).filter(Boolean).join(', '));}
-   if(keys.some(k=>['director','dirigente','president','presidente','representative'].includes(k))){const ds=(team?.players||[]).filter(p=>{const r=String(p?.role||p?.funcao||p?.function||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente');}).map(p=>p.name||p.nome).filter(Boolean);if(ds.length)return esc(ds.join(', '));}
-   return '________________________________';};
- const roster=(team,side,fallback)=>{
-   const roleText=p=>[p?.role,p?.funcao,p?.function,p?.tipo,p?.tipoCadastro,p?.categoria,p?.position,p?.cargo,p?.perfil].filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
-   const isMusa=p=>{const r=roleText(p);const bid=String(p?.id||p?.bid||p?.bidNumber||p?.numero_bid||'').replace(/[^0-9]/g,'');return r.includes('musa')||bid==='23'||bid==='023'||bid==='0023';};
-   const isNonPlayerRole=p=>{const r=roleText(p);return isMusa(p)||['diretor','diretora','dirigente','representante','presidente','vice-presidente','vice presidente','delegado','tecnico','tecnico auxiliar','auxiliar','massagista','roupeiro','comissao tecnica'].some(x=>r===x)||r.includes('dirigente')||r.includes('diretor')||r.includes('representante')||r.includes('comissao tecnica');};
-   const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
-   let body='';
-   for(let i=0;i<30;i++){
-     const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
-     body+=`<tr><td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td><td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td><td class="player-name">${p?esc(p.name||p.nome||''):''}</td><td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td></tr>`;
-   }
-   return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div><div class="sheet-directors"><b>DIRIGENTES / REPRESENTANTES</b>${Array.from({length:5},(_,i)=>`<div class="sheet-director-line">${(()=>{const ds=(team?.players||[]).filter(p=>{const r=roleText(p);return !isMusa(p)&&(r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente'));});const p=ds[i];const nm=p?(p.name||p.nome||''):'';const photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');return `${photo?`<img class="sheet-director-photo" src="${esc(photo)}" alt="">`:'<span class="sheet-director-photo sheet-director-photo-empty"> </span>'}<span class="sheet-director-name">${esc(nm)}</span><span class="sheet-director-function">FUNÇÃO: ______________________________</span>`;})()}</div>`).join('')}</div></div></section>`;
- };
- const safeDate=dateBR(m.date);
- out.innerHTML=`<div class="official-sheet">
- <div class="sheet-page sheet-page-one">
- <div class="sheet-heading">${compLogo?`<img class="sheet-competition-logo" src="${compLogo}" alt="Símbolo da competição">`:''}<h2>${esc(comp?.name||db.competition||'COMPETIÇÃO')}</h2><p class="sheet-subtitle">SÚMULA OFICIAL DA PARTIDA</p><p class="sheet-location">${esc(comp?.location||comp?.city||'')}</p>
- <div class="sheet-meta"><span><b>COMPETIÇÃO:</b> ${esc(comp?.name||db.competition||'—')}</span><span><b>TEMPORADA:</b> ${esc(comp?.season||'2026')}</span></div>
- <div class="sheet-meta"><span><b>MANDANTE:</b> ${esc(m.homeName)}</span><span class="sheet-x">X</span><span><b>VISITANTE:</b> ${esc(m.awayName)}</span></div>
- <div class="sheet-meta"><span><b>DATA:</b> ${safeDate}</span><span><b>HORÁRIO:</b> ${esc(m.time||'A definir')}</span><span><b>LOCAL:</b> ${esc(m.venue||'A definir')}</span></div>
- <div class="sheet-meta"><span><b>RODADA / FASE:</b> ${esc(m.round||'—')}</span><span><b>PLACAR:</b> ______ × ______</span></div></div>
- <div class="sheet-rosters two-rosters">${roster(home,'home',m.homeName)}${roster(away,'away',m.awayName)}</div>
- <div class="sheet-sign-row"><span>Assinatura do representante mandante: __________________________</span><span>Assinatura do representante visitante: __________________________</span></div>
- </div>
- <div class="sheet-page sheet-page-two">
- <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
- <div class="sheet-event-grid">
- <section><h3>GOLS — MANDANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
- <section><h3>GOLS — VISITANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
- <section><h3>CARTÕES AMARELOS — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
- <section><h3>CARTÕES AMARELOS — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
- <section><h3>CARTÕES VERMELHOS — MANDANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
- <section><h3>CARTÕES VERMELHOS — VISITANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
- </div>
- <div class="sheet-substitution-grid"><section><h3>SUBSTITUIÇÕES — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section><section><h3>SUBSTITUIÇÕES — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section></div>
- <section class="sheet-referee-grid"><h3>ARBITRAGEM / OFICIAIS</h3><div><b>Árbitro central:</b> ${esc($('sheetReferee')?.value||'____________________________________________')}</div><div><b>Assistente 1:</b> ________________________________________________</div><div><b>Assistente 2:</b> ________________________________________________</div><div><b>4º árbitro:</b> __________________________________________________</div><div><b>Delegado:</b> ${esc($('sheetDelegate')?.value||'____________________________________________')}</div></section>
- <section class="sheet-report"><h3>RELATÓRIO DO ÁRBITRO / OCORRÊNCIAS</h3>${Array.from({length:12},()=>'<div></div>').join('')}</section>
- <div class="sheet-sign-row"><span>Assinatura do árbitro: ______________________________</span><span>Data: ____/____/________</span></div>
- </div></div>`;
-}$('loadSheet')?.addEventListener('click',buildMatchSheet);
-$('sheetMatch')?.addEventListener('change',buildMatchSheet);
-$('printSheet')?.addEventListener('click',()=>{if(!$('sheetMatch')?.value){alert('Selecione um jogo primeiro.');return;}if(!$('matchSheet')?.querySelector('.sheet-heading'))buildMatchSheet();window.print();});
-
-
-
-
-
-
-
-
-function renderPublicCompetitions(){
- const list=$('publicCompetitionList'); if(!list)return;
- const comps=db.competitions||[];
- if(!comps.length){
-   list.innerHTML='<p class="empty">Nenhuma competição cadastrada. As competições disponíveis aparecerão aqui quando forem cadastradas.</p>';
+ const { data: existingGames, error: existingError } =
+   await supabaseClient
+     .from('jogos')
+     .select('equipe_mandante_id,equipe_visitante_id,fase,rodada,formato')
+     .eq('competicao_id', compDbId);
+ 
+ if (existingError) {
+   alert('Não foi possível verificar os jogos existentes. Nenhum jogo foi salvo.');
+   console.error(existingError);
    return;
  }
- list.innerHTML=comps.map(c=>`<div class="competition-choice" style="${c.id===db.activeCompetitionId?'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36':''}">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}</div></div><button class="${c.id===db.activeCompetitionId?'gold':'secondary'}" data-public-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Competição selecionada':'Consultar competição'}</button></div></div>`).join('');
- document.querySelectorAll('[data-public-regulation]').forEach(b=>b.onclick=()=>{
-   const c=comps.find(x=>String(x.id)===String(b.dataset.publicRegulation)||String(x.dbId||'')===String(b.dataset.publicRegulation));
-   if(c&&c.regulationUrl)window.openCompetitionRegulation(c.regulationUrl,c.name);
-   else alert('O regulamento ainda não foi cadastrado para esta competição.');
+ 
+ const existingGroupGames = (existingGames || []).filter(m =>
+   /fase de grupos|fase de grupo/i.test(m.fase || '')
+ );
+ 
+ 
+ const duplicate = prepared.find(m =>
+   existingGroupGames.some(old => {
+     const sameTeams =
+       (
+         String(old.equipe_mandante_id) === String(m.equipe_mandante_id) &&
+         String(old.equipe_visitante_id) === String(m.equipe_visitante_id)
+       ) ||
+       (
+         String(old.equipe_mandante_id) === String(m.equipe_visitante_id) &&
+         String(old.equipe_visitante_id) === String(m.equipe_mandante_id)
+       );
+ 
+     const sameRound = Number(old.rodada) === Number(m.rodada);
+ 
+     return sameTeams && sameRound;
+   })
+ );
+ 
+ if (duplicate) {
+   alert(
+     'Já existe um confronto entre estas equipes nesta competição. ' +
+     'Confira os jogos cadastrados antes de tentar salvar novamente.'
+   );
+   return;
+ }
+   const { error } = await supabaseClient
+     .from('jogos')
+     .insert(prepared);
+ 
+   if (error) {
+     console.error('Erro ao salvar jogos:', error);
+     alert('Falha ao salvar no Supabase: ' + error.message);
+     return;
+   }
+ 
+   manualGroupDraft = [];
+   manualGroupConfirmedRounds[
+     `${compDbId}-${manualGroupCurrentRound}-${manualGroupFormatMode}`
+   ] = true;
+ 
+   await loadSupabaseMatches();
+ 
+   const target = $p('manualGroupMatches');
+   if (target) target.innerHTML = '';
+ 
+   alert('Jogos salvos no Supabase com sucesso!');
  });
- document.querySelectorAll('[data-public-activate-comp]').forEach(b=>b.onclick=()=>{
-   db.activeCompetitionId=b.dataset.publicActivateComp;
-   const c=comps.find(x=>String(x.id)===String(db.activeCompetitionId)||String(x.dbId||'')===String(db.activeCompetitionId));
-   if(c)db.competition=c.name;
-   if(!teamBelongsToActiveCompetition(findTeam(selectedTeam)||{}))selectedTeam=activeCompetitionTeams()[0]?.id||'';
-   saveDb();renderAll();
+  $('exportMatches')?.addEventListener('click',()=>{
+  const lines=[['Data','Horário','Rodada','Mandante','Gols mandante','Visitante','Gols visitante','Local','Status'],...(db.matches||[]).map(m=>[m.date,m.time,m.round,m.homeName,m.homeScore,m.awayName,m.awayScore,m.venue,m.status])];
+  download('tabela-jogos-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8');
  });
-}
-function renderCompetitionManager(){
- const list=$('competitionList');if(!list)return;
- const comps=db.competitions||[];
- list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}${c.groupCount?` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup||'—')} equipe(s)`:''}${c.regulationUrl?` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`:''}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="secondary" data-edit-comp="${esc(c.id)}">Editar</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
- document.querySelectorAll('[data-activate-comp]').forEach(b=>b.onclick=()=>{db.activeCompetitionId=b.dataset.activateComp;const c=comps.find(x=>String(x.id)===String(db.activeCompetitionId)||String(x.dbId||'')===String(db.activeCompetitionId));if(c){db.competition=c.name;if($('competitionName'))$('competitionName').value=c.name}if(!teamBelongsToActiveCompetition(findTeam(selectedTeam)||{}))selectedTeam=activeCompetitionTeams()[0]?.id||'';saveDb();});
- document.querySelectorAll('[data-delete-comp]').forEach(b=>b.onclick=async()=>{
-   const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.deleteComp));
-   if(!c)return;
-   if(!confirm('Excluir a competição '+c.name+'? Serão removidos somente os vínculos desta competição. O cadastro geral das equipes e dos atletas será preservado.'))return;
-   b.disabled=true;
-   try{
-     if(c._remote && c.dbId!==undefined && typeof supabaseClient!=='undefined'){
-       const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
-       if(sessionError)throw sessionError;
-       if(!sessionData?.session){alert('Entre como administrador antes de excluir uma competição.');return;}
-       const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
-       if(adminError||adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return;}
-       // A função SQL faz a exclusão em transação e preserva equipes/atletas
-       // que ainda tenham vínculo com outras competições.
-       const {data:deleteData,error:deleteError}=await supabaseClient.rpc('bid_excluir_competicao',{p_competicao_id:c.dbId});
-       if(deleteError)throw deleteError;
-       if(!deleteData || deleteData.ok!==true)throw new Error('O Supabase não confirmou a exclusão da competição.');
-     }
-     db.competitions=(db.competitions||[]).filter(x=>String(x.id)!==String(c.id));
-     if(String(db.activeCompetitionId)===String(c.id))db.activeCompetitionId=db.competitions[0]?.id||'';
-     if(db.competitions[0])db.competition=db.competitions[0].name;
-     saveDb();
-     alert('Competição excluída. Equipes e atletas que ainda participam de outras competições foram preservados.');
-   }catch(error){
-     console.error('Erro ao excluir competição:',error);
-     alert('Não foi possível excluir a competição no Supabase. Execute primeiro o SQL de correção e confira as permissões DELETE. Detalhe: '+(error?.message||error));
-   }finally{b.disabled=false;}
+ function renderFrontPage(){
+  const fixtures=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||(a.time||'').localeCompare(b.time||''));
+  const teamForMatch=(m,side)=>{
+    const id=m[side+'Id']??m[side+'_id'];
+    const name=m[side+'Name']||m[side+'_name']||'';
+    return (db.teams||[]).find(t=>String(t.id)===String(id)||String(t.dbId)===String(id)) || (db.teams||[]).find(t=>String(t.name||t.nome||'').trim().toLowerCase()===String(name).trim().toLowerCase()) || {};
+  };
+  const crest=(team)=>team.logo||team.escudo_url||team.escudoUrl||'';
+  const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
+  const renderFixtureCard=(m)=>{
+    const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';
+    const finished=isFinished(m);
+    const competition=(db.competitions||[]).find(c=>String(c.id)===String(m.competitionId))||null;
+    const compName=m.competitionName||competition?.name||db.competition||'Copa Poeirão';
+    const season=competition?.season||competition?.temporada||m.season||m.temporada||((String(compName).match(/20\d{2}/)||[])[0])||'2026';
+    const compTitle=String(compName).match(/20\d{2}/)?String(compName):`${compName} — ${season}`;
+    const compLogo=m.competitionLogo||competition?.logo||competition?.logo_url||competition?.escudo_url||'';
+    const home=teamForMatch(m,'home'), away=teamForMatch(m,'away');
+    const homeLogo=crest(home), awayLogo=crest(away);
+    return `<div class="front-fixture-card"><div class="fixture-competition">${compLogo?`<img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}<span class="fixture-competition-name">${esc(compTitle)}</span>${compLogo?`<img src="${esc(compLogo)}" alt="Símbolo da competição">`:''}</div><div class="fixture-date">${esc(date)}${m.time?' · '+esc(m.time):''}${m.round?' · '+esc(m.round):''}</div><div class="fixture"><span class="fixture-team">${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="Escudo ${esc(m.homeName||'equipe mandante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.homeName||'EQUIPE XX')}</span></span><span class="versus">${finished?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</span><span class="fixture-team">${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="Escudo ${esc(m.awayName||'equipe visitante')}" onerror="this.style.display='none'">`:''}<span class="team-name">${esc(m.awayName||'EQUIPE XX')}</span></span></div><div class="front-fixture-status">${esc(m.status||'Agendado')}${m.venue?' · '+esc(m.venue):''}</div></div>`;
+  };
+  const upcomingFixtures=fixtures.filter(m=>!isFinished(m)).slice().sort((a,b)=>{
+    const da=String(a.date||'9999-12-31')+' '+String(a.time||'23:59');
+    const dbb=String(b.date||'9999-12-31')+' '+String(b.time||'23:59');
+    return da.localeCompare(dbb);
+  });
+  const finishedFixtures=fixtures.filter(isFinished).slice().sort((a,b)=>{
+    const da=String(a.date||'')+' '+String(a.time||'');
+    const dbb=String(b.date||'')+' '+String(b.time||'');
+    return dbb.localeCompare(da);
+  });
+  $('frontFixtures').innerHTML=upcomingFixtures.length?upcomingFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma próxima partida cadastrada.</div>';
+  const finishedPanel=$('finishedFixtures');
+  if(finishedPanel) finishedPanel.innerHTML=finishedFixtures.length?finishedFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma partida finalizada ainda.</div>';
+ 
+ 
+  const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
+  (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
+  const standings=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
+  const comp=activeCompetition()||{};
+  const fmt=String(comp.format||comp.formato||'').toLowerCase();
+  const isLeague=fmt.includes('pontos-corridos')||fmt.includes('pontos corridos');
+  const isKnockout=fmt.includes('mata-mata')||fmt.includes('mata mata');
+  const logoOf=t=>t.logo||t.escudo_url||t.escudoUrl||'';
+  const tableRows=list=>list.map((x,i)=>{const pct=x.j?((x.pts/(x.j*3))*100):0;return `<tr><td>${i+1}</td><td><span class="classification-team">${logoOf(x.team)?`<img class="classification-crest" src="${esc(logoOf(x.team))}" alt="Escudo ${esc(x.team.name)}" onerror="this.style.display='none'">`:`<span class="classification-crest-placeholder">⚽</span>`}<b>${esc(x.team.name||x.team.nome||'Equipe')}</b></span></td><td><b>${x.pts}</b></td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.gp-x.gc}</td><td>${pct.toFixed(1).replace('.',',')}%</td></tr>`}).join('');
+  const tableHTML=(title,list)=>`<div class="classification-subtable"><div class="classification-subtitle">${esc(title)}</div><div class="tablewrap"><table class="front-table"><thead><tr><th>#</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody>${list.length?tableRows(list):'<tr><td colspan="11">Nenhuma equipe neste grupo.</td></tr>'}</tbody></table></div></div>`;
+  const tables=$('classificationTables');
+  if(tables){
+    $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
+    if(isKnockout){
+      const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
+      tables.innerHTML=rounds.length?rounds.map(round=>{const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.round||m.fase||'Fase a definir')===round).sort((a,b)=>(a.date||'').localeCompare(b.date||''));return `<div class="classification-subtable"><div class="classification-subtitle">${esc(round)}</div><div class="knockout-matches">${ms.map(m=>{const h=teamForMatch(m,'home'),a=teamForMatch(m,'away'),hl=logoOf(h),al=logoOf(a),done=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';return `<div class="knockout-match"><span class="knockout-team">${hl?`<img src="${esc(hl)}" alt="">`:''}<b>${esc(m.homeName||h.name||'A definir')}</b></span><strong class="knockout-score">${done?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</strong><span class="knockout-team">${al?`<img src="${esc(al)}" alt="">`:''}<b>${esc(m.awayName||a.name||'A definir')}</b></span><small>${esc(m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir')} ${esc(m.time||'')}</small></div>`}).join('')||'<div class="empty">Nenhum confronto cadastrado nesta fase.</div>'}</div></div>`}).join(''):'<div class="empty">Cadastre os jogos e informe a fase/rodada para montar as tabelas do mata-mata.</div>';
+    }else if(!isLeague){
+      // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
+      // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
+      const groupCount=Math.max(1,Math.min(32,Number(comp.groupCount||comp.group_count||comp.quantidadeGrupos)||0));
+      const labels=Array.from({length:groupCount},(_,i)=>String.fromCharCode(65+i));
+      const groupOfPublic=team=>{
+        const map=comp.teamGroups||comp.team_groups||{};
+        let g=String(map[String(team.id)]??map[String(team.dbId||team.db_id||'')]??team.group??team.grupo??'').trim().toUpperCase();
+        if(/^\d+$/.test(g)){const n=Number(g);if(n>=1&&n<=26)g=String.fromCharCode(64+n)}
+        return g;
+      };
+      const byGroup=new Map(labels.map(g=>[g,[]]));
+      standings.forEach(x=>{
+        const g=groupOfPublic(x.team);
+        if(g && !byGroup.has(g))byGroup.set(g,[]);
+        if(g)byGroup.get(g).push(x);
+      });
+      const orderedGroups=[...byGroup.entries()].sort((a,b)=>{
+        if(a[0]==='Sem grupo')return 1;if(b[0]==='Sem grupo')return -1;
+        return a[0].localeCompare(b[0],'pt-BR',{numeric:true});
+      });
+      tables.innerHTML=orderedGroups.map(([g,list])=>tableHTML(g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
+    }else{
+      tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
+    }
+  }
+  const scorers=[];
+  const compTeams=activeCompetitionTeams();
+  const compTeamIds=new Set(compTeams.map(t=>String(t.id)));
+  const compTeamDbIds=new Set(compTeams.map(t=>String(t.dbId||'')));
+  const goalEvents=(db.events||[]).filter(e=>e.type==='goal'||String(e.label||'').toLowerCase()==='gol').filter(e=>compTeamIds.has(String(e.teamId))||compTeamDbIds.has(String(e.teamId))||compTeams.some(t=>t.name===e.team));
+  if(goalEvents.length){
+    const totals=new Map();goalEvents.forEach(e=>{const key=String(e.playerId||e.player)+'|'+String(e.teamId||e.team);const prev=totals.get(key)||{name:e.player||'Atleta',team:e.team||'',goals:0};prev.goals++;totals.set(key,prev)});scorers.push(...totals.values());
+  }else{
+    compTeams.forEach(t=>t.players.forEach(p=>{const goals=Number(p.goals||0);if(goals>0)scorers.push({name:p.name,team:t.name,goals})}));
+  }
+  scorers.sort((a,b)=>b.goals-a.goals||a.name.localeCompare(b.name));
+  const allScorers=scorers.map(x=>{
+    const team=compTeams.find(t=>String(t.id)===String(x.teamId)||String(t.dbId||'')===String(x.teamId)||String(t.name||'')===String(x.team||''))||compTeams.find(t=>String(t.name||'').trim().toLowerCase()===String(x.team||'').trim().toLowerCase())||{};
+    const player=(team.players||[]).find(p=>String(p.id)===String(x.playerId)||String(p.name||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase())||{};
+    return {...x,photo:player.photo||player.foto_url||'',logo:team.logo||team.escudo_url||''};
+  });
+  $('frontScorers').innerHTML=allScorers.length?allScorers.map((x,i)=>`<div class="scorer"><span class="scorer-rank">${i+1}</span>${x.photo?`<img class="scorer-photo" src="${esc(x.photo)}" alt="Foto de ${esc(x.name)}">`:`<span class="scorer-photo" style="display:grid;place-items:center">⚽</span>`}<div class="scorer-info"><b>${esc(x.name)}</b><small>${esc(x.team)}</small></div>${x.logo?`<img class="scorer-crest" src="${esc(x.logo)}" alt="Símbolo de ${esc(x.team)}">`:`<span class="scorer-crest" style="display:grid;place-items:center">⚽</span>`}<span class="scorer-goals">${x.goals} gol${x.goals===1?'':'s'}</span></div>`).join(''):'<div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div>';
+   
+ const discipline={yellow:[],red:[]};
+ 
+ const cardEvents=(db.events||[]).filter(e=>
+   (e.type==='yellow'||e.type==='red') &&
+   (compTeamIds.has(String(e.teamId))||
+    compTeamDbIds.has(String(e.teamId))||
+    compTeams.some(t=>String(t.name||'').trim().toLowerCase()===String(e.team||'').trim().toLowerCase()))
+ );
+ 
+ compTeams.forEach(t=>(t.players||[]).forEach(p=>{
+   const playerEvents=cardEvents.filter(e=>{
+     const sameTeam=
+       String(e.teamId||'')===String(t.id||'')||
+       String(e.teamId||'')===String(t.dbId||'')||
+       String(e.team||'').trim().toLowerCase()===String(t.name||'').trim().toLowerCase();
+     const samePlayer=
+       (e.playerId!=null&&String(e.playerId)===String(p.id))||
+       String(e.player||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase();
+     return sameTeam&&samePlayer;
+   });
+ 
+   ['yellow','red'].forEach(type=>{
+     const saved=Number(p[type]||0);
+     const fromEvents=playerEvents.filter(e=>e.type===type).length;
+     const count=Math.max(saved,fromEvents);
+     if(count>0)discipline[type].push({p,t,count});
+   });
+ }));
+  const cardMarkup=(items,color)=>items.sort((a,b)=>b.count-a.count||String(a.p.name).localeCompare(String(b.p.name))).map(({p,t,count})=>`<div class="card-leader">${(p.photo||p.foto_url)?`<img class="player-photo" src="${esc(p.photo||p.foto_url)}" alt="Foto de ${esc(p.name)}">`:`<span class="player-photo" style="display:grid;place-items:center">👤</span>`}<div class="player-data"><b>${esc(p.name)}</b><small>${t.logo||t.escudo_url?`<img class="scorer-crest" src="${esc(t.logo||t.escudo_url)}" alt="" style="vertical-align:middle;margin-right:5px">`:''}${esc(t.name)}</small></div><span class="card-count" style="color:${color}">${count}</span></div>`).join('')||'<div class="empty">Nenhum cartão registrado.</div>';
+  $('yellowCardsList').innerHTML=cardMarkup(discipline.yellow,'#f4d46a');
+  $('redCardsList').innerHTML=cardMarkup(discipline.red,'#ff7777');
+  document.querySelectorAll('[data-open-games]').forEach(b=>b.onclick=()=>showTab('games'));
+ }
+ function renderMatchSheet(){
+  const sel=$('sheetMatch'); if(!sel)return;
+  const old=sel.value;
+  const matches=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  sel.innerHTML='<option value="">Selecione um jogo cadastrado</option>'+matches.map(m=>`<option value="${esc(m.id)}">${dateBR(m.date)} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
+  if(matches.some(m=>String(m.id)===old))sel.value=old;
+ }
+ function buildMatchSheet(){
+  const id=$('sheetMatch')?.value;
+  const m=(db.matches||[]).find(x=>String(x.id)===String(id));
+  const out=$('matchSheet'); if(!out)return;
+  if(!m){out.innerHTML='<p class="empty">Selecione um jogo cadastrado para puxar as equipes e os atletas.</p>';return;}
+  const home=findTeam(m.homeId),away=findTeam(m.awayId),comp=activeCompetition();
+  const teamName=(team,fallback)=>team?.name||fallback||'Equipe';
+  const compLogo=comp?.logo||comp?.symbol||comp?.escudo||'';
+  const teamLogo=team=>team?.logo||team?.escudo_url||team?.escudoUrl||team?.crest||'';
+  const staffNames=(team,keys)=>{for(const k of keys){const v=team?.[k];if(typeof v==='string'&&v.trim())return esc(v);if(Array.isArray(v)&&v.length)return esc(v.map(x=>typeof x==='string'?x:(x.name||x.nome||'')).filter(Boolean).join(', '));}
+    if(keys.some(k=>['director','dirigente','president','presidente','representative'].includes(k))){const ds=(team?.players||[]).filter(p=>{const r=String(p?.role||p?.funcao||p?.function||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente');}).map(p=>p.name||p.nome).filter(Boolean);if(ds.length)return esc(ds.join(', '));}
+    return '________________________________';};
+  const roster=(team,side,fallback)=>{
+    const roleText=p=>[p?.role,p?.funcao,p?.function,p?.tipo,p?.tipoCadastro,p?.categoria,p?.position,p?.cargo,p?.perfil].filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+    const isMusa=p=>{const r=roleText(p);const bid=String(p?.id||p?.bid||p?.bidNumber||p?.numero_bid||'').replace(/[^0-9]/g,'');return r.includes('musa')||bid==='23'||bid==='023'||bid==='0023';};
+    const isNonPlayerRole=p=>{const r=roleText(p);return isMusa(p)||['diretor','diretora','dirigente','representante','presidente','vice-presidente','vice presidente','delegado','tecnico','tecnico auxiliar','auxiliar','massagista','roupeiro','comissao tecnica'].some(x=>r===x)||r.includes('dirigente')||r.includes('diretor')||r.includes('representante')||r.includes('comissao tecnica');};
+    const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
+    let body='';
+    for(let i=0;i<30;i++){
+      const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
+      body+=`<tr><td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td><td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td><td class="player-name">${p?esc(p.name||p.nome||''):''}</td><td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td></tr>`;
+    }
+    return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div><div class="sheet-directors"><b>DIRIGENTES / REPRESENTANTES</b>${Array.from({length:5},(_,i)=>`<div class="sheet-director-line">${(()=>{const ds=(team?.players||[]).filter(p=>{const r=roleText(p);return !isMusa(p)&&(r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente'));});const p=ds[i];const nm=p?(p.name||p.nome||''):'';const photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');return `${photo?`<img class="sheet-director-photo" src="${esc(photo)}" alt="">`:'<span class="sheet-director-photo sheet-director-photo-empty"> </span>'}<span class="sheet-director-name">${esc(nm)}</span><span class="sheet-director-function">FUNÇÃO: ______________________________</span>`;})()}</div>`).join('')}</div></div></section>`;
+  };
+  const safeDate=dateBR(m.date);
+  out.innerHTML=`<div class="official-sheet">
+  <div class="sheet-page sheet-page-one">
+  <div class="sheet-heading">${compLogo?`<img class="sheet-competition-logo" src="${compLogo}" alt="Símbolo da competição">`:''}<h2>${esc(comp?.name||db.competition||'COMPETIÇÃO')}</h2><p class="sheet-subtitle">SÚMULA OFICIAL DA PARTIDA</p><p class="sheet-location">${esc(comp?.location||comp?.city||'')}</p>
+  <div class="sheet-meta"><span><b>COMPETIÇÃO:</b> ${esc(comp?.name||db.competition||'—')}</span><span><b>TEMPORADA:</b> ${esc(comp?.season||'2026')}</span></div>
+  <div class="sheet-meta"><span><b>MANDANTE:</b> ${esc(m.homeName)}</span><span class="sheet-x">X</span><span><b>VISITANTE:</b> ${esc(m.awayName)}</span></div>
+  <div class="sheet-meta"><span><b>DATA:</b> ${safeDate}</span><span><b>HORÁRIO:</b> ${esc(m.time||'A definir')}</span><span><b>LOCAL:</b> ${esc(m.venue||'A definir')}</span></div>
+  <div class="sheet-meta"><span><b>RODADA / FASE:</b> ${esc(m.round||'—')}</span><span><b>PLACAR:</b> ______ × ______</span></div></div>
+  <div class="sheet-rosters two-rosters">${roster(home,'home',m.homeName)}${roster(away,'away',m.awayName)}</div>
+  <div class="sheet-sign-row"><span>Assinatura do representante mandante: __________________________</span><span>Assinatura do representante visitante: __________________________</span></div>
+  </div>
+  <div class="sheet-page sheet-page-two">
+  <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
+  <div class="sheet-event-grid">
+  <section><h3>GOLS — MANDANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
+  <section><h3>GOLS — VISITANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
+  <section><h3>CARTÕES AMARELOS — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
+  <section><h3>CARTÕES AMARELOS — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
+  <section><h3>CARTÕES VERMELHOS — MANDANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
+  <section><h3>CARTÕES VERMELHOS — VISITANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
+  </div>
+  <div class="sheet-substitution-grid"><section><h3>SUBSTITUIÇÕES — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section><section><h3>SUBSTITUIÇÕES — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section></div>
+  <section class="sheet-referee-grid"><h3>ARBITRAGEM / OFICIAIS</h3><div><b>Árbitro central:</b> ${esc($('sheetReferee')?.value||'____________________________________________')}</div><div><b>Assistente 1:</b> ________________________________________________</div><div><b>Assistente 2:</b> ________________________________________________</div><div><b>4º árbitro:</b> __________________________________________________</div><div><b>Delegado:</b> ${esc($('sheetDelegate')?.value||'____________________________________________')}</div></section>
+  <section class="sheet-report"><h3>RELATÓRIO DO ÁRBITRO / OCORRÊNCIAS</h3>${Array.from({length:12},()=>'<div></div>').join('')}</section>
+  <div class="sheet-sign-row"><span>Assinatura do árbitro: ______________________________</span><span>Data: ____/____/________</span></div>
+  </div></div>`;
+ }$('loadSheet')?.addEventListener('click',buildMatchSheet);
+ $('sheetMatch')?.addEventListener('change',buildMatchSheet);
+ $('printSheet')?.addEventListener('click',()=>{if(!$('sheetMatch')?.value){alert('Selecione um jogo primeiro.');return;}if(!$('matchSheet')?.querySelector('.sheet-heading'))buildMatchSheet();window.print();});
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ function renderPublicCompetitions(){
+  const list=$('publicCompetitionList'); if(!list)return;
+  const comps=db.competitions||[];
+  if(!comps.length){
+    list.innerHTML='<p class="empty">Nenhuma competição cadastrada. As competições disponíveis aparecerão aqui quando forem cadastradas.</p>';
+    return;
+  }
+  list.innerHTML=comps.map(c=>`<div class="competition-choice" style="${c.id===db.activeCompetitionId?'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36':''}">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}</div></div><button class="${c.id===db.activeCompetitionId?'gold':'secondary'}" data-public-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Competição selecionada':'Consultar competição'}</button></div></div>`).join('');
+  document.querySelectorAll('[data-public-regulation]').forEach(b=>b.onclick=()=>{
+    const c=comps.find(x=>String(x.id)===String(b.dataset.publicRegulation)||String(x.dbId||'')===String(b.dataset.publicRegulation));
+    if(c&&c.regulationUrl)window.openCompetitionRegulation(c.regulationUrl,c.name);
+    else alert('O regulamento ainda não foi cadastrado para esta competição.');
+  });
+  document.querySelectorAll('[data-public-activate-comp]').forEach(b=>b.onclick=()=>{
+    db.activeCompetitionId=b.dataset.publicActivateComp;
+    const c=comps.find(x=>String(x.id)===String(db.activeCompetitionId)||String(x.dbId||'')===String(db.activeCompetitionId));
+    if(c)db.competition=c.name;
+    if(!teamBelongsToActiveCompetition(findTeam(selectedTeam)||{}))selectedTeam=activeCompetitionTeams()[0]?.id||'';
+    saveDb();renderAll();
+  });
+ }
+ function renderCompetitionManager(){
+  const list=$('competitionList');if(!list)return;
+  const comps=db.competitions||[];
+  list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}${c.groupCount?` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup||'—')} equipe(s)`:''}${c.regulationUrl?` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`:''}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="secondary" data-edit-comp="${esc(c.id)}">Editar</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
+  document.querySelectorAll('[data-activate-comp]').forEach(b=>b.onclick=()=>{db.activeCompetitionId=b.dataset.activateComp;const c=comps.find(x=>String(x.id)===String(db.activeCompetitionId)||String(x.dbId||'')===String(db.activeCompetitionId));if(c){db.competition=c.name;if($('competitionName'))$('competitionName').value=c.name}if(!teamBelongsToActiveCompetition(findTeam(selectedTeam)||{}))selectedTeam=activeCompetitionTeams()[0]?.id||'';saveDb();});
+  document.querySelectorAll('[data-delete-comp]').forEach(b=>b.onclick=async()=>{
+    const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.deleteComp));
+    if(!c)return;
+    if(!confirm('Excluir a competição '+c.name+'? Serão removidos somente os vínculos desta competição. O cadastro geral das equipes e dos atletas será preservado.'))return;
+    b.disabled=true;
+    try{
+      if(c._remote && c.dbId!==undefined && typeof supabaseClient!=='undefined'){
+        const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+        if(sessionError)throw sessionError;
+        if(!sessionData?.session){alert('Entre como administrador antes de excluir uma competição.');return;}
+        const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
+        if(adminError||adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return;}
+        // A função SQL faz a exclusão em transação e preserva equipes/atletas
+        // que ainda tenham vínculo com outras competições.
+        const {data:deleteData,error:deleteError}=await supabaseClient.rpc('bid_excluir_competicao',{p_competicao_id:c.dbId});
+        if(deleteError)throw deleteError;
+        if(!deleteData || deleteData.ok!==true)throw new Error('O Supabase não confirmou a exclusão da competição.');
+      }
+      db.competitions=(db.competitions||[]).filter(x=>String(x.id)!==String(c.id));
+      if(String(db.activeCompetitionId)===String(c.id))db.activeCompetitionId=db.competitions[0]?.id||'';
+      if(db.competitions[0])db.competition=db.competitions[0].name;
+      saveDb();
+      alert('Competição excluída. Equipes e atletas que ainda participam de outras competições foram preservados.');
+    }catch(error){
+      console.error('Erro ao excluir competição:',error);
+      alert('Não foi possível excluir a competição no Supabase. Execute primeiro o SQL de correção e confira as permissões DELETE. Detalhe: '+(error?.message||error));
+    }finally{b.disabled=false;}
+  });
+ }
+ function updateCompetitionFormatFields(){
+  const format=$('newCompetitionFormat')?.value||'grupos';
+  const showGroups=['grupos','mista'].includes(format);
+  ['groupCountWrap','teamsPerGroupWrap'].forEach(id=>{const el=$(id);if(el)el.style.display=showGroups?'':'none'});
+ }
+ $('newCompetitionFormat')?.addEventListener('change',updateCompetitionFormatFields);
+ updateCompetitionFormatFields();
+ $('addCompetition')?.addEventListener('click',async()=>{
+  const name=$('newCompetitionName')?.value.trim();if(!name){alert('Digite o nome da competição.');return}
+  const seasonText=$('newCompetitionSeason')?.value.trim()||'';
+  const season=Number.parseInt(seasonText,10);
+  const format=$('newCompetitionFormat')?.value||'grupos';
+  const groupCount=['grupos','mista'].includes(format)?Math.max(1,Number.parseInt($('newCompetitionGroupCount')?.value||'1',10)):null;
+  const teamsPerGroup=['grupos','mista'].includes(format)?Math.max(2,Number.parseInt($('newCompetitionTeamsPerGroup')?.value||'2',10)):null;
+  const regulationFile=$('newCompetitionRegulation')?.files?.[0]||null;
+  const file=$('newCompetitionLogo')?.files?.[0]||null;
+  if(regulationFile && regulationFile.type!=='application/pdf' && !regulationFile.name.toLowerCase().endsWith('.pdf')){alert('O regulamento deve ser um arquivo PDF.');return}
+  if(regulationFile && regulationFile.size>10*1024*1024){alert('O regulamento deve ter até 10 MB.');return}
+  if(seasonText && !Number.isInteger(season)){alert('Informe a temporada como ano, por exemplo 2026.');return}
+  try{
+    if(typeof supabaseClient==='undefined'){throw new Error('A conexão com o Supabase não está disponível. Atualize a página.');}
+    const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+    if(sessionError) throw sessionError;
+    if(!sessionData?.session){alert('Entre primeiro com a conta de administrador para cadastrar competições no Supabase.');return;}
+    const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
+    if(adminError || !adminCheck){alert('A conta conectada não foi confirmada como administradora. Confira o login e a função is_admin no Supabase.');return;}
+    let logoUrl=null;
+    if(file){
+      if(file.size>2*1024*1024){alert('A logo deve ter até 2 MB.');return;}
+      const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
+      const path='competicoes/'+crypto.randomUUID()+'.'+ext;
+      const {error:uploadError}=await supabaseClient.storage.from('bid-fotos').upload(path,file,{upsert:false,contentType:file.type||'image/jpeg'});
+      if(uploadError) throw new Error('Falha ao enviar a logo para o bucket bid-fotos: '+uploadError.message);
+      const {data:urlData}=supabaseClient.storage.from('bid-fotos').getPublicUrl(path); logoUrl=urlData?.publicUrl||null;
+    }
+    let regulationUrl=null;
+    if(regulationFile){
+      const path='regulamentos/'+crypto.randomUUID()+'.pdf';
+      const {error:regError}=await supabaseClient.storage.from('bid-fotos').upload(path,regulationFile,{upsert:false,contentType:'application/pdf'});
+      if(regError) throw new Error('Falha ao enviar o regulamento para o bucket bid-fotos: '+regError.message);
+      const {data:regUrlData}=supabaseClient.storage.from('bid-fotos').getPublicUrl(path);
+      regulationUrl=regUrlData?.publicUrl||null;
+    }
+    const basePayload={nome:name,temporada:Number.isInteger(season)?season:new Date().getFullYear(),formato:format||null,logo_url:logoUrl,status:'ativa'};
+    // A tabela real deste projeto foi identificada no Supabase como public."COMPETICOES".
+    // Tenta primeiro o nome em minúsculas para compatibilidade e depois o nome real em maiúsculas.
+    let tableName='competicoes';
+    let result=await supabaseClient.from(tableName).insert(basePayload).select('id,nome,temporada,formato,logo_url,status').single();
+    if(result.error && /could not find the table|relation .* does not exist|schema cache|not found/i.test(result.error.message||'')){
+      tableName='COMPETICOES';
+      result=await supabaseClient.from(tableName).insert(basePayload).select('id,nome,temporada,formato,logo_url,status').single();
+    }
+    const {data:created,error}=result;
+    if(error) throw error;
+    // Grava os campos adicionais na MESMA tabela que aceitou o cadastro.
+    const optionalFields={quantidade_grupos:groupCount,equipes_por_grupo:teamsPerGroup,regulamento_url:regulationUrl};
+    let optionalResult=await supabaseClient.from(tableName).update(optionalFields).eq('id',created.id);
+    if(optionalResult.error && tableName==='competicoes' && /could not find the table|relation .* does not exist|schema cache|not found/i.test(optionalResult.error.message||'')){
+      tableName='COMPETICOES';
+      optionalResult=await supabaseClient.from(tableName).update(optionalFields).eq('id',created.id);
+    }
+    const optionalError=optionalResult.error;
+    const extrasSaved=!optionalError;
+    if(optionalError) console.warn('Competição salva, mas os campos adicionais não foram atualizados:',optionalError.message);
+    if(!db.competitions)db.competitions=[];
+    const c={id:String(created.id),dbId:created.id,name:created.nome,season:String(created.temporada),format:created.formato||'',groupCount:groupCount,teamsPerGroup:teamsPerGroup,regulationUrl:regulationUrl||'',logo:created.logo_url||'',_remote:true};
+    db.competitions.push(c);db.activeCompetitionId=c.id;db.competition=name;
+    if($('competitionName'))$('competitionName').value=name;
+    ['newCompetitionName','newCompetitionSeason'].forEach(id=>{if($(id))$(id).value=''});
+    if($('newCompetitionFormat'))$('newCompetitionFormat').value='grupos';
+    if($('newCompetitionGroupCount'))$('newCompetitionGroupCount').value='4';
+    if($('newCompetitionTeamsPerGroup'))$('newCompetitionTeamsPerGroup').value='4';
+    if($('newCompetitionLogo'))$('newCompetitionLogo').value='';
+    if($('newCompetitionRegulation'))$('newCompetitionRegulation').value='';
+    updateCompetitionFormatFields();
+    saveDb();alert(extrasSaved?'Competição cadastrada com sucesso! Formato, quantidade de grupos, equipes por grupo e endereço do regulamento foram enviados ao Supabase.':'A competição foi cadastrada, mas os campos adicionais não foram salvos. Detalhe: '+(optionalError?.message||'erro desconhecido')+'. Confira as permissões e os nomes das colunas da tabela COMPETICOES.');
+  }catch(e){console.error(e);alert('Não foi possível salvar a competição no Supabase. Detalhe: '+(e?.message||e));}
  });
-}
-function updateCompetitionFormatFields(){
- const format=$('newCompetitionFormat')?.value||'grupos';
- const showGroups=['grupos','mista'].includes(format);
- ['groupCountWrap','teamsPerGroupWrap'].forEach(id=>{const el=$(id);if(el)el.style.display=showGroups?'':'none'});
-}
-$('newCompetitionFormat')?.addEventListener('change',updateCompetitionFormatFields);
-updateCompetitionFormatFields();
-$('addCompetition')?.addEventListener('click',async()=>{
- const name=$('newCompetitionName')?.value.trim();if(!name){alert('Digite o nome da competição.');return}
- const seasonText=$('newCompetitionSeason')?.value.trim()||'';
- const season=Number.parseInt(seasonText,10);
- const format=$('newCompetitionFormat')?.value||'grupos';
- const groupCount=['grupos','mista'].includes(format)?Math.max(1,Number.parseInt($('newCompetitionGroupCount')?.value||'1',10)):null;
- const teamsPerGroup=['grupos','mista'].includes(format)?Math.max(2,Number.parseInt($('newCompetitionTeamsPerGroup')?.value||'2',10)):null;
- const regulationFile=$('newCompetitionRegulation')?.files?.[0]||null;
- const file=$('newCompetitionLogo')?.files?.[0]||null;
- if(regulationFile && regulationFile.type!=='application/pdf' && !regulationFile.name.toLowerCase().endsWith('.pdf')){alert('O regulamento deve ser um arquivo PDF.');return}
- if(regulationFile && regulationFile.size>10*1024*1024){alert('O regulamento deve ter até 10 MB.');return}
- if(seasonText && !Number.isInteger(season)){alert('Informe a temporada como ano, por exemplo 2026.');return}
- try{
-   if(typeof supabaseClient==='undefined'){throw new Error('A conexão com o Supabase não está disponível. Atualize a página.');}
-   const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
-   if(sessionError) throw sessionError;
-   if(!sessionData?.session){alert('Entre primeiro com a conta de administrador para cadastrar competições no Supabase.');return;}
-   const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
-   if(adminError || !adminCheck){alert('A conta conectada não foi confirmada como administradora. Confira o login e a função is_admin no Supabase.');return;}
-   let logoUrl=null;
-   if(file){
-     if(file.size>2*1024*1024){alert('A logo deve ter até 2 MB.');return;}
-     const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
-     const path='competicoes/'+crypto.randomUUID()+'.'+ext;
-     const {error:uploadError}=await supabaseClient.storage.from('bid-fotos').upload(path,file,{upsert:false,contentType:file.type||'image/jpeg'});
-     if(uploadError) throw new Error('Falha ao enviar a logo para o bucket bid-fotos: '+uploadError.message);
-     const {data:urlData}=supabaseClient.storage.from('bid-fotos').getPublicUrl(path); logoUrl=urlData?.publicUrl||null;
-   }
-   let regulationUrl=null;
-   if(regulationFile){
-     const path='regulamentos/'+crypto.randomUUID()+'.pdf';
-     const {error:regError}=await supabaseClient.storage.from('bid-fotos').upload(path,regulationFile,{upsert:false,contentType:'application/pdf'});
-     if(regError) throw new Error('Falha ao enviar o regulamento para o bucket bid-fotos: '+regError.message);
-     const {data:regUrlData}=supabaseClient.storage.from('bid-fotos').getPublicUrl(path);
-     regulationUrl=regUrlData?.publicUrl||null;
-   }
-   const basePayload={nome:name,temporada:Number.isInteger(season)?season:new Date().getFullYear(),formato:format||null,logo_url:logoUrl,status:'ativa'};
-   // A tabela real deste projeto foi identificada no Supabase como public."COMPETICOES".
-   // Tenta primeiro o nome em minúsculas para compatibilidade e depois o nome real em maiúsculas.
-   let tableName='competicoes';
-   let result=await supabaseClient.from(tableName).insert(basePayload).select('id,nome,temporada,formato,logo_url,status').single();
-   if(result.error && /could not find the table|relation .* does not exist|schema cache|not found/i.test(result.error.message||'')){
-     tableName='COMPETICOES';
-     result=await supabaseClient.from(tableName).insert(basePayload).select('id,nome,temporada,formato,logo_url,status').single();
-   }
-   const {data:created,error}=result;
-   if(error) throw error;
-   // Grava os campos adicionais na MESMA tabela que aceitou o cadastro.
-   const optionalFields={quantidade_grupos:groupCount,equipes_por_grupo:teamsPerGroup,regulamento_url:regulationUrl};
-   let optionalResult=await supabaseClient.from(tableName).update(optionalFields).eq('id',created.id);
-   if(optionalResult.error && tableName==='competicoes' && /could not find the table|relation .* does not exist|schema cache|not found/i.test(optionalResult.error.message||'')){
-     tableName='COMPETICOES';
-     optionalResult=await supabaseClient.from(tableName).update(optionalFields).eq('id',created.id);
-   }
-   const optionalError=optionalResult.error;
-   const extrasSaved=!optionalError;
-   if(optionalError) console.warn('Competição salva, mas os campos adicionais não foram atualizados:',optionalError.message);
-   if(!db.competitions)db.competitions=[];
-   const c={id:String(created.id),dbId:created.id,name:created.nome,season:String(created.temporada),format:created.formato||'',groupCount:groupCount,teamsPerGroup:teamsPerGroup,regulationUrl:regulationUrl||'',logo:created.logo_url||'',_remote:true};
-   db.competitions.push(c);db.activeCompetitionId=c.id;db.competition=name;
-   if($('competitionName'))$('competitionName').value=name;
-   ['newCompetitionName','newCompetitionSeason'].forEach(id=>{if($(id))$(id).value=''});
-   if($('newCompetitionFormat'))$('newCompetitionFormat').value='grupos';
-   if($('newCompetitionGroupCount'))$('newCompetitionGroupCount').value='4';
-   if($('newCompetitionTeamsPerGroup'))$('newCompetitionTeamsPerGroup').value='4';
-   if($('newCompetitionLogo'))$('newCompetitionLogo').value='';
-   if($('newCompetitionRegulation'))$('newCompetitionRegulation').value='';
-   updateCompetitionFormatFields();
-   saveDb();alert(extrasSaved?'Competição cadastrada com sucesso! Formato, quantidade de grupos, equipes por grupo e endereço do regulamento foram enviados ao Supabase.':'A competição foi cadastrada, mas os campos adicionais não foram salvos. Detalhe: '+(optionalError?.message||'erro desconhecido')+'. Confira as permissões e os nomes das colunas da tabela COMPETICOES.');
- }catch(e){console.error(e);alert('Não foi possível salvar a competição no Supabase. Detalhe: '+(e?.message||e));}
-});
-function renderAll(){renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();$('nTeams').textContent=activeCompetitionTeams().length;$('nPlayers').textContent=activeCompetitionTeams().reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).filter(matchBelongsToActiveCompetition).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · 2026 - TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
-$('q').addEventListener('input',renderRoster);$('filter').addEventListener('change',renderRoster);
-$('athCpf').addEventListener('input',e=>{let d=cpfDigits(e.target.value).slice(0,11);if(d.length>9)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);else if(d.length>6)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);else if(d.length>3)d=d.slice(0,3)+'.'+d.slice(3);e.target.value=d;if(cpfDigits(d).length===11 && typeof lookupAthleteByCpf==='function')lookupAthleteByCpf()});
-$('export').addEventListener('click',()=>download('bid-poeirao-backup.json',JSON.stringify(db,null,2),'application/json'));
-$('importBtn').addEventListener('click',()=>$('importFile').click());
-$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.teams)||!Array.isArray(x.events))throw Error();if(!Array.isArray(x.matches))x.matches=[];if(!x.competition)x.competition='Copa Poeirão 2026';db=x;selectedTeam=db.teams[0]?.id||'';saveDb();alert('Cópia importada.')}catch(err){alert('Arquivo de cópia inválido.')}e.target.value=''});
-$('exportEvents').addEventListener('click',()=>{const lines=[['Partida','Equipe','Atleta','BID','Evento','Minuto','Observação','Data'],...db.events.map(e=>[e.match,e.team,e.player,e.playerId,e.label,e.minute,e.note,e.at])];download('sumula-bid-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8')});
-function download(name,data,type){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-$('reset').addEventListener('click',()=>{if(confirm('Isso apaga as equipes, atletas e eventos guardados neste navegador. Deseja continuar?')){localStorage.removeItem(KEY);db=structuredClone(starter);selectedTeam=db.teams[0]?.id||'';saveDb();alert('Prévia restaurada com os dados demonstrativos.')}});
-// Editor de eventos diretamente na tabela de jogos: gols, cartões e participação.
-function refreshMatchEventChoices(preferredMatchId='', preferredTeamId=''){
- const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
- const matchSel=$('matchEventMatch');if(!matchSel)return;const oldMatch=preferredMatchId||matchSel.value;
- matchSel.innerHTML='<option value="">Selecione um jogo</option>'+ms.map(m=>`<option value="${esc(m.id)}">${esc(dateBR(m.date))} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
- if(ms.some(m=>String(m.id)===String(oldMatch)))matchSel.value=String(oldMatch);
- const m=ms.find(x=>String(x.id)===String(matchSel.value));const teamSel=$('matchEventTeam');const athleteSel=$('matchEventAthlete');
- const prevTeam=preferredTeamId||teamSel.value;
- const sides=m?[findTeam(m.homeId),findTeam(m.awayId)].filter(Boolean):[];
- teamSel.innerHTML='<option value="">Selecione a equipe</option>'+sides.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
- if(sides.some(t=>String(t.id)===String(prevTeam)))teamSel.value=String(prevTeam);
- const team=findTeam(teamSel.value);const players=team?(team.players||[]):[];const oldPlayer=athleteSel.value;
- athleteSel.innerHTML='<option value="">Selecione o atleta</option>'+players.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}${p.id?' · BID '+esc(p.id):''}</option>`).join('');
- if(players.some(p=>String(p.id)===String(oldPlayer)))athleteSel.value=oldPlayer;
- renderMatchEventList();
-}
-function renderMatchEventList(){
- const list=$('matchEventList'),sel=$('matchEventMatch');if(!list||!sel)return;const id=sel.value;
- const items=(db.events||[]).filter(e=>String(e.matchId||'')===String(id));
- list.innerHTML=items.map(e=>`<div class="event"><span>${esc(e.icon||'⚽')}</span><div><b>${esc(e.label||e.type)} · ${esc(e.player||'Atleta')}</b><span>${esc(e.team||'')} ${e.minute!==''&&e.minute!=null?'· '+esc(e.minute)+' min':''}${e.note?' · '+esc(e.note):''}</span><small>${esc(e.match||'')}</small></div></div>`).join('')||'<div class="empty">Nenhum evento registrado para esta partida ainda.</div>';
-}
-$('matchEventMatch')?.addEventListener('change',()=>refreshMatchEventChoices());
-$('matchEventTeam')?.addEventListener('change',()=>refreshMatchEventChoices($('matchEventMatch').value,$('matchEventTeam').value));
-$('addMatchEvent')?.addEventListener('click',()=>{
- if(window.__BID_ADMIN_VERIFIED!==true){alert('Somente o administrador autenticado pode registrar eventos. Entre pela Administração.');return}
- const match=(db.matches||[]).find(m=>String(m.id)===String($('matchEventMatch').value));if(!match){alert('Selecione a partida.');return}
- const team=findTeam($('matchEventTeam').value);if(!team||![String(match.homeId),String(match.awayId)].includes(String(team.id))){alert('Selecione uma das equipes que disputam esta partida.');return}
- const player=(team.players||[]).find(p=>String(p.id)===String($('matchEventAthlete').value));if(!player){alert('Selecione o atleta que marcou o gol ou recebeu o cartão.');return}
- const type=$('matchEventType').value;const labels={played:'Participou da partida',goal:'Gol',yellow:'Cartão amarelo',red:'Cartão vermelho'},icons={played:'🏃',goal:'⚽',yellow:'🟨',red:'🟥'};
- player.played=true;if(type==='goal')player.goals=(Number(player.goals)||0)+1;if(type==='yellow')player.yellow=(Number(player.yellow)||0)+1;if(type==='red')player.red=(Number(player.red)||0)+1;
- const ev={id:Date.now()+Math.floor(Math.random()*1000),matchId:match.id,match:`${match.homeName} × ${match.awayName}`,team:team.name,teamId:team.id,player:player.name,playerId:player.id,type,label:labels[type],icon:icons[type],minute:$('matchEventMinute').value,note:$('matchEventNote').value.trim(),at:new Date().toLocaleString('pt-BR')};
- db.events.unshift(ev);saveDb();$('matchEventMinute').value='';$('matchEventNote').value='';$('matchEventStatus').textContent='Evento registrado nesta prévia local. Exporte uma cópia de segurança para guardar; a sincronização dos eventos com o Supabase ainda precisa ser ligada.';refreshMatchEventChoices(match.id,team.id);renderEvents();renderFrontPage();
-});
-$('showMatchEvents')?.addEventListener('click',renderMatchEventList);
-// Mantém o editor sincronizado com os jogos existentes e com o botão Gols/cartões.
-const originalRenderMatchesForEvents=renderMatches;
-renderMatches=function(){originalRenderMatchesForEvents();refreshMatchEventChoices();document.querySelectorAll('[data-match-events]').forEach(b=>b.onclick=()=>{const m=(db.matches||[]).find(x=>String(x.id)===String(b.dataset.matchEvents));if(!m)return;showTab('games');refreshMatchEventChoices(m.id);$('matchEventEditor').scrollIntoView({behavior:'smooth',block:'center'});});};
-renderAll();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-
-
-
-
-// Recursos extras da versão de teste: competições múltiplas e prévia de mídia.
+ function renderAll(){renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();$('nTeams').textContent=activeCompetitionTeams().length;$('nPlayers').textContent=activeCompetitionTeams().reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).filter(matchBelongsToActiveCompetition).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · 2026 - TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
+ $('q').addEventListener('input',renderRoster);$('filter').addEventListener('change',renderRoster);
+ $('athCpf').addEventListener('input',e=>{let d=cpfDigits(e.target.value).slice(0,11);if(d.length>9)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);else if(d.length>6)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);else if(d.length>3)d=d.slice(0,3)+'.'+d.slice(3);e.target.value=d;if(cpfDigits(d).length===11 && typeof lookupAthleteByCpf==='function')lookupAthleteByCpf()});
+ $('export').addEventListener('click',()=>download('bid-poeirao-backup.json',JSON.stringify(db,null,2),'application/json'));
+ $('importBtn').addEventListener('click',()=>$('importFile').click());
+ $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.teams)||!Array.isArray(x.events))throw Error();if(!Array.isArray(x.matches))x.matches=[];if(!x.competition)x.competition='Copa Poeirão 2026';db=x;selectedTeam=db.teams[0]?.id||'';saveDb();alert('Cópia importada.')}catch(err){alert('Arquivo de cópia inválido.')}e.target.value=''});
+ $('exportEvents').addEventListener('click',()=>{const lines=[['Partida','Equipe','Atleta','BID','Evento','Minuto','Observação','Data'],...db.events.map(e=>[e.match,e.team,e.player,e.playerId,e.label,e.minute,e.note,e.at])];download('sumula-bid-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8')});
+ function download(name,data,type){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+ $('reset').addEventListener('click',()=>{if(confirm('Isso apaga as equipes, atletas e eventos guardados neste navegador. Deseja continuar?')){localStorage.removeItem(KEY);db=structuredClone(starter);selectedTeam=db.teams[0]?.id||'';saveDb();alert('Prévia restaurada com os dados demonstrativos.')}});
+ // Editor de eventos diretamente na tabela de jogos: gols, cartões e participação.
+ function refreshMatchEventChoices(preferredMatchId='', preferredTeamId=''){
+  const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  const matchSel=$('matchEventMatch');if(!matchSel)return;const oldMatch=preferredMatchId||matchSel.value;
+  matchSel.innerHTML='<option value="">Selecione um jogo</option>'+ms.map(m=>`<option value="${esc(m.id)}">${esc(dateBR(m.date))} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
+  if(ms.some(m=>String(m.id)===String(oldMatch)))matchSel.value=String(oldMatch);
+  const m=ms.find(x=>String(x.id)===String(matchSel.value));const teamSel=$('matchEventTeam');const athleteSel=$('matchEventAthlete');
+  const prevTeam=preferredTeamId||teamSel.value;
+  const sides=m?[findTeam(m.homeId),findTeam(m.awayId)].filter(Boolean):[];
+  teamSel.innerHTML='<option value="">Selecione a equipe</option>'+sides.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+  if(sides.some(t=>String(t.id)===String(prevTeam)))teamSel.value=String(prevTeam);
+  const team=findTeam(teamSel.value);const players=team?(team.players||[]):[];const oldPlayer=athleteSel.value;
+  athleteSel.innerHTML='<option value="">Selecione o atleta</option>'+players.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}${p.id?' · BID '+esc(p.id):''}</option>`).join('');
+  if(players.some(p=>String(p.id)===String(oldPlayer)))athleteSel.value=oldPlayer;
+  renderMatchEventList();
+ }
+ function renderMatchEventList(){
+  const list=$('matchEventList'),sel=$('matchEventMatch');if(!list||!sel)return;const id=sel.value;
+  const items=(db.events||[]).filter(e=>String(e.matchId||'')===String(id));
+  list.innerHTML=items.map(e=>`<div class="event"><span>${esc(e.icon||'⚽')}</span><div><b>${esc(e.label||e.type)} · ${esc(e.player||'Atleta')}</b><span>${esc(e.team||'')} ${e.minute!==''&&e.minute!=null?'· '+esc(e.minute)+' min':''}${e.note?' · '+esc(e.note):''}</span><small>${esc(e.match||'')}</small></div></div>`).join('')||'<div class="empty">Nenhum evento registrado para esta partida ainda.</div>';
+ }
+ $('matchEventMatch')?.addEventListener('change',()=>refreshMatchEventChoices());
+ $('matchEventTeam')?.addEventListener('change',()=>refreshMatchEventChoices($('matchEventMatch').value,$('matchEventTeam').value));
+ $('addMatchEvent')?.addEventListener('click',()=>{
+  if(window.__BID_ADMIN_VERIFIED!==true){alert('Somente o administrador autenticado pode registrar eventos. Entre pela Administração.');return}
+  const match=(db.matches||[]).find(m=>String(m.id)===String($('matchEventMatch').value));if(!match){alert('Selecione a partida.');return}
+  const team=findTeam($('matchEventTeam').value);if(!team||![String(match.homeId),String(match.awayId)].includes(String(team.id))){alert('Selecione uma das equipes que disputam esta partida.');return}
+  const player=(team.players||[]).find(p=>String(p.id)===String($('matchEventAthlete').value));if(!player){alert('Selecione o atleta que marcou o gol ou recebeu o cartão.');return}
+  const type=$('matchEventType').value;const labels={played:'Participou da partida',goal:'Gol',yellow:'Cartão amarelo',red:'Cartão vermelho'},icons={played:'🏃',goal:'⚽',yellow:'🟨',red:'🟥'};
+  player.played=true;if(type==='goal')player.goals=(Number(player.goals)||0)+1;if(type==='yellow')player.yellow=(Number(player.yellow)||0)+1;if(type==='red')player.red=(Number(player.red)||0)+1;
+  const ev={id:Date.now()+Math.floor(Math.random()*1000),matchId:match.id,match:`${match.homeName} × ${match.awayName}`,team:team.name,teamId:team.id,player:player.name,playerId:player.id,type,label:labels[type],icon:icons[type],minute:$('matchEventMinute').value,note:$('matchEventNote').value.trim(),at:new Date().toLocaleString('pt-BR')};
+  db.events.unshift(ev);saveDb();$('matchEventMinute').value='';$('matchEventNote').value='';$('matchEventStatus').textContent='Evento registrado nesta prévia local. Exporte uma cópia de segurança para guardar; a sincronização dos eventos com o Supabase ainda precisa ser ligada.';refreshMatchEventChoices(match.id,team.id);renderEvents();renderFrontPage();
+ });
+ $('showMatchEvents')?.addEventListener('click',renderMatchEventList);
+ // Mantém o editor sincronizado com os jogos existentes e com o botão Gols/cartões.
+ const originalRenderMatchesForEvents=renderMatches;
+ renderMatches=function(){originalRenderMatchesForEvents();refreshMatchEventChoices();document.querySelectorAll('[data-match-events]').forEach(b=>b.onclick=()=>{const m=(db.matches||[]).find(x=>String(x.id)===String(b.dataset.matchEvents));if(!m)return;showTab('games');refreshMatchEventChoices(m.id);$('matchEventEditor').scrollIntoView({behavior:'smooth',block:'center'});});};
+ renderAll();
+ </script>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <script>
+ 
+ 
+ 
+ 
+ // Recursos extras da versão de teste: competições múltiplas e prévia de mídia.
 const BID_EXTRA_KEY = 'bidGeralExtrasV1';
 function readBidExtras(){ try { return JSON.parse(localStorage.getItem(BID_EXTRA_KEY) || '{"competitions":[{"name":"Copa Poeirão 2026","season":"2026"}],"media":[]}'); } catch(e) { return {competitions:[{name:"Copa Poeirão 2026",season:"2026"}],media:[]}; } }
 let bidExtras = readBidExtras();
