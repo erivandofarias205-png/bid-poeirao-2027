@@ -2468,7 +2468,25 @@ let manualGroupDraft = [];
 let manualGroupCurrentRound = 1;
 let manualGroupFormatMode = 'unico';
 let manualGroupConfirmedRounds = {};
+function manualGroupLoadTeams() {
+  const c = comp();
+  const homeSelect = $p('manualGroupHome');
+  const awaySelect = $p('manualGroupAway');
 
+  if (!c || !homeSelect || !awaySelect) return;
+
+  const allTeams = teams(c);
+
+  const options = [
+    '<option value="">Selecione a equipe</option>',
+    ...allTeams.map(t =>
+      `<option value="${esc(t.id)}">${esc(t.name)}</option>`
+    )
+  ].join('');
+
+  homeSelect.innerHTML = options;
+  awaySelect.innerHTML = options;
+}
  function manualGroupUpdateRounds() {
   const c = comp();
   const format = $p('manualGroupFormat')?.value || 'unico';
