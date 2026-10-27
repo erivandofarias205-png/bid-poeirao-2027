@@ -2471,18 +2471,55 @@ let manualGroupFormatMode = 'unico';
 let manualGroupConfirmedRounds = {};
 
 function manualGroupLoadTeams() {
-  const helpers = window.bidManualGroupHelpers;
-  if (!helpers) {
-    console.error('Auxiliares dos grupos não carregados.');
-    return;
-  }
-
-  const comp = helpers.comp;
-  const teams = helpers.teams;
-
   const homeSelect = document.getElementById('manualGroupHome');
   const awaySelect = document.getElementById('manualGroupAway');
 
+  if (!homeSelect || !awaySelect) return;
+
+  const helpers = window.bidManualGroupHelpers;
+
+  if (!helpers) {
+    console.error('BID: auxiliares dos grupos ainda não carregados.');
+    return;
+  }
+
+  const competition = helpers.comp();
+  const allTeams = competition ? helpers.teams(competition) : [];
+
+  const options = [
+    '<option value="">Selecione a equipe</option>',
+    ...allTeams.map(team => {
+      const id = team.id ?? team.dbId;
+      const name = team.name || team.nome || 'Equipe sem nome';
+
+      return `<option value="${esc(String(id))}">${esc(name)}</option>`;
+    })
+  ].join('');
+
+  homeSelect.innerHTML = options;
+  awaySelect.innerHTML = options;
+
+  console.log('BID: equipes carregadas:', allTeams.length);
+}
+  const competition = helpers.comp();
+  const allTeams = competition ? helpers.teams(competition) : [];
+
+  const options = [
+    '<option value="">Selecione a equipe</option>',
+    ...allTeams.map(team => {
+      const id = team.id ?? team.dbId;
+      const name = team.name || team.nome || 'Equipe sem nome';
+      return `<option value="${esc(id)}">${esc(name)}</option>`;
+    })
+  ].join('');
+
+  homeSelect.innerHTML = options;
+  awaySelect.innerHTML = options;
+
+  if (!allTeams.length) {
+    console.warn('Nenhuma equipe vinculada à competição selecionada.');
+  }
+}
   if (!homeSelect || !awaySelect) return;
 
   const c = comp();
