@@ -4263,7 +4263,19 @@ phaseWinners: c.phaseWinners || []
 
   alert('Competição atualizada e confirmada pelo Supabase!');
 });
-  $p('phaseCompetitionSelect')?.addEventListener('change',()=>{db.activeCompetitionId=$p('phaseCompetitionSelect').value;const c=activeCompetition();if(c)db.competition=c.name;save();refreshCompetitionSelect();renderPhase()});
+ $p('phaseCompetitionSelect')?.addEventListener('change',()=>{
+  db.activeCompetitionId=$p('phaseCompetitionSelect').value;
+  const c=comp();
+  if(c)db.competition=c.name;
+  save();
+  refreshCompetitionSelect();
+  renderPhase();
+  renderRoundOf16Qualifiers();
+  renderQuarterFinals();
+  renderQuarterQualifiers();
+  renderSemiFinals();
+  renderFinalMatch();
+});
  
 $p('phaseSaveRules')?.addEventListener('click',async()=>{
   const c=comp();
