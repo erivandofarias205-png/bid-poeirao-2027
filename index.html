@@ -2496,25 +2496,7 @@ function manualGroupLoadTeams() {
     console.warn('BID: nenhuma equipe foi carregada nos seletores.');
   }
 }
-  const c = comp();
-  const homeSelect = $p('manualGroupHome');
-  const awaySelect = $p('manualGroupAway');
-
-  if (!c || !homeSelect || !awaySelect) return;
-
-  const allTeams = teams(c);
-
-  const options = [
-    '<option value="">Selecione a equipe</option>',
-    ...allTeams.map(t =>
-      `<option value="${esc(t.id)}">${esc(t.name)}</option>`
-    )
-  ].join('');
-
-  homeSelect.innerHTML = options;
-  awaySelect.innerHTML = options;
-}
- function manualGroupUpdateRounds() {
+  function manualGroupUpdateRounds() {
   const c = comp();
   const format = $p('manualGroupFormat')?.value || 'unico';
   const roundSelect = $p('manualGroupRound');
@@ -2581,8 +2563,32 @@ const labels = groupLabels(c);
 const competitionTeams = teams(c);
 const allTeams = competitionTeams.length
   ? competitionTeams
-  : (db.teams || []);
+ 
+function manualGroupLoadTeams() {
+  const c = comp();
+  const homeSelect = $p('manualGroupHome');
+  const awaySelect = $p('manualGroupAway');
 
+  if (!homeSelect || !awaySelect) return;
+
+  const allTeams = c ? teams(c) : [];
+
+  const options = [
+    '<option value="">Selecione a equipe</option>',
+    ...allTeams.map(t => {
+      const id = t.id ?? t.dbId;
+      const name = t.name || t.nome || 'Equipe sem nome';
+      return `<option value="${esc(id)}">${esc(name)}</option>`;
+    })
+  ].join('');
+
+  homeSelect.innerHTML = options;
+  awaySelect.innerHTML = options;
+
+  if (!allTeams.length) {
+    console.warn('BID: nenhuma equipe vinculada à competição selecionada.');
+  }
+}
 if (!allTeams.length) {
   alert('Nenhuma equipe vinculada à competição selecionada.');
   return;
