@@ -2748,7 +2748,11 @@ const draft = [];
  $p('manualGroupFormat')?.addEventListener('change', () => {
    manualGroupUpdateRounds();
  });
- 
+ $p('phaseCompetitionSelect')?.addEventListener('change', () => {
+  manualGroupLoadTeams();
+});
+
+manualGroupLoadTeams();
  $p('phaseCompetitionSelect')?.addEventListener('change', () => {
    manualGroupUpdateRounds();
  });
