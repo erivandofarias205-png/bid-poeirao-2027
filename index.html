@@ -1461,6 +1461,28 @@ overflow: visible !important;
   </div>
 </div>
 
+<!-- CLASSIFICADOS DAS QUARTAS DE FINAL -->
+<div class="panel" id="quarterFinalQualifiersPanel">
+  <div class="ph">
+    <h3>Classificados das quartas de final</h3>
+    <span class="pill">4 equipes</span>
+  </div>
+  <div class="pad">
+    <p class="small muted">
+      Os quatro vencedores das quartas avançam para as semifinais.
+    </p>
+    <div class="actions">
+      <button class="gold" id="generateQuarterQualifiers" type="button">
+        GERAR CLASSIFICADOS
+      </button>
+      <button class="secondary" id="saveQuarterQualifiers" type="button">
+        SALVAR CLASSIFICADOS
+      </button>
+    </div>
+    <div id="quarterQualifiersList" class="tablewrap"></div>
+  </div>
+</div>
+
 <style id="quarter-finals-style">
   #quarterFinalsPanel .quarter-finals-grid {
     display: grid;
@@ -4983,7 +5005,87 @@ $p('saveSemiFinals')?.addEventListener('click', async () => {
   }
 });
  
-function renderSemiFinals() {
+function renderQuarterQualifiers() {
+  const c = comp();
+  const panel = $p('quarterQualifiersList');
+  if (!panel) return;
+
+  if (!c) {
+    panel.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  const ties = c.quarterFinalTies || [];
+  const ts = teams(c);
+  const winners = [];
+
+  for (const m of ties) {
+    if (!m.a || !m.b || m.status !== 'finalizado' ||
+        m.score1A == null || m.score1A === '' ||
+        m.score1B == null || m.score1B === '') continue;
+
+    const a = Number(m.score1A);
+    const b = Number(m.score1B);
+    let winner = null;
+
+    if (a > b) winner = m.a;
+    else if (b > a) winner = m.b;
+    else if (
+      m.penalties1A != null && m.penalties1A !== '' &&
+      m.penalties1B != null && m.penalties1B !== '' &&
+      Number(m.penalties1A) !== Number(m.penalties1B)
+    ) {
+      winner = Number(m.penalties1A) > Number(m.penalties1B)
+        ? m.a : m.b;
+    }
+
+    if (winner) winners.push(winner);
+  }
+
+  const nameOf = id => {
+    const t = ts.find(t =>
+      String(t.id) === String(id) ||
+      String(t.dbId || '') === String(id)
+    );
+    return t ? t.name : 'Equipe não encontrada';
+  };
+
+  panel.innerHTML = winners.length
+    ? '<ol>' + winners.map(id =>
+        '<li>' + esc(nameOf(id)) + '</li>'
+      ).join('') + '</ol>'
+    : '<div class="empty">Finalize as quatro partidas das quartas para mostrar os vencedores.</div>';
+}
+
+$p('generateQuarterQualifiers')?.addEventListener('click', () => {
+  const c = comp();
+  if (!c) return;
+
+  renderQuarterQualifiers();
+
+  const winnersPanel = $p('quarterQualifiersList');
+  if (winnersPanel && (c.quarterFinalTies || []).length !== 4) {
+    alert('Cadastre os quatro confrontos das quartas de final.');
+    return;
+  }
+
+  alert('Classificados das quartas atualizados. Confira a lista.');
+});
+
+$p('saveQuarterQualifiers')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
+
+  try {
+    await saveCompetitionPhaseConfig(c);
+    renderQuarterQualifiers();
+    alert('Classificados das quartas salvos no Supabase!');
+  } catch (error) {
+    console.error('Erro ao salvar classificados das quartas:', error);
+    alert('O Supabase não confirmou o salvamento: ' + (error.message || error));
+  }
+});
+ function renderSemiFinals() {
   const c = comp();
   const panel = $p('semiFinalsTies');
   if (!panel) return;
@@ -5333,8 +5435,8 @@ $p('saveThirdPlace')?.addEventListener('click', async () => {
     alert('Não foi possível confirmar o salvamento da disputa: ' + (error.message || error));
   }
 });
-const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderSemiFinals();renderFinalMatch()};
-setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderSemiFinals();renderFinalMatch()},300);
+const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderQuarterQualifiers();renderSemiFinals();renderFinalMatch()};
+setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderQuarterQualifiers();renderSemiFinals();renderFinalMatch()},300);
 })();
 </script>
 
