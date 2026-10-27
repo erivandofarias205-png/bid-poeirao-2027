@@ -4599,9 +4599,39 @@ function renderQuarterFinals() {
     return;
   }
 
-  c.quarterFinalTies = c.quarterFinalTies || [];
+  
+c.quarterFinalTies = c.quarterFinalTies || [];
 
-  const ts = teams(c);
+const allTeams = teams(c);
+
+const qualifiedIds = (c.knockoutTies || []).flatMap(m => {
+  if (!m || !m.a || !m.b || m.status !== 'finalizado' ||
+      m.score1A == null || m.score1A === '' ||
+      m.score1B == null || m.score1B === '') return [];
+
+  const a = Number(m.score1A);
+  const b = Number(m.score1B);
+
+  if (a > b) return [String(m.a)];
+  if (b > a) return [String(m.b)];
+
+  if (m.penalties1A == null || m.penalties1A === '' ||
+      m.penalties1B == null || m.penalties1B === '' ||
+      Number(m.penalties1A) === Number(m.penalties1B)) return [];
+
+  return [
+    String(Number(m.penalties1A) > Number(m.penalties1B) ? m.a : m.b)
+  ];
+});
+
+const uniqueQualifiedIds = [...new Set(qualifiedIds)];
+
+const ts = uniqueQualifiedIds.length === 8
+  ? allTeams.filter(t =>
+      uniqueQualifiedIds.includes(String(t.id)) ||
+      uniqueQualifiedIds.includes(String(t.dbId || ''))
+    )
+  : allTeams;
   const teamName = id => {
     const t = ts.find(x =>
       String(x.id) === String(id) ||
@@ -4682,95 +4712,93 @@ function renderQuarterFinals() {
     `;
   }).join('');
 
-  panel.querySelectorAll('.quarter-tie-card').forEach(card => {
-    const a = card.querySelector('[data-quarter-field="score1A"]');
-    const b = card.querySelector('[data-quarter-field="score1B"]');
-    const penalties = card.querySelector('[data-quarter-penalties]');
-
-    const updatePenalties = () => {
-      if (!a || !b || !penalties) return;
-      penalties.style.display =
-        a.value !== '' && b.value !== '' &&
-        Number(a.value) === Number(b.value) ? '' : 'none';
-    };
-
-    a?.addEventListener('input', updatePenalties);
-    b?.addEventListener('input', updatePenalties);
-    updatePenalties();
-  });
-}
+   panel.querySelectorAll('.quarter-tie-card').forEach(card => {
+     const a = card.querySelector('[data-quarter-field="score1A"]');
+     const b = card.querySelector('[data-quarter-field="score1B"]');
+     const penalties = card.querySelector('[data-quarter-penalties]');
  
-  // ===== BOTÃO: GERAR CLASSIFICADOS PARA AS QUARTAS =====
-  $p('generateQuarterFinalists')?.addEventListener('click', () => {
-    const c = comp();
-    if (!c) return;
-
-    const ties = c.knockoutTies || [];
-    const ts = teams(c);
-
-    if (ties.length !== 8) {
-      alert('As oitavas precisam ter exatamente 8 confrontos cadastrados.');
-      return;
-    }
-
-    const winners = [];
-
-    for (let i = 0; i < ties.length; i++) {
-      const m = ties[i];
-
-      if (!m.a || !m.b || m.status !== 'finalizado') {
-        alert(`Finalize o jogo ${i + 1} das oitavas e confira as duas equipes.`);
-        return;
-      }
-
-      if (m.score1A == null || m.score1A === '' ||
-          m.score1B == null || m.score1B === '') {
-        alert(`Informe o placar do jogo ${i + 1} das oitavas.`);
-        return;
-      }
-
-      const a = Number(m.score1A);
-      const b = Number(m.score1B);
-      let winner;
-
-      if (a > b) winner = m.a;
-      else if (b > a) winner = m.b;
-      else {
-        if (m.penalties1A == null || m.penalties1A === '' ||
-            m.penalties1B == null || m.penalties1B === '' ||
-            Number(m.penalties1A) === Number(m.penalties1B)) {
-          alert(`O jogo ${i + 1} terminou empatado. Informe os pênaltis com um vencedor.`);
-          return;
-        }
-
-        winner = Number(m.penalties1A) > Number(m.penalties1B)
-          ? m.a
-          : m.b;
-      }
-
-      winners.push(winner);
-    }
-
-    c.quarterFinalTies = Array.from({ length: 4 }, (_, i) => ({
-      ...(c.quarterFinalTies?.[i] || {}),
-      round: 'Quartas de final',
-      a: winners[i * 2],
-      b: winners[i * 2 + 1]
-    }));
-
-    save();
-    renderQuarterFinals();
-
-    alert('Oito classificados encaminhados para os quatro confrontos das quartas. Confira e salve.');
-  });
-
-
-  // ===== BOTÃO: SALVAR QUARTAS NO SUPABASE =====
-  $p('saveQuarterFinals')?.addEventListener('click', async () => {
-    const c = comp();
-    if (!c) return;
-
-    c.quarterFinalTies = c.quarterFinalTies || [];
+     const updatePenalties = () => {
+       if (!a || !b || !penalties) return;
+       penalties.style.display =
+         a.value !== '' && b.value !== '' &&
+         Number(a.value) === Number(b.value) ? '' : 'none';
+     };
+ 
+     a?.addEventListener('input', updatePenalties);
+     b?.addEventListener('input', updatePenalties);
+     updatePenalties();
+   });
+ }
+  
+   // ===== BOTÃO: GERAR CLASSIFICADOS PARA AS QUARTAS =====
+   $p('generateQuarterFinalists')?.addEventListener('click', () => {
+     const c = comp();
+     if (!c) return;
+ 
+     const ties = c.knockoutTies || [];
+     if (ties.length !== 8) {
+       alert('As oitavas precisam ter exatamente 8 confrontos cadastrados.');
+       return;
+     }
+ 
+     const winners = [];
+ 
+     for (let i = 0; i < ties.length; i++) {
+       const m = ties[i];
+ 
+       if (!m.a || !m.b || m.status !== 'finalizado') {
+         alert(`Finalize o jogo ${i + 1} das oitavas e confira as duas equipes.`);
+         return;
+       }
+ 
+       if (m.score1A == null || m.score1A === '' ||
+           m.score1B == null || m.score1B === '') {
+         alert(`Informe o placar do jogo ${i + 1} das oitavas.`);
+         return;
+       }
+ 
+       const a = Number(m.score1A);
+       const b = Number(m.score1B);
+       let winner;
+ 
+       if (a > b) winner = m.a;
+       else if (b > a) winner = m.b;
+       else {
+         if (m.penalties1A == null || m.penalties1A === '' ||
+             m.penalties1B == null || m.penalties1B === '' ||
+             Number(m.penalties1A) === Number(m.penalties1B)) {
+           alert(`O jogo ${i + 1} terminou empatado. Informe os pênaltis com um vencedor.`);
+           return;
+         }
+ 
+         winner = Number(m.penalties1A) > Number(m.penalties1B)
+           ? m.a
+           : m.b;
+       }
+ 
+       winners.push(winner);
+     }
+ 
+     c.quarterFinalTies = Array.from({ length: 4 }, (_, i) => ({
+       ...(c.quarterFinalTies?.[i] || {}),
+       round: 'Quartas de final',
+       a: winners[i * 2],
+       b: winners[i * 2 + 1]
+     }));
+ 
+     save();
+     renderQuarterFinals();
+ 
+     alert('Oito classificados encaminhados para os quatro confrontos das quartas. Confira e salve.');
+   });
+ 
+ 
+   // ===== BOTÃO: SALVAR QUARTAS NO SUPABASE =====
+   $p('saveQuarterFinals')?.addEventListener('click', async () => {
+     const c = comp();
+     if (!c) return;
+ 
+     c.quarterFinalTies = c.quarterFinalTies || [];
 
     document.querySelectorAll('#quarterFinalsTies [data-quarter-index]').forEach(el => {
       const i = Number(el.dataset.quarterIndex);
