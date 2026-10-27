@@ -1414,8 +1414,46 @@ overflow: visible !important;
   </label>
 </div>
 
+
+<div class="formgrid">
+  <label>Equipe mandante
+    <select id="manualGroupHome">
+      <option value="">Selecione a equipe</option>
+    </select>
+  </label>
+
+  <label>Equipe visitante
+    <select id="manualGroupAway">
+      <option value="">Selecione a equipe</option>
+    </select>
+  </label>
+
+  <label>Data
+    <input type="date" id="manualGroupDate">
+  </label>
+
+  <label>Horário
+    <input type="time" id="manualGroupTime">
+  </label>
+
+  <label>Local da partida
+    <input type="text" id="manualGroupVenue" placeholder="Nome do campo">
+  </label>
+</div>
+
+<div class="actions">
+  <button class="secondary" id="manualGroupPrepare" type="button">
+    Adicionar confronto à lista
+  </button>
+  <button class="gold" id="manualGroupSave" type="button">
+    Salvar jogos no sistema oficial
+  </button>
+</div>
+
+<div id="manualGroupMatches" class="tablewrap"></div>
+
 <div class="note">
-  Este painel é apenas a estrutura visual inicial. Ainda precisamos conectar os campos ao cadastro oficial de partidas para salvar, editar e excluir jogos corretamente.
+  Confira os confrontos antes de salvar. Os jogos oficiais serão vinculados à competição selecionada.
 </div>
  <h4 style="margin-top:22px">2. Classificação dos grupos</h4><div id="phaseStandings" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseBuildQualifiers" type="button">Gerar classificados</button></div><div id="phaseQualifiers" class="tablewrap"></div>
 
