@@ -2468,18 +2468,40 @@ let manualGroupDraft = [];
 let manualGroupCurrentRound = 1;
 let manualGroupFormatMode = 'unico';
 let manualGroupConfirmedRounds = {};
+
 function manualGroupLoadTeams() {
-  const c = comp();
-  const homeSelect = $p('manualGroupHome');
-  const awaySelect = $p('manualGroupAway');
+  const homeSelect = document.getElementById('manualGroupHome');
+  const awaySelect = document.getElementById('manualGroupAway');
+  const competitionSelect = document.getElementById('phaseCompetitionSelect');
 
   if (!homeSelect || !awaySelect) return;
 
-  const allTeams = c ? teams(c) : [];
+  const selectedCompetitionId = competitionSelect?.value;
+
+  const allTeams = Array.isArray(db?.teams) ? db.teams : [];
+  const competitions = Array.isArray(db?.competitions) ? db.competitions : [];
+
+  const competition = competitions.find(c =>
+    String(c.id) === String(selectedCompetitionId) ||
+    String(c.dbId) === String(selectedCompetitionId)
+  );
+
+  const linkedTeams = allTeams.filter(t => {
+    if (!competition) return false;
+
+    const ids = [
+      t.competitionId,
+      t.competicao_id,
+      t.competitionDbId
+    ].filter(v => v !== undefined && v !== null).map(String);
+
+    return ids.includes(String(competition.id)) ||
+      ids.includes(String(competition.dbId));
+  });
 
   const options = [
     '<option value="">Selecione a equipe</option>',
-    ...allTeams.map(t => {
+    ...linkedTeams.map(t => {
       const id = t.id ?? t.dbId;
       const name = t.name || t.nome || 'Equipe sem nome';
       return `<option value="${esc(id)}">${esc(name)}</option>`;
@@ -2489,8 +2511,8 @@ function manualGroupLoadTeams() {
   homeSelect.innerHTML = options;
   awaySelect.innerHTML = options;
 
-  if (!allTeams.length) {
-    console.warn('BID: nenhuma equipe foi carregada nos seletores.');
+  if (!linkedTeams.length) {
+    console.warn('BID: nenhuma equipe vinculada à competição selecionada.');
   }
 }
   function manualGroupUpdateRounds() {
@@ -2560,8 +2582,7 @@ const labels = groupLabels(c);
 
 const competitionTeams = teams(c);
 const allTeams = competitionTeams;
- ? competitionTeams
-   
+    
 if (!allTeams.length) {
   alert('Nenhuma equipe vinculada à competição selecionada. Verifique os grupos e o vínculo das equipes.');
   return;
