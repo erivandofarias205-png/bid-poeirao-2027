@@ -1488,6 +1488,78 @@ overflow: visible !important;
     }
   }
 </style>
+ 
+<!-- ===== PAINEL DAS SEMIFINAIS ===== -->
+<div class="panel" id="semiFinalsPanel">
+  <div class="ph">
+    <h3>Semifinais</h3>
+    <span class="pill">Fase eliminatória</span>
+  </div>
+
+  <div class="pad">
+    <p class="small muted">
+      Os quatro classificados das quartas serão encaminhados para dois confrontos.
+    </p>
+
+    <div class="actions">
+      <button class="gold" id="generateSemiFinalists" type="button">
+        GERAR CLASSIFICADOS
+      </button>
+      <button class="secondary" id="saveSemiFinals" type="button">
+        SALVAR SEMIFINAIS
+      </button>
+    </div>
+
+    <div id="semiFinalsTies" class="semi-finals-grid"></div>
+
+    <div class="note">
+      Confira os classificados e os confrontos antes de salvar. Os vencedores das semifinais poderão ser encaminhados para a final.
+    </div>
+  </div>
+</div>
+
+<style id="semi-finals-style">
+  #semiFinalsPanel .semi-finals-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+  }
+
+  #semiFinalsPanel .semi-tie-card {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #b68a36;
+    border-radius: 12px;
+    background: #111;
+    color: #fff;
+  }
+
+  #semiFinalsPanel .semi-tie-card h4 {
+    margin: 0 0 12px;
+    color: #e4bd62;
+  }
+
+  #semiFinalsPanel .semi-tie-card label {
+    display: block;
+    margin: 9px 0 4px;
+    font-size: 12px;
+    color: #ddd;
+  }
+
+  #semiFinalsPanel .semi-tie-card input,
+  #semiFinalsPanel .semi-tie-card select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+
+  @media (max-width: 560px) {
+    #semiFinalsPanel .semi-finals-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
 <div class="panel"><div class="ph"><h3>Cadastrar equipe</h3><span class="pill">1 · Equipes</span></div><div class="pad"><div class="formgrid"> <label>Competição<select id="teamCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Nome da equipe<input id="teamName" placeholder="Ex.: Português de Águas Belas"/></label><label>Sigla para o escudo<input id="teamInitials" maxlength="5" placeholder="Ex.: PAB"/></label><label>Grupo da equipe (opcional)<input id="teamGroup" placeholder="Ex.: A, B, C"/></label><label>Escudo da equipe (opcional)<input accept="image/*" id="teamLogo" type="file"/></label><label>Vídeo da equipe (opcional)<input accept="video/*" id="teamVideo" type="file"/></label><label>Patrocinadores da equipe<input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona"/></label></div><div class="actions"><button class="gold" id="saveTeam">Cadastrar equipe</button></div></div></div>
  <div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"> <label>CPF (comece por aqui)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="Digite o CPF: 000.000.000-00" autocomplete="off"/></label><label>Competição<select id="athCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"/></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"/></label><label>Data de nascimento<input id="athBirth" type="date"/></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"/></label><label>Data da inscrição<input id="athReg" type="date"/></label><label>Foto do atleta (opcional)<input accept="image/*" id="athPhoto" type="file"/></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"/></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button class="gold" id="saveAthlete">Cadastrar pessoa</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
@@ -3967,6 +4039,7 @@ async function saveCompetitionPhaseConfig(c) {
     qualifiers: c.qualifiers || [],
    knockoutTies: c.knockoutTies || [],
 quarterFinalTies: c.quarterFinalTies || [],
+   semiFinalTies: c.semiFinalTies || [],
 phaseWinners: c.phaseWinners || []
   };
 
@@ -4514,9 +4587,312 @@ function renderQuarterFinals() {
         (error.message || error));
     }
   });
+ 
+function renderSemiFinals() {
+  const c = comp();
+  const panel = $p('semiFinalsTies');
+  if (!panel) return;
+
+  if (!c) {
+    panel.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  c.semiFinalTies = c.semiFinalTies || [];
+  const ts = teams(c);
+
+  panel.innerHTML = Array.from({ length: 2 }, (_, i) => {
+    const m = c.semiFinalTies[i] || {};
+    const options = selected =>
+      '<option value="">— Escolher equipe —</option>' +
+      ts.map(t => `
+        <option value="${esc(t.id)}"
+          ${String(selected || '') === String(t.id) ? 'selected' : ''}>
+          ${esc(t.name)}
+        </option>
+      `).join('');
+
+    return `
+      <div class="semi-tie-card">
+        <h4>SEMIFINAL — JOGO ${i + 1}</h4>
+
+        <label>Equipe 1</label>
+        <select data-semi-side="a" data-semi-index="${i}">
+          ${options(m.a)}
+        </select>
+
+        <label>Equipe 2</label>
+        <select data-semi-side="b" data-semi-index="${i}">
+          ${options(m.b)}
+        </select>
+
+        <label>Situação do jogo</label>
+        <select data-semi-field="status" data-semi-index="${i}">
+          <option value="agendado" ${(m.status || 'agendado') === 'agendado' ? 'selected' : ''}>Agendado</option>
+          <option value="em_andamento" ${m.status === 'em_andamento' ? 'selected' : ''}>Em andamento</option>
+          <option value="finalizado" ${m.status === 'finalizado' ? 'selected' : ''}>Finalizado</option>
+        </select>
+
+        <label>Data</label>
+        <input type="date" data-semi-field="date1" data-semi-index="${i}" value="${esc(m.date1 || '')}">
+
+        <label>Horário</label>
+        <input type="time" data-semi-field="time1" data-semi-index="${i}" value="${esc(m.time1 || '')}">
+
+        <label>Local</label>
+        <input type="text" data-semi-field="venue1" data-semi-index="${i}" value="${esc(m.venue1 || '')}" placeholder="Local da partida">
+
+        <label>Placar</label>
+        <div class="score-fixed">
+          <input type="number" min="0" max="99" step="1"
+            data-semi-field="score1A" data-semi-index="${i}"
+            value="${esc(m.score1A ?? '')}" placeholder="00">
+          <strong>×</strong>
+          <input type="number" min="0" max="99" step="1"
+            data-semi-field="score1B" data-semi-index="${i}"
+            value="${esc(m.score1B ?? '')}" placeholder="00">
+        </div>
+
+        <div data-semi-penalties="${i}" class="tie-penalties"
+          style="${m.score1A != null && m.score1A !== '' && m.score1B != null && m.score1B !== '' && Number(m.score1A) === Number(m.score1B) ? '' : 'display:none'}">
+          <label>Disputa por pênaltis</label>
+          <div class="score-fixed">
+            <input type="number" min="0" max="99" step="1"
+              data-semi-field="penalties1A" data-semi-index="${i}"
+              value="${esc(m.penalties1A ?? '')}" placeholder="00">
+            <strong>×</strong>
+            <input type="number" min="0" max="99" step="1"
+              data-semi-field="penalties1B" data-semi-index="${i}"
+              value="${esc(m.penalties1B ?? '')}" placeholder="00">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  panel.querySelectorAll('.semi-tie-card').forEach(card => {
+    const a = card.querySelector('[data-semi-field="score1A"]');
+    const b = card.querySelector('[data-semi-field="score1B"]');
+    const penalties = card.querySelector('[data-semi-penalties]');
+
+    const updatePenalties = () => {
+      if (!a || !b || !penalties) return;
+      penalties.style.display =
+        a.value !== '' && b.value !== '' &&
+        Number(a.value) === Number(b.value) ? '' : 'none';
+    };
+
+    a?.addEventListener('input', updatePenalties);
+    b?.addEventListener('input', updatePenalties);
+    updatePenalties();
+  });
+}
+
+
+// GERAR CLASSIFICADOS DAS QUARTAS PARA AS SEMIFINAIS
+$p('generateSemiFinalists')?.addEventListener('click', () => {
+  const c = comp();
+  if (!c) return;
+
+  const ties = c.quarterFinalTies || [];
+
+  if (ties.length !== 4) {
+    alert('As quartas precisam ter os quatro confrontos cadastrados.');
+    return;
+  }
+
+  const winners = [];
+
+  for (let i = 0; i < 4; i++) {
+    const m = ties[i];
+
+    if (!m.a || !m.b || m.status !== 'finalizado') {
+      alert(`Finalize a partida ${i + 1} das quartas e confira as equipes.`);
+      return;
+    }
+
+    if (m.score1A == null || m.score1A === '' ||
+        m.score1B == null || m.score1B === '') {
+      alert(`Informe o placar da partida ${i + 1} das quartas.`);
+      return;
+    }
+
+    const a = Number(m.score1A);
+    const b = Number(m.score1B);
+    let winner;
+
+    if (a > b) winner = m.a;
+    else if (b > a) winner = m.b;
+    else {
+      if (m.penalties1A == null || m.penalties1A === '' ||
+          m.penalties1B == null || m.penalties1B === '' ||
+          Number(m.penalties1A) === Number(m.penalties1B)) {
+        alert(`A partida ${i + 1} terminou empatada. Informe os pênaltis com um vencedor.`);
+        return;
+      }
+
+      winner = Number(m.penalties1A) > Number(m.penalties1B)
+        ? m.a : m.b;
+    }
+
+    winners.push(winner);
+  }
+
+  c.semiFinalTies = [0, 1].map(i => ({
+    ...(c.semiFinalTies?.[i] || {}),
+    round: 'Semifinais',
+    a: winners[i * 2],
+    b: winners[i * 2 + 1]
+  }));
+
+  save();
+  renderSemiFinals();
+  alert('Classificados encaminhados para as duas semifinais. Confira os confrontos e salve.');
+});
+
+
+// SALVAR SEMIFINAIS
+$p('saveSemiFinals')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
+
+  c.semiFinalTies = c.semiFinalTies || [];
+
+  document.querySelectorAll('#semiFinalsTies [data-semi-index]').forEach(el => {
+    const i = Number(el.dataset.semiIndex);
+    const tie = c.semiFinalTies[i];
+    if (!tie) return;
+
+    if (el.dataset.semiSide) tie[el.dataset.semiSide] = el.value;
+    if (el.dataset.semiField) tie[el.dataset.semiField] = el.value;
+  });
+
+  for (const tie of c.semiFinalTies) {
+    if (tie.a && tie.b && String(tie.a) === String(tie.b)) {
+      alert('Um confronto das semifinais não pode ter a mesma equipe dos dois lados.');
+      return;
+    }
+  }
+
+  save();
+
+  try {
+    await saveCompetitionPhaseConfig(c);
+    renderSemiFinals();
+    alert('Semifinais salvas no Supabase!');
+  } catch (error) {
+    console.error('Erro ao salvar semifinais:', error);
+    alert('O Supabase não confirmou o salvamento das semifinais: ' +
+      (error.message || error));
+  }
+});
+ 
+function renderSemiFinals() {
+  const c = comp();
+  const panel = $p('semiFinalsTies');
+  if (!panel) return;
+
+  if (!c) {
+    panel.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  c.semiFinalTies = c.semiFinalTies || [];
+  const ts = teams(c);
+
+  panel.innerHTML = Array.from({ length: 2 }, (_, i) => {
+    const m = c.semiFinalTies[i] || {};
+
+    const options = selected =>
+      '<option value="">— Escolher equipe —</option>' +
+      ts.map(t => `
+        <option value="${esc(t.id)}"
+          ${String(selected || '') === String(t.id) ? 'selected' : ''}>
+          ${esc(t.name)}
+        </option>
+      `).join('');
+
+    return `
+      <div class="semi-tie-card">
+        <h4>SEMIFINAL — JOGO ${i + 1}</h4>
+
+        <label>Equipe 1</label>
+        <select data-semi-side="a" data-semi-index="${i}">
+          ${options(m.a)}
+        </select>
+
+        <label>Equipe 2</label>
+        <select data-semi-side="b" data-semi-index="${i}">
+          ${options(m.b)}
+        </select>
+
+        <label>Situação do jogo</label>
+        <select data-semi-field="status" data-semi-index="${i}">
+          <option value="agendado" ${(m.status || 'agendado') === 'agendado' ? 'selected' : ''}>Agendado</option>
+          <option value="em_andamento" ${m.status === 'em_andamento' ? 'selected' : ''}>Em andamento</option>
+          <option value="finalizado" ${m.status === 'finalizado' ? 'selected' : ''}>Finalizado</option>
+        </select>
+
+        <label>Data</label>
+        <input type="date" data-semi-field="date1" data-semi-index="${i}" value="${esc(m.date1 || '')}">
+
+        <label>Horário</label>
+        <input type="time" data-semi-field="time1" data-semi-index="${i}" value="${esc(m.time1 || '')}">
+
+        <label>Local</label>
+        <input type="text" data-semi-field="venue1" data-semi-index="${i}" value="${esc(m.venue1 || '')}" placeholder="Local da partida">
+
+        <label>Placar</label>
+        <div class="score-fixed">
+          <input type="number" min="0" max="99" step="1"
+            data-semi-field="score1A" data-semi-index="${i}"
+            value="${esc(m.score1A ?? '')}" placeholder="00">
+          <strong>×</strong>
+          <input type="number" min="0" max="99" step="1"
+            data-semi-field="score1B" data-semi-index="${i}"
+            value="${esc(m.score1B ?? '')}" placeholder="00">
+        </div>
+
+        <div class="tie-penalties" data-semi-penalties="${i}" style="${
+          m.score1A != null && m.score1A !== '' &&
+          m.score1B != null && m.score1B !== '' &&
+          Number(m.score1A) === Number(m.score1B) ? '' : 'display:none'
+        }">
+          <label>Disputa por pênaltis</label>
+          <div class="score-fixed">
+            <input type="number" min="0" max="99" step="1"
+              data-semi-field="penalties1A" data-semi-index="${i}"
+              value="${esc(m.penalties1A ?? '')}" placeholder="00">
+            <strong>×</strong>
+            <input type="number" min="0" max="99" step="1"
+              data-semi-field="penalties1B" data-semi-index="${i}"
+              value="${esc(m.penalties1B ?? '')}" placeholder="00">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  panel.querySelectorAll('.semi-tie-card').forEach(card => {
+    const a = card.querySelector('[data-semi-field="score1A"]');
+    const b = card.querySelector('[data-semi-field="score1B"]');
+    const penalties = card.querySelector('[data-semi-penalties]');
+
+    const updatePenalties = () => {
+      if (!a || !b || !penalties) return;
+      penalties.style.display =
+        a.value !== '' && b.value !== '' &&
+        Number(a.value) === Number(b.value) ? '' : 'none';
+    };
+
+    a?.addEventListener('input', updatePenalties);
+    b?.addEventListener('input', updatePenalties);
+    updatePenalties();
+  });
+}
  const originalRenderAll=window.renderAll;
- const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderQuarterFinals()};
-  setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderQuarterFinals()},300);
+const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals()};
+  setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals()},300);
 })();
 </script>
 
