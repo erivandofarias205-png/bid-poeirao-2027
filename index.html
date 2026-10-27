@@ -2460,9 +2460,12 @@ else {
    await loadSupabaseMatches();showTab('games');
    alert(old?.dbId?'Partida atualizada no Supabase e disponível nos dispositivos.':'Partida salva no Supabase e disponível nos dispositivos.');
  }catch(error){console.error('Falha ao salvar partida no Supabase:',error);alert('Não foi possível salvar a partida no Supabase. Nenhuma confirmação foi dada. Detalhe: '+(error?.message||error));}
- finally{button.disabled=false}
+  finally{button.disabled=false}
 });
-$('exportMatches')?.addEventListener('click',()=>{const lines=[['Data','Horário','Rodada','Mandante','Gols mandante','Visitante','Gols visitante','Local','Status'],...(db.matches||[]).map(m=>[m.date,m.time,m.round,m.homeName,m.homeScore,m.awayName,m.awayScore,m.venue,m.status])];download('tabela-jogos-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8')});
+$('exportMatches')?.addEventListener('click',()=>{
+ const lines=[['Data','Horário','Rodada','Mandante','Gols mandante','Visitante','Gols visitante','Local','Status'],...(db.matches||[]).map(m=>[m.date,m.time,m.round,m.homeName,m.homeScore,m.awayName,m.awayScore,m.venue,m.status])];
+ download('tabela-jogos-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8');
+});
 function renderFrontPage(){
  const fixtures=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||(a.time||'').localeCompare(b.time||''));
  const teamForMatch=(m,side)=>{
