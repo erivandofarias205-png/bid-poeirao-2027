@@ -2531,11 +2531,19 @@ let manualGroupConfirmedRounds = {};
   const roundText = $p('manualGroupRound')?.value || 'Rodada 1';
  const round = Number(roundText.replace(/\D/g, '')) || 1;
    const format = $p('manualGroupFormat')?.value || 'unico';
-   const allTeams = (db.teams || []).filter(t =>
-  teamInComp(t, c) ||
-  teams(c).some(x => String(x.id) === String(t.id))
-);
-   const draft = [];
+const labels = groupLabels(c);
+
+const competitionTeams = teams(c);
+const allTeams = competitionTeams.length
+  ? competitionTeams
+  : (db.teams || []).filter(t => teamInComp(t, c));
+
+if (!allTeams.length) {
+  alert('Nenhuma equipe vinculada à competição selecionada.');
+  return;
+}
+
+const draft = [];
  
    for (const group of labels) {
      const members = allTeams.filter(t => groupOf(t, c) === group);
