@@ -2473,6 +2473,33 @@ function manualGroupLoadTeams() {
   const homeSelect = $p('manualGroupHome');
   const awaySelect = $p('manualGroupAway');
 
+  if (!homeSelect || !awaySelect) return;
+
+  const competitionTeams = c ? teams(c) : [];
+  const allTeams = competitionTeams.length
+    ? competitionTeams
+    : (db.teams || []);
+
+  const options = [
+    '<option value="">Selecione a equipe</option>',
+    ...allTeams.map(t => {
+      const id = t.id ?? t.dbId;
+      const name = t.name || t.nome || 'Equipe sem nome';
+      return `<option value="${esc(id)}">${esc(name)}</option>`;
+    })
+  ].join('');
+
+  homeSelect.innerHTML = options;
+  awaySelect.innerHTML = options;
+
+  if (!allTeams.length) {
+    console.warn('BID: nenhuma equipe foi carregada nos seletores.');
+  }
+}
+  const c = comp();
+  const homeSelect = $p('manualGroupHome');
+  const awaySelect = $p('manualGroupAway');
+
   if (!c || !homeSelect || !awaySelect) return;
 
   const allTeams = teams(c);
@@ -2554,7 +2581,7 @@ const labels = groupLabels(c);
 const competitionTeams = teams(c);
 const allTeams = competitionTeams.length
   ? competitionTeams
-  : (db.teams || []).filter(t => teamInComp(t, c));
+  : (db.teams || []);
 
 if (!allTeams.length) {
   alert('Nenhuma equipe vinculada à competição selecionada.');
