@@ -2514,6 +2514,7 @@ function manualGroupLoadTeams() {
   const groupOf = helpers.groupOf;
 
   const c = comp();
+  const format = $p('manualGroupFormat')?.value || 'unico';
   const roundSelect = $p('manualGroupRound');
 
   if (!c || !roundSelect) return;
