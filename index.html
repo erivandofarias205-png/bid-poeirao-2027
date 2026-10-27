@@ -3748,23 +3748,71 @@ $p('phaseTies').innerHTML = ties.length ? ties.map((m, i) => `
 
     <label>Local do jogo 1</label>
     <input type="text" data-tie-field="venue1" data-tie-index="${i}" value="${esc(m.venue1 || '')}" placeholder="Local da partida">
+  
+<label>Placar do jogo 1</label>
+<div class="score-fixed">
+  <input type="number" min="0" max="99" step="1"
+    data-tie-field="score1A" data-tie-index="${i}"
+    value="${esc(m.score1A ?? '')}" placeholder="00">
+  <strong>×</strong>
+  <input type="number" min="0" max="99" step="1"
+    data-tie-field="score1B" data-tie-index="${i}"
+    value="${esc(m.score1B ?? '')}" placeholder="00">
+</div>
 
-    <label>Placar do jogo 1</label>
-    <input type="text" data-tie-field="score1" data-tie-index="${i}" value="${esc(m.score1 || '')}" placeholder="Ex.: 2 x 1">
+<div class="tie-penalties" data-penalties-for="1"
+  style="${m.score1A !== '' && m.score1A != null &&
+  m.score1B !== '' && m.score1B != null &&
+  Number(m.score1A) === Number(m.score1B) ? '' : 'display:none'}">
+  <label>Disputa por pênaltis</label>
+  <div class="score-fixed">
+    <input type="number" min="0" max="99" step="1"
+      data-tie-field="penalties1A" data-tie-index="${i}"
+      value="${esc(m.penalties1A ?? '')}" placeholder="00">
+    <strong>×</strong>
+    <input type="number" min="0" max="99" step="1"
+      data-tie-field="penalties1B" data-tie-index="${i}"
+      value="${esc(m.penalties1B ?? '')}" placeholder="00">
+  </div>
+</div>
 
-    <div class="tie-second-game" style="${m.format === 'ida_volta' ? '' : 'display:none'}">
-      <label>Data do jogo 2</label>
-      <input type="date" data-tie-field="date2" data-tie-index="${i}" value="${esc(m.date2 || '')}">
+<div class="tie-second-game" style="${m.format === 'ida_volta' ? '' : 'display:none'}">
+  <label>Data do jogo 2</label>
+  <input type="date" data-tie-field="date2" data-tie-index="${i}" value="${esc(m.date2 || '')}">
 
-      <label>Horário do jogo 2</label>
-      <input type="time" data-tie-field="time2" data-tie-index="${i}" value="${esc(m.time2 || '')}">
+  <label>Horário do jogo 2</label>
+  <input type="time" data-tie-field="time2" data-tie-index="${i}" value="${esc(m.time2 || '')}">
 
-      <label>Local do jogo 2</label>
-      <input type="text" data-tie-field="venue2" data-tie-index="${i}" value="${esc(m.venue2 || '')}" placeholder="Local da partida">
+  <label>Local do jogo 2</label>
+  <input type="text" data-tie-field="venue2" data-tie-index="${i}" value="${esc(m.venue2 || '')}" placeholder="Local da partida">
 
-      <label>Placar do jogo 2</label>
-      <input type="text" data-tie-field="score2" data-tie-index="${i}" value="${esc(m.score2 || '')}" placeholder="Ex.: 1 x 0">
+  <label>Placar do jogo 2</label>
+  <div class="score-fixed">
+    <input type="number" min="0" max="99" step="1"
+      data-tie-field="score2A" data-tie-index="${i}"
+      value="${esc(m.score2A ?? '')}" placeholder="00">
+    <strong>×</strong>
+    <input type="number" min="0" max="99" step="1"
+      data-tie-field="score2B" data-tie-index="${i}"
+      value="${esc(m.score2B ?? '')}" placeholder="00">
+  </div>
+
+  <div class="tie-penalties" data-penalties-for="2"
+    style="${m.score2A !== '' && m.score2A != null &&
+    m.score2B !== '' && m.score2B != null &&
+    Number(m.score2A) === Number(m.score2B) ? '' : 'display:none'}">
+    <label>Disputa por pênaltis</label>
+    <div class="score-fixed">
+      <input type="number" min="0" max="99" step="1"
+        data-tie-field="penalties2A" data-tie-index="${i}"
+        value="${esc(m.penalties2A ?? '')}" placeholder="00">
+      <strong>×</strong>
+      <input type="number" min="0" max="99" step="1"
+        data-tie-field="penalties2B" data-tie-index="${i}"
+        value="${esc(m.penalties2B ?? '')}" placeholder="00">
     </div>
+  </div>
+</div>
   </div>
 `).join('') : '<div class="empty">Prepare os confrontos para escolher quem pega quem.</div>';
 
@@ -3777,8 +3825,49 @@ $p('phaseTies').querySelectorAll('[data-tie-field="format"]').forEach(el => {
     }
   });
 });
-   }
- function refreshCompetitionSelect(){const sel=$p('phaseCompetitionSelect');if(!sel)return;const comps=db.competitions||[];sel.innerHTML=comps.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(db.activeCompetitionId)?'selected':''}>${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');if(!comps.some(c=>String(c.id)===String(sel.value))&&comps.length)sel.value=String(comp()?.id||comps[0].id)}
+   
+
+$p('phaseTies').querySelectorAll('.phase-tie-card').forEach(card => {
+  function updatePenalties(gameNumber) {
+    const a = card.querySelector(
+      `[data-tie-field="score${gameNumber}A"]`
+    );
+    const b = card.querySelector(
+      `[data-tie-field="score${gameNumber}B"]`
+    );
+    const panel = card.querySelector(
+      `[data-penalties-for="${gameNumber}"]`
+    );
+
+    if (!a || !b || !panel) return;
+
+    const tied =
+      a.value !== '' &&
+      b.value !== '' &&
+      Number(a.value) === Number(b.value);
+
+    panel.style.display = tied ? '' : 'none';
+  }
+
+  [1, 2].forEach(gameNumber => {
+    ['A', 'B'].forEach(side => {
+      const input = card.querySelector(
+        `[data-tie-field="score${gameNumber}${side}"]`
+      );
+
+      input?.addEventListener('input', () => {
+        updatePenalties(gameNumber);
+      });
+    });
+
+    updatePenalties(gameNumber);
+  });
+});
+
+}
+
+function refreshCompetitionSelect(){
+  const sel=$p('phaseCompetitionSelect');if(!sel)return;const comps=db.competitions||[];sel.innerHTML=comps.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(db.activeCompetitionId)?'selected':''}>${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');if(!comps.some(c=>String(c.id)===String(sel.value))&&comps.length)sel.value=String(comp()?.id||comps[0].id)}
  async function saveGroupsToSupabase(c,ts){
   if(typeof supabaseClient==='undefined'||!supabaseClient||!c._remote&&!c.dbId)return {failed:0,skipped:ts.length};
   const compId=c.dbId||c.id;let failed=0,skipped=0;
@@ -4260,6 +4349,32 @@ tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
  <style>
 #competitionPhaseManager {
   display: none !important;
+}
+
+#competitionPhaseManager .score-fixed {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 20px minmax(0,1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+#competitionPhaseManager .score-fixed input {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+#competitionPhaseManager .score-fixed strong {
+  text-align: center;
+  color: #e4bd62;
+}
+
+#competitionPhaseManager .tie-penalties {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #b68a36;
 }
 </style>
  
