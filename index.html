@@ -1410,6 +1410,27 @@ overflow: visible !important;
 </div>
 
 <div id="phaseTies" class="tablewrap"></div>
+ <!-- CLASSIFICADOS DAS OITAVAS -->
+<div class="panel" id="roundOf16QualifiersPanel">
+  <div class="ph">
+    <h3>Classificados das oitavas de final</h3>
+    <span class="pill">16 equipes</span>
+  </div>
+  <div class="pad">
+    <p class="small muted">
+      Confira as equipes classificadas para as oitavas de final.
+    </p>
+    <div class="actions">
+      <button class="gold" id="generateRoundOf16Qualifiers" type="button">
+        GERAR CLASSIFICADOS
+      </button>
+      <button class="secondary" id="saveRoundOf16Qualifiers" type="button">
+        SALVAR CLASSIFICADOS
+      </button>
+    </div>
+    <div id="roundOf16QualifiersList" class="tablewrap"></div>
+  </div>
+</div>
 <div class="note">A classificação é calculada com os jogos marcados como Finalizado. Os grupos e a chave eliminatória desta ferramenta são gravados no armazenamento local do navegador; para compartilhar automaticamente entre aparelhos, será necessária a sincronização dessas configurações com o Supabase.</div>
 </div></div>
 
@@ -4359,6 +4380,104 @@ $p('phaseBuildQualifiers')?.addEventListener('click', async () => {
     );
   }
 });
+ 
+
+function renderRoundOf16Qualifiers() {
+  const c = comp();
+  const panel = $p('roundOf16QualifiersList');
+  if (!panel) return;
+
+  if (!c) {
+    panel.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  const ties = c.knockoutTies || [];
+  const ts = teams(c);
+
+  const teamName = id => {
+    const t = ts.find(x =>
+      String(x.id) === String(id) ||
+      String(x.dbId || '') === String(id)
+    );
+    return t ? t.name : 'Equipe não encontrada';
+  };
+
+  const winners = [];
+
+  for (let i = 0; i < ties.length; i++) {
+    const m = ties[i];
+
+    if (!m.a || !m.b || m.status !== 'finalizado' ||
+        m.score1A == null || m.score1A === '' ||
+        m.score1B == null || m.score1B === '') {
+      continue;
+    }
+
+    const a = Number(m.score1A);
+    const b = Number(m.score1B);
+    let winner = null;
+
+    if (a > b) winner = m.a;
+    else if (b > a) winner = m.b;
+    else if (
+      m.penalties1A != null && m.penalties1A !== '' &&
+      m.penalties1B != null && m.penalties1B !== '' &&
+      Number(m.penalties1A) !== Number(m.penalties1B)
+    ) {
+      winner = Number(m.penalties1A) > Number(m.penalties1B)
+        ? m.a : m.b;
+    }
+
+    if (winner) {
+      winners.push(winner);
+    }
+  }
+
+  panel.innerHTML = winners.length
+    ? '<ol>' + winners.map(id =>
+        '<li>' + esc(teamName(id)) + '</li>'
+      ).join('') + '</ol>'
+    : '<div class="empty">Finalize os jogos das oitavas para exibir os vencedores.</div>';
+}
+
+
+$p('generateRoundOf16Qualifiers')?.addEventListener('click', () => {
+  const c = comp();
+  if (!c) return;
+
+  renderRoundOf16Qualifiers();
+
+  const ties = c.knockoutTies || [];
+  const finished = ties.filter(m =>
+    m.a && m.b &&
+    m.status === 'finalizado' &&
+    m.score1A != null && m.score1A !== '' &&
+    m.score1B != null && m.score1B !== ''
+  ).length;
+
+  if (finished < 8) {
+    alert(`Foram encontrados ${finished} jogos finalizados com placar completo. Confira as oito partidas das oitavas.`);
+    return;
+  }
+
+  alert('Lista dos vencedores das oitavas atualizada.');
+});
+
+$p('saveRoundOf16Qualifiers')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
+
+  try {
+    await saveCompetitionPhaseConfig(c);
+    renderRoundOf16Qualifiers();
+    alert('Classificados salvos no Supabase!');
+  } catch (error) {
+    console.error('Erro ao salvar classificados das oitavas:', error);
+    alert('O Supabase não confirmou o salvamento: ' + (error.message || error));
+  }
+});
+
  document.addEventListener('click', function(ev) {
   const b = ev.target.closest('[data-remove-qualifier]');
   if (!b) return;
@@ -5214,8 +5333,8 @@ $p('saveThirdPlace')?.addEventListener('click', async () => {
     alert('Não foi possível confirmar o salvamento da disputa: ' + (error.message || error));
   }
 });
-const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals();renderFinalMatch()};
-  setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals();renderFinalMatch()},300);
+const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderSemiFinals();renderFinalMatch()};
+setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderSemiFinals();renderFinalMatch()},300);
 })();
 </script>
 
