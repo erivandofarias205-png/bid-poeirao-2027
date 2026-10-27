@@ -2519,14 +2519,14 @@ function manualGroupLoadTeams() {
 
   if (!c || !roundSelect) return;
 
-  const labels = groupLabels(c);
-  const allTeams = teams(c);
+  const labels = helpers.groupLabels(c);
+const allTeams = helpers.teams(c);
 
   let maxRounds = 0;
 
   for (const group of labels) {
     const count = allTeams.filter(
-      t => groupOf(t, c) === group
+     t => helpers.groupOf(t, c) === group
     ).length;
 
     if (count < 2) continue;
@@ -2564,9 +2564,21 @@ function manualGroupLoadTeams() {
         : 'Rodada 1';
   }
 }
-  function manualGroupGenerateRound() {
-   const c = comp();
-   if (!c) {
+function manualGroupGenerateRound() {
+  const helpers = window.bidManualGroupHelpers;
+
+  if (!helpers) {
+    alert('As funções auxiliares dos grupos não foram carregadas.');
+    return;
+  }
+
+  const comp = helpers.comp;
+  const teams = helpers.teams;
+  const groupLabels = helpers.groupLabels;
+  const groupOf = helpers.groupOf;
+
+  const c = comp();
+ if (!c) {
      alert('Selecione uma competição primeiro.');
      return;
    }
@@ -2773,10 +2785,12 @@ const draft = [];
    manualGroupUpdateRounds();
  });
  $p('phaseCompetitionSelect')?.addEventListener('change', () => {
+ setTimeout(() => {
   manualGroupLoadTeams();
+  manualGroupUpdateRounds();
+}, 0);
 });
 
-manualGroupLoadTeams();
  $p('phaseCompetitionSelect')?.addEventListener('change', () => {
    manualGroupUpdateRounds();
  });
