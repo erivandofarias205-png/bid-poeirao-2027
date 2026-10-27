@@ -2504,9 +2504,16 @@ function manualGroupLoadTeams() {
     console.warn('BID: nenhuma equipe vinculada à competição selecionada.');
   }
 }
-  function manualGroupUpdateRounds() {
+ function manualGroupUpdateRounds() {
+  const helpers = window.bidManualGroupHelpers;
+  if (!helpers) return;
+
+  const comp = helpers.comp;
+  const teams = helpers.teams;
+  const groupLabels = helpers.groupLabels;
+  const groupOf = helpers.groupOf;
+
   const c = comp();
-  const format = $p('manualGroupFormat')?.value || 'unico';
   const roundSelect = $p('manualGroupRound');
 
   if (!c || !roundSelect) return;
