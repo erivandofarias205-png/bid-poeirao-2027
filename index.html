@@ -1407,16 +1407,22 @@ overflow: visible !important;
 </section>
 <script id="tvfp-sponsors-animation">
 (function(){
- const row=document.querySelector('#tvfp-sponsors .sponsors-row');
- if(!row) return;
- // Exibir somente os cinco patrocinadores cadastrados, sem clonar logos.
- row.querySelectorAll('[aria-hidden="true"]').forEach(el=>el.remove());
- row.style.animation='none';
- row.style.transform='none';
- row.style.width='100%';
- row.style.minWidth='0';
- row.style.flexWrap='wrap';
- row.style.justifyContent='center';
+  const row = document.getElementById('sponsorsTrack');
+  if (!row) return;
+
+  row.style.display = 'flex';
+  row.style.flexWrap = 'nowrap';
+  row.style.justifyContent = 'flex-start';
+  row.style.gap = '14px';
+  row.style.width = 'max-content';
+  row.style.animation = 'sponsorsScroll 30s linear infinite';
+
+  row.querySelectorAll('.sponsor-logo-card').forEach(card => {
+    card.style.flex = '0 0 280px';
+    card.style.width = '280px';
+    card.style.aspectRatio = '7 / 4';
+    card.style.height = 'auto';
+  });
 })();
 </script>
 <footer class="tvfp-contact-footer" id="tvfp-contact-footer">
