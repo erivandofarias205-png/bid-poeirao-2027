@@ -1375,7 +1375,49 @@ overflow: visible !important;
 <div class="formgrid"><label>Competição ativa<select id="phaseCompetitionSelect"></select></label><label>Classificam por grupo<input id="phaseTopPerGroup" type="number" min="0" max="32" value="2"></label><label>Melhores terceiros classificados<input id="phaseBestThirds" type="number" min="0" max="32" value="3"></label><label>Vagas extras / convite (para completar a chave)<input id="phaseExtraSlots" type="number" min="0" max="32" value="1"></label><label>Nome da fase eliminatória<input id="phaseKnockoutName" value="Oitavas de final"></label></div>
 <div class="actions"><button class="gold" id="phaseSaveRules" type="button">Salvar regras de classificação</button><button class="secondary" id="phaseAssignEvenly" type="button">Distribuir equipes automaticamente</button></div>
 <h4 style="margin-top:22px">1. Distribuição das equipes nos grupos</h4><div id="phaseTeamGroups" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseSaveGroups" type="button">Salvar grupos</button></div>
-<h4 style="margin-top:22px">2. Classificação dos grupos</h4><div id="phaseStandings" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseBuildQualifiers" type="button">Gerar classificados</button></div><div id="phaseQualifiers" class="tablewrap"></div>
+
+<h4 style="margin-top:22px">JOGOS DA FASE DE GRUPOS — CADASTRO MANUAL</h4>
+
+<p class="small muted">
+  Cadastre os jogos por rodada, incluindo todos os grupos antes de passar para a rodada seguinte.
+  Todos os campos poderão ser editados.
+</p>
+
+<div class="formgrid">
+  <label>Rodada
+    <select id="manualGroupRound">
+      <option value="Rodada 1">Rodada 1</option>
+      <option value="Rodada 2">Rodada 2</option>
+      <option value="Rodada 3">Rodada 3</option>
+      <option value="Rodada 4">Rodada 4</option>
+      <option value="Rodada 5">Rodada 5</option>
+      <option value="Rodada 6">Rodada 6</option>
+    </select>
+  </label>
+
+  <label>Grupo
+    <select id="manualGroupName">
+      <option value="A">Grupo A</option>
+      <option value="B">Grupo B</option>
+      <option value="C">Grupo C</option>
+      <option value="D">Grupo D</option>
+      <option value="E">Grupo E</option>
+      <option value="F">Grupo F</option>
+    </select>
+  </label>
+
+  <label>Formato
+    <select id="manualGroupFormat">
+      <option value="unico">Jogo único</option>
+      <option value="ida_volta">Ida e volta</option>
+    </select>
+  </label>
+</div>
+
+<div class="note">
+  Este painel é apenas a estrutura visual inicial. Ainda precisamos conectar os campos ao cadastro oficial de partidas para salvar, editar e excluir jogos corretamente.
+</div>
+ <h4 style="margin-top:22px">2. Classificação dos grupos</h4><div id="phaseStandings" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseBuildQualifiers" type="button">Gerar classificados</button></div><div id="phaseQualifiers" class="tablewrap"></div>
 
 <h4 style="margin-top:22px">3. Gerenciar fases e confrontos</h4>
 
