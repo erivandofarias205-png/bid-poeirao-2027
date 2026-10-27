@@ -1560,6 +1560,81 @@ overflow: visible !important;
     }
   }
 </style>
+ 
+<!-- ===== PAINEL DA FINAL ===== -->
+<div class="panel" id="finalMatchPanel">
+  <div class="ph">
+    <h3>Grande Final</h3>
+    <span class="pill">Decisão do campeonato</span>
+  </div>
+  <div class="pad">
+    <p class="small muted">Os vencedores das semifinais disputarão o título.</p>
+    <div class="actions">
+      <button class="gold" id="generateFinalists" type="button">GERAR FINALISTAS</button>
+      <button class="secondary" id="saveFinalMatch" type="button">SALVAR FINAL</button>
+    </div>
+    <div id="finalMatchTie" class="final-match-grid"></div>
+  </div>
+</div>
+
+<!-- ===== PAINEL DE TERCEIRO E QUARTO LUGAR ===== -->
+<div class="panel" id="thirdPlacePanel">
+  <div class="ph">
+    <h3>Disputa de 3º e 4º lugar</h3>
+    <span class="pill">Disputa de colocação</span>
+  </div>
+  <div class="pad">
+    <p class="small muted">Os perdedores das semifinais disputarão o terceiro lugar.</p>
+    <div class="actions">
+      <button class="gold" id="generateThirdPlace" type="button">GERAR CLASSIFICADOS</button>
+      <button class="secondary" id="saveThirdPlace" type="button">SALVAR DISPUTA</button>
+    </div>
+    <div id="thirdPlaceTie" class="final-match-grid"></div>
+  </div>
+</div>
+
+<style id="final-match-style">
+  #finalMatchPanel .final-match-grid,
+  #thirdPlacePanel .final-match-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  #finalMatchPanel .final-tie-card,
+  #thirdPlacePanel .final-tie-card {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #b68a36;
+    border-radius: 12px;
+    background: #111;
+    color: #fff;
+  }
+
+  #finalMatchPanel .final-tie-card h4,
+  #thirdPlacePanel .final-tie-card h4 {
+    margin: 0 0 12px;
+    color: #e4bd62;
+  }
+
+  #finalMatchPanel .final-tie-card label,
+  #thirdPlacePanel .final-tie-card label {
+    display: block;
+    margin: 9px 0 4px;
+    font-size: 12px;
+    color: #ddd;
+  }
+
+  #finalMatchPanel .final-tie-card input,
+  #finalMatchPanel .final-tie-card select,
+  #thirdPlacePanel .final-tie-card input,
+  #thirdPlacePanel .final-tie-card select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+</style>
 <div class="panel"><div class="ph"><h3>Cadastrar equipe</h3><span class="pill">1 · Equipes</span></div><div class="pad"><div class="formgrid"> <label>Competição<select id="teamCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Nome da equipe<input id="teamName" placeholder="Ex.: Português de Águas Belas"/></label><label>Sigla para o escudo<input id="teamInitials" maxlength="5" placeholder="Ex.: PAB"/></label><label>Grupo da equipe (opcional)<input id="teamGroup" placeholder="Ex.: A, B, C"/></label><label>Escudo da equipe (opcional)<input accept="image/*" id="teamLogo" type="file"/></label><label>Vídeo da equipe (opcional)<input accept="video/*" id="teamVideo" type="file"/></label><label>Patrocinadores da equipe<input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona"/></label></div><div class="actions"><button class="gold" id="saveTeam">Cadastrar equipe</button></div></div></div>
  <div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"> <label>CPF (comece por aqui)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="Digite o CPF: 000.000.000-00" autocomplete="off"/></label><label>Competição<select id="athCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"/></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"/></label><label>Data de nascimento<input id="athBirth" type="date"/></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"/></label><label>Data da inscrição<input id="athReg" type="date"/></label><label>Foto do atleta (opcional)<input accept="image/*" id="athPhoto" type="file"/></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"/></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button class="gold" id="saveAthlete">Cadastrar pessoa</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
@@ -4040,6 +4115,8 @@ async function saveCompetitionPhaseConfig(c) {
    knockoutTies: c.knockoutTies || [],
 quarterFinalTies: c.quarterFinalTies || [],
    semiFinalTies: c.semiFinalTies || [],
+   finalMatchTie: c.finalMatchTie || null,
+thirdPlaceTie: c.thirdPlaceTie || null,
 phaseWinners: c.phaseWinners || []
   };
 
@@ -4890,9 +4967,255 @@ function renderSemiFinals() {
     updatePenalties();
   });
 }
- const originalRenderAll=window.renderAll;
-const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals()};
-  setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals()},300);
+ 
+function renderPlacementMatch(panelId, cardClass, title, data, prefix) {
+  const panel = $p(panelId);
+  if (!panel) return;
+
+  const c = comp();
+  if (!c) {
+    panel.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  const m = data || {};
+  const ts = teams(c);
+  const options = selected =>
+    '<option value="">— Escolher equipe —</option>' +
+    ts.map(t => `
+      <option value="${esc(t.id)}"
+        ${String(selected || '') === String(t.id) ? 'selected' : ''}>
+        ${esc(t.name)}
+      </option>
+    `).join('');
+
+  panel.innerHTML = `
+    <div class="${cardClass}">
+      <h4>${title}</h4>
+
+      <label>Equipe 1</label>
+      <select data-${prefix}-side="a">${options(m.a)}</select>
+
+      <label>Equipe 2</label>
+      <select data-${prefix}-side="b">${options(m.b)}</select>
+
+      <label>Situação do jogo</label>
+      <select data-${prefix}-field="status">
+        <option value="agendado" ${(m.status || 'agendado') === 'agendado' ? 'selected' : ''}>Agendado</option>
+        <option value="em_andamento" ${m.status === 'em_andamento' ? 'selected' : ''}>Em andamento</option>
+        <option value="finalizado" ${m.status === 'finalizado' ? 'selected' : ''}>Finalizado</option>
+      </select>
+
+      <label>Data</label>
+      <input type="date" data-${prefix}-field="date1" value="${esc(m.date1 || '')}">
+
+      <label>Horário</label>
+      <input type="time" data-${prefix}-field="time1" value="${esc(m.time1 || '')}">
+
+      <label>Local</label>
+      <input type="text" data-${prefix}-field="venue1" value="${esc(m.venue1 || '')}" placeholder="Local da partida">
+
+      <label>Placar</label>
+      <div class="score-fixed">
+        <input type="number" min="0" max="99" step="1"
+          data-${prefix}-field="score1A" value="${esc(m.score1A ?? '')}" placeholder="00">
+        <strong>×</strong>
+        <input type="number" min="0" max="99" step="1"
+          data-${prefix}-field="score1B" value="${esc(m.score1B ?? '')}" placeholder="00">
+      </div>
+
+      <div class="tie-penalties" data-${prefix}-penalties
+        style="${m.score1A != null && m.score1A !== '' && m.score1B != null && m.score1B !== '' && Number(m.score1A) === Number(m.score1B) ? '' : 'display:none'}">
+        <label>Disputa por pênaltis</label>
+        <div class="score-fixed">
+          <input type="number" min="0" max="99" step="1"
+            data-${prefix}-field="penalties1A" value="${esc(m.penalties1A ?? '')}" placeholder="00">
+          <strong>×</strong>
+          <input type="number" min="0" max="99" step="1"
+            data-${prefix}-field="penalties1B" value="${esc(m.penalties1B ?? '')}" placeholder="00">
+        </div>
+      </div>
+    </div>
+  `;
+
+  const card = panel.querySelector('.' + cardClass);
+  const a = card?.querySelector(`[data-${prefix}-field="score1A"]`);
+  const b = card?.querySelector(`[data-${prefix}-field="score1B"]`);
+  const penalties = card?.querySelector(`[data-${prefix}-penalties]`);
+
+  const updatePenalties = () => {
+    if (!a || !b || !penalties) return;
+    penalties.style.display =
+      a.value !== '' && b.value !== '' &&
+      Number(a.value) === Number(b.value) ? '' : 'none';
+  };
+
+  a?.addEventListener('input', updatePenalties);
+  b?.addEventListener('input', updatePenalties);
+  updatePenalties();
+}
+
+function renderFinalMatch() {
+  const c = comp();
+  renderPlacementMatch(
+    'finalMatchTie',
+    'final-tie-card',
+    'GRANDE FINAL',
+    c?.finalMatchTie,
+    'final'
+  );
+
+  renderPlacementMatch(
+    'thirdPlaceTie',
+    'final-tie-card',
+    'DISPUTA DE 3º E 4º LUGAR',
+    c?.thirdPlaceTie,
+    'third'
+  );
+}
+const originalRenderAll=window.renderAll;
+ 
+function getSemiWinnerOrLoser(match, wantWinner) {
+  if (!match || match.status !== 'finalizado' ||
+      !match.a || !match.b ||
+      match.score1A == null || match.score1A === '' ||
+      match.score1B == null || match.score1B === '') {
+    return null;
+  }
+
+  const a = Number(match.score1A);
+  const b = Number(match.score1B);
+  let winner;
+
+  if (a > b) winner = match.a;
+  else if (b > a) winner = match.b;
+  else {
+    if (match.penalties1A == null || match.penalties1A === '' ||
+        match.penalties1B == null || match.penalties1B === '' ||
+        Number(match.penalties1A) === Number(match.penalties1B)) {
+      return null;
+    }
+    winner = Number(match.penalties1A) > Number(match.penalties1B)
+      ? match.a : match.b;
+  }
+
+  const loser = String(winner) === String(match.a) ? match.b : match.a;
+  return wantWinner ? winner : loser;
+}
+
+function savePlacementFields(c, prefix, property) {
+  const panelId = prefix === 'final' ? 'finalMatchTie' : 'thirdPlaceTie';
+  const match = c[property] || (c[property] = {});
+
+  const panel = $p(panelId);
+  if (!panel) throw new Error('Painel não encontrado.');
+
+  panel.querySelectorAll(`[data-${prefix}-side]`).forEach(el => {
+    match[el.dataset[`${prefix}Side`]] = el.value;
+  });
+
+  panel.querySelectorAll(`[data-${prefix}-field]`).forEach(el => {
+    match[el.dataset[`${prefix}Field`]] = el.value;
+  });
+
+  if (match.a && match.b && String(match.a) === String(match.b)) {
+    throw new Error('Um confronto não pode ter a mesma equipe dos dois lados.');
+  }
+}
+
+$p('generateFinalists')?.addEventListener('click', () => {
+  const c = comp();
+  if (!c) return;
+
+  const semis = c.semiFinalTies || [];
+  if (semis.length !== 2) {
+    alert('Prepare primeiro os dois confrontos das semifinais.');
+    return;
+  }
+
+  const a = getSemiWinnerOrLoser(semis[0], true);
+  const b = getSemiWinnerOrLoser(semis[1], true);
+
+  if (!a || !b) {
+    alert('Finalize as duas semifinais e confira os placares e os pênaltis, se necessários.');
+    return;
+  }
+
+  c.finalMatchTie = {
+    ...(c.finalMatchTie || {}),
+    round: 'Final',
+    a,
+    b
+  };
+
+  save();
+  renderFinalMatch();
+  alert('Finalistas definidos! Confira os dados e clique em SALVAR FINAL.');
+});
+
+$p('generateThirdPlace')?.addEventListener('click', () => {
+  const c = comp();
+  if (!c) return;
+
+  const semis = c.semiFinalTies || [];
+  if (semis.length !== 2) {
+    alert('Prepare primeiro os dois confrontos das semifinais.');
+    return;
+  }
+
+  const a = getSemiWinnerOrLoser(semis[0], false);
+  const b = getSemiWinnerOrLoser(semis[1], false);
+
+  if (!a || !b) {
+    alert('Finalize as duas semifinais e confira os placares e os pênaltis, se necessários.');
+    return;
+  }
+
+  c.thirdPlaceTie = {
+    ...(c.thirdPlaceTie || {}),
+    round: 'Disputa de 3º e 4º lugar',
+    a,
+    b
+  };
+
+  save();
+  renderFinalMatch();
+  alert('Equipes da disputa de 3º e 4º lugar definidas! Confira e salve.');
+});
+
+$p('saveFinalMatch')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
+
+  try {
+    savePlacementFields(c, 'final', 'finalMatchTie');
+    save();
+    await saveCompetitionPhaseConfig(c);
+    renderFinalMatch();
+    alert('Final salva no Supabase!');
+  } catch (error) {
+    console.error('Erro ao salvar final:', error);
+    alert('Não foi possível confirmar o salvamento da final: ' + (error.message || error));
+  }
+});
+
+$p('saveThirdPlace')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
+
+  try {
+    savePlacementFields(c, 'third', 'thirdPlaceTie');
+    save();
+    await saveCompetitionPhaseConfig(c);
+    renderFinalMatch();
+    alert('Disputa de 3º e 4º lugar salva no Supabase!');
+  } catch (error) {
+    console.error('Erro ao salvar disputa de colocação:', error);
+    alert('Não foi possível confirmar o salvamento da disputa: ' + (error.message || error));
+  }
+});
+const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals();renderFinalMatch()};
+  setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderQuarterFinals();renderSemiFinals();renderFinalMatch()},300);
 })();
 </script>
 
