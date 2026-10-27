@@ -3707,63 +3707,76 @@ document.addEventListener('click',function(e){
   ...ts.filter(t=>c.teamQualifications?.[String(t.id)]||c.teamQualifications?.[String(t.dbId||'')])
 ].map(t=>[String(t.id),t])).values()];
   $p('phaseQualifiers').innerHTML=q.length?q.map((t,i)=>`<div class="phase-qualifier"><b>${i+1}.</b> ${esc(t.name)} <span class="muted">Grupo ${esc(groupOf(t,c)||'—')}</span><button class="danger" type="button" data-remove-qualifier="${esc(t.id)}">Retirar</button></div>`).join(''):'<div class="empty">Ainda não foram gerados os classificados.</div>';
-  const ties=c.knockoutTies||[],opts=`<option value="">— Escolher equipe —</option>`+q.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
-   $p('phaseTies').innerHTML = ties.length ? `
-    <table>
-      <thead>
-        <tr>
-          <th>Confronto</th>
-          <th>Equipe 1</th>
-          <th>Equipe 2</th>
-          <th>Formato</th>
-          <th>Data jogo 1</th>
-          <th>Horário jogo 1</th>
-          <th>Local jogo 1</th>
-          <th>Placar jogo 1</th>
-          <th>Data jogo 2</th>
-          <th>Horário jogo 2</th>
-          <th>Local jogo 2</th>
-          <th>Placar jogo 2</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${ties.map((m,i) => `
-          <tr>
-            <td>${esc(m.round || c.phaseRules?.knockoutName || 'Mata-mata')} ${i+1}</td>
-            <td>
-              <select data-tie-side="a" data-tie-index="${i}">
-                <option value="">Escolher equipe</option>
-                ${q.map(t => `<option value="${esc(t.id)}" ${String(m.a)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}
-              </select>
-            </td>
-            <td>
-              <select data-tie-side="b" data-tie-index="${i}">
-                <option value="">Escolher equipe</option>
-                ${q.map(t => `<option value="${esc(t.id)}" ${String(m.b)===String(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}
-              </select>
-            </td>
-            <td>
-              <select data-tie-field="format" data-tie-index="${i}">
-                <option value="unico" ${(m.format||'unico')==='unico'?'selected':''}>Jogo único</option>
-                <option value="ida_volta" ${m.format==='ida_volta'?'selected':''}>Ida e volta</option>
-              </select>
-            </td>
-            ${['date1','time1','venue1','score1','date2','time2','venue2','score2'].map((field,j) => `
-              <td>
-                <input
-                  data-tie-field="${field}"
-                  data-tie-index="${i}"
-                  type="${['date1','date2'].includes(field)?'date':['time1','time2'].includes(field)?'time':'text'}"
-                  value="${esc(m[field] || '')}"
-                  placeholder="${['Local','Placar'][j%4] || ''}"
-                >
-              </td>
-            `).join('')}
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  ` : '<div class="empty">Prepare os confrontos para escolher quem pega quem.</div>';
+ 
+const ties = c.knockoutTies || [];
+const teamOptions = (selected) =>
+  `<option value="">— Escolher equipe —</option>` +
+  q.map(t => `<option value="${esc(t.id)}" ${String(selected) === String(t.id) ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+
+$p('phaseTies').innerHTML = ties.length ? ties.map((m, i) => `
+  <div class="phase-tie-card">
+    <h4>${esc(m.round || c.phaseRules?.knockoutName || 'Mata-mata')} — Jogo ${i + 1}</h4>
+
+    <label>Equipe 1</label>
+    <select data-tie-side="a" data-tie-index="${i}">
+      ${teamOptions(m.a)}
+    </select>
+
+    <label>Equipe 2</label>
+    <select data-tie-side="b" data-tie-index="${i}">
+      ${teamOptions(m.b)}
+    </select>
+
+    <label>Formato do confronto</label>
+    <select data-tie-field="format" data-tie-index="${i}">
+      <option value="unico" ${(m.format || 'unico') === 'unico' ? 'selected' : ''}>Jogo único</option>
+      <option value="ida_volta" ${m.format === 'ida_volta' ? 'selected' : ''}>Ida e volta</option>
+    </select>
+
+    <label>Situação do jogo</label>
+    <select data-tie-field="status" data-tie-index="${i}">
+      <option value="agendado" ${(m.status || 'agendado') === 'agendado' ? 'selected' : ''}>Agendado</option>
+      <option value="em_andamento" ${m.status === 'em_andamento' ? 'selected' : ''}>Em andamento</option>
+      <option value="finalizado" ${m.status === 'finalizado' ? 'selected' : ''}>Finalizado</option>
+    </select>
+
+    <label>Data do jogo 1</label>
+    <input type="date" data-tie-field="date1" data-tie-index="${i}" value="${esc(m.date1 || '')}">
+
+    <label>Horário do jogo 1</label>
+    <input type="time" data-tie-field="time1" data-tie-index="${i}" value="${esc(m.time1 || '')}">
+
+    <label>Local do jogo 1</label>
+    <input type="text" data-tie-field="venue1" data-tie-index="${i}" value="${esc(m.venue1 || '')}" placeholder="Local da partida">
+
+    <label>Placar do jogo 1</label>
+    <input type="text" data-tie-field="score1" data-tie-index="${i}" value="${esc(m.score1 || '')}" placeholder="Ex.: 2 x 1">
+
+    <div class="tie-second-game" style="${m.format === 'ida_volta' ? '' : 'display:none'}">
+      <label>Data do jogo 2</label>
+      <input type="date" data-tie-field="date2" data-tie-index="${i}" value="${esc(m.date2 || '')}">
+
+      <label>Horário do jogo 2</label>
+      <input type="time" data-tie-field="time2" data-tie-index="${i}" value="${esc(m.time2 || '')}">
+
+      <label>Local do jogo 2</label>
+      <input type="text" data-tie-field="venue2" data-tie-index="${i}" value="${esc(m.venue2 || '')}" placeholder="Local da partida">
+
+      <label>Placar do jogo 2</label>
+      <input type="text" data-tie-field="score2" data-tie-index="${i}" value="${esc(m.score2 || '')}" placeholder="Ex.: 1 x 0">
+    </div>
+  </div>
+`).join('') : '<div class="empty">Prepare os confrontos para escolher quem pega quem.</div>';
+
+$p('phaseTies').querySelectorAll('[data-tie-field="format"]').forEach(el => {
+  el.addEventListener('change', () => {
+    const card = el.closest('.phase-tie-card');
+    const secondGame = card?.querySelector('.tie-second-game');
+    if (secondGame) {
+      secondGame.style.display = el.value === 'ida_volta' ? '' : 'none';
+    }
+  });
+});
    }
  function refreshCompetitionSelect(){const sel=$p('phaseCompetitionSelect');if(!sel)return;const comps=db.competitions||[];sel.innerHTML=comps.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(db.activeCompetitionId)?'selected':''}>${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');if(!comps.some(c=>String(c.id)===String(sel.value))&&comps.length)sel.value=String(comp()?.id||comps[0].id)}
  async function saveGroupsToSupabase(c,ts){
@@ -4324,8 +4337,53 @@ tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
     flex: 1 1 100%;
   }
 }
- #competitionPhaseManager #phaseTies{
-  display:none!important;
+
+#competitionPhaseManager #phaseTies{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  width:100%;
+  overflow:visible;
+}
+
+#competitionPhaseManager .phase-tie-card{
+  min-width:0;
+  padding:14px;
+  border:1px solid #b68a36;
+  border-radius:12px;
+  background:#111;
+  color:#fff;
+}
+
+#competitionPhaseManager .phase-tie-card h4{
+  margin:0 0 12px;
+  color:#e4bd62;
+}
+
+#competitionPhaseManager .phase-tie-card label{
+  display:block;
+  margin:9px 0 4px;
+  font-size:12px;
+  color:#ddd;
+}
+
+#competitionPhaseManager .phase-tie-card select,
+#competitionPhaseManager .phase-tie-card input{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+}
+
+@media(max-width:1000px){
+  #competitionPhaseManager #phaseTies{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:560px){
+  #competitionPhaseManager #phaseTies{
+    grid-template-columns:1fr;
+  }
 }
 </style>
 </body>
