@@ -2531,8 +2531,10 @@ let manualGroupConfirmedRounds = {};
   const roundText = $p('manualGroupRound')?.value || 'Rodada 1';
  const round = Number(roundText.replace(/\D/g, '')) || 1;
    const format = $p('manualGroupFormat')?.value || 'unico';
-   const labels = groupLabels(c);
-   const allTeams = teams(c);
+   const allTeams = (db.teams || []).filter(t =>
+  teamInComp(t, c) ||
+  teams(c).some(x => String(x.id) === String(t.id))
+);
    const draft = [];
  
    for (const group of labels) {
