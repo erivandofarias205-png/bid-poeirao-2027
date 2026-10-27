@@ -4478,8 +4478,19 @@ document.addEventListener('click',function(e){
  let editCompId=null;
  function comp(){const id=$p('phaseCompetitionSelect')?.value||db.activeCompetitionId;return (db.competitions||[]).find(c=>String(c.id)===String(id)||String(c.dbId||'')===String(id))||activeCompetition()}
  function compIds(c){return [c?.id,c?.dbId,c?.db_id].filter(v=>v!==undefined&&v!==null&&v!=='').map(String)}
- function teamInComp(t,c){
-  if(!c)return false;
+
+  const groups = c.teamGroups || {};
+  const teamIds = [t.id, t.dbId]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  if (teamIds.some(id =>
+    Object.prototype.hasOwnProperty.call(groups, id)
+  )) return true;
+
+  return false;
+}
+function teams(c=comp()){
   const ids=[...(Array.isArray(t.competitionIds)?t.competitionIds:[]),...(Array.isArray(t.competition_ids)?t.competition_ids:[])].map(String);
   const direct=[t.competitionId,t.competition_id,t.competitionDbId,t.competicao_id,t.competition].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
   const cids=compIds(c);
