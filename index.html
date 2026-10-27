@@ -4602,36 +4602,42 @@ function renderQuarterFinals() {
   
 c.quarterFinalTies = c.quarterFinalTies || [];
 
-const allTeams = teams(c);
 
-const qualifiedIds = (c.knockoutTies || []).flatMap(m => {
+const allTeams = teams(c);
+const quarterTies = c.quarterFinalTies || [];
+const qualifiedIds = [];
+
+for (const m of quarterTies) {
   if (!m || !m.a || !m.b || m.status !== 'finalizado' ||
       m.score1A == null || m.score1A === '' ||
-      m.score1B == null || m.score1B === '') return [];
+      m.score1B == null || m.score1B === '') continue;
 
   const a = Number(m.score1A);
   const b = Number(m.score1B);
+  let winner = null;
 
-  if (a > b) return [String(m.a)];
-  if (b > a) return [String(m.b)];
+  if (a > b) winner = m.a;
+  else if (b > a) winner = m.b;
+  else if (
+    m.penalties1A != null && m.penalties1A !== '' &&
+    m.penalties1B != null && m.penalties1B !== '' &&
+    Number(m.penalties1A) !== Number(m.penalties1B)
+  ) {
+    winner = Number(m.penalties1A) > Number(m.penalties1B)
+      ? m.a : m.b;
+  }
 
-  if (m.penalties1A == null || m.penalties1A === '' ||
-      m.penalties1B == null || m.penalties1B === '' ||
-      Number(m.penalties1A) === Number(m.penalties1B)) return [];
-
-  return [
-    String(Number(m.penalties1A) > Number(m.penalties1B) ? m.a : m.b)
-  ];
-});
+  if (winner != null) qualifiedIds.push(String(winner));
+}
 
 const uniqueQualifiedIds = [...new Set(qualifiedIds)];
 
-const ts = uniqueQualifiedIds.length === 8
+const ts = uniqueQualifiedIds.length === 4
   ? allTeams.filter(t =>
       uniqueQualifiedIds.includes(String(t.id)) ||
       uniqueQualifiedIds.includes(String(t.dbId || ''))
     )
-  : allTeams;
+  : [];
   const teamName = id => {
     const t = ts.find(x =>
       String(x.id) === String(id) ||
