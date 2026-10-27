@@ -2563,13 +2563,12 @@ if (pair && round >= 1 && round <= (format === 'ida_volta' ? 6 : 3)) {
     pairings.push(pair);
   }
 }
-}
-   } else {
-  const idaPool = [...members];
+    } else {
+      const idaPool = [...members];
 
-  if (idaPool.length % 2 !== 0) {
-    idaPool.push(null);
-  }
+      if (idaPool.length % 2 !== 0) {
+        idaPool.push(null);
+      }
 
   const totalRoundsIda = idaPool.length - 1;
   const totalRounds = format === 'ida_volta'
