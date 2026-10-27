@@ -1353,6 +1353,27 @@ overflow: visible !important;
 <div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"> <label>CPF (comece por aqui)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="Digite o CPF: 000.000.000-00" autocomplete="off"/></label><label>Competição<select id="athCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"/></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"/></label><label>Data de nascimento<input id="athBirth" type="date"/></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"/></label><label>Data da inscrição<input id="athReg" type="date"/></label><label>Foto do atleta (opcional)<input accept="image/*" id="athPhoto" type="file"/></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"/></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button class="gold" id="saveAthlete">Cadastrar pessoa</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
 <div class="panel" id="adminGamePromoPanel"><div class="ph"><h3>Divulgação de jogos</h3><span class="pill">Adicionar / remover artes</span></div><div class="pad"><p class="small">Envie uma ou várias artes promocionais. Elas serão exibidas no mural público em sequência e podem ser removidas depois que o jogo passar. Use imagens horizontais na proporção 7 × 4.</p><div class="formgrid"><label class="wide">Selecionar artes dos jogos<input accept="image/*" id="gamePromoUpload" multiple="" type="file"/></label></div><div class="actions"><button class="gold" id="uploadGamePromoBtn" type="button">Enviar artes para o mural</button><button class="secondary" id="refreshGamePromoBtn" type="button">Atualizar lista</button></div><p aria-live="polite" class="small" id="gamePromoAdminStatus" role="status">As artes serão carregadas do armazenamento do site quando disponível.</p><div class="game-promo-admin-list" id="gamePromoAdminList"></div></div></div>
+ 
+<div class="panel" id="adminSponsorsPanel">
+  <div class="ph">
+    <h3>Patrocinadores</h3>
+    <span class="pill">Adicionar / remover fotos</span>
+  </div>
+  <div class="pad">
+    <p class="small">Selecione as fotos dos patrocinadores no computador. As imagens serão exibidas no site em sequência, no formato 7 × 4.</p>
+    <div class="formgrid">
+      <label class="wide">Selecionar fotos dos patrocinadores
+        <input accept="image/*" id="sponsorUpload" multiple type="file">
+      </label>
+    </div>
+    <div class="actions">
+      <button class="gold" id="uploadSponsorBtn" type="button">Enviar patrocinadores</button>
+      <button class="secondary" id="refreshSponsorBtn" type="button">Atualizar lista</button>
+    </div>
+    <p class="small" id="sponsorAdminStatus" role="status" aria-live="polite">As fotos serão carregadas do armazenamento do site.</p>
+    <div class="game-promo-admin-list" id="sponsorAdminList"></div>
+  </div>
+</div>
 <div class="panel"><div class="ph"><h3>Mídias e patrocínios</h3><span class="pill">Prévia local</span></div><div class="pad"><p class="small">Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.</p><div class="formgrid" id="mediaPreview"></div></div></div>
 <div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
 </div></section>
@@ -1431,27 +1452,73 @@ overflow: visible !important;
 <section aria-label="Patrocinadores" id="tvfp-sponsors">
 <h2>Patrocinadores</h2>
 <div class="sponsors-row" id="sponsorsTrack">
-  <!-- NOVOS PATROCINADORES: adicione cada foto aqui -->
+ <div class="sponsor-logo-card">
+  <img src="COLE_AQUI_O_LINK_DA_FOTO"
+       alt="Nome do patrocinador"
+       loading="lazy">
+</div>
 </div>
 </section>
+
 <script id="tvfp-sponsors-animation">
 (function(){
   const row = document.getElementById('sponsorsTrack');
   if (!row) return;
 
-  row.style.display = 'flex';
-  row.style.flexWrap = 'nowrap';
-  row.style.justifyContent = 'flex-start';
-  row.style.gap = '14px';
-  row.style.width = 'max-content';
-  row.style.animation = 'sponsorsScroll 30s linear infinite';
+  async function loadPublicSponsors(){
+    try{
+      if(typeof supabaseClient === 'undefined') return;
 
-  row.querySelectorAll('.sponsor-logo-card').forEach(card => {
-    card.style.flex = '0 0 280px';
-    card.style.width = '280px';
-    card.style.aspectRatio = '7 / 4';
-    card.style.height = 'auto';
-  });
+      const {data,error} = await supabaseClient
+        .storage.from('bid-fotos')
+        .list('patrocinadores',{
+          limit:100,
+          sortBy:{column:'name',order:'asc'}
+        });
+
+      if(error) throw error;
+
+      const files = (data || []).filter(f =>
+        f.name && !f.name.endsWith('/')
+      );
+
+      if(!files.length){
+        row.innerHTML = '';
+        return;
+      }
+
+      const makeCard = file => {
+        const url = supabaseClient.storage
+          .from('bid-fotos')
+          .getPublicUrl('patrocinadores/' + file.name).data.publicUrl;
+
+        const card = document.createElement('div');
+        card.className = 'sponsor-logo-card';
+
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Patrocinador';
+        img.loading = 'lazy';
+
+        card.appendChild(img);
+        return card;
+      };
+
+      row.innerHTML = '';
+      files.forEach(file => row.appendChild(makeCard(file)));
+
+      if(files.length > 1){
+        files.forEach(file => row.appendChild(makeCard(file)));
+        row.style.animation = 'sponsorsScroll 30s linear infinite';
+      }else{
+        row.style.animation = 'none';
+      }
+    }catch(error){
+      console.error('Erro ao carregar patrocinadores:',error);
+    }
+  }
+
+  loadPublicSponsors();
 })();
 </script>
 <footer class="tvfp-contact-footer" id="tvfp-contact-footer">
@@ -3015,6 +3082,202 @@ photo: row.foto_url || '',
   const refresh=$('refreshGamePromoBtn');if(refresh)refresh.addEventListener('click',loadFiles);
   loadFiles();
  });
+})();
+</script>
+ 
+<script id="sponsors-admin-script">
+(function(){
+  const BUCKET = 'bid-fotos';
+  const FOLDER = 'patrocinadores';
+  const $s = id => document.getElementById(id);
+
+  function sponsorStatus(msg){
+    const el = $s('sponsorAdminStatus');
+    if(el) el.textContent = msg;
+  }
+
+  function sponsorUrl(name){
+    return supabaseClient.storage
+      .from(BUCKET)
+      .getPublicUrl(FOLDER + '/' + name).data.publicUrl;
+  }
+
+  function renderSponsors(files){
+    const list = $s('sponsorAdminList');
+    if(!list) return;
+
+    if(!files.length){
+      list.innerHTML = '<p class="small">Nenhum patrocinador cadastrado.</p>';
+      return;
+    }
+
+    list.innerHTML = files.map(f => {
+      const name = f.name;
+      const safeName = name.replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])
+      );
+      return '<div class="game-promo-admin-item">' +
+        '<img loading="lazy" src="' + sponsorUrl(name) + '" alt="Patrocinador">' +
+        '<div class="small">' + safeName + '</div>' +
+        '<button type="button" class="danger" data-delete-sponsor="' +
+        encodeURIComponent(name) + '" style="margin-top:7px;width:100%">Remover patrocinador</button>' +
+        '</div>';
+    }).join('');
+
+    list.querySelectorAll('[data-delete-sponsor]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const name = decodeURIComponent(btn.getAttribute('data-delete-sponsor'));
+        if(!confirm('Remover esta foto de patrocinador?')) return;
+
+        try{
+          const {data:{session}} = await supabaseClient.auth.getSession();
+          if(!session){
+            sponsorStatus('Entre na Administração para remover fotos.');
+            return;
+          }
+          const {error} = await supabaseClient.storage
+            .from(BUCKET).remove([FOLDER + '/' + name]);
+          if(error) throw error;
+          sponsorStatus('Foto removida.');
+          await loadSponsors();
+        }catch(e){
+          sponsorStatus('Erro ao remover: ' + (e.message || 'verifique as permissões.'));
+        }
+      });
+    });
+  }
+
+  async function loadSponsors(){
+    if(!window.supabase || typeof supabaseClient === 'undefined'){
+      sponsorStatus('O armazenamento ainda não está disponível.');
+      return;
+    }
+    try{
+      const {data,error} = await supabaseClient.storage
+        .from(BUCKET).list(FOLDER,{limit:100,sortBy:{column:'name',order:'asc'}});
+      if(error) throw error;
+      const files = (data || []).filter(f => f.name && !f.name.endsWith('/'));
+      renderSponsors(files);
+      sponsorStatus(files.length + ' foto(s) de patrocinadores cadastradas.');
+      renderPublicSponsors(files);
+    }catch(e){
+      sponsorStatus('Não foi possível carregar patrocinadores: ' + (e.message || 'verifique o Storage.'));
+    }
+  }
+
+  async function uploadSponsors(){
+    const input = $s('sponsorUpload');
+    if(!input || !input.files || !input.files.length){
+      sponsorStatus('Selecione uma ou mais fotos primeiro.');
+      return;
+    }
+
+    try{
+      const {data:{session}} = await supabaseClient.auth.getSession();
+      if(!session){
+        sponsorStatus('Entre primeiro na Administração com sua conta de administrador.');
+        return;
+      }
+
+      const files = Array.from(input.files).filter(f => f.type.startsWith('image/'));
+      if(!files.length){
+        sponsorStatus('Selecione arquivos de imagem.');
+        return;
+      }
+
+      for(const originalFile of files){
+        sponsorStatus('Enviando ' + originalFile.name + '...');
+        const file = await compressSponsorImage(originalFile);
+        const safe = originalFile.name.normalize('NFD')
+          .replace(/[\u0300-\u036f]/g,'')
+          .replace(/[^a-zA-Z0-9._-]/g,'-')
+          .replace(/\.[^.]+$/,'');
+        const path = FOLDER + '/' + Date.now() + '-' +
+          Math.random().toString(36).slice(2,8) + '-' + safe + '.jpg';
+
+        const {error} = await supabaseClient.storage.from(BUCKET)
+          .upload(path,file,{cacheControl:'3600',upsert:false,contentType:'image/jpeg'});
+        if(error) throw error;
+      }
+
+      input.value = '';
+      sponsorStatus('Fotos enviadas com sucesso.');
+      await loadSponsors();
+    }catch(e){
+      sponsorStatus('Falha no envio: ' + (e.message || 'verifique o login e as permissões do Storage.'));
+    }
+  }
+
+  
+async function compressSponsorImage(file){
+  if(!file.type.startsWith('image/')){
+    throw new Error('O arquivo selecionado não é uma imagem.');
+  }
+
+  let bitmap;
+  try{
+    bitmap = await createImageBitmap(file);
+  }catch(e){
+    throw new Error('Não foi possível abrir ' + file.name + '. Tente JPG ou PNG.');
+  }
+
+  const maxW = 1800;
+  const maxH = 1200;
+  const scale = Math.min(1, maxW / bitmap.width, maxH / bitmap.height);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+  if(bitmap.close) bitmap.close();
+
+  const blob = await new Promise(resolve =>
+    canvas.toBlob(resolve, 'image/jpeg', 0.82)
+  );
+
+  if(!blob){
+    throw new Error('Não foi possível compactar ' + file.name + '.');
+  }
+
+  return new File(
+    [blob],
+    file.name.replace(/\.[^.]+$/, '') + '.jpg',
+    {type:'image/jpeg', lastModified:Date.now()}
+  );
+}
+  function renderPublicSponsors(files){
+    const track = document.getElementById('sponsorsTrack');
+    if(!track) return;
+
+    if(!files.length){
+      track.innerHTML = '<div class="sponsor-logo-card"><p class="small">Patrocinadores em breve</p></div>';
+      track.style.animation = 'none';
+      return;
+    }
+
+    const cards = files.map(f =>
+      '<div class="sponsor-logo-card"><img loading="lazy" src="' +
+      sponsorUrl(f.name) + '" alt="Patrocinador"></div>'
+    ).join('');
+
+    track.innerHTML = cards + cards;
+    track.style.animation = files.length > 1 ? 'sponsorsScroll 30s linear infinite' : 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded',() => {
+    const upload = $s('uploadSponsorBtn');
+    if(upload) upload.addEventListener('click',uploadSponsors);
+
+    const refresh = $s('refreshSponsorBtn');
+    if(refresh) refresh.addEventListener('click',loadSponsors);
+
+    loadSponsors();
+  });
 })();
 </script>
 <script id="bid-admin-edit-tools">
