@@ -4835,7 +4835,85 @@ phaseWinners: c.phaseWinners || []
   Object.assign(c, configuracao);
   return true;
 }
- const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
+ 
+const btnLimparFases = document.createElement('button');
+btnLimparFases.id = 'btnLimparFasesEliminatorias';
+btnLimparFases.type = 'button';
+btnLimparFases.className = 'danger';
+btnLimparFases.textContent = 'LIMPAR CLASSIFICADOS E FASES ANTIGAS';
+
+const seletorFases = $p('phaseCompetitionSelect');
+const painelFases = seletorFases?.closest('.panel');
+
+if (painelFases && !document.getElementById(btnLimparFases.id)) {
+  const areaBotoes = painelFases.querySelector('.actions') || painelFases;
+  areaBotoes.appendChild(btnLimparFases);
+}
+
+btnLimparFases.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) {
+    alert('Selecione primeiro a competição que deseja limpar.');
+    return;
+  }
+
+  btnLimparFases.disabled = true;
+  try {
+    await limparFasesEliminatorias(c);
+  } catch (error) {
+    console.error('Erro ao limpar fases eliminatórias:', error);
+    alert(
+      'Não foi possível confirmar a limpeza no Supabase: ' +
+      (error.message || error)
+    );
+  } finally {
+    btnLimparFases.disabled = false;
+  }
+});
+
+ const add=$p('addCompetition');const 
+  
+async function limparFasesEliminatorias(c) {
+  if (!c || !c.dbId) {
+    throw new Error('Selecione uma competição válida.');
+  }
+
+  const confirmar = confirm(
+    'Deseja limpar os classificados e as fases eliminatórias antigas de "' +
+    (c.name || 'competição selecionada') +
+    '"?\n\nOs jogos oficiais da fase de grupos, os resultados, as equipes e os grupos serão preservados.'
+  );
+
+  if (!confirmar) return false;
+
+  // Preserva as regras, opções e distribuição das equipes nos grupos.
+  c.qualifiers = [];
+  c.teamQualifications = {};
+  c.knockoutTies = [];
+  c.quarterFinalTies = [];
+  c.semiFinalTies = [];
+  c.finalMatchTie = null;
+  c.thirdPlaceTie = null;
+  c.phaseWinners = [];
+
+  // Salva a configuração limpa no Supabase.
+  await saveCompetitionPhaseConfig(c);
+
+  // Atualiza o armazenamento local e os painéis.
+  save();
+
+  if (typeof renderPhase === 'function') renderPhase();
+  if (typeof renderRoundOf16Qualifiers === 'function') renderRoundOf16Qualifiers();
+  if (typeof renderQuarterFinals === 'function') renderQuarterFinals();
+  if (typeof renderQuarterQualifiers === 'function') renderQuarterQualifiers();
+  if (typeof renderSemiFinals === 'function') renderSemiFinals();
+  if (typeof renderFinalMatch === 'function') renderFinalMatch();
+
+  alert('Classificados e fases eliminatórias antigas foram limpos. Os jogos oficiais dos grupos foram preservados.');
+
+  return true;
+}
+saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
   document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;$p('newCompetitionTotalTeams').value =
   c.phaseOptions?.totalTeams ?? 18;
 
