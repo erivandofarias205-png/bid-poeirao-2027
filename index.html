@@ -5443,18 +5443,128 @@ $p('phaseSaveTies')?.addEventListener('click', async () => {
   save();
   renderPhase();
 
+  
   try {
     await saveCompetitionPhaseConfig(c);
-    alert('Confrontos, formato, datas, horários, locais e placares salvos no Supabase!');
-  } catch (error) {
-    console.error('Erro ao salvar confrontos:', error);
+
+    await sincronizarOitavasSupabase(c);
+
+    await loadSupabaseMatches();
+
+    renderPhase();
+
     alert(
-      'Os dados ficaram salvos localmente, mas o Supabase não confirmou o salvamento. Erro: ' +
+      'Confrontos das oitavas salvos na configuração e na tabela geral de jogos do Supabase!'
+    );
+  } catch (error) {
+    console.error('Erro ao salvar ou sincronizar as oitavas:', error);
+
+    alert(
+      'Não foi possível concluir a sincronização das oitavas. Confira o erro no console: ' +
       (error.message || error)
     );
   }
 });
- // ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
+ 
+async function sincronizarOitavasSupabase(c) {
+  if (!c?.dbId) {
+    throw new Error('A competição precisa estar cadastrada no Supabase.');
+  }
+
+  const confrontos = c.knockoutTies || [];
+  const equipes = teams(c);
+
+  const obterEquipe = id =>
+    equipes.find(t =>
+      String(t.id) === String(id) ||
+      String(t.dbId) === String(id)
+    );
+
+  const dataHora = (data, hora) => {
+    if (!data) return null;
+
+    const dt = new Date(`${data}T${hora || '12:00'}:00`);
+
+    if (Number.isNaN(dt.getTime())) {
+      throw new Error('Confira a data e o horário de uma partida.');
+    }
+
+    return dt.toISOString();
+  };
+
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
+
+    if (!m?.a || !m?.b) continue;
+
+    const mandante = obterEquipe(m.a);
+    const visitante = obterEquipe(m.b);
+
+    if (!mandante?.dbId || !visitante?.dbId) {
+      throw new Error(
+        `As equipes do confronto ${i + 1} precisam estar cadastradas no Supabase.`
+      );
+    }
+
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+    const chave = `oitavas-${i + 1}-jogo-1`;
+
+    const payload = {
+      competicao_id: c.dbId,
+      chave_fase: chave,
+      equipe_mandante_id: mandante.dbId,
+      equipe_visitante_id: visitante.dbId,
+      fase: 'Oitavas de final',
+      rodada: null,
+      formato: 'unico',
+      data_hora: dataHora(m.date1, m.time1),
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null
+          ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null
+          ? null : Number(m.score1B),
+      status
+    };
+
+    const { data: existentes, error: buscaErro } =
+      await supabaseClient
+        .from('jogos')
+        .select('id')
+        .eq('competicao_id', c.dbId)
+        .eq('chave_fase', chave);
+
+    if (buscaErro) throw buscaErro;
+
+    if (existentes?.length > 1) {
+      throw new Error(
+        `Já existem partidas duplicadas para o confronto ${i + 1}.`
+      );
+    }
+
+    if (existentes?.length === 1) {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .update(payload)
+        .eq('id', existentes[0].id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .insert(payload);
+
+      if (error) throw error;
+    }
+  }
+}
+// ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
 function renderQuarterFinals() {
   const c = comp();
   const panel = $p('quarterFinalsTies');
