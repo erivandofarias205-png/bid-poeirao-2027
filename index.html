@@ -1316,7 +1316,54 @@ overflow: visible !important;
 <div class="tabs"><button class="tab" data-tab="classification">Classificação</button><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button></div>
 <section id="publicView">
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMAS PARTIDAS</h3><span class="pill">Próximos confrontos</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
-<div class="panel finished-match-panel"><div class="ph"><h3>PARTIDAS FINALIZADAS</h3><span class="pill">Resultados oficiais</span></div><div class="fixtures" id="finishedFixtures"><div class="empty">Nenhuma partida finalizada ainda.</div></div></div>
+
+<div class="panel finished-match-panel">
+  <div class="ph">
+    <h3>CHAVEAMENTO — FASES ELIMINATÓRIAS</h3>
+    <span class="pill">Resultados oficiais</span>
+  </div>
+
+  <div class="knockout-phase-panel">
+  <h3>FINAL</h3>
+
+  <div class="fixtures" id="bracketFinal">
+    <div class="empty">Aguardando os finalistas.</div>
+  </div>
+
+  <h4>DISPUTA DE TERCEIRO LUGAR</h4>
+
+  <div class="fixtures" id="bracketThirdPlace">
+    <div class="empty">Aguardando as equipes.</div>
+  </div>
+</div>
+  <div class="knockout-phase-panel">
+    <h3>SEMIFINAIS</h3>
+    <div class="fixtures" id="bracketSemifinals">
+      <div class="empty">Aguardando os confrontos.</div>
+    </div>
+  </div>
+
+  <div class="knockout-phase-panel">
+    <h3>QUARTAS DE FINAL</h3>
+    <div class="fixtures" id="bracketQuarterfinals">
+      <div class="empty">Aguardando os confrontos.</div>
+    </div>
+  </div>
+
+  <div class="knockout-phase-panel">
+    <h3>OITAVAS DE FINAL</h3>
+    <div class="fixtures" id="bracketRoundOf16">
+      <div class="empty">Aguardando os confrontos.</div>
+    </div>
+  </div>
+
+  <div class="knockout-phase-panel">
+    <h3>OUTRAS PARTIDAS FINALIZADAS</h3>
+    <div class="fixtures" id="finishedFixtures">
+      <div class="empty">Nenhuma outra partida finalizada.</div>
+    </div>
+  </div>
+</div>
 <div class="panel classification-full" id="classificationPanel"><div class="ph"><h3>CLASSIFICAÇÃO / TABELAS DA COMPETIÇÃO</h3><span class="pill" id="classificationFormatLabel">Tabela oficial</span></div><div id="classificationTables"><div class="tablewrap"><table class="front-table"><thead><tr><th>Pos.</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody id="frontStandings"></tbody></table></div></div><div class="pad"><button class="secondary" data-open-games="">Ver tabela completa de jogos</button></div></div>
 <div class="panel" id="scorersPanel"><div class="ph"><h3>ARTILHARIA · TODOS OS ARTILHEIROS</h3><span class="pill">Gols</span></div><div class="scorers" id="frontScorers"><div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div></div></div>
 <div class="panel" id="cardControlPanel"><div class="ph"><h3>CONTROLE DE CARTÕES</h3><span class="pill">Amarelos e vermelhos por atleta</span></div><div class="pad"><div class="front-grid"><div class="box"><h4>🟨 Cartões amarelos</h4><div class="scorers" id="yellowCardsList"><div class="empty">Nenhum cartão amarelo registrado.</div></div></div><div class="box"><h4>🟥 Cartões vermelhos</h4><div class="scorers" id="redCardsList"><div class="empty">Nenhum cartão vermelho registrado.</div></div></div></div><p class="small muted">Os totais são exibidos a partir dos cartões registrados nas fichas dos atletas.</p></div></div>
@@ -3126,6 +3173,7 @@ const c = (db.competitions || []).find(x =>
   };
 
 
+
 const renderGroupedFixtures = list => {
   if (!list.length) {
     return '<div class="empty">Nenhuma partida cadastrada.</div>';
@@ -3137,24 +3185,24 @@ const renderGroupedFixtures = list => {
       .replace(/[\u0300-\u036f]/g, '')
       .toUpperCase();
 
-    if (text.includes('SEMI')) {
-  return { priority: 2, name: 'SEMIFINAIS' };
-}
-
-if (text.includes('QUART')) {
-  return { priority: 3, name: 'QUARTAS DE FINAL' };
-}
-
-if (text.includes('OITAV')) {
-  return { priority: 4, name: 'OITAVAS DE FINAL' };
-}
-
-if (text.includes('TERCEIRO')) {
-  return { priority: 5, name: 'DISPUTA DE TERCEIRO LUGAR' };
-}
+    if (text.includes('TERCEIRO')) {
+      return { priority: 1, name: 'DISPUTA DE TERCEIRO LUGAR' };
+    }
 
     if (text.includes('FINAL') && !text.includes('GRUPO')) {
-      return { priority: 1, name: 'FINAL' };
+      return { priority: 0, name: 'FINAL' };
+    }
+
+    if (text.includes('SEMI')) {
+      return { priority: 2, name: 'SEMIFINAIS' };
+    }
+
+    if (text.includes('QUART')) {
+      return { priority: 3, name: 'QUARTAS DE FINAL' };
+    }
+
+    if (text.includes('OITAV')) {
+      return { priority: 4, name: 'OITAVAS DE FINAL' };
     }
 
     if (
@@ -3163,13 +3211,13 @@ if (text.includes('TERCEIRO')) {
       text.includes('FASE DE GRUPOS')
     ) {
       return {
-        priority: 6,
+        priority: 5,
         name: 'PRIMEIRA FASE — FASE DE GRUPOS'
       };
     }
 
     return {
-      priority: 7,
+      priority: 6,
       name: raw || 'OUTRAS PARTIDAS'
     };
   };
@@ -3201,15 +3249,83 @@ if (text.includes('TERCEIRO')) {
 
   return html;
 };
+};
 
 
   $('frontFixtures').innerHTML = renderGroupedFixtures(upcomingFixtures);
 
-  const finishedPanel = $('finishedFixtures');
-  if (finishedPanel) {
-    finishedPanel.innerHTML = renderGroupedFixtures(finishedFixtures);
-  }
+  
+const finishedPanel = $('finishedFixtures');
 
+const bracketPanels = {
+  final: $('bracketFinal'),
+  third: $('bracketThirdPlace'),
+  semi: $('bracketSemifinals'),
+  quarter: $('bracketQuarterfinals'),
+  round16: $('bracketRoundOf16')
+};
+
+const normalizePhase = m =>
+  String(m.round || m.fase || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+
+const phaseMatches = {
+  final: m => {
+    const p = normalizePhase(m);
+    return p.includes('FINAL') &&
+      !p.includes('SEMI') &&
+      !p.includes('QUART') &&
+      !p.includes('OITAV') &&
+      !p.includes('TERCEIRO') &&
+      !p.includes('GRUPO');
+  },
+  third: m => normalizePhase(m).includes('TERCEIRO'),
+  semi: m => normalizePhase(m).includes('SEMI'),
+  quarter: m => normalizePhase(m).includes('QUART'),
+  round16: m => {
+  const p = normalizePhase(m);
+  return p.includes('OITAV') || p.includes('16 AVOS');
+}
+};
+
+const renderPhase = (panel, matches, predicate) => {
+  if (!panel) return;
+
+  const phaseMatchesList = matches.filter(predicate);
+  panel.innerHTML = phaseMatchesList.length
+    ? phaseMatchesList
+        .slice()
+        .sort((a, b) =>
+          String(a.date || '9999-12-31').localeCompare(
+            String(b.date || '9999-12-31')
+          ) ||
+          String(a.time || '').localeCompare(String(b.time || ''))
+        )
+        .map(m => renderFixtureCard(m))
+        .join('')
+    : '<div class="empty">Nenhuma partida cadastrada nesta fase.</div>';
+};
+
+
+renderPhase(bracketPanels.final, fixtures, phaseMatches.final);
+renderPhase(bracketPanels.third, fixtures, phaseMatches.third);
+renderPhase(bracketPanels.semi, fixtures, phaseMatches.semi);
+renderPhase(bracketPanels.quarter, fixtures, phaseMatches.quarter);
+renderPhase(bracketPanels.round16, fixtures, phaseMatches.round16);
+
+
+if (finishedPanel) {
+  const otherMatches = finishedFixtures.filter(m =>
+    !Object.values(phaseMatches).some(predicate => predicate(m))
+  );
+
+  finishedPanel.innerHTML = otherMatches.length
+    ? renderGroupedFixtures(otherMatches)
+    : '<div class="empty">Nenhuma outra partida finalizada.</div>';
+}
   
   const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
   (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
