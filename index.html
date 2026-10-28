@@ -3835,12 +3835,29 @@ photo: row.foto_url || '',
           t.players.push(person);
         }
       });
-    } catch(e) { console.warn('Não foi possível recuperar diretores/musa locais', e); }
-
-
-
-
     
+    db.teams = remoteTeams;
+
+    if (
+      !findTeam(selectedTeam) ||
+      !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})
+    ) {
+      selectedTeam = activeCompetitionTeams()[0]?.id || '';
+    }
+
+    saveDb();
+
+  } catch (error) {
+    console.error(
+      'Não foi possível carregar equipes/vínculos do Supabase:',
+      error
+    );
+    alert(
+      'Não foi possível carregar equipes e vínculos da competição. Detalhe: ' +
+      (error?.message || error)
+    );
+  }
+}
 
 async function limparFasesEliminatorias(c) {
   if (!c || !c.dbId) {
@@ -3855,12 +3872,10 @@ async function limparFasesEliminatorias(c) {
 
   if (!confirmar) return false;
 
-  // Guardar os grupos e as regras existentes.
   const gruposPreservados = { ...(c.teamGroups || {}) };
   const regrasPreservadas = { ...(c.phaseRules || {}) };
   const opcoesPreservadas = { ...(c.phaseOptions || {}) };
 
-  // Limpar apenas os dados gerados das fases eliminatórias.
   c.qualifiers = [];
   c.knockoutTies = [];
   c.quarterFinalTies = [];
@@ -3869,10 +3884,8 @@ async function limparFasesEliminatorias(c) {
   c.thirdPlaceTie = null;
   c.phaseWinners = [];
 
-  // Preservar as marcações de classificação manual.
-  // Elas não serão apagadas nesta primeira limpeza.
+  // Preserva as classificações manuais existentes.
   c.teamQualifications = c.teamQualifications || {};
-
   c.teamGroups = gruposPreservados;
   c.phaseRules = regrasPreservadas;
   c.phaseOptions = opcoesPreservadas;
@@ -3881,7 +3894,6 @@ async function limparFasesEliminatorias(c) {
   saveDb();
 
   if (typeof renderAll === 'function') renderAll();
-  if (typeof renderPhase === 'function') renderPhase();
 
   alert(
     'Configurações eliminatórias antigas limpas. ' +
@@ -3890,13 +3902,6 @@ async function limparFasesEliminatorias(c) {
 
   return true;
 }
-
-  } catch (error) {
-    console.error('Não foi possível carregar equipes/vínculos do Supabase:', error);
-    alert('Não foi possível carregar equipes e vínculos da competição. Detalhe: ' + (error?.message || error));
-  }
-}
-(async function setupAdminLogin(){
   const panel = document.getElementById('adminLoginPanel');
   const protectedArea = document.getElementById('adminProtected');
   const emailInput = document.getElementById('adminEmail');
