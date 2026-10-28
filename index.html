@@ -3143,14 +3143,14 @@ const c = (db.competitions || []).find(x =>
 
     ordered.forEach(m => {
       const priority = phasePriority(m);
-      const phaseName = priority === 1 ? 'FINAL'
+            const phaseName = priority === 1 ? 'FINAL'
         : priority === 2 ? 'DISPUTA DE TERCEIRO LUGAR'
         : priority === 3 ? 'SEMIFINAIS'
         : priority === 4 ? 'QUARTAS DE FINAL'
         : priority === 5 ? 'OITAVAS DE FINAL'
-        : priority === 6 ? 'FASE DE GRUPOS'
+        : priority === 6 ? 'PRIMEIRA FASE — FASE DE GRUPOS'
         : (m.round || 'OUTRAS PARTIDAS').toUpperCase();
-
+ 
       if (phaseName !== previousPhase) {
         html += `<div class="fixture-phase-heading">${esc(phaseName)}</div>`;
         previousPhase = phaseName;
@@ -3169,9 +3169,7 @@ const c = (db.competitions || []).find(x =>
     finishedPanel.innerHTML = renderGroupedFixtures(finishedFixtures);
   }
 
-  if(finishedPanel) finishedPanel.innerHTML=finishedFixtures.length?finishedFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma partida finalizada ainda.</div>';
- 
- 
+  
   const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
   (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
   const standings=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
