@@ -1964,6 +1964,8 @@ overflow: visible !important;
 const KEY='bidPoeiraoOfflineV1';
 const starter={competition:'BID Futebol Amador',competitions:[],activeCompetitionId:'',matches:[],teams:[],events:[],nextBid:1};
 var db=loadDb(), selectedTeam=db.teams[0]?.id||'';
+ window.db = db;
+window.selectedTeam = selectedTeam;
 function loadDb(){try{const raw=localStorage.getItem(KEY);if(raw){const x=JSON.parse(raw);if(x&&Array.isArray(x.teams)&&Array.isArray(x.events)){if(!Array.isArray(x.matches))x.matches=[];if(!Array.isArray(x.competitions))x.competitions=[];if(!x.activeCompetitionId)x.activeCompetitionId=x.competitions[0]?.id||'';if(!x.competition)x.competition='BID Futebol Amador';return x}}}catch(e){}return structuredClone(starter)}
 function removeLargeInlineImages(value){
  if(Array.isArray(value)) return value.map(removeLargeInlineImages);
