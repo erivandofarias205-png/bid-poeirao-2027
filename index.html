@@ -2400,7 +2400,7 @@ function renderMatches(){
    }catch(error){console.error('Erro ao excluir partida:',error);alert('Não foi possível excluir a partida. Ela foi mantida. Detalhe: '+(error?.message||error));}
    finally{b.disabled=false}
  });
- document.querySelectorAll('[data-edit-match]').forEach(b=>b.onclick=()=>{const m=db.matches.find(x=>String(x.id)===b.dataset.editMatch);if(!m)return;$('matchDate').value=m.date||'';$('matchRound').value=m.round||'';$('matchFormat').value=m.formato||'unico';$('matchVenue').value=m.venue||'';$('matchHome').value=m.homeId||'';$('matchAway').value=m.awayId||'';$('matchHomeScore').value=m.homeScore??'';$('matchAwayScore').value=m.awayScore??'';$('matchStatus').value=m.status||'Agendado';$('matchTime').value=m.time||'';$('saveMatch').dataset.editId=m.id;$('saveMatch').textContent='Salvar alterações do jogo';showTab('games')});
+ document.querySelectorAll('[data-edit-match]').forEach(b=>b.onclick=()=>{const m=db.matches.find(x=>String(x.id)===b.dataset.editMatch);if(!m)return;$('matchDate').value=m.date||'';$('matchRound').value=m.round||'';$('matchFormat').value=m.formato||'unico';$('matchVenue').value=m.venue||'';$('matchHome').value=m.homeId||'';$('matchAway').value=m.awayId||'';$('matchHomeScore').value=m.homeScore??'';$('matchAwayScore').value=m.awayScore??'';$('matchStatus').value=m.status||'Agendado';$('matchTime').value=m.time||'';$('saveMatch').dataset.editId=m.id;$('saveMatch').textContent='Salvar alterações do jogo';showTab('admin')});
  const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
  (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{
   const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);
@@ -2466,7 +2466,7 @@ else {
 }
     if(result.error)throw result.error;
    button.dataset.editId='';button.textContent='Adicionar jogo à tabela';
-   await loadSupabaseMatches();showTab('games');
+   await loadSupabaseMatches();showTab('admin');
    alert(old?.dbId?'Partida atualizada no Supabase e disponível nos dispositivos.':'Partida salva no Supabase e disponível nos dispositivos.');
  }catch(error){console.error('Falha ao salvar partida no Supabase:',error);alert('Não foi possível salvar a partida no Supabase. Nenhuma confirmação foi dada. Detalhe: '+(error?.message||error));}
   finally{button.disabled=false}
