@@ -2821,7 +2821,11 @@ $p('phaseCompetitionSelect')?.addEventListener('change', () => {
  });
  
  $p('manualGroupSave')?.addEventListener('click', async () => {
-   const c = comp();
+ const selectedId = $p('phaseCompetitionSelect')?.value || db.activeCompetitionId;
+const c = (db.competitions || []).find(x =>
+  String(x.id) === String(selectedId) ||
+  String(x.dbId || '') === String(selectedId)
+) || null;
  
    if (!c) {
      alert('Selecione uma competição.');
