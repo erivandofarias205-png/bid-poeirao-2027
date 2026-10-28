@@ -2989,6 +2989,91 @@ const c = (db.competitions || []).find(x =>
     return (db.teams||[]).find(t=>String(t.id)===String(id)||String(t.dbId)===String(id)) || (db.teams||[]).find(t=>String(t.name||t.nome||'').trim().toLowerCase()===String(name).trim().toLowerCase()) || {};
   };
   const crest=(team)=>team.logo||team.escudo_url||team.escudoUrl||'';
+  
+  // Incluir no painel público as fases eliminatórias salvas na competição.
+  const publicComp = activeCompetition();
+
+  if (publicComp) {
+    const phaseTies = [
+      ...(publicComp.knockoutTies || []).map(t => ({
+        ...t,
+        publicRound: t.round || 'Oitavas de final'
+      })),
+      ...(publicComp.quarterFinalTies || []).map(t => ({
+        ...t,
+        publicRound: 'Quartas de final'
+      })),
+      ...(publicComp.semiFinalTies || []).map(t => ({
+        ...t,
+        publicRound: 'Semifinais'
+      })),
+      ...(publicComp.thirdPlaceTie ? [{
+        ...publicComp.thirdPlaceTie,
+        publicRound: 'Disputa de terceiro lugar'
+      }] : []),
+      ...(publicComp.finalMatchTie ? [{
+        ...publicComp.finalMatchTie,
+        publicRound: 'Final'
+      }] : [])
+    ];
+
+    const findPhaseTeam = id =>
+      (db.teams || []).find(t =>
+        String(t.id) === String(id) ||
+        String(t.dbId || '') === String(id)
+      );
+
+    phaseTies.forEach(tie => {
+      if (!tie || !tie.a || !tie.b) return;
+
+      const home = findPhaseTeam(tie.a);
+      const away = findPhaseTeam(tie.b);
+
+      const date = tie.date1 || tie.date || '';
+      const time = tie.time1 || tie.time || '';
+      const venue = tie.venue1 || tie.venue || '';
+      const round = tie.publicRound;
+
+      // Evitar duplicar um confronto que já esteja nos jogos oficiais.
+      const alreadyExists = fixtures.some(m => {
+        const sameTeams =
+          (String(m.homeId) === String(home?.id || tie.a) &&
+           String(m.awayId) === String(away?.id || tie.b)) ||
+          (String(m.homeId) === String(away?.id || tie.b) &&
+           String(m.awayId) === String(home?.id || tie.a));
+
+        return sameTeams &&
+          String(m.round || '').toLowerCase() === round.toLowerCase() &&
+          String(m.date || '') === String(date || '');
+      });
+
+      if (alreadyExists) return;
+
+      fixtures.push({
+        id: `phase-${round}-${tie.a}-${tie.b}`,
+        homeId: home?.id || tie.a,
+        homeName: home?.name || 'Equipe',
+        awayId: away?.id || tie.b,
+        awayName: away?.name || 'Equipe',
+        date,
+        time,
+        venue,
+        round,
+        homeScore: tie.score1A ?? null,
+        awayScore: tie.score1B ?? null,
+        status: String(tie.status || 'Agendado')
+          .toLowerCase()
+          .includes('finaliz')
+            ? 'Finalizado'
+            : 'Agendado',
+        competitionId: String(publicComp.id),
+        competitionDbId: publicComp.dbId,
+        competitionName: publicComp.name || '',
+        competitionLogo: publicComp.logo || ''
+      });
+    });
+  }
+
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
   const renderFixtureCard=(m)=>{
     const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';
