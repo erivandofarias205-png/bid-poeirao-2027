@@ -1990,10 +1990,11 @@ function cpfMask(s){const raw=String(s||'').trim();if(/^XXX[.\s-]*\d{3}[.\s-]*\d
 function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))}
 function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
 
+
 function teamBelongsToActiveCompetition(t) {
   const comp = activeCompetition();
 
-  // Se não houver competição ativa, mostrar a base toda.
+  // Sem competição ativa, mostrar todas as equipes.
   if (!comp) return true;
 
   const ids = [
@@ -2027,18 +2028,18 @@ function teamBelongsToActiveCompetition(t) {
     `${comp.name || ''} ${comp.season || ''}`
   ].filter(Boolean).map(v => String(v).trim().toLowerCase());
 
-  if (direct.some(v => names.includes(v.trim().toLowerCase()))) {
-    return true;
-  }
+  return direct.some(v => names.includes(v.trim().toLowerCase()));
+}
 
-  return false;
- 
+// Esta função precisa ficar fora das outras funções.
 function activeCompetitionTeams() {
   return (db.teams || []).filter(teamBelongsToActiveCompetition);
 }
+
+function normalizeAthleteSearch(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
-function normalizeAthleteSearch(value){return String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
-function searchAthletes(){
+  function searchAthletes(){
  const input=$('athleteSearchInput');if(!input)return;
  const query=normalizeAthleteSearch(input.value),results=$('athleteSearchResults');
  if(!query){results.innerHTML='<div class="empty">Digite CPF, BID ou nome para pesquisar.</div>';return}
@@ -2047,6 +2048,11 @@ function searchAthletes(){
    const fields=[p.name,p.id,p.cpf,p.sportsName].map(normalizeAthleteSearch);
    if(fields.some(v=>v.includes(query)))found.push({p,t});
  }));
+ function activeCompetitionTeams() {
+  return (db.teams || []).filter(function(team) {
+    return teamBelongsToActiveCompetition(team);
+  });
+}
  results.innerHTML=found.length?found.map(({p,t})=>`<button class="team" type="button" data-search-athlete="${esc(p.id)}"><span class="crest">${(t.logo||t.escudo_url)?`<img src="${esc(t.logo||t.escudo_url)}" alt="">`:'⚽'}</span><span style="min-width:0;flex:1"><span class="teamname">${esc(p.name)}</span><span class="teammeta">BID ${esc(p.id)} · ${esc(t.name)} · CPF ${esc(cpfMask(p.cpf))}</span></span><span class="status info">Abrir ficha</span></button>`).join(''):'<div class="empty">Nenhum atleta encontrado com esses dados.</div>';
  results.querySelectorAll('[data-search-athlete]').forEach(b=>b.addEventListener('click',()=>{renderProfile(b.dataset.searchAthlete);$('profileContent').scrollIntoView({behavior:'smooth',block:'start'})}));
 }
