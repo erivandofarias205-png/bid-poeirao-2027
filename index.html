@@ -3054,7 +3054,53 @@ const c = (db.competitions || []).find(x =>
         if(a[0]==='Sem grupo')return 1;if(b[0]==='Sem grupo')return -1;
         return a[0].localeCompare(b[0],'pt-BR',{numeric:true});
       });
-      tables.innerHTML=orderedGroups.map(([g,list])=>tableHTML(g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
+     
+tables.innerHTML=orderedGroups.map(([g,list])=>{
+  const title=g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`;
+  const groupTeams=list.map(x=>x.team);
+
+  const groupMatches=(db.matches||[])
+    .filter(matchBelongsToActiveCompetition)
+    .filter(m=>{
+      const home=teamForMatch(m,'home');
+      const away=teamForMatch(m,'away');
+      return groupOfPublic(home)===g &&
+             groupOfPublic(away)===g;
+    })
+    .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+
+  const resultsHTML=`
+    <div class="group-results">
+      <div class="group-results-title">RESULTADOS DO ${esc(title.toUpperCase())}</div>
+      ${groupMatches.length ? groupMatches.map(m=>{
+        const home=teamForMatch(m,'home');
+        const away=teamForMatch(m,'away');
+        const hl=logoOf(home);
+        const al=logoOf(away);
+        const done=String(m.status||'').toLowerCase().includes('finaliz')
+          && m.homeScore!==null && m.awayScore!==null
+          && m.homeScore!=='' && m.awayScore!=='';
+        return `
+          <div class="group-result-card">
+            <div class="group-result-team">
+              ${hl?`<img src="${esc(hl)}" alt="">`:''}
+              <b>${esc(m.homeName||home.name||'A definir')}</b>
+            </div>
+            <div class="group-result-center">
+              <strong>${done?esc(m.homeScore)+' × '+esc(m.awayScore):'— × —'}</strong>
+              <small>${done?'FINALIZADO':esc(m.status||'AGENDADO')}</small>
+              <small>${m.date?esc(dateBR(m.date)):'Data a definir'}${m.time?' · '+esc(m.time):''}</small>
+            </div>
+            <div class="group-result-team away">
+              <b>${esc(m.awayName||away.name||'A definir')}</b>
+              ${al?`<img src="${esc(al)}" alt="">`:''}
+            </div>
+          </div>`;
+      }).join(''):'<div class="empty">Nenhum jogo cadastrado para este grupo.</div>'}
+    </div>`;
+
+  return tableHTML(title,list)+resultsHTML;
+}).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
     }else{
       tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
     }
@@ -6471,6 +6517,107 @@ tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
 @media(max-width:560px){
   #competitionPhaseManager #phaseTies{
     grid-template-columns:1fr;
+  }
+}
+</style>
+ 
+<style id="group-results-visual">
+.group-results {
+  margin: 0 0 22px;
+  overflow: hidden;
+  border: 1px solid #59491e;
+  border-radius: 0 0 12px 12px;
+  background: #080d17;
+}
+
+.group-results-title {
+  padding: 13px 10px;
+  background: linear-gradient(90deg, #d4ad35, #f1d36b, #b88d20);
+  color: #101010;
+  font-size: 15px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: .5px;
+}
+
+.group-result-card {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 110px minmax(0,1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid #263247;
+}
+
+.group-result-card:last-child {
+  border-bottom: 0;
+}
+
+.group-result-team {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  color: #fff;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.group-result-team.away {
+  justify-content: flex-start;
+}
+
+.group-result-team img {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.group-result-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.group-result-center strong {
+  color: #f2ce58;
+  font-size: 25px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.group-result-center small {
+  color: #b9c3d4;
+  font-size: 10px;
+}
+
+@media(max-width:600px) {
+  .group-result-card {
+    grid-template-columns: minmax(0,1fr) 78px minmax(0,1fr);
+    gap: 5px;
+    padding: 10px 6px;
+  }
+
+  .group-result-team {
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .group-result-team img {
+    width: 23px;
+    height: 23px;
+    flex-basis: 23px;
+  }
+
+  .group-result-center strong {
+    font-size: 20px;
   }
 }
 </style>
