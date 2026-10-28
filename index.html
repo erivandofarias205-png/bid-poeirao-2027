@@ -3125,42 +3125,83 @@ const c = (db.competitions || []).find(x =>
     return 7;
   };
 
-  const renderGroupedFixtures = list => {
-    if (!list.length) {
-      return '<div class="empty">Nenhuma partida cadastrada.</div>';
+
+const renderGroupedFixtures = list => {
+  if (!list.length) {
+    return '<div class="empty">Nenhuma partida cadastrada.</div>';
+  }
+
+  const phaseInfo = m => {
+    const raw = String(m.round || m.fase || '').trim();
+    const text = raw.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase();
+
+    if (text.includes('TERCEIRO')) {
+      return { priority: 2, name: 'DISPUTA DE TERCEIRO LUGAR' };
     }
 
-    const ordered = [...list].sort((a, b) =>
-      phasePriority(a) - phasePriority(b) ||
+    if (text.includes('SEMI')) {
+      return { priority: 3, name: 'SEMIFINAIS' };
+    }
+
+    if (text.includes('QUART')) {
+      return { priority: 4, name: 'QUARTAS DE FINAL' };
+    }
+
+    if (text.includes('OITAV')) {
+      return { priority: 5, name: 'OITAVAS DE FINAL' };
+    }
+
+    if (text.includes('FINAL') && !text.includes('GRUPO')) {
+      return { priority: 1, name: 'FINAL' };
+    }
+
+    if (
+      text.includes('GRUPO') ||
+      text.includes('RODADA') ||
+      text.includes('FASE DE GRUPOS')
+    ) {
+      return {
+        priority: 6,
+        name: 'PRIMEIRA FASE — FASE DE GRUPOS'
+      };
+    }
+
+    return {
+      priority: 7,
+      name: raw || 'OUTRAS PARTIDAS'
+    };
+  };
+
+  const ordered = [...list].sort((a, b) => {
+    const pa = phaseInfo(a).priority;
+    const pb = phaseInfo(b).priority;
+
+    return pa - pb ||
       String(a.date || '9999-12-31').localeCompare(
         String(b.date || '9999-12-31')
       ) ||
-      String(a.time || '').localeCompare(String(b.time || ''))
-    );
+      String(a.time || '').localeCompare(String(b.time || ''));
+  });
 
-    let previousPhase = null;
-    let html = '';
+  let previousPhase = null;
+  let html = '';
 
-    ordered.forEach(m => {
-      const priority = phasePriority(m);
-            const phaseName = priority === 1 ? 'FINAL'
-        : priority === 2 ? 'DISPUTA DE TERCEIRO LUGAR'
-        : priority === 3 ? 'SEMIFINAIS'
-        : priority === 4 ? 'QUARTAS DE FINAL'
-        : priority === 5 ? 'OITAVAS DE FINAL'
-        : priority === 6 ? 'PRIMEIRA FASE — FASE DE GRUPOS'
-        : (m.round || 'OUTRAS PARTIDAS').toUpperCase();
- 
-      if (phaseName !== previousPhase) {
-        html += `<div class="fixture-phase-heading">${esc(phaseName)}</div>`;
-        previousPhase = phaseName;
-      }
+  ordered.forEach(m => {
+    const phase = phaseInfo(m);
 
-      html += renderFixtureCard(m);
-    });
+    if (phase.name !== previousPhase) {
+      html += `<div class="fixture-phase-heading">${esc(phase.name)}</div>`;
+      previousPhase = phase.name;
+    }
 
-    return html;
-  };
+    html += renderFixtureCard(m);
+  });
+
+  return html;
+};
+
 
   $('frontFixtures').innerHTML = renderGroupedFixtures(upcomingFixtures);
 
