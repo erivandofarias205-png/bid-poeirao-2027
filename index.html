@@ -3613,11 +3613,33 @@ thirdPlaceTie: cfg.thirdPlaceTie || null,
 
       if (active) db.competition = active.name;
 
-      saveDb();
+      
+saveDb();
 
-      if (typeof renderAll === 'function') renderAll();
+if (typeof renderAll === 'function') renderAll();
 
-      return;
+// Atualiza o seletor de competição depois de carregar o Supabase.
+const phaseSelect = document.getElementById('phaseCompetitionSelect');
+
+if (phaseSelect) {
+  phaseSelect.innerHTML = '';
+
+  (db.competitions || []).forEach(c => {
+    const option = document.createElement('option');
+    option.value = String(c.id);
+    option.textContent = `${c.name || 'Competição'} · ${c.season || ''}`;
+    option.selected = String(c.id) === String(db.activeCompetitionId);
+    phaseSelect.appendChild(option);
+  });
+
+  if (db.activeCompetitionId) {
+    phaseSelect.value = String(db.activeCompetitionId);
+    phaseSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
+return;
+
     } catch (error) {
       lastError = error;
     }
