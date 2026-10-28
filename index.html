@@ -1964,8 +1964,6 @@ overflow: visible !important;
 const KEY='bidPoeiraoOfflineV1';
 const starter={competition:'BID Futebol Amador',competitions:[],activeCompetitionId:'',matches:[],teams:[],events:[],nextBid:1};
 var db=loadDb(), selectedTeam=db.teams[0]?.id||'';
- window.db = db;
-window.selectedTeam = selectedTeam;
 function loadDb(){try{const raw=localStorage.getItem(KEY);if(raw){const x=JSON.parse(raw);if(x&&Array.isArray(x.teams)&&Array.isArray(x.events)){if(!Array.isArray(x.matches))x.matches=[];if(!Array.isArray(x.competitions))x.competitions=[];if(!x.activeCompetitionId)x.activeCompetitionId=x.competitions[0]?.id||'';if(!x.competition)x.competition='BID Futebol Amador';return x}}}catch(e){}return structuredClone(starter)}
 function removeLargeInlineImages(value){
  if(Array.isArray(value)) return value.map(removeLargeInlineImages);
@@ -3115,25 +3113,6 @@ const c = (db.competitions || []).find(x =>
   });
   
   const phasePriority = m => {
-  const r = String(m.round || '').toLowerCase();
-
-  if (r.includes('terceiro')) return 1;
-
-  if (
-    r.includes('final') &&
-    !r.includes('semi') &&
-    !r.includes('quart') &&
-    !r.includes('oitav') &&
-    !r.includes('terceiro')
-  ) return 2;
-
-  if (r.includes('semi')) return 3;
-  if (r.includes('quart')) return 4;
-  if (r.includes('oitav') || r.includes('16 avos')) return 5;
-  if (r.includes('grupo') || r.includes('rodada')) return 6;
-
-  return 7;
-};
     const r = String(m.round || '').toLowerCase();
 
     if (r.includes('final') && !r.includes('terceiro')) return 1;
@@ -3190,7 +3169,9 @@ const c = (db.competitions || []).find(x =>
     finishedPanel.innerHTML = renderGroupedFixtures(finishedFixtures);
   }
 
-  
+  if(finishedPanel) finishedPanel.innerHTML=finishedFixtures.length?finishedFixtures.map(renderFixtureCard).join(''):'<div class="empty">Nenhuma partida finalizada ainda.</div>';
+ 
+ 
   const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
   (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);h.j++;a.j++;h.gp+=hs;h.gc+=as;a.gp+=as;a.gc+=hs;if(hs>as){h.v++;h.pts+=3;a.d++}else if(hs<as){a.v++;a.pts+=3;h.d++}else{h.e++;a.e++;h.pts++;a.pts++}});
   const standings=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
@@ -3764,18 +3745,10 @@ thirdPlaceTie: cfg.thirdPlaceTie || null,
 // Carrega equipes, vínculos de competição e atletas do Supabase.
 async function loadSupabaseTeams() {
   try {
-    const appDb = window.db || db;
-
-    if (!appDb) {
-      throw new Error('A base local do aplicativo não foi inicializada.');
-    }
-
-    const { data, error } = await supabaseClient
-      .from('EQUIPES')
-      .select('id,nome,escudo_url')
-      .order('nome');
-
+    const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
+
+
 
 
     let associationRows = [];
@@ -3954,14 +3927,7 @@ photo: row.foto_url || '',
 
 
 
-const appDb = window.db;
-
-if (!appDb) {
-  throw new Error('A base local do aplicativo não foi inicializada.');
-}
-
-window.db = appDb;
-appDb.teams = remoteTeams;
+    db.teams = remoteTeams;
     if (!findTeam(selectedTeam) || !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
       selectedTeam = activeCompetitionTeams()[0]?.id || '';
     }
