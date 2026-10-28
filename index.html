@@ -1989,41 +1989,50 @@ function cpfDigits(s){return String(s||'').replace(/\D/g,'')}
 function cpfMask(s){const raw=String(s||'').trim();if(/^XXX[.\s-]*\d{3}[.\s-]*\d{3}[-.\s]*\d{2}$/i.test(raw)){const d=raw.replace(/\D/g,'');return 'XXX.'+d.slice(-8,-5)+'.'+d.slice(-5,-2)+'-'+d.slice(-2)}const d=cpfDigits(raw);if(d.length===11)return 'XXX.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11);if(d.length===8)return 'XXX.'+d.slice(0,3)+'.'+d.slice(3,6)+'-'+d.slice(6,8);return 'XXX.***.***-**'}
 function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))}
 function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
-function teamBelongsToActiveCompetition(t){
- const comp=activeCompetition();
- // Sem seleção explícita, não misturar competições: usar a competição ativa; se não houver nenhuma cadastrada, mostrar a base toda.
- if(!comp)return !(db.competitions||[]).length;
- const ids=[...(Array.isArray(t.competitionIds)?t.competitionIds:[]),...(Array.isArray(t.competition_ids)?t.competition_ids:[])].map(String);
- const direct=[t.competitionId,t.competition_id,t.competitionDbId,t.competicao_id,t.competition].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
- const compIds=[comp.id,comp.dbId,comp.db_id].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
- if(ids.some(id=>compIds.includes(id))||direct.some(id=>compIds.includes(id)))return true;
- // Compatibilidade com registros antigos que guardavam o nome da competição, não o ID.
- const names=[comp.name,`${comp.name||''} ${comp.season||''}`].filter(Boolean).map(x=>String(x).trim().toLowerCase());
- return direct.some(v=>names.includes(v.trim().toLowerCase()));
+
+function teamBelongsToActiveCompetition(t) {
+  const comp = activeCompetition();
+
+  // Se não houver competição ativa, mostrar a base toda.
+  if (!comp) return true;
+
+  const ids = [
+    ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
+    ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
+  ].filter(v => v != null && v !== '').map(String);
+
+  const direct = [
+    t.competitionId,
+    t.competition_id,
+    t.competitionDbId,
+    t.competicao_id,
+    t.competition
+  ].filter(v => v != null && v !== '').map(String);
+
+  const compIds = [
+    comp.id,
+    comp.dbId,
+    comp.db_id
+  ].filter(v => v != null && v !== '').map(String);
+
+  if (
+    ids.some(id => compIds.includes(id)) ||
+    direct.some(id => compIds.includes(id))
+  ) {
+    return true;
+  }
+
+  const names = [
+    comp.name,
+    `${comp.name || ''} ${comp.season || ''}`
+  ].filter(Boolean).map(v => String(v).trim().toLowerCase());
+
+  if (direct.some(v => names.includes(v.trim().toLowerCase()))) {
+    return true;
+  }
+
+  return false;
 }
-function activeCompetitionTeams(){return (db.teams||[]).filter(teamBelongsToActiveCompetition)}
-function matchBelongsToActiveCompetition(m){
- const comp=activeCompetition();if(!comp)return !(db.competitions||[]).length;
- const matchComp=[m.competitionId,m.competicao_id,m.competitionDbId].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
- const compIds=[comp.id,comp.dbId,comp.db_id].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
- if(matchComp.length)return matchComp.some(id=>compIds.includes(id));
- // Partidas antigas sem ID de competição só aparecem se ambas as equipes estiverem vinculadas à competição selecionada.
- return teamBelongsToActiveCompetition(findTeam(m.homeId)||{})&&teamBelongsToActiveCompetition(findTeam(m.awayId)||{});
-}
-function findAth(id){for(const t of db.teams){const p=t.players.find(p=>p.id===id);if(p)return {p,t}}return null}
-function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
-function showTab(name){
- const views=['public','admin','games','game','profile','classification','teams'];
- views.forEach(x=>{const el=$(x+'View');if(el)el.classList.toggle('hidden',x!==name)});
- document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-}
-document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
-(function setupDedicatedViews(){
- const classification=$('classificationView'),teams=$('teamsView');
- ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
- ['teamPanel','rosterPanel'].forEach(id=>{const el=$(id);if(el)teams.appendChild(el)});
- showTab('games');
-})();
 function normalizeAthleteSearch(value){return String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
 function searchAthletes(){
  const input=$('athleteSearchInput');if(!input)return;
