@@ -1991,46 +1991,58 @@ function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(
 function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
 
 
+
 function teamBelongsToActiveCompetition(t) {
   const comp = activeCompetition();
 
-  // Sem competição ativa, mostrar todas as equipes.
   if (!comp) return true;
-
-  const ids = [
-    ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
-    ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
-  ].filter(v => v != null && v !== '').map(String);
-
-  const direct = [
-    t.competitionId,
-    t.competition_id,
-    t.competitionDbId,
-    t.competicao_id,
-    t.competition
-  ].filter(v => v != null && v !== '').map(String);
 
   const compIds = [
     comp.id,
     comp.dbId,
     comp.db_id
-  ].filter(v => v != null && v !== '').map(String);
+  ]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
 
+  const teamIds = [
+    t.competitionId,
+    t.competition_id,
+    t.competitionDbId,
+    t.competicao_id,
+    t.competition
+  ]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  const teamIdsArray = [
+    ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
+    ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
+  ]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  // Comparar todos os IDs conhecidos da competição.
   if (
-    ids.some(id => compIds.includes(id)) ||
-    direct.some(id => compIds.includes(id))
+    compIds.some(id =>
+      teamIds.includes(id) || teamIdsArray.includes(id)
+    )
   ) {
     return true;
   }
 
-  const names = [
+  // Compatibilidade com vínculos antigos por nome.
+  const nomes = [
     comp.name,
     `${comp.name || ''} ${comp.season || ''}`
-  ].filter(Boolean).map(v => String(v).trim().toLowerCase());
+  ]
+    .filter(Boolean)
+    .map(v => String(v).trim().toLowerCase());
 
-  return direct.some(v => names.includes(v.trim().toLowerCase()));
+  return teamIds.some(v =>
+    nomes.includes(v.trim().toLowerCase())
+  );
 }
-
 // Esta função precisa ficar fora das outras funções.
 function activeCompetitionTeams() {
   return (db.teams || []).filter(teamBelongsToActiveCompetition);
