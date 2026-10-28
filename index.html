@@ -3226,7 +3226,9 @@ if (text.includes('TERCEIRO')) {
     $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
     if(isKnockout){
       const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
-      tables.innerHTML=rounds.length?rounds.map(round=>{const ms=(db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.round||m.fase||'Fase a definir')===round).sort((a,b)=>(a.date||'').localeCompare(b.date||''));return `<div class="classification-subtable"><div class="classification-subtitle">${esc(round)}</div><div class="knockout-matches">${ms.map(m=>{const h=teamForMatch(m,'home'),a=teamForMatch(m,'away'),hl=logoOf(h),al=logoOf(a),done=m.status==='Finalizado'&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';return `<div class="knockout-match"><span class="knockout-team">${hl?`<img src="${esc(hl)}" alt="">`:''}<b>${esc(m.homeName||h.name||'A definir')}</b></span><strong class="knockout-score">${done?esc(m.homeScore)+' × '+esc(m.awayScore):'×'}</strong><span class="knockout-team">${al?`<img src="${esc(al)}" alt="">`:''}<b>${esc(m.awayName||a.name||'A definir')}</b></span><small>${esc(m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir')} ${esc(m.time||'')}</small></div>`}).join('')||'<div class="empty">Nenhum confronto cadastrado nesta fase.</div>'}</div></div>`}).join(''):'<div class="empty">Cadastre os jogos e informe a fase/rodada para montar as tabelas do mata-mata.</div>';
+     const ms=(db.matches||[])
+  .filter(matchBelongsToActiveCompetition)
+  .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
     }else if(!isLeague){
       // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
       // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
