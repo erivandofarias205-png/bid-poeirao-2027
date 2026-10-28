@@ -3226,8 +3226,8 @@ if (text.includes('TERCEIRO')) {
     $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
     if(isKnockout){
       const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
-     const ms=(db.matches||[])
-  .filter(matchBelongsToActiveCompetition)
+    const ms=(db.matches||[])
+  .filter(m=>m && m.id!=null)
   .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
     }else if(!isLeague){
       // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
