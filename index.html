@@ -3137,21 +3137,21 @@ const renderGroupedFixtures = list => {
       .replace(/[\u0300-\u036f]/g, '')
       .toUpperCase();
 
-    if (text.includes('TERCEIRO')) {
-      return { priority: 2, name: 'DISPUTA DE TERCEIRO LUGAR' };
-    }
-
     if (text.includes('SEMI')) {
-      return { priority: 3, name: 'SEMIFINAIS' };
-    }
+  return { priority: 2, name: 'SEMIFINAIS' };
+}
 
-    if (text.includes('QUART')) {
-      return { priority: 4, name: 'QUARTAS DE FINAL' };
-    }
+if (text.includes('QUART')) {
+  return { priority: 3, name: 'QUARTAS DE FINAL' };
+}
 
-    if (text.includes('OITAV')) {
-      return { priority: 5, name: 'OITAVAS DE FINAL' };
-    }
+if (text.includes('OITAV')) {
+  return { priority: 4, name: 'OITAVAS DE FINAL' };
+}
+
+if (text.includes('TERCEIRO')) {
+  return { priority: 5, name: 'DISPUTA DE TERCEIRO LUGAR' };
+}
 
     if (text.includes('FINAL') && !text.includes('GRUPO')) {
       return { priority: 1, name: 'FINAL' };
