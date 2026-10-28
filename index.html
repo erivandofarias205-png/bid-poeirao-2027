@@ -3054,53 +3054,7 @@ const c = (db.competitions || []).find(x =>
         if(a[0]==='Sem grupo')return 1;if(b[0]==='Sem grupo')return -1;
         return a[0].localeCompare(b[0],'pt-BR',{numeric:true});
       });
-     
-tables.innerHTML=orderedGroups.map(([g,list])=>{
-  const title=g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`;
-  const groupTeams=list.map(x=>x.team);
-
-  const groupMatches=(db.matches||[])
-    .filter(matchBelongsToActiveCompetition)
-    .filter(m=>{
-      const home=teamForMatch(m,'home');
-      const away=teamForMatch(m,'away');
-      return groupOfPublic(home)===g &&
-             groupOfPublic(away)===g;
-    })
-    .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
-
-  const resultsHTML=`
-    <div class="group-results">
-      <div class="group-results-title">RESULTADOS DO ${esc(title.toUpperCase())}</div>
-      ${groupMatches.length ? groupMatches.map(m=>{
-        const home=teamForMatch(m,'home');
-        const away=teamForMatch(m,'away');
-        const hl=logoOf(home);
-        const al=logoOf(away);
-        const done=String(m.status||'').toLowerCase().includes('finaliz')
-          && m.homeScore!==null && m.awayScore!==null
-          && m.homeScore!=='' && m.awayScore!=='';
-        return `
-          <div class="group-result-card">
-            <div class="group-result-team">
-              ${hl?`<img src="${esc(hl)}" alt="">`:''}
-              <b>${esc(m.homeName||home.name||'A definir')}</b>
-            </div>
-            <div class="group-result-center">
-              <strong>${done?esc(m.homeScore)+' × '+esc(m.awayScore):'— × —'}</strong>
-              <small>${done?'FINALIZADO':esc(m.status||'AGENDADO')}</small>
-              <small>${m.date?esc(dateBR(m.date)):'Data a definir'}${m.time?' · '+esc(m.time):''}</small>
-            </div>
-            <div class="group-result-team away">
-              <b>${esc(m.awayName||away.name||'A definir')}</b>
-              ${al?`<img src="${esc(al)}" alt="">`:''}
-            </div>
-          </div>`;
-      }).join(''):'<div class="empty">Nenhum jogo cadastrado para este grupo.</div>'}
-    </div>`;
-
-  return tableHTML(title,list)+resultsHTML;
-}).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
+      tables.innerHTML=orderedGroups.map(([g,list])=>tableHTML(g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
     }else{
       tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
     }
@@ -3613,33 +3567,11 @@ thirdPlaceTie: cfg.thirdPlaceTie || null,
 
       if (active) db.competition = active.name;
 
-      
-saveDb();
+      saveDb();
 
-if (typeof renderAll === 'function') renderAll();
+      if (typeof renderAll === 'function') renderAll();
 
-// Atualiza o seletor de competição depois de carregar o Supabase.
-const phaseSelect = document.getElementById('phaseCompetitionSelect');
-
-if (phaseSelect) {
-  phaseSelect.innerHTML = '';
-
-  (db.competitions || []).forEach(c => {
-    const option = document.createElement('option');
-    option.value = String(c.id);
-    option.textContent = `${c.name || 'Competição'} · ${c.season || ''}`;
-    option.selected = String(c.id) === String(db.activeCompetitionId);
-    phaseSelect.appendChild(option);
-  });
-
-  if (db.activeCompetitionId) {
-    phaseSelect.value = String(db.activeCompetitionId);
-    phaseSelect.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-}
-
-return;
-
+      return;
     } catch (error) {
       lastError = error;
     }
@@ -3835,78 +3767,22 @@ photo: row.foto_url || '',
           t.players.push(person);
         }
       });
-  
-    } catch(e) {
-      console.warn('Não foi possível recuperar diretores/musa locais', e);
-    }
+    } catch(e) { console.warn('Não foi possível recuperar diretores/musa locais', e); }
 
-    // Restaurar as equipes carregadas do Supabase.
+
+
+
     db.teams = remoteTeams;
-
-    if (
-      !findTeam(selectedTeam) ||
-      !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})
-    ) {
+    if (!findTeam(selectedTeam) || !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
       selectedTeam = activeCompetitionTeams()[0]?.id || '';
     }
-
     saveDb();
-
   } catch (error) {
-    console.error(
-      'Não foi possível carregar equipes/vínculos do Supabase:',
-      error
-    );
-
-    alert(
-      'Não foi possível carregar equipes e vínculos da competição. Detalhe: ' +
-      (error?.message || error)
-    );
+    console.error('Não foi possível carregar equipes/vínculos do Supabase:', error);
+    alert('Não foi possível carregar equipes e vínculos da competição. Detalhe: ' + (error?.message || error));
   }
 }
-
-// Limpeza das fases eliminatórias, mantendo os grupos.
-async function limparFasesEliminatorias(c) {
-  if (!c || !c.dbId) {
-    throw new Error('Selecione uma competição válida.');
-  }
-
-  const confirmar = confirm(
-    'Limpar os classificados e confrontos eliminatórios antigos de "' +
-    (c.name || 'competição selecionada') +
-    '"?\n\nOs grupos, as regras de classificação e os jogos oficiais serão preservados.'
-  );
-
-  if (!confirmar) return false;
-
-  const gruposPreservados = { ...(c.teamGroups || {}) };
-  const regrasPreservadas = { ...(c.phaseRules || {}) };
-  const opcoesPreservadas = { ...(c.phaseOptions || {}) };
-
-  c.qualifiers = [];
-  c.knockoutTies = [];
-  c.quarterFinalTies = [];
-  c.semiFinalTies = [];
-  c.finalMatchTie = null;
-  c.thirdPlaceTie = null;
-  c.phaseWinners = [];
-
-  c.teamQualifications = c.teamQualifications || {};
-  c.teamGroups = gruposPreservados;
-  c.phaseRules = regrasPreservadas;
-  c.phaseOptions = opcoesPreservadas;
-
-  await saveCompetitionPhaseConfig(c);
-  saveDb();
-
-  if (typeof renderAll === 'function') renderAll();
-
-  alert(
-    'Fases eliminatórias antigas limpas. Os grupos e os jogos oficiais foram preservados.'
-  );
-
-  return true;
-}
+(async function setupAdminLogin(){
   const panel = document.getElementById('adminLoginPanel');
   const protectedArea = document.getElementById('adminProtected');
   const emailInput = document.getElementById('adminEmail');
@@ -4913,85 +4789,7 @@ phaseWinners: c.phaseWinners || []
   Object.assign(c, configuracao);
   return true;
 }
- 
-const btnLimparFases = document.createElement('button');
-btnLimparFases.id = 'btnLimparFasesEliminatorias';
-btnLimparFases.type = 'button';
-btnLimparFases.className = 'danger';
-btnLimparFases.textContent = 'LIMPAR CLASSIFICADOS E FASES ANTIGAS';
-
-const seletorFases = $p('phaseCompetitionSelect');
-const painelFases = seletorFases?.closest('.panel');
-
-if (painelFases && !document.getElementById(btnLimparFases.id)) {
-  const areaBotoes = painelFases.querySelector('.actions') || painelFases;
-  areaBotoes.appendChild(btnLimparFases);
-}
-
-btnLimparFases.addEventListener('click', async () => {
-  const c = comp();
-  if (!c) {
-    alert('Selecione primeiro a competição que deseja limpar.');
-    return;
-  }
-
-  btnLimparFases.disabled = true;
-  try {
-    await limparFasesEliminatorias(c);
-  } catch (error) {
-    console.error('Erro ao limpar fases eliminatórias:', error);
-    alert(
-      'Não foi possível confirmar a limpeza no Supabase: ' +
-      (error.message || error)
-    );
-  } finally {
-    btnLimparFases.disabled = false;
-  }
-});
-
- const add=$p('addCompetition');const 
-  
-async function limparFasesEliminatorias(c) {
-  if (!c || !c.dbId) {
-    throw new Error('Selecione uma competição válida.');
-  }
-
-  const confirmar = confirm(
-    'Deseja limpar os classificados e as fases eliminatórias antigas de "' +
-    (c.name || 'competição selecionada') +
-    '"?\n\nOs jogos oficiais da fase de grupos, os resultados, as equipes e os grupos serão preservados.'
-  );
-
-  if (!confirmar) return false;
-
-  // Preserva as regras, opções e distribuição das equipes nos grupos.
-  c.qualifiers = [];
-  c.teamQualifications = {};
-  c.knockoutTies = [];
-  c.quarterFinalTies = [];
-  c.semiFinalTies = [];
-  c.finalMatchTie = null;
-  c.thirdPlaceTie = null;
-  c.phaseWinners = [];
-
-  // Salva a configuração limpa no Supabase.
-  await saveCompetitionPhaseConfig(c);
-
-  // Atualiza o armazenamento local e os painéis.
-  save();
-
-  if (typeof renderPhase === 'function') renderPhase();
-  if (typeof renderRoundOf16Qualifiers === 'function') renderRoundOf16Qualifiers();
-  if (typeof renderQuarterFinals === 'function') renderQuarterFinals();
-  if (typeof renderQuarterQualifiers === 'function') renderQuarterQualifiers();
-  if (typeof renderSemiFinals === 'function') renderSemiFinals();
-  if (typeof renderFinalMatch === 'function') renderFinalMatch();
-
-  alert('Classificados e fases eliminatórias antigas foram limpos. Os jogos oficiais dos grupos foram preservados.');
-
-  return true;
-}
-saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
+ const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
   document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;$p('newCompetitionTotalTeams').value =
   c.phaseOptions?.totalTeams ?? 18;
 
@@ -6673,107 +6471,6 @@ tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
 @media(max-width:560px){
   #competitionPhaseManager #phaseTies{
     grid-template-columns:1fr;
-  }
-}
-</style>
- 
-<style id="group-results-visual">
-.group-results {
-  margin: 0 0 22px;
-  overflow: hidden;
-  border: 1px solid #59491e;
-  border-radius: 0 0 12px 12px;
-  background: #080d17;
-}
-
-.group-results-title {
-  padding: 13px 10px;
-  background: linear-gradient(90deg, #d4ad35, #f1d36b, #b88d20);
-  color: #101010;
-  font-size: 15px;
-  font-weight: 900;
-  text-align: center;
-  letter-spacing: .5px;
-}
-
-.group-result-card {
-  display: grid;
-  grid-template-columns: minmax(0,1fr) 110px minmax(0,1fr);
-  align-items: center;
-  gap: 10px;
-  padding: 14px;
-  border-bottom: 1px solid #263247;
-}
-
-.group-result-card:last-child {
-  border-bottom: 0;
-}
-
-.group-result-team {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-width: 0;
-  color: #fff;
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-
-.group-result-team.away {
-  justify-content: flex-start;
-}
-
-.group-result-team img {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-  object-fit: contain;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.group-result-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  text-align: center;
-}
-
-.group-result-center strong {
-  color: #f2ce58;
-  font-size: 25px;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.group-result-center small {
-  color: #b9c3d4;
-  font-size: 10px;
-}
-
-@media(max-width:600px) {
-  .group-result-card {
-    grid-template-columns: minmax(0,1fr) 78px minmax(0,1fr);
-    gap: 5px;
-    padding: 10px 6px;
-  }
-
-  .group-result-team {
-    gap: 4px;
-    font-size: 10px;
-  }
-
-  .group-result-team img {
-    width: 23px;
-    height: 23px;
-    flex-basis: 23px;
-  }
-
-  .group-result-center strong {
-    font-size: 20px;
   }
 }
 </style>
