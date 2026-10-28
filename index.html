@@ -3519,13 +3519,7 @@ if (text.includes('TERCEIRO')) {
  // Editor de eventos diretamente na tabela de jogos: gols, cartões e participação.
  function refreshMatchEventChoices(preferredMatchId='', preferredTeamId=''){
   const ms=(db.matches||[])
-   console.log('PARTIDAS PARA EVENTOS:', ms.map(m => ({
-  id: m.id,
-  jogo: `${m.homeName} x ${m.awayName}`,
-  fase: m.round || m.fase,
-  competicao: m.competitionId
-})));
-  .filter(matchBelongsToActiveCompetition)
+   .filter(matchBelongsToActiveCompetition)
   .filter(m => m && m.id != null)
   .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
   const matchSel=$('matchEventMatch');if(!matchSel)return;const oldMatch=preferredMatchId||matchSel.value;
