@@ -1297,6 +1297,14 @@ overflow: visible !important;
   border: 1px solid #050505 !important;
 }
 </style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#080808">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BID Futebol Amador">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 </head>
 <body>
 <header>
@@ -6634,5 +6642,15 @@ tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
   }
 }
 </style>
+
+<script id="bid-pwa-register">
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./service-worker.js').catch(function (err) {
+      console.warn('BID PWA: não foi possível registrar o service worker.', err);
+    });
+  });
+}
+</script>
 </body>
 </html>
