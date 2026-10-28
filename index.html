@@ -3762,14 +3762,15 @@ thirdPlaceTie: cfg.thirdPlaceTie || null,
 
 
 // Carrega equipes, vínculos de competição e atletas do Supabase.
-  async function loadSupabaseTeams() {
-   const db = window.db;
-   
+    async function loadSupabaseTeams() {
+  const appDb = window.db;
+  if (!appDb) {
+    throw new Error('A base local do aplicativo não foi inicializada.');
+  }
+
   try {
-    const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
+       const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
-
-
 
 
     let associationRows = [];
@@ -3948,12 +3949,13 @@ photo: row.foto_url || '',
 
 
 
-    const appDb = window.db;
+const appDb = window.db;
 
 if (!appDb) {
   throw new Error('A base local do aplicativo não foi inicializada.');
 }
 
+window.db = appDb;
 appDb.teams = remoteTeams;
     if (!findTeam(selectedTeam) || !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
       selectedTeam = activeCompetitionTeams()[0]?.id || '';
