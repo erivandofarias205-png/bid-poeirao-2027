@@ -5017,7 +5017,12 @@ $p('phaseBuildQualifiers')?.addEventListener('click', async () => {
 
   // Acrescenta equipes marcadas manualmente como classificadas,
   // sem duplicar equipes já selecionadas.
-  const manual = tsForQualification(c);
+   // Preserva as equipes classificadas manualmente, como o Arsenal Santana.
+  const manual = st.filter(x =>
+    groupOf(x.team, c) === 'CLASSIFICADA' ||
+    c.teamQualifications?.[String(x.team.id)] ||
+    c.teamQualifications?.[String(x.team.dbId || '')]
+  );
   chosen.push(...manual);
 
   const unique = [...new Map(
