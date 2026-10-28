@@ -3763,6 +3763,8 @@ thirdPlaceTie: cfg.thirdPlaceTie || null,
 
 // Carrega equipes, vínculos de competição e atletas do Supabase.
   async function loadSupabaseTeams() {
+   const db = window.db;
+   
   try {
     const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
