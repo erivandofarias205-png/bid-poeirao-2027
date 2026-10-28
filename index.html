@@ -3841,35 +3841,54 @@ photo: row.foto_url || '',
 
 
     
-db.teams = remoteTeams;
 
-// Recupera os grupos já salvos na configuração da competição.
-const compAtivaGrupos = activeCompetition();
-const gruposSalvos = compAtivaGrupos?.teamGroups || {};
-
-db.teams.forEach(team => {
-  const grupoSalvo =
-    gruposSalvos[String(team.id)] ||
-    gruposSalvos[String(team.dbId)] ||
-    '';
-
-  // Só usa o grupo salvo como alternativa; não redistribui equipes.
-  if (grupoSalvo) {
-    team.group = grupoSalvo;
+async function limparFasesEliminatorias(c) {
+  if (!c || !c.dbId) {
+    throw new Error('Selecione uma competição válida.');
   }
-});
 
-if (
-  !findTeam(selectedTeam) ||
-  !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})
-) {
-  selectedTeam = activeCompetitionTeams()[0]?.id || '';
-}
+  const confirmar = confirm(
+    'Limpar os classificados e confrontos eliminatórios antigos de "' +
+    (c.name || 'competição selecionada') +
+    '"?\n\nOs grupos, as regras de classificação e os jogos oficiais serão preservados.'
+  );
 
-saveDb();
+  if (!confirmar) return false;
 
-if (typeof renderAll === 'function') {
-  renderAll();
+  // Guardar os grupos e as regras existentes.
+  const gruposPreservados = { ...(c.teamGroups || {}) };
+  const regrasPreservadas = { ...(c.phaseRules || {}) };
+  const opcoesPreservadas = { ...(c.phaseOptions || {}) };
+
+  // Limpar apenas os dados gerados das fases eliminatórias.
+  c.qualifiers = [];
+  c.knockoutTies = [];
+  c.quarterFinalTies = [];
+  c.semiFinalTies = [];
+  c.finalMatchTie = null;
+  c.thirdPlaceTie = null;
+  c.phaseWinners = [];
+
+  // Preservar as marcações de classificação manual.
+  // Elas não serão apagadas nesta primeira limpeza.
+  c.teamQualifications = c.teamQualifications || {};
+
+  c.teamGroups = gruposPreservados;
+  c.phaseRules = regrasPreservadas;
+  c.phaseOptions = opcoesPreservadas;
+
+  await saveCompetitionPhaseConfig(c);
+  saveDb();
+
+  if (typeof renderAll === 'function') renderAll();
+  if (typeof renderPhase === 'function') renderPhase();
+
+  alert(
+    'Configurações eliminatórias antigas limpas. ' +
+    'Os grupos, as regras e os jogos oficiais foram preservados.'
+  );
+
+  return true;
 }
 
   } catch (error) {
