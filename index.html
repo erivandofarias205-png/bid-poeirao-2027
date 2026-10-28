@@ -3840,11 +3840,38 @@ photo: row.foto_url || '',
 
 
 
-    db.teams = remoteTeams;
-    if (!findTeam(selectedTeam) || !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
-      selectedTeam = activeCompetitionTeams()[0]?.id || '';
-    }
-    saveDb();
+    
+db.teams = remoteTeams;
+
+// Recupera os grupos já salvos na configuração da competição.
+const compAtivaGrupos = activeCompetition();
+const gruposSalvos = compAtivaGrupos?.teamGroups || {};
+
+db.teams.forEach(team => {
+  const grupoSalvo =
+    gruposSalvos[String(team.id)] ||
+    gruposSalvos[String(team.dbId)] ||
+    '';
+
+  // Só usa o grupo salvo como alternativa; não redistribui equipes.
+  if (grupoSalvo) {
+    team.group = grupoSalvo;
+  }
+});
+
+if (
+  !findTeam(selectedTeam) ||
+  !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})
+) {
+  selectedTeam = activeCompetitionTeams()[0]?.id || '';
+}
+
+saveDb();
+
+if (typeof renderAll === 'function') {
+  renderAll();
+}
+
   } catch (error) {
     console.error('Não foi possível carregar equipes/vínculos do Supabase:', error);
     alert('Não foi possível carregar equipes e vínculos da competição. Detalhe: ' + (error?.message || error));
