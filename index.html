@@ -3113,6 +3113,25 @@ const c = (db.competitions || []).find(x =>
   });
   
   const phasePriority = m => {
+  const r = String(m.round || '').toLowerCase();
+
+  if (r.includes('terceiro')) return 1;
+
+  if (
+    r.includes('final') &&
+    !r.includes('semi') &&
+    !r.includes('quart') &&
+    !r.includes('oitav') &&
+    !r.includes('terceiro')
+  ) return 2;
+
+  if (r.includes('semi')) return 3;
+  if (r.includes('quart')) return 4;
+  if (r.includes('oitav') || r.includes('16 avos')) return 5;
+  if (r.includes('grupo') || r.includes('rodada')) return 6;
+
+  return 7;
+};
     const r = String(m.round || '').toLowerCase();
 
     if (r.includes('final') && !r.includes('terceiro')) return 1;
