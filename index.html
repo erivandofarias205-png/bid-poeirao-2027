@@ -3518,10 +3518,14 @@ if (text.includes('TERCEIRO')) {
  $('reset').addEventListener('click',()=>{if(confirm('Isso apaga as equipes, atletas e eventos guardados neste navegador. Deseja continuar?')){localStorage.removeItem(KEY);db=structuredClone(starter);selectedTeam=db.teams[0]?.id||'';saveDb();alert('Prévia restaurada com os dados demonstrativos.')}});
  // Editor de eventos diretamente na tabela de jogos: gols, cartões e participação.
  function refreshMatchEventChoices(preferredMatchId='', preferredTeamId=''){
-  const ms=(db.matches||[])
-   .filter(matchBelongsToActiveCompetition)
-  .filter(m => m && m.id != null)
-  .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  const allMatches=(db.matches||[]).filter(m=>m && m.id!=null);
+  const selectedMatch=preferredMatchId
+    ? allMatches.find(m=>String(m.id)===String(preferredMatchId))
+    : null;
+  const ms=allMatches
+    .filter(m=>matchBelongsToActiveCompetition(m) ||
+      (selectedMatch && String(m.id)===String(selectedMatch.id)))
+    .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
   const matchSel=$('matchEventMatch');if(!matchSel)return;const oldMatch=preferredMatchId||matchSel.value;
   matchSel.innerHTML='<option value="">Selecione um jogo</option>'+ms.map(m=>`<option value="${esc(m.id)}">${esc(dateBR(m.date))} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
   if(ms.some(m=>String(m.id)===String(oldMatch)))matchSel.value=String(oldMatch);
