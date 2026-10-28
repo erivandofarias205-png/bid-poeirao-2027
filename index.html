@@ -1366,6 +1366,15 @@ overflow: visible !important;
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
 <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Formatar as competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"/></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"/></label><label>Formato da competição<select id="newCompetitionFormat"><option value="grupos">Fase de grupos</option><option value="mata-mata">Mata-mata</option><option value="pontos-corridos">Pontos corridos</option><option value="mista">Mista (grupos + mata-mata)</option></select></label>
+ <label>Quantidade total de equipes
+  <input id="newCompetitionTotalTeams" type="number" min="2" max="256" value="18" placeholder="Ex.: 18"/>
+</label>
+<label>Formato dos jogos
+  <select id="newCompetitionMatchLegs">
+    <option value="unico">Partida única</option>
+    <option value="ida-volta">Ida e volta</option>
+  </select>
+</label>
 <label id="groupCountWrap">Quantidade de grupos<input id="newCompetitionGroupCount" max="32" min="1" placeholder="Ex.: 4" type="number" value="4"/></label>
 <label id="teamsPerGroupWrap">Equipes por grupo<input id="newCompetitionTeamsPerGroup" max="32" min="2" placeholder="Ex.: 4" type="number" value="4"/></label>
 <label>Símbolo da competição<input accept="image/*" id="newCompetitionLogo" type="file"/></label>
@@ -2781,6 +2790,17 @@ const draft = [];
      });
    });
  }
+$p('phaseCompetitionSelect')?.addEventListener('change', () => {
+  const c = comp();
+  if (!c) return;
+
+  const format = c.phaseOptions?.matchLegs || 'unico';
+
+  $p('manualGroupFormat').value =
+    format === 'ida-volta' ? 'ida_volta' : 'unico';
+
+  manualGroupUpdateRounds();
+});
  $p('manualGroupFormat')?.addEventListener('change', () => {
    manualGroupUpdateRounds();
  });
@@ -3515,6 +3535,10 @@ async function loadSupabaseCompetitions() {
           qualifiers: cfg.qualifiers || [],
           knockoutTies: cfg.knockoutTies || [],
           phaseWinners: cfg.phaseWinners || [],
+         quarterFinalTies: cfg.quarterFinalTies || [],
+semiFinalTies: cfg.semiFinalTies || [],
+finalMatchTie: cfg.finalMatchTie || null,
+thirdPlaceTie: cfg.thirdPlaceTie || null,
           _remote: true
         };
       });
@@ -4762,7 +4786,11 @@ phaseWinners: c.phaseWinners || []
   return true;
 }
  const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
-  document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;updateCompetitionFormatFields();add.style.display='none';saveEdit.style.display='inline-block';$p('newCompetitionName').scrollIntoView({behavior:'smooth',block:'center'});});
+  document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;$p('newCompetitionTotalTeams').value =
+  c.phaseOptions?.totalTeams ?? 18;
+
+$p('newCompetitionMatchLegs').value =
+  c.phaseOptions?.matchLegs ?? 'unico';updateCompetitionFormatFields();add.style.display='none';saveEdit.style.display='inline-block';$p('newCompetitionName').scrollIntoView({behavior:'smooth',block:'center'});});
  saveEdit.addEventListener('click', async () => {
   const c = (db.competitions || []).find(
     x => String(x.id) === String(editCompId)
@@ -4789,6 +4817,20 @@ phaseWinners: c.phaseWinners || []
   const teamsPerGroup = ['grupos', 'mista'].includes(format)
     ? Number($p('newCompetitionTeamsPerGroup').value) || 2
     : null;
+
+const totalTeams = Math.max(
+  2,
+  Number($p('newCompetitionTotalTeams').value) || 18
+);
+
+const matchLegs =
+  $p('newCompetitionMatchLegs').value || 'unico';
+
+const phaseOptions = {
+  ...(c.phaseOptions || {}),
+  totalTeams,
+  matchLegs
+};
 
   if (c._remote && c.dbId && typeof supabaseClient !== 'undefined') {
     const dados = {
@@ -4832,6 +4874,22 @@ phaseWinners: c.phaseWinners || []
   c.format = format;
   c.groupCount = groupCount;
   c.teamsPerGroup = teamsPerGroup;
+  
+c.phaseOptions = {
+  ...(c.phaseOptions || {}),
+  ...phaseOptions
+};
+
+try {
+  await saveCompetitionPhaseConfig(c);
+} catch (error) {
+  console.error('Erro ao salvar opções da competição:', error);
+  alert(
+    'As opções básicas foram atualizadas, mas não foi possível confirmar o salvamento das configurações extras. Erro: ' +
+    (error.message || error)
+  );
+  return;
+}
 
   editCompId = null;
   add.style.display = '';
