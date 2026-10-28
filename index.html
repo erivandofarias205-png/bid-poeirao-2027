@@ -2035,7 +2035,39 @@ function teamBelongsToActiveCompetition(t) {
 function activeCompetitionTeams() {
   return (db.teams || []).filter(teamBelongsToActiveCompetition);
 }
+function matchBelongsToActiveCompetition(m) {
+  const comp = activeCompetition();
 
+  if (!comp) return true;
+
+  const matchComp = [
+    m.competitionId,
+    m.competicao_id,
+    m.competitionDbId
+  ]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  const compIds = [
+    comp.id,
+    comp.dbId,
+    comp.db_id
+  ]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  if (matchComp.length) {
+    return matchComp.some(id => compIds.includes(id));
+  }
+
+  const home = findTeam(m.homeId);
+  const away = findTeam(m.awayId);
+
+  return !!home &&
+    !!away &&
+    teamBelongsToActiveCompetition(home) &&
+    teamBelongsToActiveCompetition(away);
+}
 function normalizeAthleteSearch(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
