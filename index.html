@@ -3306,10 +3306,68 @@ const renderGroupedFixtures = list => {
   if(tables){
     $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
     if(isKnockout){
-      const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
-    const ms=(db.matches||[])
-  .filter(m=>m && m.id!=null)
-  .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  const allMatches=(db.matches||[])
+    .filter(matchBelongsToActiveCompetition);
+
+  const phaseName=m=>String(m.round||m.fase||'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase();
+
+  const phaseMatches=(keywords)=>allMatches.filter(m=>{
+    const p=phaseName(m);
+    return keywords.some(k=>p.includes(k));
+  });
+
+  const renderPhase=(title,keywords)=>{
+    const games=phaseMatches(keywords)
+      .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+
+    if(!games.length)return '';
+
+    return `<div class="classification-subtable">
+      <div class="classification-subtitle">${title}</div>
+      <div class="tablewrap">
+        <table class="front-table">
+          <thead><tr><th>Mandante</th><th>Placar</th><th>Visitante</th></tr></thead>
+          <tbody>${games.map(m=>{
+            const home=(db.teams||[]).find(t=>
+              String(t.id)===String(m.homeId)||
+              String(t.dbId)===String(m.homeId))||{};
+            const away=(db.teams||[]).find(t=>
+              String(t.id)===String(m.awayId)||
+              String(t.dbId)===String(m.awayId))||{};
+
+            const hl=logoOf(home);
+            const al=logoOf(away);
+            const finished=String(m.status||'')
+              .toLowerCase().includes('finaliz')&&
+              m.homeScore!==null&&m.awayScore!==null&&
+              m.homeScore!==''&&m.awayScore!=='';
+
+            return `<tr>
+              <td><span class="classification-team">
+                ${hl?`<img class="classification-crest" src="${esc(hl)}" alt="">`:''}
+                <b>${esc(m.homeName||home.name||home.nome||'A definir')}</b>
+              </span></td>
+              <td style="text-align:center"><b>${finished?
+                `${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b></td>
+              <td><span class="classification-team">
+                ${al?`<img class="classification-crest" src="${esc(al)}" alt="">`:''}
+                <b>${esc(m.awayName||away.name||away.nome||'A definir')}</b>
+              </span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  };
+
+  tables.innerHTML=
+    renderPhase('FINAL',['final'])+
+    renderPhase('SEMIFINAIS',['semi'])+
+    renderPhase('QUARTAS DE FINAL',['quart'])+
+    renderPhase('OITAVAS DE FINAL',['oitav'])+
     }else if(!isLeague){
       // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
       // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
