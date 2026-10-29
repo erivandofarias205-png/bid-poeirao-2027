@@ -3342,12 +3342,12 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, vi
     };
   };
 
-  const phaseGroups=[
-    {title:'FINAL',keys:['final'],exclude:['terceiro']},
-    {title:'SEMIFINAIS',keys:['semi']},
-    {title:'QUARTAS DE FINAL',keys:['quart']},
-    {title:'OITAVAS DE FINAL',keys:['oitav']}
-  ];
+ const phaseGroups=[
+  {title:'FINAL',keys:['final'],exclude:['terceiro lugar','disputa de terceiro']},
+  {title:'SEMIFINAIS',keys:['semi']},
+  {title:'QUARTAS DE FINAL',keys:['quart']},
+  {title:'OITAVAS DE FINAL',keys:['oitav']}
+];
 
   const phaseHTML=phaseGroups.map(phase=>{
     let games=allMatches.filter(m=>{
@@ -3369,24 +3369,31 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, vi
       if(!duplicate)games.push(g);
     });
 
-    if(phase.title==='FINAL'){
-      const semis=allMatches.filter(m=>normalizePhase(m).includes('semi'));
-      const savedSemis=(comp.semiFinalTies||[]);
-      const semisFinished=semis.length>0
-        ?semis.every(m=>
-          String(m.status||'').toLowerCase().includes('finaliz')&&
-          m.homeScore!==null&&m.awayScore!==null&&
-          m.homeScore!==''&&m.awayScore!==''
-        )
-        :savedSemis.length>0&&savedSemis.every(t=>
-          String(t.status||'').toLowerCase().includes('finaliz')&&
-          t.score1A!==null&&t.score1B!==null&&
-          t.score1A!==''&&t.score1B!==''
-        );
+   if(phase.title==='FINAL'){
+  const semis=allMatches.filter(m=>
+    normalizePhase(m).includes('semi')
+  );
 
-      if(!semisFinished)games=[];
-    }
+  const savedSemis=comp.semiFinalTies||[];
 
+  const isFinished=m=>
+    String(m.status||'').toLowerCase().includes('finaliz')&&
+    m.homeScore!==null&&m.homeScore!==undefined&&
+    m.awayScore!==null&&m.awayScore!==undefined&&
+    m.homeScore!==''&&m.awayScore!=='';
+
+  const isSavedFinished=t=>
+    String(t.status||'').toLowerCase().includes('finaliz')&&
+    t.score1A!==null&&t.score1A!==undefined&&
+    t.score1B!==null&&t.score1B!==undefined&&
+    t.score1A!==''&&t.score1B!=='';
+
+  const semisFinished=semis.length>0
+    ?semis.every(isFinished)
+    :savedSemis.length>0&&savedSemis.every(isSavedFinished);
+
+  if(!semisFinished)games=[];
+}
     if(!games.length)return '';
 
     games.sort((a,b)=>
