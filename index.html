@@ -3107,7 +3107,7 @@ const c = (db.competitions || []).find(x =>
       );
 
     phaseTies.forEach(tie => {
-      if (!tie || !tie.a || !tie.b) return;
+      if (!tie) return;
 
       const home = findPhaseTeam(tie.a);
       const away = findPhaseTeam(tie.b);
@@ -3135,9 +3135,9 @@ const c = (db.competitions || []).find(x =>
       fixtures.push({
         id: `phase-${round}-${tie.a}-${tie.b}`,
         homeId: home?.id || tie.a,
-        homeName: home?.name || 'Equipe',
+       homeName: home?.name || home?.nome || 'A definir',
         awayId: away?.id || tie.b,
-        awayName: away?.name || 'Equipe',
+        awayName: away?.name || away?.nome || 'A definir',
         date,
         time,
         venue,
@@ -3195,11 +3195,8 @@ const c = (db.competitions || []).find(x =>
   };
 
 
-const renderGroupedFixtures = list => {
-  if (!list.length) {
-    return '<div class="empty">Nenhuma partida cadastrada.</div>';
-  }
 
+const renderGroupedFixtures = list => {
   const phaseInfo = m => {
     const raw = String(m.round || m.fase || '').trim();
     const text = raw.normalize('NFD')
@@ -3207,20 +3204,20 @@ const renderGroupedFixtures = list => {
       .toUpperCase();
 
     if (text.includes('SEMI')) {
-  return { priority: 2, name: 'SEMIFINAIS' };
-}
+      return { priority: 2, name: 'SEMIFINAIS' };
+    }
 
-if (text.includes('QUART')) {
-  return { priority: 3, name: 'QUARTAS DE FINAL' };
-}
+    if (text.includes('QUART')) {
+      return { priority: 3, name: 'QUARTAS DE FINAL' };
+    }
 
-if (text.includes('OITAV')) {
-  return { priority: 4, name: 'OITAVAS DE FINAL' };
-}
+    if (text.includes('OITAV') || text.includes('16 AVOS')) {
+      return { priority: 4, name: 'OITAVAS DE FINAL' };
+    }
 
-if (text.includes('TERCEIRO')) {
-  return { priority: 5, name: 'DISPUTA DE TERCEIRO LUGAR' };
-}
+    if (text.includes('TERCEIRO')) {
+      return { priority: 5, name: 'DISPUTA DE TERCEIRO LUGAR' };
+    }
 
     if (text.includes('FINAL') && !text.includes('GRUPO')) {
       return { priority: 1, name: 'FINAL' };
@@ -3268,10 +3265,25 @@ if (text.includes('TERCEIRO')) {
     html += renderFixtureCard(m);
   });
 
+    const fasesObrigatorias = [
+    { nome: 'FINAL', prioridade: 1, vazio: 'Final a definir.' },
+    { nome: 'SEMIFINAIS', prioridade: 2, vazio: 'Semifinais a definir.' },
+    { nome: 'QUARTAS DE FINAL', prioridade: 3, vazio: 'Quartas de final a definir.' },
+    { nome: 'OITAVAS DE FINAL', prioridade: 4, vazio: 'Oitavas de final a definir.' },
+    { nome: 'PRIMEIRA FASE — FASE DE GRUPOS', prioridade: 6, vazio: 'Partidas da primeira fase a definir.' }
+  ];
+
+  if (!ordered.length) {
+    return fasesObrigatorias.map(f =>
+      `<div class="fixture-phase-heading">${f.nome}</div>
+       <div class="empty">${f.vazio}</div>`
+    ).join('');
+  }
+
   return html;
 };
 
-
+    
   $('frontFixtures').innerHTML = renderGroupedFixtures(upcomingFixtures);
 
   const finishedPanel = $('finishedFixtures');
