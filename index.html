@@ -3308,7 +3308,7 @@ const renderGroupedFixtures = list => {
  if(isKnockout){
   const allMatches=(db.matches||[])
     .filter(matchBelongsToActiveCompetition);
-
+console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, visitante:m.awayName, fase:m.round, faseAlternativa:m.fase, status:m.status})));
   const normalizePhase=m=>String(m.round||m.fase||m.publicRound||'')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'')
