@@ -3305,18 +3305,123 @@ const renderGroupedFixtures = list => {
   const tables=$('classificationTables');
   if(tables){
     $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
-   if(isKnockout){
-  const rounds=[...new Set((db.matches||[])
-    .filter(matchBelongsToActiveCompetition)
-    .map(m=>String(m.round||m.fase||'Fase a definir'))
-    .filter(Boolean))];
+ if(isKnockout){
+  const allMatches=(db.matches||[])
+    .filter(matchBelongsToActiveCompetition);
 
-  const ms=(db.matches||[])
-    .filter(m=>m && m.id!=null)
-    .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  const normalizePhase=m=>String(m.round||m.fase||m.publicRound||'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase();
 
-}else if(!isLeague){
-      // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
+  const savedTies=[
+    ...(comp.knockoutTies||[]).map(t=>({...t,round:t.round||'Oitavas de final'})),
+    ...(comp.quarterFinalTies||[]).map(t=>({...t,round:'Quartas de final'})),
+    ...(comp.semiFinalTies||[]).map(t=>({...t,round:'Semifinais'})),
+    ...(comp.thirdPlaceTie?[{...comp.thirdPlaceTie,round:'Disputa de terceiro lugar'}]:[]),
+    ...(comp.finalMatchTie?[{...comp.finalMatchTie,round:'Final'}]:[])
+  ];
+
+  const toGame=t=>{
+    const home=(db.teams||[]).find(x=>
+      String(x.id)===String(t.a)||String(x.dbId||'')===String(t.a))||{};
+    const away=(db.teams||[]).find(x=>
+      String(x.id)===String(t.b)||String(x.dbId||'')===String(t.b))||{};
+
+    return {
+      homeId:home.id||t.a,
+      homeName:home.name||home.nome||t.homeName||'A definir',
+      awayId:away.id||t.b,
+      awayName:away.name||away.nome||t.awayName||'A definir',
+      homeScore:t.score1A??null,
+      awayScore:t.score1B??null,
+      status:t.status||'Agendado',
+      date:t.date1||t.date||'',
+      time:t.time1||t.time||'',
+      round:t.round
+    };
+  };
+
+  const phaseGroups=[
+    {title:'FINAL',keys:['final'],exclude:['terceiro']},
+    {title:'SEMIFINAIS',keys:['semi']},
+    {title:'QUARTAS DE FINAL',keys:['quart']},
+    {title:'OITAVAS DE FINAL',keys:['oitav']}
+  ];
+
+  const phaseHTML=phaseGroups.map(phase=>{
+    let games=allMatches.filter(m=>{
+      const name=normalizePhase(m);
+      if(phase.exclude?.some(k=>name.includes(k)))return false;
+      return phase.keys.some(k=>name.includes(k));
+    });
+
+    savedTies.filter(t=>{
+      const name=normalizePhase(t);
+      if(phase.exclude?.some(k=>name.includes(k)))return false;
+      return phase.keys.some(k=>name.includes(k));
+    }).forEach(t=>{
+      const g=toGame(t);
+      const duplicate=games.some(m=>
+        (String(m.homeId)===String(g.homeId)&&String(m.awayId)===String(g.awayId))||
+        (String(m.homeId)===String(g.awayId)&&String(m.awayId)===String(g.homeId))
+      );
+      if(!duplicate)games.push(g);
+    });
+
+    if(phase.title==='FINAL'){
+      const semis=allMatches.filter(m=>normalizePhase(m).includes('semi'));
+      const savedSemis=(comp.semiFinalTies||[]);
+      const semisFinished=semis.length>0
+        ?semis.every(m=>
+          String(m.status||'').toLowerCase().includes('finaliz')&&
+          m.homeScore!==null&&m.awayScore!==null&&
+          m.homeScore!==''&&m.awayScore!==''
+        )
+        :savedSemis.length>0&&savedSemis.every(t=>
+          String(t.status||'').toLowerCase().includes('finaliz')&&
+          t.score1A!==null&&t.score1B!==null&&
+          t.score1A!==''&&t.score1B!==''
+        );
+
+      if(!semisFinished)games=[];
+    }
+
+    if(!games.length)return '';
+
+    games.sort((a,b)=>
+      String(a.date||'9999').localeCompare(String(b.date||'9999'))||
+      String(a.time||'').localeCompare(String(b.time||''))
+    );
+
+    return `<div class="classification-subtable">
+      <div class="classification-subtitle">${phase.title}</div>
+      <div class="knockout-games">${games.map(m=>{
+        const home=(db.teams||[]).find(t=>
+          String(t.id)===String(m.homeId)||String(t.dbId||'')===String(m.homeId))||{};
+        const away=(db.teams||[]).find(t=>
+          String(t.id)===String(m.awayId)||String(t.dbId||'')===String(m.awayId))||{};
+        const homeLogo=logoOf(home);
+        const awayLogo=logoOf(away);
+        const finished=String(m.status||'').toLowerCase().includes('finaliz')&&
+          m.homeScore!==null&&m.awayScore!==null&&
+          m.homeScore!==''&&m.awayScore!=='';
+
+        return `<div class="group-result-row">
+          <span>${esc(m.homeName||home.name||home.nome||'A definir')}</span>
+          ${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}
+          <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
+          ${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}
+          <span>${esc(m.awayName||away.name||away.nome||'A definir')}</span>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+
+  tables.innerHTML=phaseHTML;
+
+}else if(!isLeague){  
+  // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
       // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
       const groupCount=Math.max(1,Math.min(32,Number(comp.groupCount||comp.group_count||comp.quantidadeGrupos)||0));
       const labels=Array.from({length:groupCount},(_,i)=>String.fromCharCode(65+i));
