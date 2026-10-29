@@ -5497,23 +5497,12 @@ async function sincronizarOitavasSupabase(c) {
 
     if (!m?.a || !m?.b) continue;
 
-       const mandante = obterEquipe(m.a);
+    const mandante = obterEquipe(m.a);
     const visitante = obterEquipe(m.b);
 
-    const mandanteId = mandante?.dbId ||
-      String(mandante?.id || '').replace(/^dbteam-/, '');
-
-    const visitanteId = visitante?.dbId ||
-      String(visitante?.id || '').replace(/^dbteam-/, '');
-
-    if (
-      !mandanteId ||
-      !visitanteId ||
-      !/^\d+$/.test(String(mandanteId)) ||
-      !/^\d+$/.test(String(visitanteId))
-    ) {
+    if (!mandante?.dbId || !visitante?.dbId) {
       throw new Error(
-        `Não foi possível identificar os IDs reais das equipes do confronto ${i + 1}.`
+        `As equipes do confronto ${i + 1} precisam estar cadastradas no Supabase.`
       );
     }
 
@@ -5528,9 +5517,9 @@ async function sincronizarOitavasSupabase(c) {
     const payload = {
       competicao_id: c.dbId,
       chave_fase: chave,
-            equipe_mandante_id: Number(mandanteId),
-      equipe_visitante_id: Number(visitanteId),
-     fase: 'Oitavas de final',
+      equipe_mandante_id: mandante.dbId,
+      equipe_visitante_id: visitante.dbId,
+      fase: 'Oitavas de final',
       rodada: null,
       formato: 'unico',
       data_hora: dataHora(m.date1, m.time1),
