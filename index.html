@@ -3305,12 +3305,65 @@ const renderGroupedFixtures = list => {
   const tables=$('classificationTables');
   if(tables){
     $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
-    if(isKnockout){
-      const rounds=[...new Set((db.matches||[]).filter(matchBelongsToActiveCompetition).map(m=>String(m.round||m.fase||'Fase a definir')).filter(Boolean))];
-    const ms=(db.matches||[])
-  .filter(m=>m && m.id!=null)
-  .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
-    }else if(!isLeague){
+
+if (isKnockout) {
+  const rounds = [
+    ...new Set(
+      (db.matches || [])
+        .filter(matchBelongsToActiveCompetition)
+        .map(m => String(m.round || m.fase || 'Fase a definir'))
+        .filter(Boolean)
+    )
+  ];
+
+  const ms = (db.matches || [])
+    .filter(matchBelongsToActiveCompetition)
+    .filter(m => m && m.id != null)
+    .sort((a, b) =>
+      String(a.date || '9999').localeCompare(String(b.date || '9999'))
+    );
+
+  const phaseComp = activeCompetition() || comp;
+  const phaseTeams = db.teams || [];
+
+  const findPhaseTeam = id => phaseTeams.find(t =>
+    String(t.id) === String(id) ||
+    String(t.dbId || '') === String(id)
+  );
+
+  const phaseName = (id, fallback) => {
+    const t = findPhaseTeam(id);
+    return t ? (t.name || t.nome || fallback) : fallback;
+  };
+
+const renderPhaseSection = (title, matches) => {
+  const jogos = Array.isArray(matches) ? matches : [];
+
+  return `
+    <div class="classification-subtitle">${esc(title)}</div>
+    ${
+      jogos.length
+        ? jogos.map((m, i) =>
+            renderPhaseCard(m, i, title)
+          ).join('')
+        : `<div class="empty">${esc(title)}: confrontos a definir.</div>`
+    }
+  `;
+};
+
+  const finalTie = phaseComp.finalMatchTie;
+  const finalReady = finalTie &&
+    (finalTie.a || finalTie.homeId) &&
+    (finalTie.b || finalTie.awayId);
+
+  tables.innerHTML =
+    (finalReady
+      ? renderPhaseSection('FINAL', [finalTie])
+      : '') +
+    renderPhaseSection('SEMIFINAIS', phaseComp.semiFinalTies || []) +
+    renderPhaseSection('QUARTAS DE FINAL', phaseComp.quarterFinalTies || []) +
+    renderPhaseSection('OITAVAS DE FINAL', phaseComp.knockoutTies || []);
+}else if(!isLeague){
       // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
       // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
       const groupCount=Math.max(1,Math.min(32,Number(comp.groupCount||comp.group_count||comp.quantidadeGrupos)||0));
@@ -3363,6 +3416,94 @@ const renderGroupedFixtures = list => {
     }
   }
   const scorers=[];
+  
+  // Adiciona os confrontos eliminatórios ao painel de classificação.
+  if (tables) {
+    const phaseComp = activeCompetition() || comp;
+    const allTeams = db.teams || [];
+
+    const getPhaseTeam = id => allTeams.find(t =>
+      String(t.id) === String(id) ||
+      String(t.dbId || '') === String(id)
+    );
+
+    const getPhaseName = (id, fallback) => {
+      const t = getPhaseTeam(id);
+      return t ? (t.name || t.nome || fallback) : fallback;
+    };
+
+    const renderPhaseCard = (m, index, title) => {
+      const a = m.a ?? m.homeId ?? m.home_id ?? '';
+      const b = m.b ?? m.awayId ?? m.away_id ?? '';
+
+      const homeName = getPhaseName(
+        a, m.homeName || m.home_name || 'A definir'
+      );
+      const awayName = getPhaseName(
+        b, m.awayName || m.away_name || 'A definir'
+      );
+
+      const scoreA = m.score1A ?? m.homeScore ?? m.home_score;
+      const scoreB = m.score1B ?? m.awayScore ?? m.away_score;
+
+      const hasScore = scoreA != null && scoreA !== '' &&
+                       scoreB != null && scoreB !== '';
+
+      const status = String(m.status || '').toLowerCase();
+      const finished = status.includes('finaliz');
+
+      return `
+        <div class="classification-subtable">
+          <div class="classification-subtitle">
+            ${esc(title)} — JOGO ${index + 1}
+          </div>
+          <div class="group-result-row">
+            <span>${esc(homeName)}</span>
+            <b>${hasScore ? `${esc(scoreA)} × ${esc(scoreB)}` : '×'}</b>
+            <span>${esc(awayName)}</span>
+          </div>
+          <div class="empty">
+            ${finished && hasScore ? 'Partida finalizada' : 'Partida agendada ou a definir'}
+          </div>
+        </div>
+      `;
+    };
+
+    const renderPhaseSection = (title, matches) => {
+      if (!matches.length) return '';
+
+      return `
+        <div class="classification-subtitle">${esc(title)}</div>
+        ${matches.map((m, i) =>
+          renderPhaseCard(m, i, title)
+        ).join('')}
+      `;
+    };
+
+    const round16 = phaseComp.knockoutTies || [];
+    const quarters = phaseComp.quarterFinalTies || [];
+    const semifinals = phaseComp.semiFinalTies || [];
+
+    const finalMatch = phaseComp.finalMatchTie;
+    const finalReady = finalMatch &&
+      (finalMatch.a || finalMatch.homeId || finalMatch.home_id) &&
+      (finalMatch.b || finalMatch.awayId || finalMatch.away_id);
+
+   
+    const eliminationHTML = [
+      renderPhaseSection('FINAL', finalReady ? [finalMatch] : []),
+      renderPhaseSection('SEMIFINAIS', semifinals),
+      renderPhaseSection('QUARTAS DE FINAL', quarters),
+      renderPhaseSection('OITAVAS DE FINAL', round16)
+    ].join('');
+
+    // Exibe as fases eliminatórias antes das tabelas dos grupos.
+    if (eliminationHTML) {
+      tables.innerHTML = eliminationHTML + tables.innerHTML;
+    }
+
+  const scorers=[];
+
   const compTeams=activeCompetitionTeams();
   const compTeamIds=new Set(compTeams.map(t=>String(t.id)));
   const compTeamDbIds=new Set(compTeams.map(t=>String(t.dbId||'')));
