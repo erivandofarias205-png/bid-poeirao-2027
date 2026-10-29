@@ -3813,6 +3813,7 @@ const renderPhaseSection = (title, matches) => {
  const originalRenderMatchesForEvents=renderMatches;
  renderMatches=function(){originalRenderMatchesForEvents();refreshMatchEventChoices();document.querySelectorAll('[data-match-events]').forEach(b=>b.onclick=()=>{const m=(db.matches||[]).find(x=>String(x.id)===String(b.dataset.matchEvents));if(!m)return;showTab('games');refreshMatchEventChoices(m.id);$('matchEventEditor').scrollIntoView({behavior:'smooth',block:'center'});});};
  renderAll();
+  </script>
  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
  <script>
  
