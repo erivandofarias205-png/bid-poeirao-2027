@@ -1297,6 +1297,75 @@ overflow: visible !important;
   border: 1px solid #050505 !important;
 }
 </style>
+
+ <style id="group-results-style">
+.group-results {
+  margin: 12px 0 20px;
+  padding: 12px;
+  background: #111;
+  border: 1px solid #b89435;
+  border-radius: 8px;
+}
+
+.group-result-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px minmax(76px, auto) 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #333;
+  color: #fff;
+  text-align: center;
+}
+
+.group-result-row:last-child {
+  border-bottom: 0;
+}
+
+.group-result-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.group-result-row img.team-crest {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  justify-self: center;
+}
+
+.group-result-row b {
+  color: #e0bd54;
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+@media (max-width: 600px) {
+  .group-results {
+    padding: 8px;
+  }
+
+  .group-result-row {
+    grid-template-columns: minmax(0, 1fr) 24px minmax(58px, auto) 24px minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .group-result-row span {
+    font-size: 11px;
+  }
+
+  .group-result-row img.team-crest {
+    width: 22px;
+    height: 22px;
+  }
+
+  .group-result-row b {
+    font-size: 14px;
+  }
+}
+</style>
 </head>
 <body>
 <header>
@@ -3250,7 +3319,33 @@ if (text.includes('TERCEIRO')) {
         if(a[0]==='Sem grupo')return 1;if(b[0]==='Sem grupo')return -1;
         return a[0].localeCompare(b[0],'pt-BR',{numeric:true});
       });
-      tables.innerHTML=orderedGroups.map(([g,list])=>tableHTML(g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`,list)).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
+      tables.innerHTML=orderedGroups.map(([g,list])=>{
+  const title=g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`;
+  const teamIds=new Set(list.map(x=>String(x.team.id)));
+  const games=(db.matches||[])
+    .filter(matchBelongsToActiveCompetition)
+    .filter(m=>{
+  const phase=String(m.round||m.fase||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return !phase.includes('oitav')&&!phase.includes('quart')&&!phase.includes('semi')&&!phase.includes('final')&&!phase.includes('terceiro')&&teamIds.has(String(m.homeId))&&teamIds.has(String(m.awayId));
+})
+ .sort((a,b)=>{
+  const af=String(a.status||'').toLowerCase().includes('finaliz')?0:1;
+  const bf=String(b.status||'').toLowerCase().includes('finaliz')?0:1;
+  return af-bf||String(a.date||'').localeCompare(String(b.date||''));
+})
+.slice(0,3);
+  const results=games.length
+    ? `<div class="group-results"><div class="classification-subtitle">JOGOS DO ${esc(title)}</div>${games.map(m=>{
+        const home=(db.teams||[]).find(t=>String(t.id)===String(m.homeId)||String(t.dbId)===String(m.homeId))||{};
+        const away=(db.teams||[]).find(t=>String(t.id)===String(m.awayId)||String(t.dbId)===String(m.awayId))||{};
+        const homeLogo=home.logo||home.escudo_url||home.escudoUrl||'';
+        const awayLogo=away.logo||away.escudo_url||away.escudoUrl||'';
+        const finished=String(m.status||'').toLowerCase().includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';
+        return `<div class="group-result-row"><span>${esc(m.homeName||home.name||'Equipe')}</span>${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}<b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}<span>${esc(m.awayName||away.name||'Equipe')}</span></div>`;
+      }).join('')}</div>`
+    : '';
+  return tableHTML(title,list)+results;
+}).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
     }else{
       tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
     }
