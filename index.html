@@ -4425,7 +4425,7 @@ const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
       const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
       body+=`<tr><td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td><td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td><td class="player-name">${p?esc(p.name||p.nome||''):''}</td><td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td></tr>`;
     }
- return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div><div class="sheet-directors"><b>EQUIPE PESSOAL</b>${(()=>{const people=team?.players||[];const getFunction=p=>String(p?.role||p?.funcao||p?.function||p?.cargo||p?.position||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();const roles=[{key:'treinador',label:'TREINADOR'},{key:'auxiliar',label:'AUXILIAR'},{key:'massagista',label:'MASSAGISTA'},{key:'diretor',label:'DIRETOR'},{key:'',label:'EQUIPE PESSOAL'}];const renderLine=(p,label)=>{const photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');const name=p?(p.name||p.nome||''):'';return `<div class="sheet-director-line">${photo?`<img class="sheet-director-photo" src="${esc(photo)}" alt="">`:'<span class="sheet-director-photo sheet-director-photo-empty"> </span>'}<span class="sheet-director-name">${esc(name)}</span><span class="sheet-director-function">${label}</span></div>`;};const staff=roles.map(role=>{const p=role.key?people.find(person=>!isMusa(person)&&getFunction(person).includes(role.key)):null;return renderLine(p,role.label);}).join('');const musa=people.find(p=>isMusa(p));return staff+`<b class="sheet-musa-title">MUSA</b>`+renderLine(musa,'MUSA');})()}</div></div></section>`;
+return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div></div></section>`;
   };
   const safeDate=dateBR(m.date);
   out.innerHTML=`<div class="official-sheet">
@@ -4439,8 +4439,20 @@ const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
   <div class="sheet-sign-row"><span>Assinatura do representante mandante: __________________________</span><span>Assinatura do representante visitante: __________________________</span></div>
   </div>
   <div class="sheet-page sheet-page-two">
-  <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
-  <div class="sheet-event-grid">
+<div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
+
+<div class="sheet-personnel-grid">
+  <section>
+    <h3>EQUIPE PESSOAL — MANDANTE</h3>
+    ${(findTeam(m.homeTeamId)?.players||[]).filter(p=>p._remotePersonnel===true).map(p=>`<div class="event-line">${esc(p.role||p.funcao||'')} : ${esc(p.name||p.nome||'')}</div>`).join('')}
+  </section>
+  <section>
+    <h3>EQUIPE PESSOAL — VISITANTE</h3>
+    ${(findTeam(m.awayTeamId)?.players||[]).filter(p=>p._remotePersonnel===true).map(p=>`<div class="event-line">${esc(p.role||p.funcao||'')} : ${esc(p.name||p.nome||'')}</div>`).join('')}
+  </section>
+</div>
+
+<div class="sheet-event-grid">
   <section><h3>GOLS — MANDANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
   <section><h3>GOLS — VISITANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
   <section><h3>CARTÕES AMARELOS — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
