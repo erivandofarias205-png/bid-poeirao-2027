@@ -3305,7 +3305,8 @@ const renderGroupedFixtures = list => {
   const tables=$('classificationTables');
   if(tables){
     $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
- if(isKnockout || fmt.includes('mista')){
+let phaseHTML='';
+   if(isKnockout || fmt.includes('mista')){
   const allMatches=(db.matches||[])
     .filter(matchBelongsToActiveCompetition);
 console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, visitante:m.awayName, fase:m.round, faseAlternativa:m.fase, status:m.status})));
@@ -3349,7 +3350,7 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, vi
   {title:'OITAVAS DE FINAL',keys:['oitav']}
 ];
 
-  const phaseHTML=phaseGroups.map(phase=>{
+ phaseHTML=phaseGroups.map(phase=>{
     let games=allMatches.filter(m=>{
       const name=normalizePhase(m);
       if(phase.exclude?.some(k=>name.includes(k)))return false;
@@ -3425,9 +3426,9 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, vi
     </div>`;
   }).join('');
 
-  tables.innerHTML=phaseHTML;
+  // HTML dos confrontos guardado para juntar com os grupos.
 
-if(!isLeague && !isKnockout){
+if(!isLeague){
   // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
       // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
       const groupCount=Math.max(1,Math.min(32,Number(comp.groupCount||comp.group_count||comp.quantidadeGrupos)||0));
@@ -3448,7 +3449,7 @@ if(!isLeague && !isKnockout){
         if(a[0]==='Sem grupo')return 1;if(b[0]==='Sem grupo')return -1;
         return a[0].localeCompare(b[0],'pt-BR',{numeric:true});
       });
-      tables.innerHTML=orderedGroups.map(([g,list])=>{
+const groupsHTML=orderedGroups.map(([g,list])=>{
   const title=g==='Sem grupo'?'Equipes sem grupo':`GRUPO ${g}`;
   const teamIds=new Set(list.map(x=>String(x.team.id)));
   const games=(db.matches||[])
@@ -3475,6 +3476,7 @@ if(!isLeague && !isKnockout){
     : '';
   return tableHTML(title,list)+results;
 }).join('')||'<div class="empty">Cadastre as equipes para montar a classificação.</div>';
+ tables.innerHTML=phaseHTML+groupsHTML;
     }else{
       tables.innerHTML=tableHTML('CLASSIFICAÇÃO GERAL',standings);
     }
