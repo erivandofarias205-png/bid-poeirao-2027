@@ -1552,31 +1552,48 @@ overflow: visible !important;
   }
 }
 </style>
-<style id="sumula-cambria-12">
-#matchSheet .official-sheet,
-#matchSheet .official-sheet *{
-  font-family:Cambria,serif!important;
-}
-
-/* NOMES E FUNÇÕES DA EQUIPE PESSOAL */
-#matchSheet .sheet-director-name,
-#matchSheet .sheet-director-function,
-#matchSheet .sheet-referee-grid,
-#matchSheet .sheet-referee-grid div,
-#matchSheet .sheet-referee-grid b{
-  font-size:10pt!important;
-}
-
-/* PADRÃO DE IMPRESSÃO */
+/* AJUSTE DAS COLUNAS E FOTOS DOS ATLETAS */
 @media print{
-  #matchSheet .official-sheet,
-  #matchSheet .official-sheet *{
-    font-family:Cambria,serif!important;
-    font-size:12pt!important;
-    line-height:1.2!important;
+  #matchSheet .sheet-team table{
+    width:100%!important;
+    table-layout:fixed!important;
   }
+
+  #matchSheet .sheet-team th:nth-child(1),
+  #matchSheet .sheet-team td:nth-child(1){
+    width:6%!important;
+  }
+
+  #matchSheet .sheet-team th:nth-child(2),
+  #matchSheet .sheet-team td:nth-child(2){
+    width:7%!important;
+    padding:1px!important;
+  }
+
+  #matchSheet .sheet-team th:nth-child(3),
+#matchSheet .sheet-team td:nth-child(3){
+  width:60%!important;
+  padding:2px 3px!important;
 }
-</style>
+
+#matchSheet .sheet-rosters.two-rosters{
+  gap:1mm!important;
+}
+
+  #matchSheet .sheet-team th:nth-child(4),
+  #matchSheet .sheet-team td:nth-child(4){
+    width:15%!important;
+  }
+
+  #matchSheet .sheet-player-photo,
+  #matchSheet .sheet-player-photo img,
+  #matchSheet .sheet-player-photo-empty{
+    width:5mm!important;
+    height:5mm!important;
+    min-width:5mm!important;
+    object-fit:cover!important;
+  }
+}</style>
 </head>
 <body>
 <header>
