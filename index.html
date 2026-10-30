@@ -1797,15 +1797,17 @@ overflow: visible !important;
 /* AJUSTE DA PRIMEIRA FOLHA — SÚMULA A4 */
 @media print {
 
+ @media print {
   #matchSheet .sheet-page-one {
-    width: 196mm !important;
-    height: 283mm !important;
-    min-height: 283mm !important;
-    max-height: 283mm !important;
-    padding: 3mm !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
+    padding-top: 0mm !important;
+    margin-top: 0 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-heading {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+}
   }
 
   #matchSheet .sheet-page-one,
