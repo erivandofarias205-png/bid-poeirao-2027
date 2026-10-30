@@ -8512,5 +8512,18 @@ tbody tr.row-staff td.bid{
   }
 }
 </style>
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(function (registration) {
+        console.log('BID PWA registrado:', registration.scope);
+      })
+      .catch(function (error) {
+        console.error('Erro ao registrar BID PWA:', error);
+      });
+  });
+}
+</script>
 </body>
 </html>
