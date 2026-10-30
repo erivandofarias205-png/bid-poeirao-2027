@@ -1122,6 +1122,33 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 #matchSheet .sheet-page-two .sheet-page-title,
 #matchSheet .sheet-page-two h3{background:#f2c94c!important;color:#111!important;border:1px solid #111!important;font-weight:900!important}
 #matchSheet .sheet-page-two .event-line{border-bottom:1px solid #aaa!important}
+ /* EQUIPE PESSOAL - MANDANTE E VISITANTE LADO A LADO */
+#matchSheet .sheet-personnel-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:3mm!important;
+  width:100%!important;
+  align-items:start!important;
+}
+
+#matchSheet .sheet-personnel-grid section{
+  min-width:0!important;
+  width:100%!important;
+}
+
+#matchSheet .sheet-personnel-grid .sheet-director-line{
+  display:grid!important;
+  grid-template-columns:7mm minmax(0,1fr) 17mm!important;
+  gap:1mm!important;
+  min-height:6mm!important;
+  align-items:center!important;
+}
+
+#matchSheet .sheet-personnel-grid .sheet-director-photo{
+  width:5.5mm!important;
+  height:5.5mm!important;
+  object-fit:cover!important;
+}
 @media print{
  @page{
    size:A4 portrait;
