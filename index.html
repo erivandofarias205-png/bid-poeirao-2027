@@ -1123,8 +1123,46 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 #matchSheet .sheet-page-two h3{background:#f2c94c!important;color:#111!important;border:1px solid #111!important;font-weight:900!important}
 #matchSheet .sheet-page-two .event-line{border-bottom:1px solid #aaa!important}
 @media print{
- #matchSheet .sheet-page-one,#matchSheet .sheet-page-two{background:#fff!important;color:#111!important}
- #matchSheet .sheet-page-two *{print-color-adjust:economy!important;-webkit-print-color-adjust:economy!important}
+ @page{
+   size:A4 portrait;
+   margin:7mm;
+ }
+
+ #matchSheet .official-sheet{
+   width:196mm!important;
+   margin:0!important;
+   padding:0!important;
+ }
+
+ #matchSheet .sheet-page{
+   width:196mm!important;
+   height:283mm!important;
+   min-height:283mm!important;
+   max-height:283mm!important;
+   box-sizing:border-box!important;
+   overflow:hidden!important;
+   margin:0!important;
+   padding:5mm!important;
+   break-after:page!important;
+   page-break-after:always!important;
+ }
+
+ #matchSheet .sheet-page:last-child{
+   break-after:auto!important;
+   page-break-after:auto!important;
+ }
+
+ #matchSheet .sheet-page-one,
+ #matchSheet .sheet-page-two{
+   background:#fff!important;
+   color:#111!important;
+ }
+
+ #matchSheet .sheet-page-two *{
+   print-color-adjust:exact!important;
+   -webkit-print-color-adjust:exact!important;
+ }
+}
 }
 </style>
 <style id="sumula-mobile-legibility-fix">
