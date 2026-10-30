@@ -2380,160 +2380,713 @@ $('saveTeam').addEventListener('click', async ()=>{
 
  // Cadastro por CPF: busca o atleta na base central antes de permitir novo registro.
  let athleteMatchedByCpf = null;
- async function lookupAthleteByCpf(){
-   const cpf=cpfDigits($('athCpf')?.value||'');
-   athleteMatchedByCpf=null;
-   if(cpf.length!==11 || ($('athRole')?.value||'jogador')!=='jogador') return;
-   if(typeof supabaseClient!=='undefined' && supabaseClient){
-     try{
-       const {data,error}=await supabaseClient.from('ATLETAS')
-         .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo')
-         .eq('cpf',cpf).limit(2);
-       if(error) throw error;
-       if(data?.length>1){alert('ATENÇÃO: este CPF aparece em mais de um cadastro. Não cadastre novamente; peça ao administrador para corrigir os duplicados.');return}
-       if(data?.length===1){
-         const row=data[0]; athleteMatchedByCpf={...row,_remote:true};
-         $('athName').value=row.nome||'';
-         $('athSportsName').value=row.nome_esportivo||'';
-         $('athBirth').value=row.data_nascimento||'';
-         $('athCity').value=row.naturalidade||'';
-         $('athBid').value=row.numero_inscricao||'';
-         const compId=$('athCompetition')?.value;
-         let already=false;
-         if(compId){
-           const a=await supabaseClient.from('competicao_atletas').select('atleta_id')
-             .eq('atleta_id',row.id).eq('competicao_id',compId).limit(1);
-           already=!a.error && !!a.data?.length;
-         }
-         if(already){
-           const keep=confirm('ATENÇÃO: este CPF já está cadastrado nesta competição.\n\nClique em OK para manter os dados e poder trocar o atleta de equipe. Clique em Cancelar para limpar os dados e digitar outro atleta.');
-           if(!keep){
-             ['athName','athSportsName','athBirth','athCity','athBid','athReg','athCpf'].forEach(x=>{if($(x))$(x).value=''});
-             if($('athPhoto'))$('athPhoto').value='';
-             athleteMatchedByCpf=null;
-             $('athCpf')?.focus();
-           }
-         }else{
-           alert('Atleta encontrado no BID! Os dados foram preenchidos automaticamente. Escolha a equipe desta competição e salve para vincular o mesmo atleta, sem duplicá-lo.');
-         }
-         return;
-       }
-     }catch(err){console.warn('Não foi possível consultar CPF no Supabase:',err)}
-   }
-   const matches=[];
-   (db.teams||[]).forEach(t=>(t.players||[]).forEach(p=>{if(cpfDigits(p.cpf)===cpf)matches.push({p,t})}));
-   if(matches.length){
-     const {p}=matches[0]; athleteMatchedByCpf={...p,_local:true};
-     $('athName').value=p.name||''; $('athSportsName').value=p.sportsName||'';
-     $('athBirth').value=p.birth||''; $('athCity').value=p.city||'';
-     $('athBid').value=p.id||'';
-     alert('Este CPF já existe na base local. Os dados foram preenchidos. Não cadastre novamente; para reutilizar entre competições, o atleta precisa estar no banco central do Supabase.');
-   }
- }
+
+
+async function lookupAthleteByCpf(){
+  const cpf=cpfDigits($('athCpf')?.value||'');
+  athleteMatchedByCpf=null;
+
+  if(cpf.length!==11)return;
+
+  const role=$('athRole')?.value||'jogador';
+
+  if(typeof supabaseClient!=='undefined'&&supabaseClient){
+    try{
+      const table=role==='jogador'?'ATLETAS':'equipe_pessoal';
+
+      const columns=role==='jogador'
+        ?'id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo'
+        :'id,equipe_id,nome,funcao,data_nascimento,cidade,cpf,numero_inscricao,nome_esportivo,foto_url';
+
+      const {data,error}=await supabaseClient
+        .from(table)
+        .select(columns)
+        .eq('cpf',cpf)
+        .limit(2);
+
+      if(error)throw error;
+
+      if(data?.length>1){
+        alert('Este CPF aparece em mais de um cadastro. Não continue até verificar os duplicados.');
+        return;
+      }
+
+      if(data?.length===1){
+        const row=data[0];
+        const isPersonnel=role!=='jogador';
+
+        athleteMatchedByCpf=isPersonnel
+          ? {...row,_remotePersonnel:true}
+          : {...row,_remote:true};
+
+        $('athName').value=row.nome||'';
+        $('athSportsName').value=row.nome_esportivo||'';
+        $('athBirth').value=row.data_nascimento||'';
+        $('athCity').value=isPersonnel
+          ?row.cidade||''
+          :row.naturalidade||'';
+        $('athBid').value=row.numero_inscricao||'';
+
+        const team=(db.teams||[]).find(t=>
+          String(t.dbId)===String(row.equipe_id)
+        );
+
+        if(team)$('athTeam').value=team.id;
+
+        alert(
+          (isPersonnel?'Cadastro de dirigente/treinador':'Atleta')+
+          ' encontrado! BID preservado. Confira os dados antes de salvar.'
+        );
+
+        return;
+      }
+
+    }catch(error){
+      console.error('Erro ao consultar cadastro:',error);
+      alert('Não foi possível consultar o cadastro no Supabase: '+error.message);
+      return;
+    }
+  }
+
+  alert('Nenhum cadastro encontrado com esse CPF nesta categoria.');
+}
+
  $('athCpf')?.addEventListener('change',lookupAthleteByCpf);
  $('athCpf')?.addEventListener('blur',lookupAthleteByCpf);
 
-$('saveAthlete').addEventListener('click', async ()=>{
- const team=findTeam($('athTeam').value),name=$('athName').value.trim(),birth=$('athBirth').value,city=$('athCity')?.value.trim()||'',cpf=cpfDigits($('athCpf').value),registered=$('athReg').value||new Date().toISOString().slice(0,10),role=$('athRole')?.value||'jogador',sportsName=$('athSportsName')?.value.trim()||'';
- if(!team||!name){alert('Selecione a equipe e informe o nome do atleta.');return}
- if(cpf&&cpf.length!==11){alert('O CPF deve ter 11 dígitos, ou deixe o campo vazio.');return}
-  if(cpf && athleteMatchedByCpf && cpfDigits(athleteMatchedByCpf.cpf)!==cpf) athleteMatchedByCpf=null;
-  if(cpf && !athleteMatchedByCpf && typeof supabaseClient!=='undefined' && supabaseClient && team?.dbId && role==='jogador'){
-    try{
-      const dup=await supabaseClient.from('ATLETAS').select('id,nome,cpf').eq('cpf',cpf).limit(1);
-      if(!dup.error && dup.data?.length){await lookupAthleteByCpf();return}
-    }catch(e){console.warn('Verificação final de CPF:',e)}
-  }
- const extraKey='tvfp_team_personnel_v1';let extraPeople=[];try{extraPeople=JSON.parse(localStorage.getItem(extraKey)||'[]')}catch(e){}
- const requestedBid=$('athBid').value.trim();
- let id=requestedBid;
- if(!id){
-   const isUsedBid=candidate=>!!findAth(candidate)||extraPeople.some(p=>String(p.id)===String(candidate));
-   do{id='BID-'+String(db.nextBid++).padStart(4,'0')}while(isUsedBid(id));
- }
- if(findAth(id)||extraPeople.some(p=>String(p.id)===String(id))){alert('Esse número BID já existe. Informe outro.');return}
- const peopleForTeam=[...(team.players||[]),...extraPeople.filter(x=>String(x.teamId)===String(team.id))];
- if(role==='diretor'&&peopleForTeam.filter(x=>x.role==='diretor').length>=5){alert('Esta equipe já tem 5 diretores cadastrados. O limite é de 5 por equipe.');return}
- if(role==='musa'&&peopleForTeam.some(x=>x.role==='musa')){alert('Esta equipe já tem uma musa cadastrada. O limite é de 1 por equipe.');return}
- if(role!=='jogador'){
-   const photoFile=$('athPhoto')?.files?.[0]||null;
- const savePerson=(photo='')=>{const person={id,name,birth,city,cpf,registered,photo,photo_url:photo,played:false,transferAllowed:false,yellow:0,red:0,goals:0,role,sportsName,teamId:team.id};extraPeople.push(person);localStorage.setItem(extraKey,JSON.stringify(extraPeople));if(!team.players)team.players=[];team.players.push(person);selectedTeam=team.id;['athName','athBirth','athCity','athCpf','athReg','athBid','athSportsName'].forEach(x=>{if($(x))$(x).value='';});if($('athPhoto'))$('athPhoto').value='';if($('athRole'))$('athRole').value='jogador';saveDb();renderAll();showTab('admin');alert((({diretor:'Diretor',musa:'Musa',treinador:'Treinador',auxiliar:'Auxiliar',massagista:'Massagista'}[role]||'Pessoa'))+' cadastrada para '+team.name+'. Observação: esse cadastro complementar fica salvo neste navegador; para sincronizar entre dispositivos, será necessário adicionar suporte a esses perfis no Supabase.');};
-   const pf=$('athPhoto')?.files?.[0];if(pf){if(pf.size>1500000){alert('A foto deve ter até 1,5 MB nesta etapa.');return}const rd=new FileReader();rd.onload=()=>savePerson(String(rd.result||''));rd.onerror=()=>alert('Não foi possível ler a foto.');rd.readAsDataURL(pf)}else savePerson();return;
- }
- if(team.dbId){
-   const button=$('saveAthlete'); button.disabled=true;
-   try {
-     const {data:sessionData}=await supabaseClient.auth.getSession();
-     if(!sessionData?.session){alert('Entre com o login de administrador antes de cadastrar um atleta.');return}
-     const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
-     if(adminError||adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return}
-     const compChoice=$('athCompetition')?.value||activeCompetition()?.id||'';
-     const compRecord=(db.competitions||[]).find(c=>String(c.id)===String(compChoice)||String(c.dbId)===String(compChoice));
-     const compDbId=compRecord?.dbId||compRecord?.id||compChoice;
-     if(athleteMatchedByCpf?._remote){
-       const existing=athleteMatchedByCpf;
-       const {data:links,error:linksError}=await supabaseClient.from('competicao_atletas').select('atleta_id,competicao_id,equipe_id').eq('atleta_id',existing.id).eq('competicao_id',compDbId).limit(1);
-       if(linksError) throw new Error('Não foi possível verificar o vínculo da competição: '+linksError.message);
-       if(links?.length){
-         if(String(links[0].equipe_id)===String(team.dbId)){
-           alert('Este atleta já está inscrito nesta competição e nesta equipe. Não foi criado cadastro duplicado.');return;
-         }
-         const mudar=confirm('Este atleta já está inscrito nesta competição por outra equipe. Deseja transferi-lo para a equipe selecionada?');
-         if(!mudar)return;
-         const {error:updateError}=await supabaseClient.from('competicao_atletas').update({equipe_id:team.dbId,status:'Inscrito'}).eq('atleta_id',existing.id).eq('competicao_id',compDbId);
-         if(updateError) throw new Error('Não foi possível mudar o atleta de equipe: '+updateError.message);
-       }else{
-         const {error:linkError}=await supabaseClient.from('competicao_atletas').insert({competicao_id:compDbId,atleta_id:existing.id,equipe_id:team.dbId,status:'Inscrito'});
-         if(linkError) throw new Error('Atleta encontrado, mas não foi possível vinculá-lo à competição. Confira as permissões/colunas da tabela competicao_atletas: '+linkError.message);
-       }
-       ['athName','athBirth','athCity','athCpf','athReg','athBid','athSportsName'].forEach(x=>{if($(x))$(x).value=''});
-       if($('athPhoto'))$('athPhoto').value='';
-       athleteMatchedByCpf=null; await loadSupabaseTeams();showTab('admin');
-       alert('Atleta existente vinculado à nova competição/equipe, sem criar cadastro duplicado.');return;
-     }
-     const photoFile=$('athPhoto')?.files?.[0]||null;
-     let photoUrl=null;
-     if(photoFile){
-       if(photoFile.size>3*1024*1024) throw new Error('A foto deve ter até 3 MB.');
-       const ext=(photoFile.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
-       const path='atletas/'+crypto.randomUUID()+'.'+ext;
-       const {error:uploadError}=await supabaseClient.storage.from('bid-fotos').upload(path,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'});
-       if(uploadError) throw new Error('Foto não enviada. Confira se o bucket público bid-fotos existe e as permissões de upload. '+uploadError.message);
-       photoUrl=supabaseClient.storage.from('bid-fotos').getPublicUrl(path).data?.publicUrl||null;
-     }
-     const {error}=await supabaseClient.from('ATLETAS').insert({
-    nome:name,
-    data_nascimento:birth||null,
-    numero_inscricao:id,
-    cpf:cpf||null,
-    naturalidade:$('#athCity')?.value?.trim()||null,
-    nome_esportivo:$('#athSportsName')?.value?.trim()||null,
-      foto_url:photoUrl,
-    equipe_id:team.dbId,
-    status:'Inscrito',
-    gols:0,
-    cartoes_amarelos:0,
-    cartoes_vermelhos:0,
-         apto_jogar:false
-});
-     if(error) throw error;
-      ['athName','athBirth','athCity','athCpf','athReg','athBid'].forEach(x=>{if($(x)) $(x).value=''});
-      if($('athPhoto')) $('athPhoto').value='';
-      await loadSupabaseTeams();showTab('admin');
-      alert('Atleta cadastrado no Supabase'+(cpf?' com CPF salvo':'')+(photoUrl?' e foto enviada':'')+'.');
-    } catch(error) {
-      console.error('Erro ao cadastrar atleta:',error);
-      alert('Não foi possível cadastrar no Supabase. Confira as políticas RLS e as colunas da tabela ATLETAS. Detalhe: '+(error?.message||'erro desconhecido'));
-    } finally {button.disabled=false}
+
+$('saveAthlete').addEventListener('click',async ()=>{
+  const team=findTeam($('athTeam').value);
+  const name=$('athName').value.trim();
+  const birth=$('athBirth').value;
+  const city=$('athCity')?.value.trim()||'';
+  const cpf=cpfDigits($('athCpf').value);
+  const registered=$('athReg').value||new Date().toISOString().slice(0,10);
+  const role=$('athRole')?.value||'jogador';
+  const sportsName=$('athSportsName')?.value.trim()||'';
+  const button=$('saveAthlete');
+
+  if(!team||!name){
+    alert('Selecione a equipe e informe o nome.');
     return;
   }
-  const photoFile=$('athPhoto')?.files?.[0]||null;
-  const finishLocalSave=(photoData='')=>{
-    const played=$('athPlayed')?.value==='true';const transferAllowed=$('athTransfer')?.value==='true'?true:($('athTransfer')?.value==='false'?false:!played);team.players.push({id,name,birth,city,cpf,registered,photo:photoData,played,transferAllowed,yellow:0,red:0,goals:0,role:'jogador',sportsName});
-    selectedTeam=team.id;['athName','athBirth','athCity','athCpf','athReg','athBid','athSportsName'].forEach(x=>{if($(x))$(x).value=''});if($('athPhoto'))$('athPhoto').value='';if($('athRole'))$('athRole').value='jogador';if($('athPlayed'))$('athPlayed').value='false';if($('athTransfer'))$('athTransfer').value='auto';saveDb();showTab('admin');alert('Atleta cadastrado nesta prévia local. A foto ficará guardada neste navegador.');
+
+  if(cpf&&cpf.length!==11){
+    alert('O CPF deve ter 11 dígitos, ou deixe o campo vazio.');
+    return;
+  }
+
+  const extraKey='tvfp_team_personnel_v1';
+  let extraPeople=[];
+  try{
+    extraPeople=JSON.parse(localStorage.getItem(extraKey)||'[]');
+  }catch(e){}
+
+  const existing=athleteMatchedByCpf;
+  const requestedBid=$('athBid').value.trim();
+
+  // EDITAR cadastro complementar: diretor, treinador, auxiliar,
+  // massagista ou musa. Mantém o mesmo BID.
+  if(existing?._local){
+    const oldId=String(existing.id);
+    const oldRole=existing.role||'jogador';
+
+    if(oldRole!=='jogador'&&role==='jogador'){
+      alert('A conversão de dirigente para jogador exige migração do cadastro para o banco central. Não alteramos esse tipo de cadastro nesta etapa.');
+      return;
+    }
+
+    if(oldRole==='jogador'&&role!=='jogador'){
+      alert('A conversão de jogador para dirigente exige migração do cadastro. Não alteramos esse tipo de cadastro nesta etapa.');
+      return;
+    }
+
+    if(role==='diretor'){
+      const count=extraPeople.filter(p=>
+        String(p.teamId)===String(team.id)&&
+        p.role==='diretor'&&String(p.id)!==oldId
+      ).length;
+
+      if(count>=5){
+        alert('Esta equipe já tem 5 diretores cadastrados.');
+        return;
+      }
+    }
+
+    if(role==='musa'){
+      const hasMusa=extraPeople.some(p=>
+        String(p.teamId)===String(team.id)&&
+        p.role==='musa'&&String(p.id)!==oldId
+      );
+
+      if(hasMusa){
+        alert('Esta equipe já tem uma musa cadastrada.');
+        return;
+      }
+    }
+
+    const photoFile=$('athPhoto')?.files?.[0]||null;
+    let photo=existing.photo||existing.photo_url||'';
+
+    if(photoFile){
+      if(photoFile.size>1500000){
+        alert('A foto deve ter até 1,5 MB nesta etapa.');
+        return;
+      }
+
+      try{
+        photo=await new Promise((resolve,reject)=>{
+          const reader=new FileReader();
+          reader.onload=()=>resolve(String(reader.result||''));
+          reader.onerror=()=>reject(new Error('Não foi possível ler a foto.'));
+          reader.readAsDataURL(photoFile);
+        });
+      }catch(error){
+        alert(error.message);
+        return;
+      }
+    }
+
+    const updated={
+      ...existing,
+      id:oldId,
+      name,
+      birth,
+      city,
+      cpf,
+      registered,
+      photo,
+      photo_url:photo,
+      role,
+      sportsName,
+      teamId:team.id
+    };
+
+    const oldTeam=findTeam(existing._originalTeamId||existing.teamId);
+
+    if(oldTeam){
+      oldTeam.players=(oldTeam.players||[]).filter(p=>
+        String(p.id)!==oldId
+      );
+    }
+
+    team.players=team.players||[];
+    team.players=team.players.filter(p=>String(p.id)!==oldId);
+    team.players.push(updated);
+
+    const extraIndex=extraPeople.findIndex(p=>String(p.id)===oldId);
+
+    if(extraIndex>=0){
+      extraPeople[extraIndex]=updated;
+    }else{
+      extraPeople.push(updated);
+    }
+
+    localStorage.setItem(extraKey,JSON.stringify(extraPeople));
+
+    selectedTeam=team.id;
+    athleteMatchedByCpf=null;
+
+    ['athName','athBirth','athCity','athCpf','athReg','athSportsName'].forEach(x=>{
+      if($(x))$(x).value='';
+    });
+
+    if($('athPhoto'))$('athPhoto').value='';
+    if($('athBid'))$('athBid').value='';
+    if($('athRole'))$('athRole').value='jogador';
+
+    saveDb();
+    renderAll();
+    showTab('admin');
+
+    alert('Cadastro atualizado! O número BID '+oldId+' foi preservado. Equipe e função atualizadas.');
+
+    return;
+  }
+
+  // Dirigente ou treinador encontrado no Supabase:
+  // atualiza o cadastro existente sem alterar o número BID.
+  if(existing?._remotePersonnel){
+    if(!team.dbId){
+      alert('A equipe selecionada precisa estar cadastrada no Supabase.');
+      return;
+    }
+
+    button.disabled=true;
+
+    try{
+      const {data:sessionData,error:sessionError}=
+        await supabaseClient.auth.getSession();
+
+      if(sessionError)throw sessionError;
+      if(!sessionData?.session)throw new Error('Entre como administrador.');
+
+      const {data:adminCheck,error:adminError}=
+        await supabaseClient.rpc('is_admin');
+
+      if(adminError)throw adminError;
+      if(adminCheck!==true)throw new Error('Acesso permitido somente ao administrador.');
+
+      let photoUrl=existing.foto_url||null;
+      const photoFile=$('athPhoto')?.files?.[0]||null;
+
+      if(photoFile){
+        if(photoFile.size>3*1024*1024){
+          throw new Error('A foto deve ter até 3 MB.');
+        }
+
+        const ext=(photoFile.name.split('.').pop()||'jpg')
+          .replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
+
+        const path='atletas/'+crypto.randomUUID()+'.'+ext;
+
+        const {error:uploadError}=await supabaseClient.storage
+          .from('bid-fotos')
+          .upload(path,photoFile,{
+            upsert:false,
+            contentType:photoFile.type||'image/jpeg'
+          });
+
+        if(uploadError)throw uploadError;
+
+        photoUrl=supabaseClient.storage
+          .from('bid-fotos').getPublicUrl(path).data.publicUrl;
+      }
+
+      const {error:updateError}=await supabaseClient
+        .from('equipe_pessoal')
+        .update({
+          nome:name,
+          funcao:role,
+          data_nascimento:birth||null,
+          cidade:city||null,
+          cpf:cpf||null,
+          nome_esportivo:sportsName||null,
+          foto_url:photoUrl,
+          equipe_id:team.dbId
+        })
+        .eq('id',existing.id);
+
+      if(updateError)throw updateError;
+
+      athleteMatchedByCpf=null;
+
+      if($('athPhoto'))$('athPhoto').value='';
+
+      await loadSupabaseTeams();
+      renderAll();
+      showTab('admin');
+
+      alert('Cadastro atualizado com sucesso! Número BID preservado. Função e equipe atualizadas.');
+
+    }catch(error){
+      console.error('Erro ao atualizar dirigente:',error);
+      alert('Não foi possível atualizar: '+(error.message||error));
+    }finally{
+      button.disabled=false;
+    }
+
+    return;
+  }
+
+  // Jogador encontrado no Supabase: atualizar o cadastro existente
+  // e somente o vínculo da competição selecionada.
+  if(existing?._remote){
+    if(role!=='jogador'){
+      alert('Este registro é um jogador do banco central. Não é possível convertê-lo em dirigente nesta operação.');
+      return;
+    }
+
+    if(!team.dbId){
+      alert('A equipe selecionada precisa estar cadastrada no Supabase.');
+      return;
+    }
+
+    button.disabled=true;
+
+    try{
+      const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+      if(sessionError)throw sessionError;
+
+      if(!sessionData?.session)throw new Error('Entre como administrador.');
+
+      const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
+      if(adminError)throw adminError;
+      if(adminCheck!==true)throw new Error('Acesso permitido somente ao administrador.');
+
+      let photoUrl=existing.foto_url||null;
+      const photoFile=$('athPhoto')?.files?.[0]||null;
+
+      if(photoFile){
+        if(photoFile.size>3*1024*1024)throw new Error('A foto deve ter até 3 MB.');
+
+        const ext=(photoFile.name.split('.').pop()||'jpg')
+          .replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
+
+        const path='atletas/'+crypto.randomUUID()+'.'+ext;
+
+        const {error:uploadError}=await supabaseClient.storage
+          .from('bid-fotos')
+          .upload(path,photoFile,{
+            upsert:false,
+            contentType:photoFile.type||'image/jpeg'
+          });
+
+        if(uploadError)throw uploadError;
+
+        photoUrl=supabaseClient.storage
+          .from('bid-fotos').getPublicUrl(path).data.publicUrl;
+      }
+
+      const {error:updateError}=await supabaseClient.from('ATLETAS')
+        .update({
+          nome:name,
+          data_nascimento:birth||null,
+          naturalidade:city||null,
+          nome_esportivo:sportsName||null,
+          cpf:cpf||null,
+          foto_url:photoUrl
+        })
+        .eq('id',existing.id);
+
+      if(updateError)throw updateError;
+
+      const compChoice=$('athCompetition')?.value||activeCompetition()?.id||'';
+      const compRecord=(db.competitions||[]).find(c=>
+        String(c.id)===String(compChoice)||
+        String(c.dbId)===String(compChoice)
+      );
+      const compDbId=compRecord?.dbId||compRecord?.id||compChoice;
+
+      if(!compDbId)throw new Error('Selecione a competição.');
+
+      const {data:links,error:linksError}=await supabaseClient
+        .from('competicao_atletas')
+        .select('atleta_id,competicao_id,equipe_id')
+        .eq('atleta_id',existing.id)
+        .eq('competicao_id',compDbId)
+        .limit(1);
+
+      if(linksError)throw linksError;
+
+      if(links?.length){
+        if(String(links[0].equipe_id)!==String(team.dbId)){
+          if(!confirm('Deseja transferir este atleta para a equipe selecionada nesta competição?'))return;
+
+          const {error:moveError}=await supabaseClient
+            .from('competicao_atletas')
+            .update({equipe_id:team.dbId,status:'Inscrito'})
+            .eq('atleta_id',existing.id)
+            .eq('competicao_id',compDbId);
+
+          if(moveError)throw moveError;
+        }
+      }else{
+        const {error:linkError}=await supabaseClient
+          .from('competicao_atletas')
+          .insert({
+            competicao_id:compDbId,
+            atleta_id:existing.id,
+            equipe_id:team.dbId,
+            status:'Inscrito'
+          });
+
+        if(linkError)throw linkError;
+      }
+
+      athleteMatchedByCpf=null;
+      ['athName','athBirth','athCity','athCpf','athReg','athSportsName','athBid'].forEach(x=>{
+        if($(x))$(x).value='';
+      });
+
+      if($('athPhoto'))$('athPhoto').value='';
+
+      await loadSupabaseTeams();
+      showTab('admin');
+
+      alert('Cadastro atualizado e vínculo da competição conferido. Número BID preservado.');
+
+    }catch(error){
+      console.error('Erro ao atualizar atleta:',error);
+      alert('Não foi possível concluir a atualização: '+(error.message||error));
+    }finally{
+      button.disabled=false;
+    }
+
+    return;
+  }
+
+  // Novo cadastro: impede reutilização de BID ou CPF já existente.
+  const id=requestedBid||'';
+
+  if(id&&(findAth(id)||extraPeople.some(p=>String(p.id)===id))){
+    alert('Esse número BID já existe. Localize o cadastro pelo CPF para editá-lo.');
+    return;
+  }
+
+  if(cpf){
+    const duplicateLocal=(db.teams||[]).some(t=>
+      (t.players||[]).some(p=>cpfDigits(p.cpf)===cpf)
+    )||extraPeople.some(p=>cpfDigits(p.cpf)===cpf);
+
+    if(duplicateLocal){
+      alert('Este CPF já existe na base local. Localize o cadastro antes de continuar.');
+      return;
+    }
+  }
+
+  const isUsedBid=candidate=>
+    !!findAth(candidate)||
+    extraPeople.some(p=>String(p.id)===String(candidate));
+
+  let newId=id;
+
+  if(!newId){
+    do{
+      newId='BID-'+String(db.nextBid++).padStart(4,'0');
+    }while(isUsedBid(newId));
+  }
+
+  const peopleForTeam=[
+    ...(team.players||[]),
+    ...extraPeople.filter(x=>String(x.teamId)===String(team.id))
+  ];
+
+  if(role==='diretor'&&peopleForTeam.filter(x=>x.role==='diretor').length>=5){
+    alert('Esta equipe já tem 5 diretores cadastrados.');
+    return;
+  }
+
+  if(role==='musa'&&peopleForTeam.some(x=>x.role==='musa')){
+    alert('Esta equipe já tem uma musa cadastrada.');
+    return;
+  }
+
+  button.disabled=true;
+
+  try{
+    const photoFile=$('athPhoto')?.files?.[0]||null;
+    let photo='';
+
+    if(photoFile){
+      if(role==='jogador'&&team.dbId&&photoFile.size>3*1024*1024){
+        throw new Error('A foto deve ter até 3 MB.');
+      }
+
+      if(role!=='jogador'&&photoFile.size>1500000){
+        throw new Error('A foto deve ter até 1,5 MB.');
+      }
+
+      if(role==='jogador'&&team.dbId){
+        const {data:sessionData}=await supabaseClient.auth.getSession();
+        if(!sessionData?.session)throw new Error('Entre como administrador.');
+
+        const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
+        if(adminError||adminCheck!==true)throw new Error('Acesso permitido somente ao administrador.');
+
+        const ext=(photoFile.name.split('.').pop()||'jpg')
+          .replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
+
+        const path='atletas/'+crypto.randomUUID()+'.'+ext;
+
+        const {error:uploadError}=await supabaseClient.storage
+          .from('bid-fotos')
+          .upload(path,photoFile,{
+            upsert:false,
+            contentType:photoFile.type||'image/jpeg'
+          });
+
+        if(uploadError)throw uploadError;
+
+        photo=supabaseClient.storage.from('bid-fotos')
+          .getPublicUrl(path).data.publicUrl;
+      }else{
+        photo=await new Promise((resolve,reject)=>{
+          const reader=new FileReader();
+          reader.onload=()=>resolve(String(reader.result||''));
+          reader.onerror=()=>reject(new Error('Não foi possível ler a foto.'));
+          reader.readAsDataURL(photoFile);
+        });
+      }
+    }
+
+   
+if(role!=='jogador'){
+  if(!team.dbId){
+    throw new Error('A equipe precisa estar cadastrada no Supabase.');
+  }
+
+  const {data:sessionData,error:sessionError}=
+    await supabaseClient.auth.getSession();
+
+  if(sessionError)throw sessionError;
+  if(!sessionData?.session)throw new Error('Entre como administrador.');
+
+  const {data:adminCheck,error:adminError}=
+    await supabaseClient.rpc('is_admin');
+
+  if(adminError)throw adminError;
+  if(adminCheck!==true)throw new Error('Acesso permitido somente ao administrador.');
+
+  // Confere BID e CPF na base central antes de cadastrar.
+  const {data:bidExists,error:bidError}=await supabaseClient
+    .from('equipe_pessoal')
+    .select('id')
+    .eq('numero_inscricao',newId)
+    .limit(1);
+
+  if(bidError)throw bidError;
+  if(bidExists?.length){
+    throw new Error('Este número BID já está cadastrado.');
+  }
+
+  if(cpf){
+    const {data:cpfExists,error:cpfError}=await supabaseClient
+      .from('equipe_pessoal')
+      .select('id')
+      .eq('cpf',cpf)
+      .limit(1);
+
+    if(cpfError)throw cpfError;
+    if(cpfExists?.length){
+      throw new Error('Este CPF já está cadastrado.');
+    }
+  }
+
+  let photoUrl=null;
+
+  if(photoFile){
+    const ext=(photoFile.name.split('.').pop()||'jpg')
+      .replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
+
+    const path='atletas/'+crypto.randomUUID()+'.'+ext;
+
+    const {error:uploadError}=await supabaseClient.storage
+      .from('bid-fotos')
+      .upload(path,photoFile,{
+        upsert:false,
+        contentType:photoFile.type||'image/jpeg'
+      });
+
+    if(uploadError)throw uploadError;
+
+    photoUrl=supabaseClient.storage
+      .from('bid-fotos').getPublicUrl(path).data.publicUrl;
+  }
+
+  const {data:created,error:insertError}=await supabaseClient
+    .from('equipe_pessoal')
+    .insert({
+      equipe_id:team.dbId,
+      nome:name,
+      funcao:role,
+      data_nascimento:birth||null,
+      cidade:city||null,
+      cpf:cpf||null,
+      numero_inscricao:newId,
+      nome_esportivo:sportsName||null,
+      foto_url:photoUrl
+    })
+    .select()
+    .single();
+
+  if(insertError)throw insertError;
+
+  const person={
+    id:newId,
+    dbId:created.id,
+    name,
+    birth,
+    city,
+    cpf,
+    registered,
+    photo:photoUrl||'',
+    photo_url:photoUrl||'',
+    played:false,
+    transferAllowed:false,
+    yellow:0,
+    red:0,
+    goals:0,
+    role,
+    sportsName,
+    teamId:team.id,
+    _remotePersonnel:true
   };
-  if(photoFile){const reader=new FileReader();reader.onload=()=>finishLocalSave(String(reader.result||''));reader.onerror=()=>alert('Não foi possível ler a foto. Tente outra imagem.');reader.readAsDataURL(photoFile)}else finishLocalSave();
- });
+
+  extraPeople.push(person);
+  localStorage.setItem(extraKey,JSON.stringify(extraPeople));
+
+  team.players=team.players||[];
+  team.players.push(person);
+
+  selectedTeam=team.id;
+  saveDb();
+
+  await loadSupabaseTeams();
+  renderAll();
+  showTab('admin');
+
+  alert('Cadastro salvo no Supabase! BID: '+newId+'. Número preservado.');
+
+  return;
+}
+
+
+    if(team.dbId){
+      const {data:sessionData}=await supabaseClient.auth.getSession();
+      if(!sessionData?.session)throw new Error('Entre com o login de administrador.');
+
+      const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
+      if(adminError||adminCheck!==true)throw new Error('Acesso permitido somente ao administrador.');
+
+      const {error}=await supabaseClient.from('ATLETAS').insert({
+        nome,
+        data_nascimento:birth||null,
+        numero_inscricao:newId,
+        cpf:cpf||null,
+        naturalidade:city||null,
+        nome_esportivo:sportsName||null,
+        foto_url:photo||null,
+        equipe_id:team.dbId,
+        status:'Inscrito',
+        gols:0,
+        cartoes_amarelos:0,
+        cartoes_vermelhos:0,
+        apto_jogar:false
+      });
+
+      if(error)throw error;
+
+      await loadSupabaseTeams();
+      showTab('admin');
+      alert('Atleta cadastrado no Supabase. BID: '+newId);
+      return;
+    }
+
+    const played=$('athPlayed')?.value==='true';
+    const transferAllowed=$('athTransfer')?.value==='true'?true:
+      ($('athTransfer')?.value==='false'?false:!played);
+
+    team.players=team.players||[];
+    team.players.push({
+      id:newId,name,birth,city,cpf,registered,photo,
+      played,transferAllowed,yellow:0,red:0,goals:0,
+      role:'jogador',sportsName
+    });
+
+    selectedTeam=team.id;
+    saveDb();
+    showTab('admin');
+    alert('Atleta cadastrado na prévia local. BID: '+newId);
+
+  }catch(error){
+    console.error('Erro ao salvar pessoa:',error);
+    alert('Não foi possível salvar: '+(error.message||error));
+  }finally{
+    button.disabled=false;
+  }
+});
+
  $('addEvent').addEventListener('click',()=>{
   const f=findAth($('gameAthlete').value);if(!f){alert('Cadastre ou selecione um atleta primeiro.');return}
   const {p,t}=f,type=$('gameEvent').value,match=$('gameName').value.trim();if(!match){alert('Informe o nome da partida.');return}
