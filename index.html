@@ -2419,6 +2419,9 @@ async function lookupAthleteByCpf(){
           ? {...row,_remotePersonnel:true}
           : {...row,_remote:true};
 
+       if(isPersonnel && row.funcao){
+  $('athRole').value=row.funcao;
+}
         $('athName').value=row.nome||'';
         $('athSportsName').value=row.nome_esportivo||'';
         $('athBirth').value=row.data_nascimento||'';
