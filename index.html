@@ -183,9 +183,21 @@ header,.hero,.topbar,.banner,.brand-header{background:#050505!important;backgrou
 .idcard-bid{display:flex;align-items:center;gap:1.2mm;background:#fff!important;color:#050505!important;border:0.4mm solid #ffd95b!important;border-radius:1mm;padding:1mm 1.2mm!important;font-size:8pt!important;font-weight:900!important}
 .idcard-bid strong{color:#111!important}.idcard-bid b{font-size:9pt!important;color:#050505!important;letter-spacing:.3px!important}
 .idcard-role{margin-top:.4mm!important;padding:1mm 2mm!important;font-size:7.5pt!important;display:inline-block!important;background:#d6ad36!important;color:#111!important}
-.idcard-role-diretor .idcard-role{background:#ffd92e!important;color:#111!important}
-.idcard-role-musa .idcard-role{background:#e6005c!important;color:#fff!important}
-.idcard-role-jogador .idcard-role{background:#d6ad36!important;color:#111!important}
+.idcard-role-diretor .idcard-role,
+.idcard-role-treinador .idcard-role,
+.idcard-role-auxiliar .idcard-role,
+.idcard-role-massagista .idcard-role{
+  background:#ffd92e!important;
+  color:#111!important;
+}
+.idcard-role-musa .idcard-role{
+  background:#e6005c!important;
+  color:#fff!important;
+}
+.idcard-role-jogador .idcard-role{
+  background:#d6ad36!important;
+  color:#111!important;
+}
 .idcard-section{margin:0 2mm 1mm!important;border:.35mm solid #d6ad36!important}
 .idcard-section-title{padding:.6mm 1.2mm!important;font-size:5.5pt!important;background:#202020!important;color:#ffd95b!important}
 .idcard-section-content{padding:.7mm 1mm!important;gap:1mm!important;font-size:5.2pt!important}
@@ -2129,8 +2141,9 @@ function renderProfile(id){
  const cardLogo=logo?`<img class="idcard-brandmark" src="${logo}" alt="Símbolo da equipe">`:`<div class="idcard-brandmark" style="display:grid;place-items:center;color:#111;font-weight:bold">⚽</div>`;
  const competitionMark=competitionLogo?`<img class="idcard-competition-mark" src="${competitionLogo}" alt="Símbolo da competição">`:`<div class="idcard-competition-mark" style="display:grid;place-items:center;color:#111;font-size:5pt">COMP.</div>`;
  const photoBlock=photo?`<img class="idcard-photo" src="${photo}" alt="Foto de ${esc(p.name)}">`:`<div class="idcard-photo-placeholder">FOTO<br>DO ATLETA</div>`;
- const role=p.role||'jogador';
- const roleLabel=role==='diretor'?'DIRETOR':role==='musa'?'MUSA':'JOGADOR';
+ const role=String(p.role||'jogador').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const roleLabels={jogador:'JOGADOR',diretor:'DIRETOR',treinador:'TREINADOR',auxiliar:'AUXILIAR',massagista:'MASSAGISTA',musa:'MUSA'};
+const roleLabel=roleLabels[role]||'JOGADOR';
  const people=(t.players||[]).filter(x=>x.role==='diretor');
  const muse=(t.players||[]).find(x=>x.role==='musa');
  const personSlots=Array.from({length:5},(_,i)=>{const d=people[i];return `<div class="idcard-person">${d?.photo?`<img src="${d.photo}" alt="" style="width:100%;height:10mm;object-fit:cover">`:`<div style="height:10mm;display:grid;place-items:center;color:#888">👤</div>`}<b>DIRETOR ${i+1}</b><span>${d?esc(d.sportsName||d.name):'Não cadastrado'}</span></div>`}).join('');
