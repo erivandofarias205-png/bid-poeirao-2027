@@ -6896,10 +6896,24 @@ setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifie
 #finishedFixtures .fixture-competition img{width:24px;height:24px;object-fit:contain;border-radius:5px;background:#fff;padding:2px;flex:0 0 auto}
 #finishedFixtures .fixture-competition-name{overflow-wrap:anywhere}
 @media(max-width:520px){#finishedFixtures.fixtures{grid-template-columns:1fr!important;max-height:none}}
-/* Dirigentes / Musa (não atletas): cor diferente na tabela do BID */
-tbody tr.row-staff,tbody tr.row-staff:nth-child(odd),tbody tr.row-staff:nth-child(even){background:#3b1659!important;box-shadow:inset 5px 0 0 #b26bff}
-tbody tr.row-staff td{background:#3b1659!important;border-color:#6d2fa0!important}
-tbody tr.row-staff td.bid{background:#b26bff!important;color:#fff!important}
+/* Dirigentes / Musa: identidade visual dourada TVFP */
+tbody tr.row-staff,
+tbody tr.row-staff:nth-child(odd),
+tbody tr.row-staff:nth-child(even){
+  background:#fff0bd!important;
+  box-shadow:inset 5px 0 0 #d6ad36!important;
+}
+
+tbody tr.row-staff td{
+  background:#fff0bd!important;
+  border-color:#d6ad36!important;
+  color:#171717!important;
+}
+
+tbody tr.row-staff td.bid{
+  background:#d6ad36!important;
+  color:#171717!important;
+}
  <style id="finished-panel-taller">
  /* CORREÇÃO CONFIRMADA: PAINEL DE FINALIZADOS SEM CORTE */
 #publicView #finishedFixtures {
