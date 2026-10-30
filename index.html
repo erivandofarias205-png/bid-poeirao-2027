@@ -3305,7 +3305,7 @@ const renderGroupedFixtures = list => {
   const tables=$('classificationTables');
   if(tables){
     $('classificationFormatLabel').textContent=isLeague?'PONTOS CORRIDOS':isKnockout?'MATA-MATA · CONFRONTOS POR FASE':fmt.includes('mista')?'FASE DE GRUPOS + MATA-MATA':'CLASSIFICAÇÃO POR GRUPOS';
-let phaseHTML='';
+   let phaseHTML='';
    if(isKnockout || fmt.includes('mista')){
   const allMatches=(db.matches||[])
     .filter(matchBelongsToActiveCompetition);
@@ -3427,7 +3427,7 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, vi
   }).join('');
 
   // HTML dos confrontos guardado para juntar com os grupos.
-
+}
 if(!isLeague){
   // Sempre renderiza os grupos na ordem alfabética A, B, C... incluindo grupos vazios.
       // A atribuição salva na competição (teamGroups) tem prioridade sobre o campo antigo da equipe.
