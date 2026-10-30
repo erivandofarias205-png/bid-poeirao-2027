@@ -4442,16 +4442,41 @@ return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team
 <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
 
 <div class="sheet-personnel-grid">
-  ${[ {team:home,label:'MANDANTE'}, {team:away,label:'VISITANTE'} ].map(({team,label})=>{
-    const people=(team?.players||[]).filter(p=>{
-      const role=String(p.role||p.funcao||p.cargo||'')
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-        .toLowerCase().trim();
-      return ['treinador','auxiliar','massagista','diretor','musa'].includes(role);
-    });
+  ${[
+    {team:home,label:'MANDANTE'},
+    {team:away,label:'VISITANTE'}
+  ].map(({team,label})=>{
+    const roles=[
+      {key:'treinador',label:'TREINADOR'},
+      {key:'auxiliar',label:'AUXILIAR'},
+      {key:'massagista',label:'MASSAGISTA'},
+      {key:'diretor',label:'DIRETOR'},
+      {key:'musa',label:'MUSA'}
+    ];
+
+    const people=team?.players||[];
+
+    const normalizeRole=p=>String(
+      p?.role||p?.funcao||p?.function||p?.cargo||p?.position||''
+    ).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+     .toLowerCase().trim();
+
     return `<section>
       <h3>EQUIPE PESSOAL — ${label}</h3>
-      ${people.map(p=>`<div class="event-line">${esc(p.role||p.funcao||p.cargo||'')} : ${esc(p.name||p.nome||'')}</div>`).join('')}
+      ${roles.map(r=>{
+        const person=people.find(p=>normalizeRole(p)===r.key);
+        const photo=person?.photo||person?.foto_url||person?.photoUrl||person?.foto||'';
+        const name=person?(person.name||person.nome||''):'';
+
+        return `<div class="sheet-director-line">
+          ${photo
+            ? `<img class="sheet-director-photo" src="${esc(photo)}" alt="">`
+            : `<span class="sheet-director-photo sheet-director-photo-empty"></span>`
+          }
+          <span class="sheet-director-name">${esc(name)}</span>
+          <span class="sheet-director-function">${r.label}</span>
+        </div>`;
+      }).join('')}
     </section>`;
   }).join('')}
 </div>
