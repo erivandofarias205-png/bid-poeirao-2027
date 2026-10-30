@@ -4474,12 +4474,13 @@ return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team
     {team:away,label:'VISITANTE'}
   ].map(({team,label})=>{
     const roles=[
-      {key:'treinador',label:'TREINADOR'},
-      {key:'auxiliar',label:'AUXILIAR'},
-      {key:'massagista',label:'MASSAGISTA'},
-      {key:'diretor',label:'DIRETOR'},
-      {key:'musa',label:'MUSA'}
-    ];
+  {key:'treinador',label:'TREINADOR'},
+  {key:'auxiliar',label:'AUXILIAR'},
+  {key:'massagista',label:'MASSAGISTA'},
+  {key:'diretor',label:'DIRETOR'},
+  {key:'diretor',label:'2º DIRETOR',second:true},
+  {key:'musa',label:'MUSA'}
+];
 
     const people=team?.players||[];
 
@@ -4491,7 +4492,8 @@ return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team
     return `<section>
       <h3>EQUIPE PESSOAL — ${label}</h3>
       ${roles.map(r=>{
-        const person=people.find(p=>normalizeRole(p)===r.key);
+        const matching=people.filter(p=>normalizeRole(p)===r.key);
+const person=r.second?matching[1]:matching[0];
         const photo=person?.photo||person?.foto_url||person?.photoUrl||person?.foto||'';
         const name=person?(person.name||person.nome||''):'';
 
