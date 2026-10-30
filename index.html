@@ -1620,75 +1620,148 @@ overflow: visible !important;
   }
 }</style>
   
+
 <style id="sumula-compactacao-a4">
 @media print {
 
-  /* SEGUNDA FOLHA: APROVEITAR MELHOR A ÁREA A4 */
+  /* SEGUNDA FOLHA: COMPACTAÇÃO GERAL */
   #matchSheet .sheet-page-two {
+    width: 196mm !important;
+    height: 283mm !important;
+    min-height: 283mm !important;
+    max-height: 283mm !important;
     padding: 3mm !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  #matchSheet .sheet-page-two,
+  #matchSheet .sheet-page-two * {
+    font-size: 7pt !important;
+    line-height: 1.05 !important;
     box-sizing: border-box !important;
   }
 
-  /* EQUIPE PESSOAL: MENOS ESPAÇO ENTRE AS COLUNAS */
+  #matchSheet .sheet-page-two .sheet-page-title {
+    font-size: 10pt !important;
+    padding: 2mm !important;
+    margin: 0 0 1.5mm !important;
+  }
+
+  /* EQUIPE PESSOAL */
   #matchSheet .sheet-page-two .sheet-personnel-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    column-gap: 2mm !important;
-    row-gap: 1mm !important;
-    width: 100% !important;
+    gap: 2mm !important;
     margin: 1mm 0 !important;
   }
 
+  #matchSheet .sheet-page-two .sheet-personnel-grid h3 {
+    padding: 1mm !important;
+    margin: 0 !important;
+  }
+
   #matchSheet .sheet-page-two .sheet-director-line {
-    min-height: 5mm !important;
-    height: 5mm !important;
+    height: 4mm !important;
+    min-height: 4mm !important;
     padding: 0 !important;
     margin: 0 !important;
     gap: 1mm !important;
   }
 
-  /* GOLS E CARTÕES: REDUZIR ESPAÇOS LATERAIS E VERTICAIS */
+  #matchSheet .sheet-page-two .sheet-director-photo {
+    width: 3.5mm !important;
+    height: 3.5mm !important;
+  }
+
+  /* GOLS E CARTÕES */
   #matchSheet .sheet-page-two .sheet-event-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    column-gap: 2mm !important;
-    row-gap: 1.5mm !important;
-    width: 100% !important;
-    margin-top: 1mm !important;
+    gap: 1mm !important;
+    margin: 1mm 0 !important;
   }
 
   #matchSheet .sheet-page-two .sheet-event-grid section {
-    min-width: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+    min-width: 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-event-grid h3 {
+    padding: 1mm !important;
+    margin: 0 !important;
   }
 
   #matchSheet .sheet-page-two .event-line,
   #matchSheet .sheet-page-two .event-pair {
-    min-height: 6mm !important;
-    padding: 1mm 1.5mm !important;
+    min-height: 4mm !important;
+    height: 4mm !important;
+    padding: 0.5mm 1mm !important;
     margin: 0 !important;
-    line-height: 1.1 !important;
-    box-sizing: border-box !important;
   }
 
-  /* ARBITRAGEM E RELATÓRIO */
+  /* SUBSTITUIÇÕES */
+  #matchSheet .sheet-page-two .sheet-substitution-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 2mm !important;
+    margin: 1mm 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-substitution-grid section {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-substitution-grid h3 {
+    padding: 1mm !important;
+    margin: 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-substitution-grid div {
+    min-height: 4mm !important;
+    padding: 0.5mm !important;
+  }
+
+  /* ARBITRAGEM */
   #matchSheet .sheet-page-two .sheet-referee-grid {
-    margin-top: 1.5mm !important;
+    margin: 1mm 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-referee-grid h3 {
+    padding: 1mm !important;
+    margin: 0 !important;
   }
 
   #matchSheet .sheet-page-two .sheet-referee-grid div {
-    padding: 1mm !important;
-    line-height: 1.1 !important;
+    min-height: 4mm !important;
+    padding: 0.5mm 1mm !important;
   }
 
+  /* RELATÓRIO */
   #matchSheet .sheet-page-two .sheet-report {
-    margin-top: 1.5mm !important;
+    margin: 1mm 0 !important;
   }
 
+  #matchSheet .sheet-page-two .sheet-report h3 {
+    padding: 1mm !important;
+    margin: 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-report div {
+    height: 4mm !important;
+    min-height: 4mm !important;
+    padding: 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-sign-row {
+    margin-top: 1mm !important;
+    padding: 1mm 0 !important;
+  }
 }
 </style>
-
 </head>
 <body>
 <header>
