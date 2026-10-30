@@ -1621,6 +1621,36 @@ overflow: visible !important;
   
 
 <style id="sumula-compactacao-a4">
+
+  /* PERMITIR QUE AS TABELAS DOS ATLETAS OCUPem A PRIMEIRA FOLHA */
+  #matchSheet .sheet-page-one .sheet-rosters {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: start !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+    margin: 0 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team table,
+  #matchSheet .sheet-page-one .sheet-team tbody,
+  #matchSheet .sheet-page-one .sheet-team tr {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team th,
+  #matchSheet .sheet-page-one .sheet-team td {
+    height: 3.5mm !important;
+    padding: 0.3mm !important;
+    font-size: 5.5pt !important;
+    line-height: 1 !important;
+  }
 @media print {
 
   /* SEGUNDA FOLHA: COMPACTAÇÃO GERAL */
@@ -1761,17 +1791,30 @@ overflow: visible !important;
   }
 }
 
-/* AJUSTE EXCLUSIVO DA PRIMEIRA FOLHA */
+
+/* AJUSTE DA PRIMEIRA FOLHA — SÚMULA A4 */
 @media print {
 
   #matchSheet .sheet-page-one {
+    width: 196mm !important;
+    height: 283mm !important;
+    min-height: 283mm !important;
+    max-height: 283mm !important;
     padding: 3mm !important;
+    margin: 0 !important;
     overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  #matchSheet .sheet-page-one,
+  #matchSheet .sheet-page-one * {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
   #matchSheet .sheet-page-one .sheet-heading {
     padding: 1mm !important;
-    margin-bottom: 1mm !important;
+    margin: 0 0 1mm !important;
   }
 
   #matchSheet .sheet-page-one .sheet-meta {
@@ -1782,35 +1825,39 @@ overflow: visible !important;
   #matchSheet .sheet-page-one .sheet-rosters {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 2mm !important;
+    gap: 1.5mm !important;
+    width: 100% !important;
     margin: 1mm 0 !important;
+    align-items: start !important;
   }
 
   #matchSheet .sheet-page-one .sheet-team {
+    min-width: 0 !important;
+    width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    break-inside: avoid !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team h3 {
+    font-size: 6.5pt !important;
+    padding: 1mm !important;
+    margin: 0 !important;
   }
 
   #matchSheet .sheet-page-one .sheet-team table {
     width: 100% !important;
     table-layout: fixed !important;
-    font-size: 6pt !important;
+    border-collapse: collapse !important;
+    font-size: 5.5pt !important;
   }
 
   #matchSheet .sheet-page-one .sheet-team th,
   #matchSheet .sheet-page-one .sheet-team td {
-    height: 4mm !important;
-    min-height: 4mm !important;
-    padding: 0.5mm !important;
-    font-size: 6pt !important;
+    height: 3.5mm !important;
+    min-height: 3.5mm !important;
+    padding: 0.3mm !important;
+    font-size: 5.5pt !important;
     line-height: 1 !important;
-  }
-
-  #matchSheet .sheet-page-one .sheet-team h3 {
-    padding: 1mm !important;
-    margin: 1mm 0 !important;
-    font-size: 7pt !important;
   }
 
   #matchSheet .sheet-page-one .sheet-player-photo,
@@ -1818,6 +1865,7 @@ overflow: visible !important;
     width: 4mm !important;
     height: 4mm !important;
     min-width: 4mm !important;
+    object-fit: cover !important;
   }
 
   #matchSheet .sheet-page-one .sheet-sign-row {
@@ -1825,6 +1873,8 @@ overflow: visible !important;
     padding: 1mm 0 !important;
   }
 }
+</style>
+
 </style>
 </head>
 <body>
