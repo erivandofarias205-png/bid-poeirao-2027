@@ -4442,14 +4442,18 @@ return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team
 <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
 
 <div class="sheet-personnel-grid">
-  <section>
-    <h3>EQUIPE PESSOAL — MANDANTE</h3>
-    ${(findTeam(m.homeTeamId)?.players||[]).filter(p=>p._remotePersonnel===true).map(p=>`<div class="event-line">${esc(p.role||p.funcao||'')} : ${esc(p.name||p.nome||'')}</div>`).join('')}
-  </section>
-  <section>
-    <h3>EQUIPE PESSOAL — VISITANTE</h3>
-    ${(findTeam(m.awayTeamId)?.players||[]).filter(p=>p._remotePersonnel===true).map(p=>`<div class="event-line">${esc(p.role||p.funcao||'')} : ${esc(p.name||p.nome||'')}</div>`).join('')}
-  </section>
+  ${[ {team:home,label:'MANDANTE'}, {team:away,label:'VISITANTE'} ].map(({team,label})=>{
+    const people=(team?.players||[]).filter(p=>{
+      const role=String(p.role||p.funcao||p.cargo||'')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .toLowerCase().trim();
+      return ['treinador','auxiliar','massagista','diretor','musa'].includes(role);
+    });
+    return `<section>
+      <h3>EQUIPE PESSOAL — ${label}</h3>
+      ${people.map(p=>`<div class="event-line">${esc(p.role||p.funcao||p.cargo||'')} : ${esc(p.name||p.nome||'')}</div>`).join('')}
+    </section>`;
+  }).join('')}
 </div>
 
 <div class="sheet-event-grid">
