@@ -2382,80 +2382,89 @@ $('saveTeam').addEventListener('click', async ()=>{
  let athleteMatchedByCpf = null;
 
 
+
 async function lookupAthleteByCpf(){
   const cpf=cpfDigits($('athCpf')?.value||'');
   athleteMatchedByCpf=null;
 
   if(cpf.length!==11)return;
 
-  const role=$('athRole')?.value||'jogador';
-
-  if(typeof supabaseClient!=='undefined'&&supabaseClient){
-    try{
-      const table=role==='jogador'?'ATLETAS':'equipe_pessoal';
-
-      const columns=role==='jogador'
-        ?'id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo'
-        :'id,equipe_id,nome,funcao,data_nascimento,cidade,cpf,numero_inscricao,nome_esportivo,foto_url';
-
-      const {data,error}=await supabaseClient
-        .from(table)
-        .select(columns)
-        .eq('cpf',cpf)
-        .limit(2);
-
-      if(error)throw error;
-
-      if(data?.length>1){
-        alert('Este CPF aparece em mais de um cadastro. Não continue até verificar os duplicados.');
-        return;
-      }
-
-      if(data?.length===1){
-        const row=data[0];
-        const isPersonnel=role!=='jogador';
-
-        athleteMatchedByCpf=isPersonnel
-          ? {...row,_remotePersonnel:true}
-          : {...row,_remote:true};
-
-       if(isPersonnel && row.funcao){
-  $('athRole').value=row.funcao;
-}
-        $('athName').value=row.nome||'';
-        $('athSportsName').value=row.nome_esportivo||'';
-        $('athBirth').value=row.data_nascimento||'';
-        $('athCity').value=isPersonnel
-          ?row.cidade||''
-          :row.naturalidade||'';
-        $('athBid').value=row.numero_inscricao||'';
-
-        const team=(db.teams||[]).find(t=>
-          String(t.dbId)===String(row.equipe_id)
-        );
-
-        if(team)$('athTeam').value=team.id;
-
-        alert(
-          (isPersonnel?'Cadastro de dirigente/treinador':'Atleta')+
-          ' encontrado! BID preservado. Confira os dados antes de salvar.'
-        );
-
-        return;
-      }
-
-    }catch(error){
-      console.error('Erro ao consultar cadastro:',error);
-      alert('Não foi possível consultar o cadastro no Supabase: '+error.message);
-      return;
-    }
+  if(typeof supabaseClient==='undefined'||!supabaseClient){
+    alert('Conexão com o banco de dados indisponível.');
+    return;
   }
 
-  alert('Nenhum cadastro encontrado com esse CPF nesta categoria.');
-}
+  try{
+    // Pesquisa o CPF nas duas tabelas, independentemente da função escolhida.
+    const [athletesResult,personnelResult]=await Promise.all([
+      supabaseClient.from('ATLETAS')
+        .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo')
+        .eq('cpf',cpf)
+        .limit(2),
 
- $('athCpf')?.addEventListener('change',lookupAthleteByCpf);
- $('athCpf')?.addEventListener('blur',lookupAthleteByCpf);
+      supabaseClient.from('equipe_pessoal')
+        .select('id,equipe_id,nome,funcao,data_nascimento,cidade,cpf,numero_inscricao,nome_esportivo,foto_url')
+        .eq('cpf',cpf)
+        .limit(2)
+    ]);
+
+    if(athletesResult.error)throw athletesResult.error;
+    if(personnelResult.error)throw personnelResult.error;
+
+    const athletes=athletesResult.data||[];
+    const personnel=personnelResult.data||[];
+
+    const matches=[
+      ...athletes.map(row=>({row,kind:'jogador'})),
+      ...personnel.map(row=>({row,kind:'pessoal'}))
+    ];
+
+    if(matches.length>1){
+      alert('Este CPF aparece em mais de um cadastro. Não altere nada até verificar os registros duplicados.');
+      return;
+    }
+
+    if(matches.length===0){
+      alert('Nenhum cadastro encontrado com esse CPF.');
+      return;
+    }
+
+    const {row,kind}=matches[0];
+    const isPersonnel=kind==='pessoal';
+
+    athleteMatchedByCpf=isPersonnel
+      ?{...row,_remotePersonnel:true}
+      :{...row,_remote:true};
+
+    // Carrega automaticamente a função correta.
+    $('athRole').value=isPersonnel?row.funcao:'jogador';
+
+    $('athName').value=row.nome||'';
+    $('athSportsName').value=row.nome_esportivo||'';
+    $('athBirth').value=row.data_nascimento||'';
+    $('athCity').value=isPersonnel
+      ?row.cidade||''
+      :row.naturalidade||'';
+    $('athBid').value=row.numero_inscricao||'';
+
+    const team=(db.teams||[]).find(t=>
+      String(t.dbId)===String(row.equipe_id)
+    );
+
+    if(team)$('athTeam').value=team.id;
+
+    alert(
+      'Cadastro encontrado! Função: '+
+      (isPersonnel?row.funcao:'jogador')+
+      '. BID: '+(row.numero_inscricao||'não informado')+
+      '. Dados carregados para edição.'
+    );
+
+  }catch(error){
+    console.error('Erro ao consultar CPF:',error);
+    alert('Erro ao consultar cadastro: '+(error.message||error));
+  }
+}
 
 
 $('saveAthlete').addEventListener('click',async ()=>{
