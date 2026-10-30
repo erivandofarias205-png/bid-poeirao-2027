@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1757,6 +1756,71 @@ overflow: visible !important;
   }
 
   #matchSheet .sheet-page-two .sheet-sign-row {
+    margin-top: 1mm !important;
+    padding: 1mm 0 !important;
+  }
+}
+
+/* AJUSTE EXCLUSIVO DA PRIMEIRA FOLHA */
+@media print {
+
+  #matchSheet .sheet-page-one {
+    padding: 3mm !important;
+    overflow: hidden !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-heading {
+    padding: 1mm !important;
+    margin-bottom: 1mm !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-meta {
+    margin: 1mm 0 !important;
+    padding: 1mm !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-rosters {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 2mm !important;
+    margin: 1mm 0 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team {
+    margin: 0 !important;
+    padding: 0 !important;
+    break-inside: avoid !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 6pt !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team th,
+  #matchSheet .sheet-page-one .sheet-team td {
+    height: 4mm !important;
+    min-height: 4mm !important;
+    padding: 0.5mm !important;
+    font-size: 6pt !important;
+    line-height: 1 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team h3 {
+    padding: 1mm !important;
+    margin: 1mm 0 !important;
+    font-size: 7pt !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-player-photo,
+  #matchSheet .sheet-page-one .sheet-player-photo-empty {
+    width: 4mm !important;
+    height: 4mm !important;
+    min-width: 4mm !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-sign-row {
     margin-top: 1mm !important;
     padding: 1mm 0 !important;
   }
