@@ -1619,6 +1619,76 @@ overflow: visible !important;
     object-fit:cover!important;
   }
 }</style>
+  
+<style id="sumula-compactacao-a4">
+@media print {
+
+  /* SEGUNDA FOLHA: APROVEITAR MELHOR A ÁREA A4 */
+  #matchSheet .sheet-page-two {
+    padding: 3mm !important;
+    box-sizing: border-box !important;
+  }
+
+  /* EQUIPE PESSOAL: MENOS ESPAÇO ENTRE AS COLUNAS */
+  #matchSheet .sheet-page-two .sheet-personnel-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: 2mm !important;
+    row-gap: 1mm !important;
+    width: 100% !important;
+    margin: 1mm 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-director-line {
+    min-height: 5mm !important;
+    height: 5mm !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 1mm !important;
+  }
+
+  /* GOLS E CARTÕES: REDUZIR ESPAÇOS LATERAIS E VERTICAIS */
+  #matchSheet .sheet-page-two .sheet-event-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: 2mm !important;
+    row-gap: 1.5mm !important;
+    width: 100% !important;
+    margin-top: 1mm !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-event-grid section {
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #matchSheet .sheet-page-two .event-line,
+  #matchSheet .sheet-page-two .event-pair {
+    min-height: 6mm !important;
+    padding: 1mm 1.5mm !important;
+    margin: 0 !important;
+    line-height: 1.1 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ARBITRAGEM E RELATÓRIO */
+  #matchSheet .sheet-page-two .sheet-referee-grid {
+    margin-top: 1.5mm !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-referee-grid div {
+    padding: 1mm !important;
+    line-height: 1.1 !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-report {
+    margin-top: 1.5mm !important;
+  }
+
+}
+</style>
+
 </head>
 <body>
 <header>
