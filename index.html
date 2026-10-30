@@ -4500,6 +4500,7 @@ return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team
   <div class="sheet-rosters two-rosters">${roster(home,'home',m.homeName)}${roster(away,'away',m.awayName)}</div>
   <div class="sheet-sign-row"><span>Assinatura do representante mandante: __________________________</span><span>Assinatura do representante visitante: __________________________</span></div>
   </div>
+  <div style="text-align:center;font:7pt Cambria,serif;color:#555;margin-top:3mm;">BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app</div>
   <div class="sheet-page sheet-page-two">
 <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
 
@@ -4575,7 +4576,10 @@ const person=r.second?matching[1]:matching[0];
   <section class="sheet-referee-grid"><h3>ARBITRAGEM / OFICIAIS</h3><div><b>Árbitro central:</b> ${esc($('sheetReferee')?.value||'____________________________________________')}</div><div><b>Assistente 1:</b> ________________________________________________</div><div><b>Assistente 2:</b> ________________________________________________</div><div><b>4º árbitro:</b> __________________________________________________</div><div><b>Delegado:</b> ${esc($('sheetDelegate')?.value||'____________________________________________')}</div></section>
   <section class="sheet-report"><h3>RELATÓRIO DO ÁRBITRO / OCORRÊNCIAS</h3>${Array.from({length:12},()=>'<div></div>').join('')}</section>
   <div class="sheet-sign-row"><span>Assinatura do árbitro: ______________________________</span><span>Data: ____/____/________</span></div>
-  </div></div>`;
+  <div style="text-align:center;font-family:Cambria,serif;font-size:7pt;color:#555;margin-top:3mm;white-space:nowrap;">
+BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app
+</div>
+</div></div>`;
  }$('loadSheet')?.addEventListener('click',buildMatchSheet);
  $('sheetMatch')?.addEventListener('change',buildMatchSheet);
  $('printSheet')?.addEventListener('click',()=>{if(!$('sheetMatch')?.value){alert('Selecione um jogo primeiro.');return;}if(!$('matchSheet')?.querySelector('.sheet-heading'))buildMatchSheet();window.print();});
