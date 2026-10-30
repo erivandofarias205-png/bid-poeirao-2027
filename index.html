@@ -5792,7 +5792,34 @@ document.addEventListener('DOMContentLoaded', function () {
 .sheet-event-grid section,.sheet-referee-grid,.sheet-report{border:1px solid #333;break-inside:avoid}
 .sheet-event-grid h3,.sheet-referee-grid h3,.sheet-report h3{background:#f3c75a;color:#111;font-size:8pt;margin:0;padding:2mm;border-bottom:1px solid #333}
 .event-line{height:7mm;border-bottom:1px solid #aaa;padding:1.5mm;font-size:7pt}
-.sheet-referee-grid{margin-top:3mm}
+/* ESPAÇOS MAIORES PARA GOLS E CARTÕES */
+.sheet-event-grid .event-pair{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4mm;
+  min-height:10mm;
+  align-items:center;
+  padding:1.5mm 2mm;
+  border-bottom:1px solid #aaa;
+  font-size:9pt;
+  line-height:1.6;
+}
+
+.sheet-event-grid .event-pair span{
+  display:block;
+  padding:2mm 1mm;
+  white-space:nowrap;
+}
+
+/* SUBSTITUIÇÕES COM MAIS ESPAÇO */
+.sheet-substitution-grid .event-line{
+  height:auto!important;
+  min-height:10mm!important;
+  padding:2mm!important;
+  font-size:9pt!important;
+  line-height:1.6!important;
+}
+ .sheet-referee-grid{margin-top:3mm}
 .sheet-referee-grid div{padding:2mm;border-bottom:1px solid #aaa}
 .sheet-report{margin-top:3mm}
 .sheet-report div{height:7mm;border-bottom:1px solid #aaa}
