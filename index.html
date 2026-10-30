@@ -4511,13 +4511,31 @@ const person=r.second?matching[1]:matching[0];
 </div>
 
 <div class="sheet-event-grid">
-  <section><h3>GOLS — MANDANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
-  <section><h3>GOLS — VISITANTE</h3>${Array.from({length:10},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
-  <section><h3>CARTÕES AMARELOS — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
-  <section><h3>CARTÕES AMARELOS — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
-  <section><h3>CARTÕES VERMELHOS — MANDANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
-  <section><h3>CARTÕES VERMELHOS — VISITANTE</h3>${Array.from({length:5},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Atleta: __________________________ Min.: ____</div>`).join('')}</section>
-  </div>
+  <section>
+    <h3>GOLS — MANDANTE</h3>
+    ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
+  </section>
+  <section>
+    <h3>GOLS — VISITANTE</h3>
+    ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
+  </section>
+  <section>
+    <h3>CARTÕES AMARELOS — MANDANTE</h3>
+    ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
+  </section>
+  <section>
+    <h3>CARTÕES AMARELOS — VISITANTE</h3>
+    ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
+  </section>
+  <section>
+    <h3>CARTÕES VERMELHOS — MANDANTE</h3>
+    ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
+  </section>
+  <section>
+    <h3>CARTÕES VERMELHOS — VISITANTE</h3>
+    ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
+  </section>
+</div>
   <div class="sheet-substitution-grid"><section><h3>SUBSTITUIÇÕES — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section><section><h3>SUBSTITUIÇÕES — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section></div>
   <section class="sheet-referee-grid"><h3>ARBITRAGEM / OFICIAIS</h3><div><b>Árbitro central:</b> ${esc($('sheetReferee')?.value||'____________________________________________')}</div><div><b>Assistente 1:</b> ________________________________________________</div><div><b>Assistente 2:</b> ________________________________________________</div><div><b>4º árbitro:</b> __________________________________________________</div><div><b>Delegado:</b> ${esc($('sheetDelegate')?.value||'____________________________________________')}</div></section>
   <section class="sheet-report"><h3>RELATÓRIO DO ÁRBITRO / OCORRÊNCIAS</h3>${Array.from({length:12},()=>'<div></div>').join('')}</section>
