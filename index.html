@@ -2118,7 +2118,7 @@ function renderRoster(){
  const NAO_ATLETAS=new Set(['BID-0020','BID-0021','BID-0022','BID-0023']);
 $('rows').innerHTML=ps.map(p=>`<tr class="${NAO_ATLETAS.has(String(p.id).trim().toUpperCase())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button> <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button></td></tr>`).join('');
  $('noRows').classList.toggle('hidden',ps.length>0);
- document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>renderProfile(b.dataset.profile));
+ document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>renderProfile(b.dataset.profile));document.querySelectorAll('[data-edit-athlete]').forEach(b=>b.onclick=()=>editAthlete(b.dataset.editAthlete));
 }
 function renderProfile(id){
  const f=findAth(id);if(!f)return;const {p,t}=f;
@@ -2169,7 +2169,136 @@ function renderProfile(id){
  $('printAthleteCard').onclick=()=>window.print();
  $('downloadAthleteCard').onclick=()=>downloadCardImage(p,t,photo,logo);
 }
-function downloadCardImage(p,t,photo,logo){
+
+async function editAthlete(id){
+  const f=findAth(id);
+  if(!f)return;
+
+  const {p,t}=f;
+
+  try{
+    // Primeiro verifica a autorização do administrador.
+    if(p._remote){
+      const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
+
+      if(sessionError)throw sessionError;
+
+      if(!sessionData?.session){
+        alert('Entre com o login de administrador.');
+        return;
+      }
+
+      const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
+
+      if(adminError||adminCheck!==true){
+        alert('Acesso permitido somente ao administrador.');
+        return;
+      }
+    }
+
+    const name=prompt('Nome completo:',p.name||'');
+    if(name===null)return;
+    if(!name.trim()){
+      alert('Informe o nome do atleta.');
+      return;
+    }
+
+    const birth=prompt('Data de nascimento (AAAA-MM-DD):',p.birth||'');
+    if(birth===null)return;
+
+    const city=prompt('Cidade / Naturalidade:',p.city||p.naturalidade||'');
+    if(city===null)return;
+
+    const sportsName=prompt('Nome esportivo:',p.sportsName||'');
+    if(sportsName===null)return;
+
+    let photoUrl=p.photo||p.foto_url||'';
+
+    const changePhoto=confirm('Deseja selecionar uma nova foto para este atleta?');
+
+    if(changePhoto){
+      const fileInput=document.createElement('input');
+      fileInput.type='file';
+      fileInput.accept='image/*';
+
+      const file=await new Promise(resolve=>{
+        fileInput.onchange=()=>resolve(fileInput.files[0]||null);
+        fileInput.click();
+      });
+
+      if(file){
+        if(file.size>3*1024*1024){
+          alert('A foto deve ter até 3 MB.');
+          return;
+        }
+
+        if(p._remote){
+          const ext=(file.name.split('.').pop()||'jpg')
+            .replace(/[^a-z0-9]/gi,'').toLowerCase()||'jpg';
+
+          const path='atletas/'+crypto.randomUUID()+'.'+ext;
+
+          const {error:uploadError}=await supabaseClient
+            .storage.from('bid-fotos')
+            .upload(path,file,{
+              upsert:false,
+              contentType:file.type||'image/jpeg'
+            });
+
+          if(uploadError)throw uploadError;
+
+          photoUrl=supabaseClient.storage
+            .from('bid-fotos')
+            .getPublicUrl(path).data.publicUrl;
+
+        }else{
+          photoUrl=await new Promise((resolve,reject)=>{
+            const reader=new FileReader();
+            reader.onload=()=>resolve(String(reader.result||''));
+            reader.onerror=()=>reject(new Error('Não foi possível ler a foto.'));
+            reader.readAsDataURL(file);
+          });
+        }
+      }
+    }
+
+    // Atualiza o cadastro existente, sem criar outro atleta.
+    if(p._remote){
+      const {error}=await supabaseClient.from('ATLETAS')
+        .update({
+          nome:name.trim(),
+          data_nascimento:birth||null,
+          naturalidade:city.trim()||null,
+          nome_esportivo:sportsName.trim()||null,
+          foto_url:photoUrl||null
+        })
+        .eq('id',p.dbId);
+
+      if(error)throw error;
+    }
+
+    // Atualiza os dados locais somente depois do salvamento.
+    p.name=name.trim();
+    p.birth=birth;
+    p.city=city.trim();
+    p.naturalidade=city.trim();
+    p.sportsName=sportsName.trim();
+    p.photo=photoUrl;
+    p.foto_url=photoUrl;
+
+    saveDb();
+
+    await loadSupabaseTeams();
+    renderAll();
+
+    alert('Cadastro atualizado com sucesso! Número BID preservado.');
+
+  }catch(error){
+    console.error('Erro ao editar atleta:',error);
+    alert('Erro ao atualizar atleta: '+(error.message||error));
+  }
+}
+ function downloadCardImage(p,t,photo,logo){
  const card=document.getElementById('athleteIdCard');
  // SVG-based download is intentionally not used: preserve exact visible card by opening print dialog if canvas export is unavailable.
  window.print();
