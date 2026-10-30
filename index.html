@@ -763,7 +763,39 @@ button.gold, .gold button { color:#111!important; }
  #profileContent #athleteIdCard,#profileContent #athleteIdCard *{visibility:visible!important}
  #profileContent #athleteIdCard{position:absolute!important;left:0!important;top:0!important;width:242mm!important;height:80mm!important;margin:0!important}
  #profileContent .idcard-actions{display:none!important}
- @page{size:242mm 80mm;margin:0}
+
+#profileContent #athleteIdCard.idcard-role-diretor .idcard-front-top,
+#profileContent #athleteIdCard.idcard-role-treinador .idcard-front-top,
+#profileContent #athleteIdCard.idcard-role-auxiliar .idcard-front-top,
+#profileContent #athleteIdCard.idcard-role-massagista .idcard-front-top{
+  background:linear-gradient(135deg,#f5d547,#d6ad00 65%,#fff0a0)!important;
+}
+
+#profileContent #athleteIdCard.idcard-role-diretor .idcard-front-footer,
+#profileContent #athleteIdCard.idcard-role-treinador .idcard-front-footer,
+#profileContent #athleteIdCard.idcard-role-auxiliar .idcard-front-footer,
+#profileContent #athleteIdCard.idcard-role-massagista .idcard-front-footer{
+  background:linear-gradient(90deg,#b58a00,#f2cf45,#b58a00)!important;
+  color:#111!important;
+  text-shadow:none!important;
+  border-color:#8b6800!important;
+}
+
+/* CARTEIRINHA DA MUSA - ROSA */
+#profileContent #athleteIdCard.idcard-role-musa .idcard-front{
+  background:linear-gradient(145deg,#ffe0ec,#ff9fc4 55%,#f05b9a)!important;
+  border-color:#e6005c!important;
+}
+
+#profileContent #athleteIdCard.idcard-role-musa .idcard-front-top{
+  background:linear-gradient(135deg,#e6005c,#8f0039 65%,#ff80b5)!important;
+}
+
+#profileContent #athleteIdCard.idcard-role-musa .idcard-front-footer{
+  background:linear-gradient(90deg,#a90046,#e6005c,#a90046)!important;
+  color:#fff!important;
+  border-color:#e6005c!important;
+} @page{size:242mm 80mm;margin:0}
 }
 </style><style id="roster-table-contrast-fix">
 .bid{font-weight:1000!important;color:#07152e!important;background:#f5d45b!important;border:2px solid #ffdf70!important;padding:7px 9px!important;border-radius:6px!important;white-space:nowrap!important;text-align:center!important;letter-spacing:.4px!important;min-width:78px;display:inline-block}
@@ -902,20 +934,53 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 #profileContent .idcard-sign b{font-size:7.5pt!important;padding:1.7mm!important}
 #profileContent .idcard-sign div{height:7mm!important}
 #profileContent .idcard-back-footer{font-size:7pt!important;padding:2mm 1mm!important;margin-top:auto!important}
-/* Diretores e musa: apresentação amarela, incluindo as duas faces */
+/* DIRETOR - AMARELO */
 #profileContent .idcard.idcard-role-diretor,
 #profileContent .idcard.idcard-role-diretor .idcard-front,
-#profileContent .idcard.idcard-role-diretor .idcard-back,
+#profileContent .idcard.idcard-role-diretor .idcard-back{
+  background:#fff0a8!important;
+  color:#171717!important;
+}
+#profileContent .idcard.idcard-role-diretor .idcard-front-top{
+  background:linear-gradient(135deg,#f2cf45,#fff0a8 65%,#d6ad36)!important;
+}
+#profileContent .idcard.idcard-role-diretor .idcard-front-footer{
+  background:#d6ad36!important;
+  color:#171717!important;
+  text-shadow:none!important;
+}
+#profileContent .idcard.idcard-role-diretor .idcard-back-competition{
+  background:#fff8d6!important;
+}
+
+/* MUSA - ROSA */
 #profileContent .idcard.idcard-role-musa,
 #profileContent .idcard.idcard-role-musa .idcard-front,
-#profileContent .idcard.idcard-role-musa .idcard-back{background:#fff0a8!important;color:#171717!important}
-#profileContent .idcard.idcard-role-diretor .idcard-front-top,
-#profileContent .idcard.idcard-role-musa .idcard-front-top{background:linear-gradient(135deg,#f2cf45,#fff0a8 65%,#d6ad36)!important}
-#profileContent .idcard.idcard-role-diretor .idcard-front-footer,
-#profileContent .idcard.idcard-role-musa .idcard-front-footer{background:#d6ad36!important;color:#171717!important;text-shadow:none!important}
-#profileContent .idcard.idcard-role-diretor .idcard-back-competition,
-#profileContent .idcard.idcard-role-musa .idcard-back-competition{background:#fff8d6!important}
-@media print{
+#profileContent .idcard.idcard-role-musa .idcard-back{
+  background:#f5a0c5!important;
+  color:#24101a!important;
+}
+#profileContent .idcard.idcard-role-musa .idcard-front-top{
+  background:linear-gradient(135deg,#e6005c,#f5a0c5 65%,#ffccdf)!important;
+}
+#profileContent .idcard.idcard-role-musa .idcard-front-footer{
+  background:#e6005c!important;
+  color:#fff!important;
+}
+#profileContent .idcard.idcard-role-musa .idcard-back-competition{
+  background:#ffe0eb!important;
+}
+
+/* CARTEIRINHAS DA EQUIPE PESSOAL - AMARELO */
+#profileContent #athleteIdCard.idcard-role-diretor .idcard-front,
+#profileContent #athleteIdCard.idcard-role-treinador .idcard-front,
+#profileContent #athleteIdCard.idcard-role-auxiliar .idcard-front,
+#profileContent #athleteIdCard.idcard-role-massagista .idcard-front{
+  background:linear-gradient(145deg,#fff4a8,#ffe45c 55%,#e9bd20)!important;
+  border-color:#c49a00!important;
+}
+
+ @media print{
  @page{size:80mm 120mm;margin:0}
  html,body{width:80mm!important;margin:0!important;padding:0!important;background:#fff!important}
  body *{visibility:hidden!important}
@@ -934,19 +999,57 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 #profileContent .idcard-wrap{display:flex!important;justify-content:flex-start!important;align-items:flex-start!important;overflow-x:auto!important;padding:12px!important}
 #profileContent #athleteIdCard{display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:flex-start!important;gap:4mm!important;width:max-content!important;max-width:none!important;height:120mm!important;margin:0!important;padding:0!important;overflow:visible!important}
 #profileContent .idcard-front,#profileContent .idcard-back{flex:0 0 80mm!important;width:80mm!important;height:120mm!important;min-width:80mm!important;min-height:120mm!important;max-width:80mm!important;max-height:120mm!important;margin:0!important;box-sizing:border-box!important}
-/* Destaque evidente para diretores e musa, sem alterar jogadores */
+/* DIRETOR - AMARELO */
 #profileContent .idcard.idcard-role-diretor .idcard-front,
-#profileContent .idcard.idcard-role-diretor .idcard-back,
+#profileContent .idcard.idcard-role-diretor .idcard-back{
+  background:linear-gradient(160deg,#fff8c9,#ffe36a 42%,#fff0a8)!important;
+  border:1.2mm solid #c18a00!important;
+  color:#231900!important;
+}
+
+/* MUSA - ROSA */
 #profileContent .idcard.idcard-role-musa .idcard-front,
-#profileContent .idcard.idcard-role-musa .idcard-back{background:linear-gradient(160deg,#fff8c9 0%,#ffe36a 42%,#fff0a8 100%)!important;border:1.2mm solid #c18a00!important;color:#231900!important;box-shadow:0 0 0 1mm #ffdf45,0 2mm 5mm #0004!important}
-#profileContent .idcard.idcard-role-diretor .idcard-front-top,
-#profileContent .idcard.idcard-role-musa .idcard-front-top{background:linear-gradient(135deg,#b8860b,#ffdf45 45%,#fff3a6)!important;border-bottom:1mm solid #c18a00!important}
-#profileContent .idcard.idcard-role-diretor .idcard-front-footer,
-#profileContent .idcard.idcard-role-musa .idcard-front-footer{background:linear-gradient(90deg,#a87900,#ffdf45,#a87900)!important;color:#211700!important;font-weight:900!important;text-shadow:none!important}
-#profileContent .idcard.idcard-role-diretor .idcard-back-competition,
-#profileContent .idcard.idcard-role-musa .idcard-back-competition{background:#fff7c2!important;border-bottom:1mm solid #c18a00!important}
-#profileContent .idcard.idcard-role-diretor .idcard-back-section>b,
-#profileContent .idcard.idcard-role-musa .idcard-back-section>b{background:#9c7100!important;color:#fff7cf!important}
+#profileContent .idcard.idcard-role-musa .idcard-back{
+  background:linear-gradient(160deg,#fff0f5,#f5a0c5 55%,#ffe0eb)!important;
+  border:1.2mm solid #e6005c!important;
+  color:#24101a!important;
+}
+
+#profileContent .idcard.idcard-role-diretor .idcard-front-top{
+  background:linear-gradient(135deg,#b8860b,#ffdf45 45%,#fff3a6)!important;
+}
+
+#profileContent .idcard.idcard-role-musa .idcard-front-top{
+  background:linear-gradient(135deg,#e6005c,#f5a0c5 65%,#ffccdf)!important;
+}
+
+#profileContent .idcard.idcard-role-diretor .idcard-front-footer{
+  background:linear-gradient(90deg,#a87900,#ffdf45,#a87900)!important;
+  color:#211700!important;
+}
+
+#profileContent .idcard.idcard-role-musa .idcard-front-footer{
+  background:#e6005c!important;
+  color:#fff!important;
+}
+
+#profileContent .idcard.idcard-role-diretor .idcard-back-competition{
+  background:#fff7c2!important;
+}
+
+#profileContent .idcard.idcard-role-musa .idcard-back-competition{
+  background:#ffe0eb!important;
+}
+
+#profileContent .idcard.idcard-role-diretor .idcard-back-section>b{
+  background:#9c7100!important;
+  color:#fff7cf!important;
+}
+
+#profileContent .idcard.idcard-role-musa .idcard-back-section>b{
+  background:#e6005c!important;
+  color:#fff!important;
+}
 @media print{
  @page{size:160mm 120mm;margin:0}
  html,body{width:160mm!important;height:120mm!important;margin:0!important;padding:0!important;background:#fff!important}
