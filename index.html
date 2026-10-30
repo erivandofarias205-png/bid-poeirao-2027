@@ -4819,8 +4819,7 @@ return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team
   <div class="sheet-rosters two-rosters">${roster(home,'home',m.homeName)}${roster(away,'away',m.awayName)}</div>
   <div class="sheet-sign-row"><span>Assinatura do representante mandante: __________________________</span><span>Assinatura do representante visitante: __________________________</span></div>
   </div>
-  <div style="text-align:center;font:7pt Cambria,serif;color:#555;margin-top:3mm;">BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app</div>
-  <div class="sheet-page sheet-page-two">
+   <div class="sheet-page sheet-page-two">
 <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
 
 <div class="sheet-personnel-grid">
@@ -6224,8 +6223,7 @@ document.addEventListener('DOMContentLoaded', function () {
  html,body {background:#fff!important;color:#111!important}
  #matchSheet .sheet-page {background:#fff!important;color:#111!important;box-shadow:none!important}
  #matchSheet .sheet-page-one {break-after:page!important;page-break-after:always!important}
- #matchSheet .sheet-page-two {break-before:page!important;page-break-before:always!important}
- #matchSheet .sheet-page-one .sheet-subs {display:none!important}
+  #matchSheet .sheet-page-one .sheet-subs {display:none!important}
  #matchSheet .sheet-page-two {background:#fff!important}
  #matchSheet .sheet-page-two .sheet-event-grid h3,
  #matchSheet .sheet-page-two .sheet-substitution-grid h3,
