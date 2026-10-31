@@ -2301,7 +2301,17 @@ overflow: visible !important;
     #quarterFinalsPanel .quarter-finals-grid {
       grid-template-columns: 1fr;
     }
+/* Ocultar instalação quando o BID estiver aberto como aplicativo */
+@media (display-mode: standalone) {
+  .install-app-banner {
+    display: none !important;
   }
+}  
+    @media (display-mode: standalone) {
+  .install-app-banner {
+    display: none !important;
+  }
+}
 </style>
  
 <!-- ===== PAINEL DAS SEMIFINAIS ===== -->
