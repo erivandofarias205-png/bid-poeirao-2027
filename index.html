@@ -8511,6 +8511,8 @@ tbody tr.row-staff td.bid{
   }
 }
 </style>
+  
+  <script>
   async function updateAdminVisibility(){
   const adminPanels=document.querySelectorAll('.admin-only');
 
@@ -8533,7 +8535,7 @@ tbody tr.row-staff td.bid{
     // Somente o administrador pode visualizar
     if(!adminError && adminCheck===true){
       adminPanels.forEach(panel=>{
-        panel.style.display='';
+        panel.style.display='block';
       });
     }
   }catch(error){
@@ -8542,5 +8544,6 @@ tbody tr.row-staff td.bid{
 }
 
 updateAdminVisibility();
+</script>
 </body>
 </html>
