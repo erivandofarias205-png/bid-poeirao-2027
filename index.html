@@ -2440,7 +2440,7 @@ overflow: visible !important;
 <section class="hidden" id="gameView">
 <div class="panel"><div class="ph"><h3>Súmula pronta do jogo</h3><span class="pill">Puxar equipes e atletas</span></div><div class="pad"><p class="small">Selecione um jogo já cadastrado na Tabela de jogos. O sistema puxa automaticamente os nomes das duas equipes e a lista de atletas cadastrados em cada uma. Você pode imprimir a súmula ou salvar em PDF pelo navegador.</p><div class="formgrid"><label>Jogo<select id="sheetMatch"></select></label><label>Árbitro (opcional)<input id="sheetReferee" placeholder="Nome do árbitro"/></label><label>Delegado (opcional)<input id="sheetDelegate" placeholder="Nome do delegado"/></label></div><div class="actions"><button class="gold" id="loadSheet" type="button">Puxar súmula</button><button class="secondary" id="printSheet" type="button">Imprimir / Salvar PDF</button></div><div class="match-sheet" id="matchSheet"><p class="empty">Cadastre um jogo na aba “Tabela de jogos” e clique em “Puxar súmula”.</p></div></div></div>
 <div class="note"><b>Fluxo rápido:</b> depois do jogo, escolha a partida, a equipe e o atleta; selecione “Participou”, “Gol”, “Amarelo” ou “Vermelho” e toque em Registrar. Os totais são atualizados automaticamente nesta prévia.</div>
-<div class="panel"><div class="ph"><h3>Registrar evento da partida</h3><span class="pill">3 · Súmula</span></div><div class="pad"><div class="formgrid"><label>Nome da partida<input id="gameName" placeholder="Ex.: Português x Grêmio — 1ª rodada"/></label><label>Equipe<select id="gameTeam"></select></label><label>Atleta<select id="gameAthlete"></select></label><label>Evento<select id="gameEvent"><option value="played">Participou da partida</option><option value="goal">Gol</option><option value="yellow">Cartão amarelo</option><option value="red">Cartão vermelho</option></select></label><label>Minuto (opcional)<input id="minute" max="130" min="0" placeholder="Ex.: 37" type="number"/></label><label>Observação (opcional)<input id="eventNote" placeholder="Ex.: gol de falta"/></label></div><div class="actions"><button class="gold" id="addEvent">Registrar evento</button><button class="secondary" id="exportEvents">Baixar súmula (CSV)</button></div></div></div>
+<div class="panel admin-only"><div class="ph"><h3>Registrar evento da partida</h3><span class="pill">3 · Súmula</span></div><div class="pad"><div class="formgrid"><label>Nome da partida<input id="gameName" placeholder="Ex.: Português x Grêmio — 1ª rodada"/></label><label>Equipe<select id="gameTeam"></select></label><label>Atleta<select id="gameAthlete"></select></label><label>Evento<select id="gameEvent"><option value="played">Participou da partida</option><option value="goal">Gol</option><option value="yellow">Cartão amarelo</option><option value="red">Cartão vermelho</option></select></label><label>Minuto (opcional)<input id="minute" max="130" min="0" placeholder="Ex.: 37" type="number"/></label><label>Observação (opcional)<input id="eventNote" placeholder="Ex.: gol de falta"/></label></div><div class="actions"><button class="gold" id="addEvent">Registrar evento</button><button class="secondary" id="exportEvents">Baixar súmula (CSV)</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Eventos registrados</h3><span class="pill" id="eventTotal">0 eventos</span></div><div class="pad"><div class="events" id="eventList"></div><div class="empty" id="emptyEvents">Nenhum evento registrado.</div></div></div>
 </section>
 <section class="hidden" id="profileView">
@@ -8511,5 +8511,36 @@ tbody tr.row-staff td.bid{
   }
 }
 </style>
+  async function updateAdminVisibility(){
+  const adminPanels=document.querySelectorAll('.admin-only');
+
+  // Começa escondendo os painéis administrativos
+  adminPanels.forEach(panel=>{
+    panel.style.display='none';
+  });
+
+  try{
+    if(typeof supabaseClient==='undefined') return;
+
+    const {data:sessionData}=await supabaseClient.auth.getSession();
+
+    // Se não estiver logado, permanece escondido
+    if(!sessionData?.session) return;
+
+    const {data:adminCheck,error:adminError}=
+      await supabaseClient.rpc('is_admin');
+
+    // Somente o administrador pode visualizar
+    if(!adminError && adminCheck===true){
+      adminPanels.forEach(panel=>{
+        panel.style.display='';
+      });
+    }
+  }catch(error){
+    console.error('Erro ao verificar administrador:',error);
+  }
+}
+
+updateAdminVisibility();
 </body>
 </html>
