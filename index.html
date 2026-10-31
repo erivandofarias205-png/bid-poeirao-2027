@@ -8961,5 +8961,52 @@ tbody tr.row-staff td.bid{
 
 updateAdminVisibility();
 </script>
+  
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async function () {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        '/service-worker.js',
+        { updateViaCache: 'none' }
+      );
+
+      await registration.update();
+
+      setInterval(function () {
+        registration.update();
+      }, 60 * 1000);
+
+      registration.addEventListener('updatefound', function () {
+        const newWorker = registration.installing;
+
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', function () {
+          if (
+            newWorker.state === 'installed' &&
+            navigator.serviceWorker.controller
+          ) {
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+
+      let refreshing = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+
+      console.log('BID Futebol Amador: atualização automática ativada.');
+    } catch (error) {
+      console.error('Erro no PWA:', error);
+    }
+  });
+}
+</script>
+
 </body>
 </html>
