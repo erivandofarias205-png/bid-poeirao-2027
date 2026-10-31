@@ -3608,7 +3608,11 @@ if(role!=='jogador'){
   return;
 }
 
+    const name=String($('athName')?.value||'').trim();
 
+    if(!name){
+      throw new Error('Informe o nome completo do atleta.');
+    }
     if(team.dbId){
       const {data:sessionData}=await supabaseClient.auth.getSession();
       if(!sessionData?.session)throw new Error('Entre com o login de administrador.');
@@ -3617,7 +3621,7 @@ if(role!=='jogador'){
       if(adminError||adminCheck!==true)throw new Error('Acesso permitido somente ao administrador.');
 
       const {error}=await supabaseClient.from('ATLETAS').insert({
-        nome,
+    nome:name,
         data_nascimento:birth||null,
         numero_inscricao:newId,
         cpf:cpf||null,
