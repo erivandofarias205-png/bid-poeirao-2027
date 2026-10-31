@@ -2721,7 +2721,23 @@ const roleLabel=roleLabels[role]||'JOGADOR';
  <div class="actions idcard-actions"><button class="gold" id="printAthleteCard" type="button">Imprimir / Salvar carteirinha frente e verso em PDF</button><button class="secondary" id="downloadAthleteCard" type="button">Baixar imagem da ficha</button>${role==='jogador'?`<button class="secondary" onclick="prepareEvent('${esc(p.id)}','${esc(t.id)}')">Registrar evento</button>`:''}</div>
  <p class="small muted">Impressão em formato horizontal de 12 × 8 cm por face (frente e verso). Atletas mostram gols e cartões; diretores e musa mostram a função de credenciamento. O símbolo da competição e o escudo da equipe aparecem no cabeçalho.</p>
  </div>
- <div class="profile" style="margin-top:16px"><div class="box"><h4>Dados do cadastro</h4>${[['Tipo',roleLabel],['Número BID',p.id],['Equipe',t.name],['Nascimento',dateBR(p.birth)],['CPF mascarado',cpfMask(p.cpf)],['Data de inscrição',dateBR(p.registered)]].map(([a,b])=>`<div class="detail"><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div><div class="box"><h4>Estatísticas</h4><div class="chips">${role==='jogador'?`<span class="chip">🟨 Amarelos: ${p.yellow||0}</span><span class="chip">🟥 Vermelhos: ${p.red||0}</span><span class="chip">⚽ Gols: ${p.goals||0}</span>`:`<span class="chip">Função: ${roleLabel}</span><span class="chip">Equipe: ${esc(t.name)}</span>`}</div></div></div>`;
+ ${role==='jogador'?`
+<div class="box" style="margin-top:16px">
+  <h4>📋 HISTÓRICO DE EVENTOS DO ATLETA</h4>
+  ${athleteEvents.length?`
+    <div class="chips">
+      ${athleteEvents.map(e=>`
+        <div class="detail">
+          <span>${esc(e.icon||'⚽')} ${esc(e.label||e.type||'Evento')}</span>
+          <b>${esc(e.match||'Partida')}${e.minute?' · '+esc(e.minute)+' min':''}</b>
+          ${e.note?`<span>${esc(e.note)}</span>`:''}
+        </div>
+      `).join('')}
+    </div>
+  `:'<p class="small muted">Nenhum evento registrado para este atleta.</p>'}
+</div>
+`:''}
+<div class="profile" style="margin-top:16px"><div class="box"><h4>Dados do cadastro</h4>${[['Tipo',roleLabel],['Número BID',p.id],['Equipe',t.name],['Nascimento',dateBR(p.birth)],['CPF mascarado',cpfMask(p.cpf)],['Data de inscrição',dateBR(p.registered)]].map(([a,b])=>`<div class="detail"><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div><div class="box"><h4>Estatísticas</h4><div class="chips">${role==='jogador'?`<span class="chip">🟨 Amarelos: ${p.yellow||0}</span><span class="chip">🟥 Vermelhos: ${p.red||0}</span><span class="chip">⚽ Gols: ${p.goals||0}</span>`:`<span class="chip">Função: ${roleLabel}</span><span class="chip">Equipe: ${esc(t.name)}</span>`}</div></div></div>`;
  showTab('profile');
  $('printAthleteCard').onclick=()=>window.print();
  $('downloadAthleteCard').onclick=()=>downloadCardImage(p,t,photo,logo);
@@ -2732,6 +2748,9 @@ async function editAthlete(id){
   if(!f)return;
 
   const {p,t}=f;
+  const athleteEvents=(db.events||[]).filter(e=>
+  String(e.playerId||'')===String(p.id)
+).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
 
   try{
     // Primeiro verifica a autorização do administrador.
