@@ -5870,24 +5870,19 @@ photo: row.foto_url || '',
     remoteTeams.forEach(team => {
       team.players = (team.players || []).filter(player => {
         const ids = (player.competitionIds || []).map(String);
-        if (!ids.length) return athleteCompetitionRows.length === 0;
-        const comp = activeCompetition();
+       if (!ids.length) return true;
+        const omp = activeCompetition();
         if (!comp) return true;
         const compIds = [comp.id, comp.dbId].filter(v => v !== undefined && v !== null && v !== '').map(String);
         return ids.some(id => compIds.includes(id));
       });
     });
 
-
-
-
  
     // Busca diretores e musa salvos no Supabase.
     const { data: personnelRows, error: personnelError } = await supabaseClient
       .from('equipe_pessoal')
       .select('id,equipe_id,nome,funcao,data_nascimento,cidade,cpf,numero_inscricao,nome_esportivo,foto_url');
-
-
 
 
     if (personnelError) {
