@@ -5870,11 +5870,16 @@ photo: row.foto_url || '',
     remoteTeams.forEach(team => {
       team.players = (team.players || []).filter(player => {
         const ids = (player.competitionIds || []).map(String);
-       if (!ids.length) return true;
-        const omp = activeCompetition();
-        if (!comp) return true;
-        const compIds = [comp.id, comp.dbId].filter(v => v !== undefined && v !== null && v !== '').map(String);
-        return ids.some(id => compIds.includes(id));
+       if (!ids.length) return athleteCompetitionRows.length === 0;
+
+const comp = activeCompetition();
+if (!comp) return true;
+
+const compIds = [comp.id, comp.dbId]
+  .filter(v => v !== undefined && v !== null && v !== '')
+  .map(String);
+
+return ids.some(id => compIds.includes(id));
       });
     });
 
