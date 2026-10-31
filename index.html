@@ -5870,7 +5870,7 @@ photo: row.foto_url || '',
     remoteTeams.forEach(team => {
       team.players = (team.players || []).filter(player => {
         const ids = (player.competitionIds || []).map(String);
-       if (!ids.length) return athleteCompetitionRows.length === 0;
+       if (!ids.length) return true;
 
 const comp = activeCompetition();
 if (!comp) return true;
