@@ -8514,17 +8514,56 @@ tbody tr.row-staff td.bid{
 }
 </style>
   <script>
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(function (registration) {
-        console.log('BID PWA registrado:', registration.scope);
-      })
-      .catch(function (error) {
-        console.error('Erro ao registrar BID PWA:', error);
+  window.addEventListener('load', async function () {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        '/service-worker.js',
+        { updateViaCache: 'none' }
+      );
+
+      console.log('BID PWA registrado:', registration.scope);
+
+      // Verifica se existe uma versão nova
+      await registration.update();
+
+      // Verifica novamente a cada 60 segundos enquanto o app estiver aberto
+      setInterval(function () {
+        registration.update();
+      }, 60 * 1000);
+
+      // Quando uma nova versão estiver instalada, ativa a atualização
+      registration.addEventListener('updatefound', function () {
+        const newWorker = registration.installing;
+
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', function () {
+          if (
+            newWorker.state === 'installed' &&
+            navigator.serviceWorker.controller
+          ) {
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
       });
+
+      // Recarrega a tela quando a nova versão assumir o controle
+      let refreshing = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+
+    } catch (error) {
+      console.error('Erro ao atualizar BID PWA:', error);
+    }
   });
 }
+
 </script>
 </body>
 </html>
