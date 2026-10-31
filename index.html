@@ -2676,7 +2676,39 @@ function matchBelongsToActiveCompetition(m){
  // Partidas antigas sem ID de competição só aparecem se ambas as equipes estiverem vinculadas à competição selecionada.
  return teamBelongsToActiveCompetition(findTeam(m.homeId)||{})&&teamBelongsToActiveCompetition(findTeam(m.awayId)||{});
 }
-function findAth(id){for(const t of db.teams){const p=t.players.find(p=>p.id===id);if(p)return {p,t}}return null}
+
+function findAth(id){
+  // Primeiro procura nos elencos das equipes.
+  for(const t of (db.teams || [])){
+    const p = (t.players || []).find(p =>
+      String(p.id) === String(id) ||
+      String(p.dbId) === String(id)
+    );
+
+    if(p) return {p,t};
+  }
+
+  // Depois procura na lista de atletas em STANDBY.
+  const p = (db.standbyAthletes || []).find(p =>
+    String(p.id) === String(id) ||
+    String(p.dbId) === String(id)
+  );
+
+  if(p){
+    return {
+      p,
+      t: {
+        id: 'standby',
+        name: 'SEM EQUIPE NO MOMENTO',
+        logo: '',
+        players: []
+      }
+    };
+  }
+
+  return null;
+}
+
 function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
 function showTab(name){
  const views=['public','admin','games','game','profile','classification','teams'];
@@ -2708,73 +2740,106 @@ function renderTeams(){
  $('teamList').innerHTML=activeCompetitionTeams().map(t=>`<button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}"><span class="crest">${t.logo?`<img src="${t.logo}" alt="">`:esc(t.initials||'⚽')}</span><span><span class="teamname">${esc(t.name)}</span><span class="teammeta">${t.players.length} atleta(s) · Grupo ${esc(t.group||'—')} · abrir boletim</span></span></button>`).join('')||'<div class="empty">Cadastre a primeira equipe na aba Administração.</div>';
  document.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.team;renderAll()});
 }
+
 function renderRoster(){
- const initialTeam=findTeam(selectedTeam);if(initialTeam&&!teamBelongsToActiveCompetition(initialTeam)){selectedTeam=activeCompetitionTeams()[0]?.id||'';}const rosterTeam=findTeam(selectedTeam);$('rosterTitle').textContent='Boletim · '+(rosterTeam?.name||'Selecione uma equipe');
- const t=rosterTeam;
- if(!t){$('rows').innerHTML='';$('noRows').classList.remove('hidden');return}
- const q=$('q').value.trim().toLowerCase(),f=$('filter').value;
- const ps=t.players.filter(p=>(!q||(p.name+' '+p.id).toLowerCase().includes(q))&&(!f||(f==='free'?!p.played:p.played)));
- const NAO_ATLETAS=new Set(['BID-0020','BID-0021','BID-0022','BID-0023']);
-$('rows').innerHTML=ps.map(p=>`<tr class="${NAO_ATLETAS.has(String(p.id).trim().toUpperCase())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button> <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button></td></tr>`).join('');
- $('noRows').classList.toggle('hidden',ps.length>0);
- document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>renderProfile(b.dataset.profile));document.querySelectorAll('[data-edit-athlete]').forEach(b=>b.onclick=()=>editAthlete(b.dataset.editAthlete));
+  const initialTeam = findTeam(selectedTeam);
+
+  if(initialTeam && !teamBelongsToActiveCompetition(initialTeam)){
+    selectedTeam = activeCompetitionTeams()[0]?.id || '';
+  }
+
+  const t = findTeam(selectedTeam);
+  $('rosterTitle').textContent = 'Boletim · ' + (t?.name || 'Selecione uma equipe');
+
+  const q = $('q').value.trim().toLowerCase();
+  const f = $('filter').value;
+
+  const ps = (t?.players || []).filter(p =>
+    (!q || (p.name + ' ' + p.id).toLowerCase().includes(q)) &&
+    (!f || (f === 'free' ? !p.played : p.played))
+  );
+
+  const standby = (db.standbyAthletes || []).filter(p =>
+    !q || (String(p.name || '') + ' ' + String(p.id || '')).toLowerCase().includes(q)
+  );
+
+  const NAO_ATLETAS = new Set([
+    'BID-0020','BID-0021','BID-0022','BID-0023'
+  ]);
+
+  const rosterRows = ps.map(p => `
+    <tr class="${NAO_ATLETAS.has(String(p.id).trim().toUpperCase())?'row-staff':''}">
+      <td>${(p.photo||p.foto_url)
+        ? `<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`
+        : `<span class="roster-no-photo">SEM<br>FOTO</span>`}
+      </td>
+      <td class="bid">${esc(p.id)}</td>
+      <td><b>${esc(p.name)}</b></td>
+      <td>${dateBR(p.birth)}</td>
+      <td>${esc(p.city||p.naturalidade||'—')}</td>
+      <td>${cpfMask(p.cpf)}</td>
+      <td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td>
+      <td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td>
+      <td>${p.yellow||0}</td>
+      <td>${p.red||0}</td>
+      <td><b>${p.goals||0}</b></td>
+      <td>
+        <button class="secondary" data-profile="${esc(p.id)}">Ficha</button>
+        <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button>
+      </td>
+    </tr>
+  `).join('');
+
+  const standbyRows = standby.length ? `
+    <tr>
+      <td colspan="12" style="text-align:center;background:#292929;color:#e4bd4c;font-weight:900;padding:12px">
+        ATLETAS EM STANDBY — SEM EQUIPE NO MOMENTO
+      </td>
+    </tr>
+    ${standby.map(p => `
+      <tr class="standby-athlete-row">
+        <td>${(p.photo||p.foto_url)
+          ? `<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`
+          : `<span class="roster-no-photo">SEM<br>FOTO</span>`}
+        </td>
+        <td class="bid">${esc(p.id)}</td>
+        <td><b>${esc(p.name)}</b></td>
+        <td>${dateBR(p.birth)}</td>
+        <td>${esc(p.city||p.naturalidade||'—')}</td>
+        <td>${cpfMask(p.cpf)}</td>
+        <td>—</td>
+        <td><span class="status info">STANDBY</span></td>
+        <td>${p.yellow||0}</td>
+        <td>${p.red||0}</td>
+        <td><b>${p.goals||0}</b></td>
+        <td>—</td>
+      </tr>
+    `).join('')}
+  ` : '';
+
+  $('rows').innerHTML = rosterRows + standbyRows;
+
+  $('noRows').classList.toggle(
+    'hidden',
+    ps.length > 0 || standby.length > 0
+  );
+
+  document.querySelectorAll('[data-profile]').forEach(b =>
+    b.onclick = () => renderProfile(b.dataset.profile)
+  );
+
+  document.querySelectorAll('[data-edit-athlete]').forEach(b =>
+    b.onclick = () => editAthlete(b.dataset.editAthlete)
+  );
 }
-function renderProfile(id){
- const f=findAth(id);if(!f)return;const {p,t}=f;
- const logo=t.logo||t.escudo_url||'';
- const competition=(db.competitions||[]).find(c=>c.id===db.activeCompetitionId)||null;
- const competitionLogo=competition?(competition.logo||competition.escudo_url||''):'';
- const photo=p.photo||p.foto_url||'';
- const cardLogo=logo?`<img class="idcard-brandmark" src="${logo}" alt="Símbolo da equipe">`:`<div class="idcard-brandmark" style="display:grid;place-items:center;color:#111;font-weight:bold">⚽</div>`;
- const competitionMark=competitionLogo?`<img class="idcard-competition-mark" src="${competitionLogo}" alt="Símbolo da competição">`:`<div class="idcard-competition-mark" style="display:grid;place-items:center;color:#111;font-size:5pt">COMP.</div>`;
- const photoBlock=photo?`<img class="idcard-photo" src="${photo}" alt="Foto de ${esc(p.name)}">`:`<div class="idcard-photo-placeholder">FOTO<br>DO ATLETA</div>`;
- const role=String(p.role||'jogador').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-const roleLabels={jogador:'JOGADOR',diretor:'DIRETOR',treinador:'TREINADOR',auxiliar:'AUXILIAR',massagista:'MASSAGISTA',musa:'MUSA'};
-const roleLabel=roleLabels[role]||'JOGADOR';
- const people=(t.players||[]).filter(x=>x.role==='diretor');
- const muse=(t.players||[]).find(x=>x.role==='musa');
- const personSlots=Array.from({length:5},(_,i)=>{const d=people[i];return `<div class="idcard-person">${d?.photo?`<img src="${d.photo}" alt="" style="width:100%;height:10mm;object-fit:cover">`:`<div style="height:10mm;display:grid;place-items:center;color:#888">👤</div>`}<b>DIRETOR ${i+1}</b><span>${d?esc(d.sportsName||d.name):'Não cadastrado'}</span></div>`}).join('');
- $('profileContent').innerHTML=`<div class="idcard-wrap">
- <div class="idcard idcard-role-${role}" id="athleteIdCard">
-  <div class="idcard-front">
-   <div class="idcard-front-top">
-    <div class="idcard-team-crest">${cardLogo}</div>
-    ${photo?`<img class="idcard-front-photo" src="${photo}" alt="Foto de ${esc(p.name)}">`:`<div class="idcard-front-photo idcard-photo-placeholder">FOTO DO ATLETA</div>`}
-   </div>
-   <div class="idcard-field"><label>NOME:</label><div>${esc(p.name)}</div></div>
-   <div class="idcard-field"><label>NOME ESPORTIVO:</label><div>${esc(p.sportsName||'—')}</div></div>
-   <div class="idcard-field"><label>DATA DE NASCIMENTO:</label><div>${dateBR(p.birth)}</div></div>
-   <div class="idcard-field"><label>CIDADE / NATURALIDADE:</label><div>${esc(p.city||p.naturalidade||'NÃO INFORMADA')}</div></div>
-   <div class="idcard-field"><label>DOCUMENTO:</label><div>${esc(cpfMask(p.cpf))}</div></div>
-   <div class="idcard-front-footer">${roleLabel}</div>
-  </div>
-  <div class="idcard-back">
-   <div class="idcard-back-competition">${competitionMark}<div class="idcard-comp-title"><b>${esc(competition?.name||competition?.nome||'COMPETIÇÃO')}</b><span>2026 · TVFP ESPORTES</span></div></div>
-   <div class="idcard-back-section"><b>INFORMAÇÕES DO ${roleLabel}</b>
-    <div class="idcard-back-data"><span><strong>Nº BID:</strong> ${esc(p.id)}</span><span><strong>EQUIPE:</strong> ${esc(t.name)}</span><span><strong>CIDADE:</strong> ${esc(p.city||'—')}</span><span><strong>INSCRIÇÃO:</strong> ${dateBR(p.registered)}</span></div>
-   </div>
-   <div class="idcard-back-section"><b>ESTATÍSTICAS ${roleLabel}</b>
-   <div class="idcard-back-data">${role==='jogador'?`<span>GOLS: ${p.goals||0}</span><span>AMARELOS: ${p.yellow||0}</span><span>VERMELHOS: ${p.red||0}</span><span>PARTICIPOU: ${p.played?'SIM':'NÃO'}</span>`:`<span style="display:inline-block;background:#d6ad36;color:#111;padding:3px 8px;border-radius:4px;font-weight:900">${esc(roleLabel)}</span>`}</div>
-   </div>
-   <div class="idcard-sign"><b>ASSINATURA DO ${role==='diretor'?'DIRETOR':'ATLETA'}</b><div></div></div>
-   <div class="idcard-sign"><b>ASSINATURA DO DIRETOR DA EQUIPE</b><div></div></div>
-   <div class="idcard-back-footer">DOCUMENTO OFICIAL · PESSOAL E INTRANSFERÍVEL</div>
-  </div>
- </div>
- <div class="actions idcard-actions"><button class="gold" id="printAthleteCard" type="button">Imprimir / Salvar carteirinha frente e verso em PDF</button><button class="secondary" id="downloadAthleteCard" type="button">Baixar imagem da ficha</button>${role==='jogador'?`<button class="secondary" onclick="prepareEvent('${esc(p.id)}','${esc(t.id)}')">Registrar evento</button>`:''}</div>
- <p class="small muted">Impressão em formato horizontal de 12 × 8 cm por face (frente e verso). Atletas mostram gols e cartões; diretores e musa mostram a função de credenciamento. O símbolo da competição e o escudo da equipe aparecem no cabeçalho.</p>
- </div>
-<div class="profile" style="margin-top:16px"><div class="box"><h4>Dados do cadastro</h4>${[['Tipo',roleLabel],['Número BID',p.id],['Equipe',t.name],['Nascimento',dateBR(p.birth)],['CPF mascarado',cpfMask(p.cpf)],['Data de inscrição',dateBR(p.registered)]].map(([a,b])=>`<div class="detail"><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div><div class="box"><h4>Estatísticas</h4><div class="chips">${role==='jogador'?`<span class="chip">🟨 Amarelos: ${p.yellow||0}</span><span class="chip">🟥 Vermelhos: ${p.red||0}</span><span class="chip">⚽ Gols: ${p.goals||0}</span>`:`<span class="chip">Função: ${roleLabel}</span><span class="chip">Equipe: ${esc(t.name)}</span>`}</div></div></div>`;
- showTab('profile');
- $('printAthleteCard').onclick=()=>window.print();
- $('downloadAthleteCard').onclick=()=>downloadCardImage(p,t,photo,logo);
-}
+
 
 async function editAthlete(id){
   const f=findAth(id);
   if(!f)return;
 
   const {p,t}=f;
+  const athleteIsStandby = p.competitionStatus === 'STANDBY';
   const athleteEvents=(db.events||[]).filter(e=>
   String(e.playerId||'')===String(p.id)
 ).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
@@ -5853,58 +5918,86 @@ async function loadSupabaseTeams() {
 
 
 
-    const athleteCompetitionIds = new Map();
-    const athleteCompetitionTeams = new Map();
-    athleteCompetitionRows.forEach(a => {
-      const athleteKey = String(a.atleta_id);
-      if (!athleteCompetitionIds.has(athleteKey)) athleteCompetitionIds.set(athleteKey, []);
-      athleteCompetitionIds.get(athleteKey).push(String(a.competicao_id));
-      if (a.equipe_id !== null && a.equipe_id !== undefined) athleteCompetitionTeams.set(athleteKey, String(a.equipe_id));
-    });
 
+const athleteCompetitionIds = new Map();
+const athleteCompetitionTeams = new Map();
+const athleteCompetitionStatus = new Map();
+const athleteCompetitionShirts = new Map();
 
+const comp = activeCompetition();
+const activeCompIds = comp
+  ? [comp.id, comp.dbId]
+      .filter(v => v !== undefined && v !== null && v !== '')
+      .map(String)
+  : [];
 
+athleteCompetitionRows.forEach(a => {
+  const athleteKey = String(a.atleta_id);
+  const compKey = String(a.competicao_id);
 
-    const { data: athleteRows, error: athleteError } = await supabaseClient
-      .from('ATLETAS')
-      .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo')
-      .order('nome');
-    if (athleteError) throw athleteError;
+  if (!athleteCompetitionIds.has(athleteKey)) {
+    athleteCompetitionIds.set(athleteKey, []);
+  }
 
+  athleteCompetitionIds.get(athleteKey).push(compKey);
 
+  if (activeCompIds.includes(compKey)) {
+    athleteCompetitionStatus.set(athleteKey, String(a.status || 'Inscrito').toUpperCase());
 
+    if (a.equipe_id !== null && a.equipe_id !== undefined) {
+      athleteCompetitionTeams.set(athleteKey, String(a.equipe_id));
+    }
 
-    const athletesByTeam = new Map();
-    (athleteRows || []).forEach(row => {
-      const key = String(row.equipe_id);
-      if (!athletesByTeam.has(key)) athletesByTeam.set(key, []);
-      const compIds = athleteCompetitionIds.get(String(row.id)) || [];
-      const assocTeamId = athleteCompetitionTeams.get(String(row.id));
-      athletesByTeam.get(key).push({
-        id: row.numero_inscricao || ('BID-' + String(row.id)), dbId: row.id,
-      name: row.nome,
-birth: row.data_nascimento || '',
-cpf: row.cpf || '',
-city: row.naturalidade || '',
-naturalidade: row.naturalidade || '',
-registered: row.numero_inscricao || '',
-role: 'jogador',
-sportsName: row.nome_esportivo || '',
-foto_url: row.foto_url || '',
-photo: row.foto_url || '',
-        played: row.status === 'Atuou', yellow: row.cartoes_amarelos || 0,
-        red: row.cartoes_vermelhos || 0, goals: row.gols || 0,
-        apto: row.apto_jogar, competitionIds: compIds,
-        competitionId: compIds[0] || '', competitionTeamId: assocTeamId || key,
-        shirtNumber: (athleteCompetitionRows.find(a => String(a.atleta_id) === String(row.id)) || {}).numero_camisa || '',
-        _remote: true
-      });
-    });
+    athleteCompetitionShirts.set(athleteKey, a.numero_camisa || '');
+  }
+});
 
+const athletesByTeam = new Map();
 
+(athleteRows || []).forEach(row => {
+  const athleteKey = String(row.id);
+  const compIds = athleteCompetitionIds.get(athleteKey) || [];
+  const compStatus = athleteCompetitionStatus.get(athleteKey) || '';
+  const assocTeamId = athleteCompetitionTeams.get(athleteKey);
 
+  // Não incluir no elenco o atleta em standby na competição ativa.
+  if (compStatus === 'STANDBY') return;
 
-    const remoteTeams = (data || []).map(row => ({
+  const teamKey = assocTeamId || String(row.equipe_id || '');
+
+  if (!teamKey || teamKey === 'null') return;
+
+  if (!athletesByTeam.has(teamKey)) {
+    athletesByTeam.set(teamKey, []);
+  }
+
+  athletesByTeam.get(teamKey).push({
+    id: row.numero_inscricao || ('BID-' + String(row.id)),
+    dbId: row.id,
+    name: row.nome,
+    birth: row.data_nascimento || '',
+    cpf: row.cpf || '',
+    city: row.naturalidade || '',
+    naturalidade: row.naturalidade || '',
+    registered: row.numero_inscricao || '',
+    role: 'jogador',
+    sportsName: row.nome_esportivo || '',
+    foto_url: row.foto_url || '',
+    photo: row.foto_url || '',
+    played: row.status === 'Atuou',
+    yellow: row.cartoes_amarelos || 0,
+    red: row.cartoes_vermelhos || 0,
+    goals: row.gols || 0,
+    apto: row.apto_jogar,
+    competitionIds: compIds,
+    competitionId: activeCompIds.find(id => compIds.includes(id)) || '',
+    competitionTeamId: assocTeamId || teamKey,
+    competitionStatus: compStatus || 'Inscrito',
+    shirtNumber: athleteCompetitionShirts.get(athleteKey) || '',
+    _remote: true
+  });
+});
+
       id: 'dbteam-' + String(row.id), dbId: row.id, name: row.nome,
       initials: String(row.nome || '').split(/\s+/).map(part => part[0] || '').join('').slice(0,4).toUpperCase(),
       logo: row.escudo_url || '', players: athletesByTeam.get(String(row.id)) || [],
@@ -6000,7 +6093,32 @@ return ids.some(id => compIds.includes(id));
 
 
 
-
+// Atletas em STANDBY na competição ativa
+db.standbyAthletes = (athleteRows || [])
+  .filter(row =>
+    athleteCompetitionStatus.get(String(row.id)) === 'STANDBY'
+  )
+  .map(row => ({
+    id: row.numero_inscricao || ('BID-' + String(row.id)),
+    dbId: row.id,
+    name: row.nome,
+    birth: row.data_nascimento || '',
+    cpf: row.cpf || '',
+    city: row.naturalidade || '',
+    naturalidade: row.naturalidade || '',
+    registered: row.numero_inscricao || '',
+    role: 'jogador',
+    sportsName: row.nome_esportivo || '',
+    foto_url: row.foto_url || '',
+    photo: row.foto_url || '',
+    played: row.status === 'Atuou',
+    yellow: row.cartoes_amarelos || 0,
+    red: row.cartoes_vermelhos || 0,
+    goals: row.gols || 0,
+    apto: row.apto_jogar,
+    competitionStatus: 'STANDBY',
+    _remote: true
+  }));
     db.teams = remoteTeams;
     if (!findTeam(selectedTeam) || !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
       selectedTeam = activeCompetitionTeams()[0]?.id || '';
