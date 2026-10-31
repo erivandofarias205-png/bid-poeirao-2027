@@ -9195,5 +9195,49 @@ document.addEventListener('click', async function(event) {
 
 
 });</script>
+<script>
+async function refreshBidAnalytics() {
+  const button = document.getElementById('refreshBidAnalytics');
+
+  if (button) button.disabled = true;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('bid_metricas_eventos')
+      .select('evento');
+
+    if (error) throw error;
+
+    const totals = {};
+
+    data.forEach(item => {
+      totals[item.evento] = (totals[item.evento] || 0) + 1;
+    });
+
+    const metrics = {
+      visita_site: 'metricVisits',
+      abertura_app: 'metricApp',
+      instalacao_app: 'metricInstalls',
+      clique_instalar: 'metricInstallClicks',
+      whatsapp_1: 'metricWhats1',
+      whatsapp_2: 'metricWhats2'
+    };
+
+    Object.entries(metrics).forEach(([event, id]) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = totals[event] || 0;
+    });
+
+  } catch (error) {
+    console.error('Erro nas estatísticas:', error);
+    alert('Erro ao consultar estatísticas: ' + error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+document.getElementById('refreshBidAnalytics')
+  ?.addEventListener('click', refreshBidAnalytics);
+</script>
 </body>
 </html>
