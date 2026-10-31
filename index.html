@@ -2811,7 +2811,12 @@ async function editAthlete(id){
           photoUrl=supabaseClient.storage
             .from('bid-fotos')
             .getPublicUrl(path).data.publicUrl;
+          
+const name = String($('athName')?.value || '').trim();
 
+if(!name){
+  throw new Error('Informe o nome completo.');
+}
         }else{
           photoUrl=await new Promise((resolve,reject)=>{
             const reader=new FileReader();
@@ -3225,7 +3230,11 @@ $('saveAthlete').addEventListener('click',async ()=>{
         photoUrl=supabaseClient.storage
           .from('bid-fotos').getPublicUrl(path).data.publicUrl;
       }
+const name = String($('athName')?.value || '').trim();
 
+if(!name){
+  throw new Error('Informe o nome completo.');
+}
       const {error:updateError}=await supabaseClient
         .from('equipe_pessoal')
         .update({
