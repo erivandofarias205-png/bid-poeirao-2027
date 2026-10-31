@@ -5107,16 +5107,173 @@ BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app
  }
  $('matchEventMatch')?.addEventListener('change',()=>refreshMatchEventChoices());
  $('matchEventTeam')?.addEventListener('change',()=>refreshMatchEventChoices($('matchEventMatch').value,$('matchEventTeam').value));
- $('addMatchEvent')?.addEventListener('click',()=>{
-  if(window.__BID_ADMIN_VERIFIED!==true){alert('Somente o administrador autenticado pode registrar eventos. Entre pela Administração.');return}
-  const match=(db.matches||[]).find(m=>String(m.id)===String($('matchEventMatch').value));if(!match){alert('Selecione a partida.');return}
-  const team=findTeam($('matchEventTeam').value);if(!team||![String(match.homeId),String(match.awayId)].includes(String(team.id))){alert('Selecione uma das equipes que disputam esta partida.');return}
-  const player=(team.players||[]).find(p=>String(p.id)===String($('matchEventAthlete').value));if(!player){alert('Selecione o atleta que marcou o gol ou recebeu o cartão.');return}
-  const type=$('matchEventType').value;const labels={played:'Participou da partida',goal:'Gol',yellow:'Cartão amarelo',red:'Cartão vermelho'},icons={played:'🏃',goal:'⚽',yellow:'🟨',red:'🟥'};
-  player.played=true;if(type==='goal')player.goals=(Number(player.goals)||0)+1;if(type==='yellow')player.yellow=(Number(player.yellow)||0)+1;if(type==='red')player.red=(Number(player.red)||0)+1;
-  const ev={id:Date.now()+Math.floor(Math.random()*1000),matchId:match.id,match:`${match.homeName} × ${match.awayName}`,team:team.name,teamId:team.id,player:player.name,playerId:player.id,type,label:labels[type],icon:icons[type],minute:$('matchEventMinute').value,note:$('matchEventNote').value.trim(),at:new Date().toLocaleString('pt-BR')};
-  db.events.unshift(ev);saveDb();$('matchEventMinute').value='';$('matchEventNote').value='';$('matchEventStatus').textContent='Evento registrado nesta prévia local. Exporte uma cópia de segurança para guardar; a sincronização dos eventos com o Supabase ainda precisa ser ligada.';refreshMatchEventChoices(match.id,team.id);renderEvents();renderFrontPage();
- });
+
+$('addMatchEvent')?.addEventListener('click', async () => {
+  try {
+    if (window.__BID_ADMIN_VERIFIED !== true) {
+      alert('Somente o administrador autenticado pode registrar eventos.');
+      return;
+    }
+
+    const match = (db.matches || []).find(
+      m => String(m.id) === String($('matchEventMatch').value)
+    );
+
+    if (!match || !match.dbId) {
+      alert('Partida não encontrada no Supabase.');
+      return;
+    }
+
+    const team = findTeam($('matchEventTeam').value);
+
+    if (
+      !team ||
+      !team.dbId ||
+      ![String(match.homeId), String(match.awayId)].includes(String(team.id))
+    ) {
+      alert('Selecione uma equipe válida desta partida.');
+      return;
+    }
+
+    const player = (team.players || []).find(
+      p => String(p.id) === String($('matchEventAthlete').value)
+    );
+
+    if (!player || !player.dbId || player._remotePersonnel) {
+      alert('Selecione um atleta cadastrado no BID.');
+      return;
+    }
+
+    const type = $('matchEventType').value;
+
+    const eventTypes = {
+      played: 'observacao',
+      goal: 'gol',
+      yellow: 'cartao_amarelo',
+      red: 'cartao_vermelho'
+    };
+
+    const labels = {
+      played: 'Participou da partida',
+      goal: 'Gol',
+      yellow: 'Cartão amarelo',
+      red: 'Cartão vermelho'
+    };
+
+    const icons = {
+      played: '🏃',
+      goal: '⚽',
+      yellow: '🟨',
+      red: '🟥'
+    };
+
+    const minuteValue = $('matchEventMinute').value.trim();
+    const minute = minuteValue === '' ? null : Number(minuteValue);
+
+    if (
+      minute !== null &&
+      (!Number.isInteger(minute) || minute < 0 || minute > 150)
+    ) {
+      alert('Informe um minuto válido entre 0 e 150.');
+      return;
+    }
+
+    const note = $('matchEventNote').value.trim();
+
+    const descricao = type === 'played'
+      ? (note || labels[type])
+      : (note || labels[type]);
+
+    const eventData = {
+      jogo_id: match.dbId,
+      atleta_id: player.dbId,
+      equipe_id: team.dbId,
+      tipo: eventTypes[type],
+      minuto: minute,
+      descricao
+    };
+
+    const { error: insertError } = await supabaseClient
+      .from('jogo_eventos')
+      .insert(eventData);
+
+    if (insertError) throw insertError;
+
+    const athleteUpdate = {};
+
+    if (type === 'played') {
+      athleteUpdate.status = 'Atuou';
+    }
+
+    if (type === 'goal') {
+      athleteUpdate.gols = Number(player.goals || 0) + 1;
+    }
+
+    if (type === 'yellow') {
+      athleteUpdate.cartoes_amarelos = Number(player.yellow || 0) + 1;
+    }
+
+    if (type === 'red') {
+      athleteUpdate.cartoes_vermelhos = Number(player.red || 0) + 1;
+    }
+
+    if (Object.keys(athleteUpdate).length) {
+      const { error: updateError } = await supabaseClient
+        .from('ATLETAS')
+        .update(athleteUpdate)
+        .eq('id', player.dbId);
+
+      if (updateError) {
+        throw new Error(
+          'Evento salvo, mas houve erro ao atualizar os dados do atleta: ' +
+          updateError.message
+        );
+      }
+    }
+
+    const ev = {
+      id: Date.now(),
+      matchId: match.id,
+      match: `${match.homeName} × ${match.awayName}`,
+      team: team.name,
+      teamId: team.id,
+      player: player.name,
+      playerId: player.id,
+      type,
+      label: labels[type],
+      icon: icons[type],
+      minute: minuteValue,
+      note,
+      at: new Date().toLocaleString('pt-BR')
+    };
+
+    db.events = db.events || [];
+    db.events.unshift(ev);
+
+    if (type === 'played') player.played = true;
+    if (type === 'goal') player.goals = Number(player.goals || 0) + 1;
+    if (type === 'yellow') player.yellow = Number(player.yellow || 0) + 1;
+    if (type === 'red') player.red = Number(player.red || 0) + 1;
+
+    saveDb();
+
+    $('matchEventMinute').value = '';
+    $('matchEventNote').value = '';
+
+    $('matchEventStatus').textContent =
+      'Evento salvo no Supabase com sucesso!';
+
+    refreshMatchEventChoices(match.id, team.id);
+    renderEvents();
+    renderFrontPage();
+
+    alert('Evento registrado e enviado ao banco de dados!');
+
+  } catch (error) {
+    console.error('Erro ao registrar evento:', error);
+    alert('Não foi possível concluir o registro: ' + error.message);
+  }
+});
  $('showMatchEvents')?.addEventListener('click',renderMatchEventList);
  // Mantém o editor sincronizado com os jogos existentes e com o botão Gols/cartões.
  const originalRenderMatchesForEvents=renderMatches;
@@ -5189,59 +5346,174 @@ const supabaseClient = window.supabase.createClient(
 
 
 
-// Carrega partidas da tabela public.jogos para que apareçam igualmente em celular e computador.
-async function loadSupabaseMatches(){
- try{
-  const {data:rows,error}=await supabaseClient.from('jogos').select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status').order('data_hora',{ascending:true});
-  if(error)throw error;
-  const teams=db.teams||[];
-  const toLocalTeamId=(id)=>{const t=teams.find(x=>String(x.dbId)===String(id)||String(x.id)===String(id));return t?.id||String(id)};
-  const remote=(rows||[]).map(r=>{
-   const dt=r.data_hora?new Date(r.data_hora):null;
-   const date=dt&&!Number.isNaN(dt.getTime())?`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`:'';
-   const time=dt&&!Number.isNaN(dt.getTime())?`${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`:'';
-   const home=teams.find(t=>String(t.dbId)===String(r.equipe_mandante_id));
-   const away=teams.find(t=>String(t.dbId)===String(r.equipe_visitante_id));
-   const comp=(db.competitions||[]).find(c=>String(c.dbId||c.id)===String(r.competicao_id));
-  return {
-  id:String(r.id),
-  dbId:r.id,
-  date,
-  time,
-  round:r.fase||r.rodada||'',
-  formato:r.formato||'unico',
-  venue:r.local_jogo||'',
-  homeId:home?.id||String(r.equipe_mandante_id),
-  homeName:home?.name||'Equipe',
-  awayId:away?.id||String(r.equipe_visitante_id),
-  awayName:away?.name||'Equipe',
-  homeScore:r.gols_mandante,
-  awayScore:r.gols_visitante,
-  status:r.status||'Agendado',
-  competitionId:String(r.competicao_id),
-  competitionDbId:r.competicao_id,
-  competitionName:comp?.name||'',
-  competitionLogo:comp?.logo||'',
-  _remote:true
-};
-  });
-  const localOnly=(db.matches||[]).filter(m=>!m._remote&&!m.dbId);
-  db.matches=[...remote,...localOnly];
-  saveDb();
-  // Atualiza a consulta pública, tabela de jogos e classificação após receber os dados remotos.
-  if(typeof renderAll==='function') renderAll();
- }catch(error){
-  console.error('Não foi possível carregar partidas do Supabase:',error);
-  // Preserve os jogos que já estão na memória, mas informe que a consulta remota falhou.
-  const msg=error?.message||String(error);
-  if(/permission|row-level|RLS|schema cache|does not exist|not find/i.test(msg)) console.warn('Confira a permissão SELECT da tabela public.jogos e a exposição da tabela na API:',msg);
- }
+
+// Carrega partidas da tabela public.jogos para celular e computador.
+async function loadSupabaseMatches() {
+  try {
+    const { data: rows, error } = await supabaseClient
+      .from('jogos')
+      .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
+      .order('data_hora', { ascending: true });
+
+    if (error) throw error;
+
+    const teams = db.teams || [];
+
+    const remote = (rows || []).map(r => {
+      const dt = r.data_hora ? new Date(r.data_hora) : null;
+
+      const date = dt && !Number.isNaN(dt.getTime())
+        ? `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+        : '';
+
+      const time = dt && !Number.isNaN(dt.getTime())
+        ? `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`
+        : '';
+
+      const home = teams.find(t => String(t.dbId) === String(r.equipe_mandante_id));
+      const away = teams.find(t => String(t.dbId) === String(r.equipe_visitante_id));
+      const comp = (db.competitions || []).find(
+        c => String(c.dbId || c.id) === String(r.competicao_id)
+      );
+
+      return {
+        id: String(r.id),
+        dbId: r.id,
+        date,
+        time,
+        round: r.fase || r.rodada || '',
+        formato: r.formato || 'unico',
+        venue: r.local_jogo || '',
+        homeId: home?.id || String(r.equipe_mandante_id),
+        homeName: home?.name || 'Equipe',
+        awayId: away?.id || String(r.equipe_visitante_id),
+        awayName: away?.name || 'Equipe',
+        homeScore: r.gols_mandante,
+        awayScore: r.gols_visitante,
+        status: r.status || 'Agendado',
+        competitionId: String(r.competicao_id),
+        competitionDbId: r.competicao_id,
+        competitionName: comp?.name || '',
+        competitionLogo: comp?.logo || '',
+        _remote: true
+      };
+    });
+
+    const localOnly = (db.matches || []).filter(m => !m._remote && !m.dbId);
+    db.matches = [...remote, ...localOnly];
+
+    saveDb();
+
+    if (typeof renderAll === 'function') renderAll();
+
+  } catch (error) {
+    console.error('Não foi possível carregar partidas do Supabase:', error);
+
+    const msg = error?.message || String(error);
+
+    if (/permission|row-level|RLS|schema cache|does not exist|not find/i.test(msg)) {
+      console.warn(
+        'Confira a permissão SELECT da tabela public.jogos:',
+        msg
+      );
+    }
+  }
 }
 
 
+// Carrega eventos registrados no Supabase para todos os dispositivos.
+async function loadSupabaseEvents() {
+  try {
+    const { data: rows, error } = await supabaseClient
+      .from('jogo_eventos')
+      .select('id,jogo_id,atleta_id,equipe_id,tipo,minuto,descricao,criado_em')
+      .order('criado_em', { ascending: false });
 
+    if (error) throw error;
 
-// Carrega competições: tenta o nome padrão em minúsculas e, se necessário, a tabela em maiúsculas.
+    const matches = db.matches || [];
+    const teams = db.teams || [];
+
+    const labels = {
+      gol: 'Gol',
+      gol_contra: 'Gol contra',
+      cartao_amarelo: 'Cartão amarelo',
+      cartao_vermelho: 'Cartão vermelho',
+      substituicao: 'Substituição',
+      observacao: 'Participação / Observação'
+    };
+
+    const icons = {
+      gol: '⚽',
+      gol_contra: '⚽',
+      cartao_amarelo: '🟨',
+      cartao_vermelho: '🟥',
+      substituicao: '🔄',
+      observacao: '🏃'
+    };
+
+    const remoteEvents = (rows || []).map(row => {
+      const match = matches.find(
+        m => String(m.dbId) === String(row.jogo_id)
+      );
+
+      const team = teams.find(
+        t => String(t.dbId) === String(row.equipe_id)
+      );
+
+      const player = team
+        ? (team.players || []).find(
+            p => String(p.dbId) === String(row.atleta_id)
+          )
+        : null;
+
+      const date = row.criado_em ? new Date(row.criado_em) : null;
+
+      return {
+        id: row.id,
+        dbId: row.id,
+        matchId: match?.id || String(row.jogo_id),
+        match: match
+          ? `${match.homeName} × ${match.awayName}`
+          : 'Partida',
+        team: team?.name || 'Equipe',
+        teamId: team?.id || String(row.equipe_id),
+        player: player?.name || 'Atleta',
+        playerId: player?.id || String(row.atleta_id),
+        type: ({
+          gol: 'goal',
+          gol_contra: 'goal',
+          cartao_amarelo: 'yellow',
+          cartao_vermelho: 'red',
+          observacao: 'played'
+        })[row.tipo] || row.tipo,
+        label: labels[row.tipo] || row.tipo,
+        icon: icons[row.tipo] || '📋',
+        minute: row.minuto == null ? '' : String(row.minuto),
+        note: row.descricao || '',
+        at: date && !Number.isNaN(date.getTime())
+          ? date.toLocaleString('pt-BR')
+          : '',
+        _remote: true
+      };
+    });
+
+    const localOnly = (db.events || []).filter(e => !e._remote);
+
+    db.events = [...remoteEvents, ...localOnly];
+
+    saveDb();
+
+    if (typeof renderEvents === 'function') renderEvents();
+    if (typeof renderFrontPage === 'function') renderFrontPage();
+    if (typeof renderMatchEventList === 'function') renderMatchEventList();
+
+    console.log('Eventos carregados do Supabase:', remoteEvents.length);
+
+  } catch (error) {
+    console.error('Não foi possível carregar eventos do Supabase:', error);
+  }
+}
 
 async function loadSupabaseCompetitions() {
   let lastError = null;
@@ -5630,8 +5902,9 @@ photo: row.foto_url || '',
   });
   // A consulta pública depende da política SELECT já configurada no banco.
   await loadSupabaseCompetitions();
-  await loadSupabaseTeams();
-  await loadSupabaseMatches();
+await loadSupabaseTeams();
+await loadSupabaseMatches();
+await loadSupabaseEvents();
 })();
 </script>
 <script id="bid-operation-confirmations">
