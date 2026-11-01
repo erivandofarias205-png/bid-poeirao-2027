@@ -5589,7 +5589,6 @@ penalties1B: tie.penalties1B ?? '',
         competitionName: publicComp.name || '',
         competitionLogo: publicComp.logo || ''
       });
-    });
   }
 
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
