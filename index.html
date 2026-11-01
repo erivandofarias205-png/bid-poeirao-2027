@@ -6053,7 +6053,9 @@ thirdPlaceTie: cfg.thirdPlaceTie || null,
       if (active) db.competition = active.name;
 
       saveDb();
-
+if (typeof window.refreshPhotoCompetitionSelect === 'function') {
+  window.refreshPhotoCompetitionSelect();
+}
       if (typeof renderAll === 'function') renderAll();
 
       return;
@@ -6814,7 +6816,7 @@ async function compressSponsorImage(file){
         ).join('')
       : '<option value="">Nenhuma competição cadastrada</option>';
   }
-
+window.refreshPhotoCompetitionSelect = loadCompetitions;
   async function loadGallery(){
     const folder = competitionFolder();
 
