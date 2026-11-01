@@ -2722,6 +2722,9 @@ function teamBelongsToActiveCompetition(t){
   return direct.some(v => names.includes(v.trim().toLowerCase()));
 }
 function activeCompetitionTeams(){return (db.teams||[]).filter(teamBelongsToActiveCompetition)}
+  function publicCompetitionTeams(){
+  return activeCompetitionTeams().filter(t => !t._virtual);
+}
 function matchBelongsToActiveCompetition(m){
  const comp=activeCompetition();if(!comp)return !(db.competitions||[]).length;
  const matchComp=[m.competitionId,m.competicao_id,m.competitionDbId].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
@@ -2765,13 +2768,25 @@ function searchAthletes(){
 }
 $('athleteSearchInput')?.addEventListener('input',searchAthletes);
 function renderTeams(){
- $('teamList').innerHTML=activeCompetitionTeams().map(t=>`<button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}"><span class="crest">${t.logo?`<img src="${t.logo}" alt="">`:esc(t.initials||'⚽')}</span><span><span class="teamname">${esc(t.name)}</span><span class="teammeta">${t.players.length} atleta(s) · Grupo ${esc(t.group||'—')} · abrir boletim</span></span></button>`).join('')||'<div class="empty">Cadastre a primeira equipe na aba Administração.</div>';
+$('teamList').innerHTML=activeCompetitionTeams().filter(t => !t._virtual || window.__BID_ADMIN_VERIFIED === true).map(t=>
  document.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.team;renderAll()});
 }
 function renderRoster(){
  const initialTeam=findTeam(selectedTeam);if(initialTeam&&!teamBelongsToActiveCompetition(initialTeam)){selectedTeam=activeCompetitionTeams()[0]?.id||'';}const rosterTeam=findTeam(selectedTeam);$('rosterTitle').textContent='Boletim · '+(rosterTeam?.name||'Selecione uma equipe');
  const t=rosterTeam;
- if(!t){$('rows').innerHTML='';$('noRows').classList.remove('hidden');return}
+
+if(t && t._virtual && window.__BID_ADMIN_VERIFIED !== true){
+  $('rows').innerHTML='';
+  $('noRows').textContent='Esta equipe não está disponível na consulta pública.';
+  $('noRows').classList.remove('hidden');
+  return;
+}
+
+if(!t){
+  $('rows').innerHTML='';
+  $('noRows').classList.remove('hidden');
+  return;
+}
  const q=$('q').value.trim().toLowerCase(),f=$('filter').value;
  const ps=t.players.filter(p=>(!q||(p.name+' '+p.id).toLowerCase().includes(q))&&(!f||(f==='free'?!p.played:p.played)));
  const NAO_ATLETAS=new Set(['BID-0020','BID-0021','BID-0022','BID-0023']);
