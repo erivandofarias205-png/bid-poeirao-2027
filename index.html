@@ -5749,7 +5749,16 @@ const renderGroupedFixtures = list => {
    if(isKnockout || fmt.includes('mista')){
   const allMatches=(db.matches||[])
     .filter(matchBelongsToActiveCompetition);
-console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({mandante:m.homeName, visitante:m.awayName, fase:m.round, faseAlternativa:m.fase, status:m.status})));
+console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({
+  mandante:m.homeName,
+  visitante:m.awayName,
+  fase:m.round,
+  status:m.status,
+  placarA:m.homeScore,
+  placarB:m.awayScore,
+  penaltisA:m.penalties1A,
+  penaltisB:m.penalties1B
+})));
   const normalizePhase=m=>String(m.round||m.fase||m.publicRound||'')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'')
