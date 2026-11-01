@@ -1960,6 +1960,81 @@ overflow: visible !important;
   font-size: 13px;
 }
 </style>
+
+<style>
+/* AJUSTE DEFINITIVO - COMISSÃO DE VOTAÇÃO */
+#highlightsView #highlightsVoters{
+  display:grid !important;
+  grid-template-columns:repeat(4, 58px) !important;
+  justify-content:center !important;
+  align-items:start !important;
+  gap:10px !important;
+  width:100% !important;
+  max-width:100% !important;
+  margin:0 auto !important;
+  padding:12px 4px !important;
+  box-sizing:border-box !important;
+}
+
+#highlightsView #highlightsVoters .voter-card{
+  display:block !important;
+  width:58px !important;
+  min-width:58px !important;
+  max-width:58px !important;
+  margin:0 !important;
+  padding:0 !important;
+  text-align:center !important;
+  box-sizing:border-box !important;
+}
+
+#highlightsView #highlightsVoters .voter-card img{
+  display:block !important;
+  width:58px !important;
+  min-width:58px !important;
+  max-width:58px !important;
+  height:77px !important;
+  aspect-ratio:3/4 !important;
+  object-fit:cover !important;
+  margin:0 auto !important;
+  border:1px solid #d6ad35 !important;
+  border-radius:4px !important;
+}
+
+#highlightsView #highlightsVoters .voter-card strong{
+  display:block !important;
+  font-size:8px !important;
+  line-height:1.15 !important;
+  overflow-wrap:anywhere !important;
+  margin-top:5px !important;
+}
+
+#highlightsView #highlightsVoters .voter-card small{
+  display:block !important;
+  font-size:7px !important;
+  line-height:1.1 !important;
+  margin-top:3px !important;
+}
+
+@media(max-width:480px){
+  #highlightsView #highlightsVoters{
+    grid-template-columns:repeat(4,minmax(0,52px)) !important;
+    gap:5px !important;
+  }
+
+  #highlightsView #highlightsVoters .voter-card{
+    width:52px !important;
+    min-width:0 !important;
+    max-width:52px !important;
+  }
+
+  #highlightsView #highlightsVoters .voter-card img{
+    width:52px !important;
+    min-width:52px !important;
+    max-width:52px !important;
+    height:69px !important;
+  }
+}
+</style>
 </head>
 <body>
 <header>
