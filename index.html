@@ -5833,12 +5833,12 @@ if (phase.title === 'FINAL') {
   savedTies.filter(t => {
     const name = normalizePhase(t);
 
-    if (
-      name.includes('final') ||
-      name.includes('terceiro')
-    ) {
-      return false;
-    }
+   if (
+  name === 'final' ||
+  name.includes('terceiro')
+) {
+  return false;
+}
 
     return phase.keys.some(k => name.includes(k));
   }).forEach(t => {
