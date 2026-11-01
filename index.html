@@ -5835,17 +5835,33 @@ if (phase.title === 'FINAL') {
   }).forEach(t => {
     const g = toGame(t);
 
-    const duplicate = games.some(m =>
-      (String(m.homeId) === String(g.homeId) &&
-       String(m.awayId) === String(g.awayId)) ||
-      (String(m.homeId) === String(g.awayId) &&
-       String(m.awayId) === String(g.homeId))
-    );
+    const existingGame = games.find(m =>
+  (String(m.homeId) === String(g.homeId) &&
+   String(m.awayId) === String(g.awayId)) ||
+  (String(m.homeId) === String(g.awayId) &&
+   String(m.awayId) === String(g.homeId))
+);
 
-    if (!duplicate) games.push(g);
-  });
+if (!existingGame) {
+  games.push(g);
+} else {
+  const sameOrder =
+    String(existingGame.homeId) === String(g.homeId);
+
+  const penaltyA = sameOrder ? g.penalties1A : g.penalties1B;
+  const penaltyB = sameOrder ? g.penalties1B : g.penalties1A;
+
+  if (penaltyA !== '' && penaltyA != null) {
+    existingGame.penalties1A = penaltyA;
+  }
+
+   if (penaltyB !== '' && penaltyB != null) {
+    existingGame.penalties1B = penaltyB;
+  }
+});
 }
-  if (phase.title === 'FINAL') {
+
+if (phase.title === 'FINAL') {
    const semis=allMatches.filter(m=>
     normalizePhase(m).includes('semi')
   );
