@@ -2441,71 +2441,78 @@ overflow: visible !important;
 }
 
 
-/* COMISSÃO DE VOTAÇÃO */
+
+/* COMISSÃO - COPA POEIRÃO */
 #highlightsVoters.highlights-voters{
-  width:100% !important;
-  max-width:600px !important;
-  margin:0 auto !important;
-  display:grid !important;
-  grid-template-columns:repeat(4,minmax(0,110px)) !important;
+  display:flex !important;
+  flex-direction:row !important;
   justify-content:center !important;
-  align-items:start !important;
-  gap:12px !important;
+  align-items:flex-start !important;
+  gap:10px !important;
+  width:100% !important;
+  max-width:100% !important;
+  margin:0 auto !important;
+  padding:8px 4px !important;
 }
 
 #highlightsVoters .voter-card{
-  width:100% !important;
+  flex:0 1 62px !important;
+  width:62px !important;
   min-width:0 !important;
-  text-align:center !important;
   padding:0 !important;
   margin:0 !important;
+  text-align:center !important;
 }
 
 #highlightsVoters .voter-card img{
   display:block !important;
-  width:100% !important;
-  max-width:110px !important;
-  height:auto !important;
+  width:58px !important;
+  height:77px !important;
+  max-width:58px !important;
   aspect-ratio:3/4 !important;
   object-fit:cover !important;
-  border:2px solid #d6ad35 !important;
-  border-radius:5px !important;
   margin:0 auto !important;
+  border:1px solid #d6ad35 !important;
+  border-radius:4px !important;
 }
 
 #highlightsVoters .voter-card strong{
-  display:block;
-  color:#e8bd43;
-  font-size:11px;
-  line-height:1.2;
-  margin-top:6px;
-  overflow-wrap:anywhere;
+  display:block !important;
+  font-size:9px !important;
+  line-height:1.1 !important;
+  margin-top:5px !important;
+  overflow-wrap:anywhere !important;
 }
 
 #highlightsVoters .voter-card small{
-  display:block;
-  color:#fff;
-  font-size:9px;
-  margin-top:3px;
+  display:block !important;
+  font-size:8px !important;
+  line-height:1.1 !important;
+  margin-top:3px !important;
 }
 
 @media(max-width:480px){
   #highlightsVoters.highlights-voters{
-    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
     gap:5px !important;
-    max-width:100% !important;
+  }
+
+  #highlightsVoters .voter-card{
+    flex:0 1 55px !important;
+    width:55px !important;
   }
 
   #highlightsVoters .voter-card img{
-    max-width:100% !important;
+    width:48px !important;
+    height:64px !important;
+    max-width:48px !important;
   }
 
   #highlightsVoters .voter-card strong{
-    font-size:8px;
+    font-size:7px !important;
   }
 
   #highlightsVoters .voter-card small{
-    font-size:7px;
+    font-size:6px !important;
   }
 }
 </style>
@@ -2982,6 +2989,21 @@ if(highlightsSelect){
     }
 
     renderHighlightsTopScorer();
+    const selectedCompetition=
+  (db.competitions||[]).find(c=>
+    String(c.id||c.dbId)===String(highlightsSelect.value)
+  );
+
+const isPoeirao=
+  String(selectedCompetition?.name||selectedCompetition?.nome||'')
+    .toUpperCase()
+    .includes('POEIRÃO');
+
+const votersPanel=$('highlightsVoters')?.closest('.panel');
+
+if(votersPanel){
+  votersPanel.classList.toggle('hidden',!isPoeirao);
+}
   });
 }
 
