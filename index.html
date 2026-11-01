@@ -6374,7 +6374,7 @@ async function compressSponsorImage(file){
     }
 
     const cards = files.map(f =>
-      '<div class="sponsor-logo-card"><img loading="lazy" src="' +
+      '<div class="sponsor-logo-card"><img loading="eager" src="' +
       sponsorUrl(f.name) + '" alt="Patrocinador"></div>'
     ).join('');
 
