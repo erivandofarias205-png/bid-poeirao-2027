@@ -1982,7 +1982,7 @@ overflow: visible !important;
   <div class="panel" id="game-promo-panel"><div class="ph"><h3>DIVULGUE SEU JOGO AQUI!</h3></div><div class="pad"><p class="game-promo-callout">Envie as informações do seu jogo no WhatsApp disponível no rodapé da página.</p><div class="game-promo-viewport" id="gamePromoViewport"><div class="game-promo-track" id="gamePromoTrack"><div class="game-promo-empty">As divulgações de jogos aparecerão aqui.</div></div></div></div></div>
 <div class="panel"><div class="ph"><h3>CONSULTAR AS COMPETIÇÕES ADMINISTRADAS</h3><span class="pill">Selecione uma competição</span></div><div class="pad"><div aria-live="polite" class="small" id="publicCompetitionList"></div></div></div>
 <div class="stats"><div class="stat"><small>Equipes cadastradas</small><strong id="nTeams">0</strong></div><div class="stat"><small>Atletas cadastrados</small><strong id="nPlayers">0</strong></div><div class="stat"><small>Partidas com eventos</small><strong id="nMatches">0</strong></div></div>
-<div class="tabs"><button class="tab" data-tab="classification">Classificação</button><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button><button class="tab" type="button" data-tab="photos">FOTOS</button><button class="tab" type="button" data-tab="highlights">DESTAQUES</button></div>
+<div class="tabs"><button class="tab" data-tab="classification">Classificação</button><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button><button class="tab" type="button" data-tab="photos">FOTOS</button><button class="tab" type="button" data-tab="highlights">DESTAQUES DA COMPETIÇÃO</button></div>
 <section id="publicView">
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMAS PARTIDAS</h3><span class="pill">Próximos confrontos</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
 <div class="panel finished-match-panel"><div class="ph"><h3>PARTIDAS FINALIZADAS</h3><span class="pill">Resultados oficiais</span></div><div class="fixtures" id="finishedFixtures"><div class="empty">Nenhuma partida finalizada ainda.</div></div></div>
@@ -1994,7 +1994,24 @@ overflow: visible !important;
 </section>
 <section class="hidden" id="classificationView"></section>
 <section class="hidden" id="teamsView"></section>
-<section class="hidden" id="gamesView">
+<section class="hidden" id="highlightsView">
+  <div class="panel">
+    <div class="ph">
+      <h3>DESTAQUES DA COMPETIÇÃO</h3>
+      <span class="pill">Selecione uma competição</span>
+    </div>
+    <div class="pad">
+      <label for="highlightsCompetitionSelect">Escolha a competição</label>
+      <select id="highlightsCompetitionSelect">
+        <option value="">Carregando competições...</option>
+      </select>
+      <div id="highlightsCompetitionContent" class="empty">
+        Selecione uma competição para visualizar os destaques.
+      </div>
+    </div>
+  </div>
+</section>
+  <section class="hidden" id="gamesView">
 <div class="panel"><div class="ph"><h3>Tabela oficial de jogos</h3><span class="pill">Calendário e resultados</span></div>
 <div class="pad"><div class="formgrid">
 <label>Data do jogo<input id="matchDate" type="date"/></label>
@@ -2742,12 +2759,39 @@ function findAth(id){
 }
 function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
 function showTab(name){
- const views=['public','admin','games','game','profile','classification','teams','photos'];
+ const views=['public','admin','games','game','profile','classification','teams','photos','highlights'];
  views.forEach(x=>{const el=$(x+'View');if(el)el.classList.toggle('hidden',x!==name)});
  document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
 }
 document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
-(function setupDedicatedViews(){
+function loadHighlightsCompetitions(){
+  const select=$('highlightsCompetitionSelect');
+  if(!select)return;
+
+  const competitions=db.competitions||[];
+
+  select.innerHTML='<option value="">Selecione uma competição</option>';
+
+  competitions.forEach(c=>{
+    const id=c.id||c.dbId;
+    const name=c.name||c.nome||c.title||c.competitionName;
+
+    if(!id||!name)return;
+
+    const option=document.createElement('option');
+    option.value=id;
+    option.textContent=name;
+    select.appendChild(option);
+  });
+
+  if(!competitions.length){
+    select.innerHTML='<option value="">Nenhuma competição cadastrada</option>';
+  }
+}
+
+document.querySelector('[data-tab="highlights"]')
+  ?.addEventListener('click',loadHighlightsCompetitions);
+  (function setupDedicatedViews(){
  const classification=$('classificationView'),teams=$('teamsView');
  ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
  ['teamPanel','rosterPanel'].forEach(id=>{const el=$(id);if(el)teams.appendChild(el)});
