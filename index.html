@@ -3242,6 +3242,23 @@ const athletes = compTeams.flatMap(t =>
     team: t.name || t.nome || ''
   }))
 ).filter(p => p.id !== undefined && p.id !== null);
+    const coaches = compTeams.flatMap(t =>
+  (t.players || [])
+    .filter(p =>
+      p._remotePersonnel === true &&
+      String(p.role || p.funcao || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .toLowerCase()
+        .trim() === 'treinador'
+    )
+    .map(p => ({
+      id: p.id,
+      name: p.name || p.nome || 'Treinador',
+      photo: p.photo || p.foto_url || '',
+      team: t.name || t.nome || ''
+    }))
+);
 console.log('Competição selecionada:', comp);
 console.log('Equipes encontradas:', compTeams.length);
 console.log('Atletas encontrados:', athletes.length);
@@ -3253,12 +3270,14 @@ const categories = [
   {id:'selection',title:'🥇 SELEÇÃO DA COMPETIÇÃO',positions}
 ];
 
-function athleteOptions(){
-  return '<option value="">Selecione um atleta</option>' +
-    athletes.map(p =>
+
+function athleteOptions(list = athletes){
+  return '<option value="">Selecione um cadastro</option>' +
+    list.map(p =>
       `<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.team)}</option>`
     ).join('');
 }
+
 
 adminHighlightsCategories.innerHTML = `
   <div class="panel">
@@ -3286,7 +3305,7 @@ ${(category.id === 'selection'
         <select
           id="admin_${category.id}_athlete_${i}_${j}"
           class="admin-highlight-athlete">
-          ${athleteOptions()}
+          ${athleteOptions(category.id === 'selection' && position === 'Treinador' ? coaches : athletes)}
         </select>
 
         <img
@@ -3323,9 +3342,15 @@ categories.forEach(category => {
       if(!select || !photo) continue;
 
       select.addEventListener('change',()=>{
-        const athlete = athletes.find(p =>
-          String(p.id) === String(select.value)
-        );
+        const candidateList =
+  category.id === 'selection' &&
+  category.positions[i] === 'Treinador'
+    ? coaches
+    : athletes;
+
+const athlete = candidateList.find(p =>
+  String(p.id) === String(select.value)
+);
 
         if(athlete && athlete.photo){
           photo.src = athlete.photo;
@@ -3339,8 +3364,8 @@ categories.forEach(category => {
   }
 });
 
-  if(!athletes.length){
-  alert('Não foram encontrados atletas vinculados a esta competição.');
+ if(!athletes.length && !coaches.length){
+  alert('Não foram encontrados atletas nem treinadores nesta competição.');
 }
 
 adminHighlightsContent.classList.remove('hidden');
