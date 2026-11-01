@@ -2882,12 +2882,149 @@ if(highlightsSelect){
   highlightsSelect.addEventListener('change',()=>{
     const content=$('highlightsCompetitionContent');
 
-    if(content){
-      content.classList.toggle('hidden',!highlightsSelect.value);
-    }
+   if(content){
+  content.classList.toggle('hidden',!highlightsSelect.value);
+}
+
+renderHighlightsTopScorer();
   });
 }
   (function setupDedicatedViews(){
+    function renderHighlightsTopScorer(){
+  const out=$('highlightsTopScorer');
+  const select=$('highlightsCompetitionSelect');
+
+  if(!out||!select)return;
+
+  const comp=(db.competitions||[]).find(c=>
+    [c.id,c.dbId,c.db_id].some(v=>
+      v!==undefined&&v!==null&&String(v)===String(select.value)
+    )
+  );
+
+  if(!comp){
+    out.innerHTML='<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  const compIds=[comp.id,comp.dbId,comp.db_id]
+    .filter(v=>v!==undefined&&v!==null&&v!=='')
+    .map(String);
+
+  const compNames=[
+    comp.name,
+    `${comp.name||''} ${comp.season||''}`
+  ].filter(Boolean).map(x=>String(x).trim().toLowerCase());
+
+  const compTeams=(db.teams||[]).filter(t=>{
+    const ids=[
+      ...(Array.isArray(t.competitionIds)?t.competitionIds:[]),
+      ...(Array.isArray(t.competition_ids)?t.competition_ids:[])
+    ].map(String);
+
+    const direct=[
+      t.competitionId,
+      t.competition_id,
+      t.competitionDbId,
+      t.competicao_id,
+      t.competition
+    ].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
+
+    return ids.some(id=>compIds.includes(id))||
+      direct.some(id=>compIds.includes(id))||
+      direct.some(v=>compNames.includes(v.trim().toLowerCase()));
+  });
+
+  const compTeamIds=new Set(compTeams.map(t=>String(t.id)));
+  const compTeamDbIds=new Set(compTeams.map(t=>String(t.dbId||'')));
+
+  const goalEvents=(db.events||[])
+    .filter(e=>e.type==='goal'||String(e.label||'').toLowerCase()==='gol')
+    .filter(e=>
+      compTeamIds.has(String(e.teamId))||
+      compTeamDbIds.has(String(e.teamId))||
+      compTeams.some(t=>t.name===e.team)
+    );
+
+  const scorers=[];
+
+  if(goalEvents.length){
+    const totals=new Map();
+
+    goalEvents.forEach(e=>{
+      const key=String(e.playerId||e.player)+'|'+String(e.teamId||e.team);
+      const prev=totals.get(key)||{
+        name:e.player||'Atleta',
+        team:e.team||'',
+        goals:0
+      };
+
+      prev.goals++;
+      totals.set(key,prev);
+    });
+
+    scorers.push(...totals.values());
+
+  }else{
+    compTeams.forEach(t=>{
+      (t.players||[]).forEach(p=>{
+        const goals=Number(p.goals||0);
+
+        if(goals>0){
+          scorers.push({
+            name:p.name,
+            team:t.name,
+            goals
+          });
+        }
+      });
+    });
+  }
+
+  scorers.sort((a,b)=>
+    b.goals-a.goals||a.name.localeCompare(b.name)
+  );
+
+  if(!scorers.length){
+    out.innerHTML='<div class="empty">Ainda não há gols registrados nesta competição.</div>';
+    return;
+  }
+
+  const topGoals=scorers[0].goals;
+  const leaders=scorers.filter(x=>x.goals===topGoals);
+
+  out.innerHTML=leaders.map(x=>{
+    const team=compTeams.find(t=>
+      String(t.name||'').trim().toLowerCase()===
+      String(x.team||'').trim().toLowerCase()
+    )||{};
+
+    const player=(team.players||[]).find(p=>
+      String(p.name||'').trim().toLowerCase()===
+      String(x.name||'').trim().toLowerCase()
+    )||{};
+
+    const photo=player.photo||player.foto_url||'';
+    const logo=team.logo||team.escudo_url||'';
+
+    return `
+      <div class="scorer">
+        <span class="scorer-rank">1</span>
+        ${photo
+          ?`<img class="scorer-photo" src="${esc(photo)}" alt="Foto de ${esc(x.name)}">`
+          :`<span class="scorer-photo">⚽</span>`}
+        <div class="scorer-info">
+          <b>${esc(x.name)}</b>
+          <small>${esc(x.team)}</small>
+        </div>
+        ${logo
+          ?`<img class="scorer-crest" src="${esc(logo)}" alt="Escudo">`
+          :''}
+        <span class="scorer-goals">${x.goals} gols</span>
+      </div>
+    `;
+  }).join('');
+}
  const classification=$('classificationView'),teams=$('teamsView');
  ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
  ['teamPanel','rosterPanel'].forEach(id=>{const el=$(id);if(el)teams.appendChild(el)});
