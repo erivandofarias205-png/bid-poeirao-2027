@@ -2768,8 +2768,26 @@ function searchAthletes(){
 }
 $('athleteSearchInput')?.addEventListener('input',searchAthletes);
 function renderTeams(){
-$('teamList').innerHTML=activeCompetitionTeams().filter(t => !t._virtual || window.__BID_ADMIN_VERIFIED === true).map(t=>
- document.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.team;renderAll()});
+  $('teamList').innerHTML = activeCompetitionTeams()
+    .filter(t => !t._virtual || window.__BID_ADMIN_VERIFIED === true)
+    .map(t => `
+      <button class="team ${t.id===selectedTeam?'sel':''}" data-team="${esc(t.id)}">
+        <span class="crest">
+          ${t.logo ? `<img src="${t.logo}" alt="">` : esc(t.initials || '⚽')}
+        </span>
+        <span>
+          <span class="teamname">${esc(t.name)}</span>
+          <span class="teammeta">${(t.players || []).length} atleta(s) · Grupo ${esc(t.group || '—')} · abrir boletim</span>
+        </span>
+      </button>
+    `).join('') || '<div class="empty">Cadastre a primeira equipe na aba Administração.</div>';
+
+  document.querySelectorAll('[data-team]').forEach(b => {
+    b.onclick = () => {
+      selectedTeam = b.dataset.team;
+      renderAll();
+    };
+  });
 }
 function renderRoster(){
  const initialTeam=findTeam(selectedTeam);if(initialTeam&&!teamBelongsToActiveCompetition(initialTeam)){selectedTeam=activeCompetitionTeams()[0]?.id||'';}const rosterTeam=findTeam(selectedTeam);$('rosterTitle').textContent='Boletim · '+(rosterTeam?.name||'Selecione uma equipe');
