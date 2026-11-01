@@ -3725,8 +3725,27 @@ if(adminHighlightsSelect){
 
 }
 function updateAthleteSelect(preselect){
-$('gameTeam').addEventListener('change',()=>updateAthleteSelect());
+  const team = findTeam($('gameTeam')?.value);
+  const select = $('gameAthlete');
+
+  if(!select) return;
+
+  const players = team?.players || [];
+
+  select.innerHTML =
+    '<option value="">Selecione um atleta</option>' +
+    players.map(p =>
+      `<option value="${esc(p.id)}">${esc(p.name || p.nome || 'Atleta')}</option>`
+    ).join('');
+
+  if(preselect !== undefined && preselect !== null){
+    select.value = String(preselect);
+  }
+}
+$('gameTeam')?.addEventListener('change',()=>updateAthleteSelect());
+
 $('saveTeam').addEventListener('click', async ()=>{
+
  const name=$('teamName').value.trim(),initials=$('teamInitials').value.trim().toUpperCase()||name.split(/\s+/).map(x=>x[0]).join('').slice(0,4);
  if(!name){alert('Digite o nome da equipe.');return}
  const button=$('saveTeam');
