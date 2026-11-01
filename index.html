@@ -3085,7 +3085,12 @@ function activeCompetitionTeams(){return (db.teams||[]).filter(teamBelongsToActi
   return activeCompetitionTeams().filter(t => !t._virtual);
 }
 function matchBelongsToActiveCompetition(m){
- const comp=activeCompetition();if(!comp)return !(db.competitions||[]).length;
+const comp=(db.competitions||[]).find(c=>
+  String(c.id)===String(db.activeCompetitionId)||
+  String(c.dbId||'')===String(db.activeCompetitionId)
+)||null;
+
+if(!comp)return !(db.competitions||[]).length;
  const matchComp=[m.competitionId,m.competicao_id,m.competitionDbId].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
  const compIds=[comp.id,comp.dbId,comp.db_id].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
  if(matchComp.length)return matchComp.some(id=>compIds.includes(id));
@@ -6988,7 +6993,10 @@ async function loadSupabaseTeams() {
 
      const athletesByTeam = new Map();
 
-    const comp = activeCompetition();
+    const comp = (db.competitions || []).find(c =>
+  String(c.id) === String(db.activeCompetitionId) ||
+  String(c.dbId || '') === String(db.activeCompetitionId)
+) || null;
     const activeCompIds = comp
       ? [comp.id, comp.dbId]
           .filter(v => v !== undefined && v !== null && v !== '')
