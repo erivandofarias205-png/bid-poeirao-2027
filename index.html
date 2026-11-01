@@ -2687,16 +2687,39 @@ function cpfMask(s){const raw=String(s||'').trim();if(/^XXX[.\s-]*\d{3}[.\s-]*\d
 function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))}
 function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
 function teamBelongsToActiveCompetition(t){
- const comp=activeCompetition();
- // Sem seleção explícita, não misturar competições: usar a competição ativa; se não houver nenhuma cadastrada, mostrar a base toda.
- if(!comp)return !(db.competitions||[]).length;
- const ids=[...(Array.isArray(t.competitionIds)?t.competitionIds:[]),...(Array.isArray(t.competition_ids)?t.competition_ids:[])].map(String);
- const direct=[t.competitionId,t.competition_id,t.competitionDbId,t.competicao_id,t.competition].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
- const compIds=[comp.id,comp.dbId,comp.db_id].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
- if(ids.some(id=>compIds.includes(id))||direct.some(id=>compIds.includes(id)))return true;
- // Compatibilidade com registros antigos que guardavam o nome da competição, não o ID.
- const names=[comp.name,`${comp.name||''} ${comp.season||''}`].filter(Boolean).map(x=>String(x).trim().toLowerCase());
- return direct.some(v=>names.includes(v.trim().toLowerCase()));
+  const comp = activeCompetition();
+
+  if(!comp) return !(db.competitions || []).length;
+
+  // Permite a equipe virtual EQUIPE OFF.
+  if(t._virtual && String(t.id) === 'EQUIPE_OFF') return true;
+
+  const ids = [
+    ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
+    ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
+  ].map(String);
+
+  const direct = [
+    t.competitionId,
+    t.competition_id,
+    t.competitionDbId,
+    t.competicao_id,
+    t.competition
+  ].filter(v => v !== undefined && v !== null && v !== '').map(String);
+
+  const compIds = [comp.id, comp.dbId, comp.db_id]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  if(ids.some(id => compIds.includes(id)) ||
+     direct.some(id => compIds.includes(id))) return true;
+
+  const names = [
+    comp.name,
+    `${comp.name || ''} ${comp.season || ''}`
+  ].filter(Boolean).map(x => String(x).trim().toLowerCase());
+
+  return direct.some(v => names.includes(v.trim().toLowerCase()));
 }
 function activeCompetitionTeams(){return (db.teams||[]).filter(teamBelongsToActiveCompetition)}
 function matchBelongsToActiveCompetition(m){
@@ -2707,7 +2730,13 @@ function matchBelongsToActiveCompetition(m){
  // Partidas antigas sem ID de competição só aparecem se ambas as equipes estiverem vinculadas à competição selecionada.
  return teamBelongsToActiveCompetition(findTeam(m.homeId)||{})&&teamBelongsToActiveCompetition(findTeam(m.awayId)||{});
 }
-function findAth(id){for(const t of db.teams){const p=t.players.find(p=>p.id===id);if(p)return {p,t}}return null}
+function findAth(id){
+  for(const t of (db.teams || [])){
+    const p = (t.players || []).find(p => String(p.id) === String(id));
+    if(p) return {p,t};
+  }
+  return null;
+}
 function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
 function showTab(name){
  const views=['public','admin','games','game','profile','classification','teams','photos'];
@@ -6109,16 +6138,24 @@ async function loadSupabaseTeams() {
 
         if (!matchingCompId) return;
 
-        teamId = teamMap.get(matchingCompId);
+        
+teamId = teamMap.get(matchingCompId);
 
-        if (teamId === null || teamId === undefined) return;
+athleteStatus = statusMap.get(matchingCompId) || 'Inscrito';
 
-        shirtNumber = (athleteCompetitionRows.find(a =>
-          String(a.atleta_id) === athleteKey &&
-          String(a.competicao_id) === matchingCompId
-        ) || {}).numero_camisa || '';
+if (teamId === null || teamId === undefined) {
+  if (String(athleteStatus).trim().toLowerCase() !== 'equipe off') {
+    return;
+  }
 
-        athleteStatus = statusMap.get(matchingCompId) || 'Inscrito';
+  teamId = 'EQUIPE_OFF';
+}
+
+shirtNumber = (athleteCompetitionRows.find(a =>
+  String(a.atleta_id) === athleteKey &&
+  String(a.competicao_id) === matchingCompId
+) || {}).numero_camisa || '';
+
       }
 
       if (!athletesByTeam.has(String(teamId))) {
@@ -6233,6 +6270,22 @@ async function loadSupabaseTeams() {
 
 
 
+   // Cria a equipe virtual EQUIPE OFF.
+const offPlayers = athletesByTeam.get('EQUIPE_OFF') || [];
+
+remoteTeams.push({
+  id: 'EQUIPE_OFF',
+  dbId: null,
+  name: 'EQUIPE OFF',
+  initials: 'OFF',
+  logo: '',
+  players: offPlayers,
+  competitionIds: [String(db.activeCompetitionId)],
+  competitionId: String(db.activeCompetitionId),
+  group: '',
+  _remote: true,
+  _virtual: true
+});
     db.teams = remoteTeams;
     if (!findTeam(selectedTeam) || !teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
       selectedTeam = activeCompetitionTeams()[0]?.id || '';
