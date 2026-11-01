@@ -2876,21 +2876,22 @@ function loadHighlightsCompetitions(){
 
 document.querySelector('[data-tab="highlights"]')
   ?.addEventListener('click',loadHighlightsCompetitions);
-  const highlightsSelect=$('highlightsCompetitionSelect');
+
+const highlightsSelect=$('highlightsCompetitionSelect');
 
 if(highlightsSelect){
   highlightsSelect.addEventListener('change',()=>{
     const content=$('highlightsCompetitionContent');
 
-   if(content){
-  content.classList.toggle('hidden',!highlightsSelect.value);
-}
+    if(content){
+      content.classList.toggle('hidden',!highlightsSelect.value);
+    }
 
-renderHighlightsTopScorer();
+    renderHighlightsTopScorer();
   });
 }
-  (function setupDedicatedViews(){
-    function renderHighlightsTopScorer(){
+
+function renderHighlightsTopScorer(){
   const out=$('highlightsTopScorer');
   const select=$('highlightsCompetitionSelect');
 
@@ -2964,7 +2965,6 @@ renderHighlightsTopScorer();
     });
 
     scorers.push(...totals.values());
-
   }else{
     compTeams.forEach(t=>{
       (t.players||[]).forEach(p=>{
@@ -3025,11 +3025,24 @@ renderHighlightsTopScorer();
     `;
   }).join('');
 }
- const classification=$('classificationView'),teams=$('teamsView');
- ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
- ['teamPanel','rosterPanel'].forEach(id=>{const el=$(id);if(el)teams.appendChild(el)});
- showTab('games');
+
+(function setupDedicatedViews(){
+  const classification=$('classificationView');
+  const teams=$('teamsView');
+
+  ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{
+    const el=$(id);
+    if(el)classification.appendChild(el);
+  });
+
+  ['teamPanel','rosterPanel'].forEach(id=>{
+    const el=$(id);
+    if(el)teams.appendChild(el);
+  });
+
+  showTab('games');
 })();
+
 function normalizeAthleteSearch(value){return String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
 function searchAthletes(){
  const input=$('athleteSearchInput');if(!input)return;
