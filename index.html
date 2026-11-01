@@ -10830,5 +10830,68 @@ window.addEventListener('appinstalled', async function() {
   }
 }
 </style>
+<script id="recolher-paineis-administrativos">
+document.addEventListener('DOMContentLoaded', function () {
+  const area = document.getElementById('adminProtected');
+  if (!area) return;
+
+  const paineis = area.querySelectorAll(':scope > .panel');
+
+  paineis.forEach(function (painel) {
+    const cabecalho = painel.querySelector(':scope > .ph');
+    if (!cabecalho) return;
+
+    const conteudo = Array.from(painel.children)
+      .filter(el => el !== cabecalho);
+
+    if (!conteudo.length) return;
+
+    painel.classList.add('admin-collapsible');
+
+    conteudo.forEach(function (el) {
+      el.dataset.adminContent = 'true';
+      el.hidden = true;
+    });
+
+    cabecalho.style.cursor = 'pointer';
+    cabecalho.setAttribute('role', 'button');
+    cabecalho.setAttribute('tabindex', '0');
+    cabecalho.setAttribute('aria-expanded', 'false');
+
+    function alternar() {
+      const abrir = cabecalho.getAttribute('aria-expanded') !== 'true';
+
+      cabecalho.setAttribute('aria-expanded', String(abrir));
+
+      conteudo.forEach(function (el) {
+        el.hidden = !abrir;
+      });
+    }
+
+    cabecalho.addEventListener('click', alternar);
+
+    cabecalho.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        alternar();
+      }
+    });
+  });
+});
+</script>
+<style>
+#adminProtected [data-admin-content][hidden] {
+  display: none !important;
+}
+#adminProtected .admin-collapsible > .ph::after {
+  content: '＋';
+  float: right;
+  font-size: 20px;
+  margin-left: 10px;
+}
+#adminProtected .admin-collapsible > .ph[aria-expanded="true"]::after {
+  content: '－';
+}
+</style>
 </body>
 </html>
