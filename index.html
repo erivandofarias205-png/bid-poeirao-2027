@@ -2746,9 +2746,11 @@ function renderRoster(){
  const q=$('q').value.trim().toLowerCase(),f=$('filter').value;
  const ps=t.players.filter(p=>(!q||(p.name+' '+p.id).toLowerCase().includes(q))&&(!f||(f==='free'?!p.played:p.played)));
  const NAO_ATLETAS=new Set(['BID-0020','BID-0021','BID-0022','BID-0023']);
-$('rows').innerHTML=ps.map(p=>`<tr class="${NAO_ATLETAS.has(String(p.id).trim().toUpperCase())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button> <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button></td></tr>`).join('');
+$('rows').innerHTML=ps.map(p=>`<tr class="${NAO_ATLETAS.has(String(p.id).trim().toUpperCase())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button> <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button> <button class="secondary" data-transfer-athlete="${esc(p.id)}">TRANSFERIR</button></td></tr>`).join('');
  $('noRows').classList.toggle('hidden',ps.length>0);
- document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>renderProfile(b.dataset.profile));document.querySelectorAll('[data-edit-athlete]').forEach(b=>b.onclick=()=>editAthlete(b.dataset.editAthlete));
+ document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>renderProfile(b.dataset.profile));
+  document.querySelectorAll('[data-edit-athlete]').forEach(b=>b.onclick=()=>editAthlete(b.dataset.editAthlete));
+  document.querySelectorAll('[data-transfer-athlete]').forEach(b=>b.onclick=()=>transferAthlete(b.dataset.transferAthlete));
 }
 function renderProfile(id){
  const f=findAth(id);if(!f)return;const {p,t}=f;
@@ -2932,11 +2934,137 @@ async function editAthlete(id){
     alert('Erro ao atualizar atleta: '+(error.message||error));
   }
 }
- function downloadCardImage(p,t,photo,logo){
- const card=document.getElementById('athleteIdCard');
- // SVG-based download is intentionally not used: preserve exact visible card by opening print dialog if canvas export is unavailable.
- window.print();
+    async function transferAthlete(id){
+  const f = findAth(id);
+  if(!f) return;
+
+  const {p,t} = f;
+
+  try{
+    if(!p._remote){
+      alert('Este atleta não está carregado do Supabase.');
+      return;
+    }
+
+    const {data:sessionData,error:sessionError} =
+      await supabaseClient.auth.getSession();
+
+    if(sessionError) throw sessionError;
+
+    if(!sessionData?.session){
+      alert('Entre com o login de administrador.');
+      return;
+    }
+
+    const {data:adminCheck,error:adminError} =
+      await supabaseClient.rpc('is_admin');
+
+    if(adminError || adminCheck !== true){
+      alert('Acesso permitido somente ao administrador.');
+      return;
+    }
+
+    const comp = activeCompetition();
+    if(!comp){
+      alert('Selecione uma competição.');
+      return;
+    }
+
+    const compId = String(comp.dbId || comp.id);
+
+    const {data:link,error:linkError} = await supabaseClient
+      .from('competicao_atletas')
+      .select('id,equipe_id,status,numero_camisa')
+      .eq('competicao_id',compId)
+      .eq('atleta_id',p.dbId)
+      .maybeSingle();
+
+    if(linkError) throw linkError;
+
+    if(!link){
+      alert('Este atleta não possui vínculo cadastrado nesta competição.');
+      return;
+    }
+
+    const teams = activeCompetitionTeams()
+      .filter(team => String(team.dbId) !== String(link.equipe_id));
+
+    let options = teams.map((team,index) =>
+      `${index + 1} - ${team.name}`
+    );
+
+    options.push(`${teams.length + 1} - EQUIPE OFF`);
+
+    const choice = prompt(
+      'TRANSFERIR: ' + p.name +
+      '\n\nEscolha a nova equipe:\n\n' +
+      options.join('\n') +
+      '\n\nDigite o número da opção:'
+    );
+
+    if(choice === null) return;
+
+    const selected = Number(choice);
+
+    if(!Number.isInteger(selected) || selected < 1 || selected > teams.length + 1){
+      alert('Opção inválida.');
+      return;
+    }
+
+    const newTeam = selected <= teams.length
+      ? teams[selected - 1]
+      : null;
+
+    const oldTeamId = link.equipe_id;
+    const newTeamId = newTeam ? newTeam.dbId : null;
+    const newStatus = newTeam ? 'Inscrito' : 'Equipe OFF';
+
+    const destination = newTeam ? newTeam.name : 'EQUIPE OFF';
+
+    if(!confirm(
+      'Confirma a transferência de ' + p.name +
+      ' para ' + destination + '?'
+    )) return;
+
+    const {error:updateError} = await supabaseClient
+      .from('competicao_atletas')
+      .update({
+        equipe_id: newTeamId,
+        status: newStatus
+      })
+      .eq('id',link.id);
+
+    if(updateError) throw updateError;
+
+    const {error:historyError} = await supabaseClient
+      .from('historico_transferencias')
+      .insert({
+        atleta_id: p.dbId,
+        competicao_id: compId,
+        equipe_anterior_id: oldTeamId,
+        equipe_nova_id: newTeamId,
+        administrador: sessionData.session.user.email || 'Administrador'
+      });
+
+    if(historyError) throw historyError;
+
+    await loadSupabaseTeams();
+    renderAll();
+
+    alert('Transferência realizada com sucesso!');
+  }catch(error){
+    console.error('Erro na transferência:',error);
+    alert('Erro ao transferir atleta: ' + (error.message || error));
+  }
 }
+
+function downloadCardImage(p,t,photo,logo){
+  const card=document.getElementById('athleteIdCard');
+  // SVG-based download is intentionally not used: preserve exact visible card by opening print dialog if canvas export is unavailable.
+  window.print();
+}
+
+
 function prepareEvent(pid,tid){showTab('game');$('gameTeam').value=tid;updateAthleteSelect(pid)}
 function updateSelects(){
  const opts=activeCompetitionTeams().map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
@@ -5916,57 +6044,113 @@ async function loadSupabaseTeams() {
       if (a.grupo) competitionGroupsByTeam.set(key, a.grupo);
     });
 
-
-
-
     const athleteCompetitionIds = new Map();
     const athleteCompetitionTeams = new Map();
+    const athleteCompetitionStatus = new Map();
+
     athleteCompetitionRows.forEach(a => {
       const athleteKey = String(a.atleta_id);
-      if (!athleteCompetitionIds.has(athleteKey)) athleteCompetitionIds.set(athleteKey, []);
-      athleteCompetitionIds.get(athleteKey).push(String(a.competicao_id));
-      if (a.equipe_id !== null && a.equipe_id !== undefined) athleteCompetitionTeams.set(athleteKey, String(a.equipe_id));
+      const compKey = String(a.competicao_id);
+
+      if (!athleteCompetitionIds.has(athleteKey)) {
+        athleteCompetitionIds.set(athleteKey, []);
+      }
+
+      athleteCompetitionIds.get(athleteKey).push(compKey);
+
+      if (!athleteCompetitionTeams.has(athleteKey)) {
+        athleteCompetitionTeams.set(athleteKey, new Map());
+        athleteCompetitionStatus.set(athleteKey, new Map());
+      }
+
+      athleteCompetitionTeams.get(athleteKey).set(
+        compKey,
+        a.equipe_id === null ? null : String(a.equipe_id)
+      );
+
+      athleteCompetitionStatus.get(athleteKey).set(
+        compKey,
+        a.status || 'Inscrito'
+      );
     });
-
-
-
 
     const { data: athleteRows, error: athleteError } = await supabaseClient
       .from('ATLETAS')
       .select('id,nome,data_nascimento,numero_inscricao,equipe_id,status,gols,cartoes_amarelos,cartoes_vermelhos,apto_jogar,foto_url,cpf,naturalidade,nome_esportivo')
       .order('nome');
+
+
     if (athleteError) throw athleteError;
 
 
 
 
-    const athletesByTeam = new Map();
+     const athletesByTeam = new Map();
+
+    const comp = activeCompetition();
+    const activeCompIds = comp
+      ? [comp.id, comp.dbId]
+          .filter(v => v !== undefined && v !== null && v !== '')
+          .map(String)
+      : [];
+
     (athleteRows || []).forEach(row => {
-      const key = String(row.equipe_id);
-      if (!athletesByTeam.has(key)) athletesByTeam.set(key, []);
-      const compIds = athleteCompetitionIds.get(String(row.id)) || [];
-      const assocTeamId = athleteCompetitionTeams.get(String(row.id));
-      athletesByTeam.get(key).push({
-        id: row.numero_inscricao || ('BID-' + String(row.id)), dbId: row.id,
-      name: row.nome,
-birth: row.data_nascimento || '',
-cpf: row.cpf || '',
-city: row.naturalidade || '',
-naturalidade: row.naturalidade || '',
-registered: row.numero_inscricao || '',
-role: 'jogador',
-sportsName: row.nome_esportivo || '',
-foto_url: row.foto_url || '',
-photo: row.foto_url || '',
-        played: row.status === 'Atuou', yellow: row.cartoes_amarelos || 0,
-        red: row.cartoes_vermelhos || 0, goals: row.gols || 0,
-        apto: row.apto_jogar, competitionIds: compIds,
-        competitionId: compIds[0] || '', competitionTeamId: assocTeamId || key,
-        shirtNumber: (athleteCompetitionRows.find(a => String(a.atleta_id) === String(row.id)) || {}).numero_camisa || '',
+      const athleteKey = String(row.id);
+      const compIds = athleteCompetitionIds.get(athleteKey) || [];
+      const teamMap = athleteCompetitionTeams.get(athleteKey);
+      const statusMap = athleteCompetitionStatus.get(athleteKey);
+
+      let teamId = String(row.equipe_id);
+      let shirtNumber = '';
+      let athleteStatus = 'Inscrito';
+
+      if (compIds.length && activeCompIds.length) {
+        const matchingCompId = activeCompIds.find(id => compIds.includes(id));
+
+        if (!matchingCompId) return;
+
+        teamId = teamMap.get(matchingCompId);
+
+        if (teamId === null || teamId === undefined) return;
+
+        shirtNumber = (athleteCompetitionRows.find(a =>
+          String(a.atleta_id) === athleteKey &&
+          String(a.competicao_id) === matchingCompId
+        ) || {}).numero_camisa || '';
+
+        athleteStatus = statusMap.get(matchingCompId) || 'Inscrito';
+      }
+
+      if (!athletesByTeam.has(String(teamId))) {
+        athletesByTeam.set(String(teamId), []);
+      }
+
+      athletesByTeam.get(String(teamId)).push({
+        id: row.numero_inscricao || ('BID-' + athleteKey),
+        dbId: row.id,
+        name: row.nome,
+        birth: row.data_nascimento || '',
+        cpf: row.cpf || '',
+        city: row.naturalidade || '',
+        naturalidade: row.naturalidade || '',
+        registered: row.numero_inscricao || '',
+        role: 'jogador',
+        sportsName: row.nome_esportivo || '',
+        foto_url: row.foto_url || '',
+        photo: row.foto_url || '',
+        played: row.status === 'Atuou',
+        yellow: row.cartoes_amarelos || 0,
+        red: row.cartoes_vermelhos || 0,
+        goals: row.gols || 0,
+        apto: row.apto_jogar,
+        competitionIds: compIds,
+        competitionId: activeCompIds.find(id => compIds.includes(id)) || '',
+        competitionTeamId: teamId,
+        competitionStatus: athleteStatus,
+        shirtNumber,
         _remote: true
       });
     });
-
 
 
 
@@ -5981,24 +6165,6 @@ photo: row.foto_url || '',
 
 
 
-
-    // Mantém apenas atletas associados à competição ativa quando há vínculos explícitos.
-    // Se não houver nenhum vínculo de atleta cadastrado ainda, a equipe continua exibindo seu elenco geral.
-    remoteTeams.forEach(team => {
-      team.players = (team.players || []).filter(player => {
-        const ids = (player.competitionIds || []).map(String);
-       if (!ids.length) return true;
-
-const comp = activeCompetition();
-if (!comp) return true;
-
-const compIds = [comp.id, comp.dbId]
-  .filter(v => v !== undefined && v !== null && v !== '')
-  .map(String);
-
-return ids.some(id => compIds.includes(id));
-      });
-    });
 
  
     // Busca diretores e musa salvos no Supabase.
