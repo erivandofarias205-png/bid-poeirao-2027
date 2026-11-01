@@ -3044,8 +3044,10 @@ function cpfMask(s){const raw=String(s||'').trim();if(/^XXX[.\s-]*\d{3}[.\s-]*\d
 function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))}
 function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
 function teamBelongsToActiveCompetition(t){
-  const comp = activeCompetition();
-
+  const comp = (db.competitions || []).find(c =>
+  String(c.id) === String(db.activeCompetitionId) ||
+  String(c.dbId || '') === String(db.activeCompetitionId)
+) || null;
   if(!comp) return !(db.competitions || []).length;
 
   // Permite a equipe virtual EQUIPE OFF.
