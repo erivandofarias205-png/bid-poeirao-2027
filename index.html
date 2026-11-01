@@ -1994,23 +1994,108 @@ overflow: visible !important;
 </section>
 <section class="hidden" id="classificationView"></section>
 <section class="hidden" id="teamsView"></section>
+
 <section class="hidden" id="highlightsView">
   <div class="panel">
     <div class="ph">
-      <h3>DESTAQUES DA COMPETIÇÃO</h3>
-      <span class="pill">Selecione uma competição</span>
+      <h3>🏆 DESTAQUES DA COMPETIÇÃO</h3>
+      <span class="pill">Eleição oficial</span>
     </div>
+
     <div class="pad">
-      <label for="highlightsCompetitionSelect">Escolha a competição</label>
+      <label for="highlightsCompetitionSelect">
+        Escolha a competição
+      </label>
+
       <select id="highlightsCompetitionSelect">
         <option value="">Carregando competições...</option>
       </select>
-      <div id="highlightsCompetitionContent" class="empty">
-        Selecione uma competição para visualizar os destaques.
-      </div>
     </div>
   </div>
+
+  <div id="highlightsCompetitionContent" class="hidden">
+
+    <!-- PAINEL DOS QUATRO ELEITORES -->
+    <div class="panel">
+      <div class="ph">
+        <h3>COMISSÃO DE VOTAÇÃO</h3>
+        <span class="pill">TVFP SPORTS</span>
+      </div>
+      <div class="pad">
+        <div id="highlightsVoters" class="highlights-voters"></div>
+      </div>
+    </div>
+
+    <!-- REGRAS -->
+    <div class="panel">
+      <div class="ph">
+        <h3>📋 REGRAS DA ELEIÇÃO</h3>
+      </div>
+      <div class="pad" id="highlightsRules">
+        <p>As regras oficiais desta eleição serão apresentadas aqui.</p>
+      </div>
+    </div>
+
+    <!-- ARTILHEIRO -->
+    <div class="panel">
+      <div class="ph">
+        <h3>⚽ ARTILHEIRO DA COMPETIÇÃO</h3>
+        <span class="pill">Automático</span>
+      </div>
+      <div class="pad" id="highlightsTopScorer"></div>
+    </div>
+
+    <!-- GOLS MAIS BONITOS -->
+    <div class="panel">
+      <div class="ph">
+        <h3>⚽ GOLS MAIS BONITOS</h3>
+      </div>
+      <div class="pad" id="highlightsGoals"></div>
+    </div>
+
+    <!-- DEFESAS MAIS BONITAS -->
+    <div class="panel">
+      <div class="ph">
+        <h3>🧤 DEFESA MAIS BONITA</h3>
+      </div>
+      <div class="pad" id="highlightsSaves"></div>
+    </div>
+
+    <!-- REVELAÇÕES -->
+    <div class="panel">
+      <div class="ph">
+        <h3>🌟 REVELAÇÕES DA COMPETIÇÃO</h3>
+      </div>
+      <div class="pad" id="highlightsRevelations"></div>
+    </div>
+
+    <!-- CRAQUE -->
+    <div class="panel">
+      <div class="ph">
+        <h3>🏆 CRAQUE DA COMPETIÇÃO</h3>
+      </div>
+      <div class="pad" id="highlightsStar"></div>
+    </div>
+
+    <!-- SELEÇÃO -->
+    <div class="panel">
+      <div class="ph">
+        <h3>🥇 SELEÇÃO DA COMPETIÇÃO</h3>
+      </div>
+      <div class="pad" id="highlightsSelection"></div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="panel">
+      <div class="ph">
+        <h3>📊 RESULTADOS DA ELEIÇÃO</h3>
+      </div>
+      <div class="pad" id="highlightsResults"></div>
+    </div>
+
+  </div>
 </section>
+
   <section class="hidden" id="gamesView">
 <div class="panel"><div class="ph"><h3>Tabela oficial de jogos</h3><span class="pill">Calendário e resultados</span></div>
 <div class="pad"><div class="formgrid">
@@ -2791,6 +2876,17 @@ function loadHighlightsCompetitions(){
 
 document.querySelector('[data-tab="highlights"]')
   ?.addEventListener('click',loadHighlightsCompetitions);
+  const highlightsSelect=$('highlightsCompetitionSelect');
+
+if(highlightsSelect){
+  highlightsSelect.addEventListener('change',()=>{
+    const content=$('highlightsCompetitionContent');
+
+    if(content){
+      content.classList.toggle('hidden',!highlightsSelect.value);
+    }
+  });
+}
   (function setupDedicatedViews(){
  const classification=$('classificationView'),teams=$('teamsView');
  ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{const el=$(id);if(el)classification.appendChild(el)});
