@@ -3177,47 +3177,174 @@ if(adminHighlightsButton){
 
     if(!adminHighlightsContent || !adminHighlightsCategories) return;
 
-    const categories = [
-      {id:'goals',title:'⚽ GOLS MAIS BONITOS',count:3},
-      {id:'saves',title:'🧤 DEFESA MAIS BONITA',count:3},
-      {id:'revelations',title:'🌟 REVELAÇÕES',count:3},
-      {id:'star',title:'🏆 CRAQUE DA COMPETIÇÃO',count:3},
-      {id:'selection',title:'🥇 SELEÇÃO DA COMPETIÇÃO',count:11}
-    ];
 
-    adminHighlightsCategories.innerHTML = `
-      <div class="panel">
-        <h3>⚽ ARTILHEIRO DA COMPETIÇÃO</h3>
-        <p>Categoria automática, calculada pela artilharia do BID.</p>
+const positions = [
+  'Goleiro — CAMISA 01',
+  'Lateral-direito — CAMISA 02',
+  'Zagueiro — CAMISA 03',
+  'Zagueiro — CAMISA 04',
+  'Volante — CAMISA 05',
+  'Lateral-esquerdo — CAMISA 06',
+  'Atacante — CAMISA 07',
+  'Volante — CAMISA 08',
+  'Atacante — CAMISA 09',
+  'Meia — CAMISA 10',
+  'Meia — CAMISA 11',
+  'Treinador'
+];
+
+const comp = (db.competitions || []).find(c =>
+  [c.id,c.dbId,c.db_id].some(v =>
+    v !== undefined && v !== null &&
+    String(v) === String(competitionId)
+  )
+);
+
+if(!comp){
+  alert('Competição não encontrada.');
+  return;
+}
+
+const compIds = [comp.id,comp.dbId,comp.db_id]
+  .filter(v => v !== undefined && v !== null && v !== '')
+  .map(String);
+
+const compNames = [
+  comp.name,
+  `${comp.name || ''} ${comp.season || ''}`
+].filter(Boolean).map(v => String(v).trim().toLowerCase());
+
+const compTeams = (db.teams || []).filter(t => {
+  const ids = [
+    ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
+    ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
+  ].map(String);
+
+  const direct = [
+    t.competitionId,
+    t.competition_id,
+    t.competitionDbId,
+    t.competicao_id,
+    t.competition
+  ].filter(v => v !== undefined && v !== null && v !== '')
+   .map(String);
+
+  return ids.some(id => compIds.includes(id)) ||
+    direct.some(id => compIds.includes(id)) ||
+    direct.some(v => compNames.includes(v.trim().toLowerCase()));
+});
+
+const athletes = compTeams.flatMap(t =>
+  (t.players || []).map(p => ({
+    id: p.id,
+    name: p.name || p.nome || 'Atleta',
+    photo: p.photo || p.foto_url || '',
+    team: t.name || t.nome || ''
+  }))
+).filter(p => p.id !== undefined && p.id !== null);
+console.log('Competição selecionada:', comp);
+console.log('Equipes encontradas:', compTeams.length);
+console.log('Atletas encontrados:', athletes.length);
+const categories = [
+  {id:'goals',title:'⚽ GOLS MAIS BONITOS',count:3},
+  {id:'saves',title:'🧤 DEFESA MAIS BONITA',count:3},
+  {id:'revelations',title:'🌟 REVELAÇÕES',count:3},
+  {id:'star',title:'🏆 CRAQUE DA COMPETIÇÃO',count:3},
+  {id:'selection',title:'🥇 SELEÇÃO DA COMPETIÇÃO',positions}
+];
+
+function athleteOptions(){
+  return '<option value="">Selecione um atleta</option>' +
+    athletes.map(p =>
+      `<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.team)}</option>`
+    ).join('');
+}
+
+adminHighlightsCategories.innerHTML = `
+  <div class="panel">
+    <h3>⚽ ARTILHEIRO DA COMPETIÇÃO</h3>
+    <p>Categoria automática, calculada pela artilharia do BID.</p>
+  </div>
+
+  ${categories.map(category => `
+    <div class="panel" style="margin-top:15px">
+      <h3>${category.title}</h3>
+
+     
+${(category.id === 'selection'
+  ? category.positions
+  : Array.from({length:category.count},(_,i)=>`Indicado ${i+1}`)
+).map((position,i) => `
+  <div class="panel" style="padding:12px;margin:10px 0">
+    <h4>${position}</h4>
+
+    ${Array.from({length:3},(_,j)=>`
+      <div style="margin:12px 0;padding:10px;border:1px solid #555;border-radius:8px">
+        <strong>Candidato ${j+1}</strong>
+
+        <label>Escolher atleta do BID</label>
+        <select
+          id="admin_${category.id}_athlete_${i}_${j}"
+          class="admin-highlight-athlete">
+          ${athleteOptions()}
+        </select>
+
+        <img
+          id="admin_${category.id}_photo_${i}_${j}"
+          alt="Foto do atleta"
+          style="display:none;width:90px;height:110px;object-fit:cover;border-radius:8px;margin-top:10px">
+
+        ${category.id === 'goals' || category.id === 'saves' ? `
+          <label>Link do vídeo no TikTok</label>
+          <input
+            type="url"
+            id="admin_${category.id}_tiktok_${i}_${j}"
+            placeholder="Cole aqui o link do vídeo">
+        ` : ''}
       </div>
-      ${categories.map(category=>`
-        <div class="panel" style="margin-top:15px">
-          <h3>${category.title}</h3>
-          ${Array.from({length:category.count},(_,i)=>`
-            <div class="panel" style="padding:12px;margin:10px 0">
-              <strong>${category.id==='selection'?'Posição':'Indicado'} ${i+1}</strong>
-              <label>Nome do atleta</label>
-              <input type="text"
-                id="admin_${category.id}_name_${i}"
-                placeholder="Nome do atleta">
-              <label>Foto do atleta (URL)</label>
-              <input type="url"
-                id="admin_${category.id}_photo_${i}"
-                placeholder="Link da foto">
-              ${category.id==='selection'?`
-                <label>Posição</label>
-                <input type="text"
-                  id="admin_${category.id}_position_${i}"
-                  placeholder="Ex.: Goleiro">
-              `:''}
-            </div>
-          `).join('')}
-        </div>
-      `).join('')}
-    `;
+    `).join('')}
+  </div>
+`).join('')}
+    </div>
+  `).join('')}
+`;
 
-    adminHighlightsContent.classList.remove('hidden');
 
+categories.forEach(category => {
+  const total = category.id === 'selection'
+    ? category.positions.length
+    : category.count;
+
+  for(let i=0;i<total;i++){
+    for(let j=0;j<3;j++){
+      const select = $(`admin_${category.id}_athlete_${i}_${j}`);
+      const photo = $(`admin_${category.id}_photo_${i}_${j}`);
+
+      if(!select || !photo) continue;
+
+      select.addEventListener('change',()=>{
+        const athlete = athletes.find(p =>
+          String(p.id) === String(select.value)
+        );
+
+        if(athlete && athlete.photo){
+          photo.src = athlete.photo;
+          photo.style.display = 'block';
+        }else{
+          photo.removeAttribute('src');
+          photo.style.display = 'none';
+        }
+      });
+    }
+  }
+});
+
+  if(!athletes.length){
+  alert('Não foram encontrados atletas vinculados a esta competição.');
+}
+
+adminHighlightsContent.classList.remove('hidden');
+    
     adminHighlightsContent.scrollIntoView({
       behavior:'smooth',
       block:'start'
