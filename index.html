@@ -6056,6 +6056,8 @@ thirdPlaceTie: cfg.thirdPlaceTie || null,
 if (typeof window.refreshPhotoCompetitionSelect === 'function') {
   window.refreshPhotoCompetitionSelect();
 }
+  window.dispatchEvent(new Event('bid-competitions-loaded'));
+      
       if (typeof renderAll === 'function') renderAll();
 
       return;
@@ -6935,6 +6937,107 @@ window.refreshPhotoCompetitionSelect = loadCompetitions;
   select.addEventListener('change',loadGallery);
   $('uploadGalleryPhotosBtn')?.addEventListener('click',uploadPhotos);
   $('refreshGalleryPhotosBtn')?.addEventListener('click',loadGallery);
+
+  loadCompetitions();
+})();
+</script>
+
+<script id="competition-photo-gallery-public">
+(function(){
+  const BUCKET = 'bid-fotos';
+  const ROOT = 'fotos-competicoes';
+
+  const select = document.getElementById('publicPhotoCompetition');
+  const gallery = document.getElementById('publicPhotoGallery');
+
+  if (!select || !gallery) return;
+
+  let competitions = [];
+
+  function loadCompetitions(){
+    competitions = Array.isArray(db.competitions)
+      ? db.competitions.filter(c => c && (c.id || c.dbId))
+      : [];
+
+    select.innerHTML = '';
+
+    const initial = new Option('Selecione uma competição', '');
+    select.add(initial);
+
+    competitions.forEach(c => {
+      select.add(new Option(
+        (c.name || 'Competição') +
+        (c.season ? ' — ' + c.season : ''),
+        String(c.id ?? c.dbId)
+      ));
+    });
+  }
+
+  async function loadPublicGallery(){
+    const competition = competitions.find(c =>
+      String(c.id ?? c.dbId) === String(select.value)
+    );
+
+    if (!competition){
+      gallery.innerHTML =
+        '<p class="empty">Escolha uma competição para visualizar as fotos.</p>';
+      return;
+    }
+
+    const folder = ROOT + '/' +
+      String(competition.id ?? competition.dbId)
+        .replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    gallery.innerHTML = '<p class="empty">Carregando fotos...</p>';
+
+    try{
+      const { data, error } = await supabaseClient.storage
+        .from(BUCKET)
+        .list(folder, {
+          limit: 200,
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+
+      if (error) throw error;
+
+      const files = (data || []).filter(f => f.name && f.id);
+
+      if (!files.length){
+        gallery.innerHTML =
+          '<p class="empty">Nenhuma foto disponível nesta competição.</p>';
+        return;
+      }
+
+      gallery.innerHTML = files.map(f => {
+        const path = folder + '/' + f.name;
+        const url = supabaseClient.storage
+          .from(BUCKET)
+          .getPublicUrl(path).data.publicUrl;
+
+        return `
+          <div class="public-photo-item">
+            <img
+              src="${url}"
+              alt="Foto da competição"
+              loading="lazy"
+              style="width:100%;height:auto;object-fit:contain"
+            >
+          </div>
+        `;
+      }).join('');
+
+    }catch(error){
+      console.error('Erro na galeria pública:', error);
+      gallery.innerHTML =
+        '<p class="empty">Não foi possível carregar as fotos.</p>';
+    }
+  }
+
+  select.addEventListener('change', loadPublicGallery);
+
+  window.refreshPublicPhotoCompetition = loadCompetitions;
+
+  window.addEventListener('bid-competitions-loaded', loadCompetitions);
 
   loadCompetitions();
 })();
