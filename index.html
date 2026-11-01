@@ -2091,7 +2091,15 @@ overflow: visible !important;
     </button>
   </div>
 </div>
-
+<div class="panel" id="scorersPanel">
+  <div class="ph">
+    <h3>ARTILHARIA · TODOS OS ARTILHEIROS</h3>
+    <span class="pill">Gols</span>
+  </div>
+  <div class="scorers" id="frontScorers">
+    <div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div>
+  </div>
+</div>
 <div class="panel" id="cardControlPanel"><div class="ph"><h3>CONTROLE DE CARTÕES</h3><span class="pill">Amarelos e vermelhos por atleta</span></div><div class="pad"><div class="front-grid"><div class="box"><h4>🟨 Cartões amarelos</h4><div class="scorers" id="yellowCardsList"><div class="empty">Nenhum cartão amarelo registrado.</div></div></div><div class="box"><h4>🟥 Cartões vermelhos</h4><div class="scorers" id="redCardsList"><div class="empty">Nenhum cartão vermelho registrado.</div></div></div></div><p class="small muted">Os totais são exibidos a partir dos cartões registrados nas fichas dos atletas.</p></div></div>
 <div class="panel" id="teamPanel"><div class="ph"><h3>Equipes da competição</h3><span class="pill">Clique para abrir</span></div><div class="teams" id="teamList"></div></div>
 <div class="panel" id="rosterPanel"><div class="ph"><h3 id="rosterTitle">Boletim da equipe</h3><span class="pill" id="rosterDataStatus">Dados do Supabase</span></div><div class="search"><input id="q" placeholder="Buscar atleta ou número BID"/><select id="filter"><option value="">Todas as situações</option><option value="free">Pode transferir</option><option value="played">Já atuou</option></select></div><div class="tablewrap"><table><thead><tr><th>Foto</th><th>Nº BID</th><th>Atleta</th><th>Nascimento</th><th>Naturalidade / Cidade</th><th>CPF mascarado</th><th>Atuou?</th><th>Transferência</th><th>🟨</th><th>🟥</th><th>Gols</th><th>Ficha</th></tr></thead><tbody id="rows"></tbody></table></div><div class="empty hidden" id="noRows">Nenhum atleta encontrado.</div></div>
