@@ -3279,6 +3279,7 @@ function athleteOptions(list = athletes){
 }
 
 
+
 adminHighlightsCategories.innerHTML = `
   <div class="panel">
     <h3>⚽ ARTILHEIRO DA COMPETIÇÃO</h3>
@@ -3289,44 +3290,50 @@ adminHighlightsCategories.innerHTML = `
     <div class="panel" style="margin-top:15px">
       <h3>${category.title}</h3>
 
-     
-${(category.id === 'selection'
-  ? category.positions
-  : Array.from({length:category.count},(_,i)=>`Indicado ${i+1}`)
-).map((position,i) => `
-  <div class="panel" style="padding:12px;margin:10px 0">
-    <h4>${position}</h4>
+      ${(category.id === 'selection'
+        ? category.positions
+        : Array.from({length:category.count},(_,i)=>`Indicado ${i+1}`)
+      ).map((position,i) => `
+        <div class="panel" style="padding:12px;margin:10px 0">
+          <h4>${position}</h4>
 
-    ${Array.from({length:3},(_,j)=>`
-      <div style="margin:12px 0;padding:10px;border:1px solid #555;border-radius:8px">
-        <strong>Candidato ${j+1}</strong>
+          ${Array.from({
+            length:category.id === 'selection' ? 3 : 1
+          },(_,j)=>`
+            <div style="margin:12px 0;padding:10px;border:1px solid #555;border-radius:8px">
+              ${category.id === 'selection' ? `<strong>Candidato ${j+1}</strong>` : ''}
 
-        <label>Escolher atleta do BID</label>
-        <select
-          id="admin_${category.id}_athlete_${i}_${j}"
-          class="admin-highlight-athlete">
-          ${athleteOptions(category.id === 'selection' && position === 'Treinador' ? coaches : athletes)}
-        </select>
+              <label>Escolher cadastro do BID</label>
+              <select
+                id="admin_${category.id}_athlete_${i}_${j}"
+                class="admin-highlight-athlete">
+                ${athleteOptions(
+                  category.id === 'selection' && position === 'Treinador'
+                    ? coaches
+                    : athletes
+                )}
+              </select>
 
-        <img
-          id="admin_${category.id}_photo_${i}_${j}"
-          alt="Foto do atleta"
-          style="display:none;width:90px;height:110px;object-fit:cover;border-radius:8px;margin-top:10px">
+              <img
+                id="admin_${category.id}_photo_${i}_${j}"
+                alt="Foto do indicado"
+                style="display:none;width:90px;height:110px;object-fit:cover;border-radius:8px;margin-top:10px">
 
-        ${category.id === 'goals' || category.id === 'saves' ? `
-          <label>Link do vídeo no TikTok</label>
-          <input
-            type="url"
-            id="admin_${category.id}_tiktok_${i}_${j}"
-            placeholder="Cole aqui o link do vídeo">
-        ` : ''}
-      </div>
-    `).join('')}
-  </div>
-`).join('')}
+              ${j===0 && (category.id === 'goals' || category.id === 'saves') ? `
+                <label>Link do vídeo no TikTok</label>
+                <input
+                  type="url"
+                  id="admin_${category.id}_tiktok_${i}_0"
+                  placeholder="Cole aqui o link do vídeo">
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
     </div>
   `).join('')}
 `;
+
 
 
 categories.forEach(category => {
@@ -3334,8 +3341,11 @@ categories.forEach(category => {
     ? category.positions.length
     : category.count;
 
+  const candidatesPerPosition =
+    category.id === 'selection' ? 3 : 1;
+
   for(let i=0;i<total;i++){
-    for(let j=0;j<3;j++){
+    for(let j=0;j<candidatesPerPosition;j++){
       const select = $(`admin_${category.id}_athlete_${i}_${j}`);
       const photo = $(`admin_${category.id}_photo_${i}_${j}`);
 
@@ -3343,14 +3353,26 @@ categories.forEach(category => {
 
       select.addEventListener('change',()=>{
         const candidateList =
-  category.id === 'selection' &&
-  category.positions[i] === 'Treinador'
-    ? coaches
-    : athletes;
+          category.id === 'selection' &&
+          category.positions[i] === 'Treinador'
+            ? coaches
+            : athletes;
 
-const athlete = candidateList.find(p =>
-  String(p.id) === String(select.value)
-);
+        const athlete = candidateList.find(p =>
+          String(p.id) === String(select.value)
+        );
+
+        if(athlete && athlete.photo){
+          photo.src = athlete.photo;
+          photo.style.display = 'block';
+        }else{
+          photo.removeAttribute('src');
+          photo.style.display = 'none';
+        }
+      });
+    }
+  }
+});
 
         if(athlete && athlete.photo){
           photo.src = athlete.photo;
