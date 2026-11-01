@@ -2488,7 +2488,50 @@ overflow: visible !important;
   </div>
 </div>
 <div class="panel"><div class="ph"><h3>Mídias e patrocínios</h3><span class="pill">Prévia local</span></div><div class="pad"><p class="small">Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.</p><div class="formgrid" id="mediaPreview"></div></div></div>
-<div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
+
+<div class="panel" id="adminPhotoGalleryPanel">
+  <div class="ph">
+    <h3>GALERIA DE FOTOS</h3>
+    <span class="pill">Adicionar / remover fotos</span>
+  </div>
+  <div class="pad">
+    <p class="small">
+      Selecione a competição e envie várias fotos. Serão aceitas imagens verticais,
+      horizontais e quadradas, sem corte.
+    </p>
+
+    <div class="formgrid">
+      <label class="wide">
+        Competição
+        <select id="photoCompetitionSelect">
+          <option value="">Carregando competições...</option>
+        </select>
+      </label>
+
+      <label class="wide">
+        Selecionar fotos
+        <input accept="image/*" id="photoGalleryUpload" multiple type="file">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="gold" id="uploadGalleryPhotosBtn" type="button">
+        Enviar fotos
+      </button>
+      <button class="secondary" id="refreshGalleryPhotosBtn" type="button">
+        Atualizar galeria
+      </button>
+    </div>
+
+    <p class="small" id="photoGalleryAdminStatus" role="status" aria-live="polite">
+      Selecione uma competição para gerenciar suas fotos.
+    </p>
+
+    <div class="game-promo-admin-list" id="photoGalleryAdminList"></div>
+  </div>
+</div>
+
+  <div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
 </div></section>
 <section class="hidden" id="gameView">
 <div class="panel"><div class="ph"><h3>Súmula pronta do jogo</h3><span class="pill">Puxar equipes e atletas</span></div><div class="pad"><p class="small">Selecione um jogo já cadastrado na Tabela de jogos. O sistema puxa automaticamente os nomes das duas equipes e a lista de atletas cadastrados em cada uma. Você pode imprimir a súmula ou salvar em PDF pelo navegador.</p><div class="formgrid"><label>Jogo<select id="sheetMatch"></select></label><label>Árbitro (opcional)<input id="sheetReferee" placeholder="Nome do árbitro"/></label><label>Delegado (opcional)<input id="sheetDelegate" placeholder="Nome do delegado"/></label></div><div class="actions"><button class="gold" id="loadSheet" type="button">Puxar súmula</button><button class="secondary" id="printSheet" type="button">Imprimir / Salvar PDF</button></div><div class="match-sheet" id="matchSheet"><p class="empty">Cadastre um jogo na aba “Tabela de jogos” e clique em “Puxar súmula”.</p></div></div></div>
@@ -2498,8 +2541,30 @@ overflow: visible !important;
 </section>
 <section class="hidden" id="profileView">
 <div class="panel" id="athleteSearchPanel"><div class="ph"><h3>PESQUISA DE ATLETA</h3><span class="pill">CPF · BID · Nome</span></div><div class="pad"><label>Buscar atleta por CPF, número BID ou nome<input id="athleteSearchInput" placeholder="Digite o CPF, BID ou nome do atleta" type="search"/></label><div class="teams" id="athleteSearchResults" style="padding:12px 0"><div class="empty">Digite acima para localizar um atleta e abrir sua carteirinha.</div></div></div></div>
-<div class="panel"><div class="ph"><h3>Ficha individual do atleta</h3><span class="pill">BID 2026</span></div><div class="pad" id="profileContent"><p class="muted">Escolha “Ficha” ao lado de um atleta na consulta pública.</p></div></div></section>
+
+<div class="panel"><div class="ph"><h3>Ficha individual do atleta</h3><span class="pill">BID 2026</span></div><div class="pad" id="profileContent"><p class="muted">Escolha “Ficha” ao lado de um atleta na consulta pública.</p></div></div>
+</section>
+
+<section class="hidden" id="photosView">
+  <div class="panel">
+    <div class="ph">
+      <h3>GALERIA DE FOTOS</h3>
+      <span class="pill">Fotos das competições</span>
+    </div>
+    <div class="pad">
+      <label>Escolha a competição
+        <select id="publicPhotoCompetition">
+          <option value="">Selecione uma competição</option>
+        </select>
+      </label>
+      <div id="publicPhotoGallery" class="photo-gallery-grid">
+        <p class="empty">Escolha uma competição para visualizar as fotos.</p>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
+
 <style id="game-promo-style">
 #game-promo-panel{overflow:hidden}
 #game-promo-panel .game-promo-callout{text-align:center;font-weight:800;font-size:clamp(15px,2vw,21px);color:#f4d46a;margin:0 0 14px}
@@ -2645,7 +2710,7 @@ function matchBelongsToActiveCompetition(m){
 function findAth(id){for(const t of db.teams){const p=t.players.find(p=>p.id===id);if(p)return {p,t}}return null}
 function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
 function showTab(name){
- const views=['public','admin','games','game','profile','classification','teams'];
+ const views=['public','admin','games','game','profile','classification','teams','photos'];
  views.forEach(x=>{const el=$(x+'View');if(el)el.classList.toggle('hidden',x!==name)});
  document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
 }
@@ -6449,6 +6514,178 @@ async function compressSponsorImage(file){
   });
 })();
 </script>
+  
+<script id="competition-photo-gallery-admin">
+(function(){
+  const BUCKET = 'bid-fotos';
+  const ROOT = 'fotos-competicoes';
+  const $ = id => document.getElementById(id);
+
+  const select = $('photoCompetitionSelect');
+  const input = $('photoGalleryUpload');
+  const list = $('photoGalleryAdminList');
+  const status = $('photoGalleryAdminStatus');
+
+  if (!select || !input || !list || !status) return;
+
+  let competitions = [];
+
+  function message(text){
+    status.textContent = text;
+  }
+
+  function safeText(value){
+    return String(value || '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;',
+      '"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function competitionFolder(){
+    const c = competitions.find(x =>
+      String(x.id ?? x.dbId) === String(select.value)
+    );
+    if (!c) return null;
+    return ROOT + '/' + String(c.id ?? c.dbId).replace(/[^a-zA-Z0-9_-]/g,'_');
+  }
+
+  function loadCompetitions(){
+    competitions = Array.isArray(db.competitions) ? db.competitions : [];
+
+    select.innerHTML = competitions.length
+      ? '<option value="">Selecione uma competição</option>' +
+        competitions.map(c =>
+          '<option value="' + safeText(c.id ?? c.dbId) + '">' +
+          safeText(c.name || 'Competição') +
+          (c.season ? ' — ' + safeText(c.season) : '') +
+          '</option>'
+        ).join('')
+      : '<option value="">Nenhuma competição cadastrada</option>';
+  }
+
+  async function loadGallery(){
+    const folder = competitionFolder();
+
+    if (!folder){
+      list.innerHTML = '';
+      message('Selecione uma competição para ver suas fotos.');
+      return;
+    }
+
+    try{
+      const {data,error} = await supabaseClient.storage
+        .from(BUCKET).list(folder,{
+          limit:200,
+          sortBy:{column:'created_at',order:'desc'}
+        });
+
+      if(error) throw error;
+
+      const files = (data || []).filter(f => f.name && f.id);
+
+      if(!files.length){
+        list.innerHTML = '<p class="small">Nenhuma foto nesta competição.</p>';
+        message('Galeria carregada.');
+        return;
+      }
+
+      list.innerHTML = files.map(f => {
+        const path = folder + '/' + f.name;
+        const url = supabaseClient.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+
+        return '<div class="game-promo-admin-item">' +
+          '<img loading="lazy" src="' + url + '" alt="Foto da competição" style="width:100%;height:auto;object-fit:contain">' +
+          '<div class="small">' + safeText(f.name) + '</div>' +
+          '<button class="danger" type="button" data-remove-photo="' +
+          encodeURIComponent(f.name) + '">Remover foto</button>' +
+          '</div>';
+      }).join('');
+
+      list.querySelectorAll('[data-remove-photo]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const name = decodeURIComponent(btn.dataset.removePhoto);
+          if (!confirm('Deseja remover esta foto?')) return;
+
+          try{
+            const {data:{session}} = await supabaseClient.auth.getSession();
+            if (!session) throw new Error('Entre na Administração primeiro.');
+
+            const {error} = await supabaseClient.storage
+              .from(BUCKET).remove([folder + '/' + name]);
+
+            if(error) throw error;
+
+            message('Foto removida.');
+            await loadGallery();
+          }catch(e){
+            message('Erro ao remover: ' + e.message);
+          }
+        });
+      });
+
+      message(files.length + ' foto(s) encontradas.');
+    }catch(e){
+      message('Erro ao carregar fotos: ' + e.message);
+    }
+  }
+
+  async function uploadPhotos(){
+    const folder = competitionFolder();
+    const files = Array.from(input.files || []);
+
+    if (!folder){
+      message('Selecione uma competição.');
+      return;
+    }
+
+    if (!files.length){
+      message('Selecione pelo menos uma foto.');
+      return;
+    }
+
+    try{
+      const {data:{session}} = await supabaseClient.auth.getSession();
+      if (!session) throw new Error('Entre na Administração primeiro.');
+
+      let sent = 0;
+
+      for (const file of files){
+        if (!file.type.startsWith('image/')) continue;
+
+        const ext = (file.name.split('.').pop() || 'jpg')
+          .toLowerCase().replace(/[^a-z0-9]/g,'');
+
+        const path = folder + '/' + Date.now() + '-' +
+          Math.random().toString(36).slice(2,9) + '.' + ext;
+
+        const {error} = await supabaseClient.storage
+          .from(BUCKET)
+          .upload(path,file,{
+            cacheControl:'3600',
+            upsert:false,
+            contentType:file.type
+          });
+
+        if(error) throw error;
+        sent++;
+      }
+
+      input.value = '';
+      message(sent + ' foto(s) enviada(s) com sucesso!');
+      await loadGallery();
+    }catch(e){
+      message('Falha no envio: ' + e.message);
+    }
+  }
+
+  select.addEventListener('change',loadGallery);
+  $('uploadGalleryPhotosBtn')?.addEventListener('click',uploadPhotos);
+  $('refreshGalleryPhotosBtn')?.addEventListener('click',loadGallery);
+
+  loadCompetitions();
+})();
+</script>
+
 <script id="bid-admin-edit-tools">
 (function(){
  const $=id=>document.getElementById(id);
