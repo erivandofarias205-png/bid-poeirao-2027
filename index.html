@@ -2645,7 +2645,22 @@ overflow: visible !important;
     aspect-ratio:7 / 4;
   }
 }
-@media(prefers-reduced-motion:reduce){#tvfp-sponsors .sponsors-row{animation:none;transform:none;flex-wrap:wrap;width:100%;justify-content:center}}
+@media(prefers-reduced-motion:reduce){
+  #tvfp-sponsors .sponsors-row{
+    animation:none;
+    transform:none;
+    flex-wrap:nowrap;
+    width:max-content;
+    max-width:100%;
+    justify-content:flex-start;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+
+  #tvfp-sponsors .sponsors-row::-webkit-scrollbar{
+    display:none;
+  }
+}
 </style>
 <section aria-label="Patrocinadores" id="tvfp-sponsors">
 <h2>Patrocinadores</h2>
