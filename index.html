@@ -3382,19 +3382,7 @@ categories.forEach(category => {
   }
 });
 
-        if(athlete && athlete.photo){
-          photo.src = athlete.photo;
-          photo.style.display = 'block';
-        }else{
-          photo.removeAttribute('src');
-          photo.style.display = 'none';
-        }
-      });
-    }
-  }
-});
-
- if(!athletes.length && !coaches.length){
+        if(!athletes.length && !coaches.length){
   alert('Não foram encontrados atletas nem treinadores nesta competição.');
 }
 
