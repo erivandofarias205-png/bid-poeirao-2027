@@ -5771,7 +5771,7 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({
     ...(comp.thirdPlaceTie?[{...comp.thirdPlaceTie,round:'Disputa de terceiro lugar'}]:[]),
     ...(comp.finalMatchTie?[{...comp.finalMatchTie,round:'Final'}]:[])
   ];
-
+console.log('DADOS SALVOS DAS OITAVAS:', comp.knockoutTies);
   const toGame=t=>{
     const home=(db.teams||[]).find(x=>
       String(x.id)===String(t.a)||String(x.dbId||'')===String(t.a))||{};
