@@ -6550,7 +6550,7 @@ async function compressSponsorImage(file){
   }
 
   function loadCompetitions(){
-    competitions = Array.isArray(db.competitions) ? db.competitions : [];
+    competitions = Array.isArray(db.competitions) ? db.competitions.filter(c => c && (c.id || c.dbId)) : [];
 
     select.innerHTML = competitions.length
       ? '<option value="">Selecione uma competição</option>' +
