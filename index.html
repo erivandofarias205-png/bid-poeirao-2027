@@ -2055,8 +2055,43 @@ overflow: visible !important;
 <section id="publicView">
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMAS PARTIDAS</h3><span class="pill">Próximos confrontos</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
 <div class="panel finished-match-panel"><div class="ph"><h3>PARTIDAS FINALIZADAS</h3><span class="pill">Resultados oficiais</span></div><div class="fixtures" id="finishedFixtures"><div class="empty">Nenhuma partida finalizada ainda.</div></div></div>
-<div class="panel classification-full" id="classificationPanel"><div class="ph"><h3>CLASSIFICAÇÃO / TABELAS DA COMPETIÇÃO</h3><span class="pill" id="classificationFormatLabel">Tabela oficial</span></div><div id="classificationTables"><div class="tablewrap"><table class="front-table"><thead><tr><th>Pos.</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody id="frontStandings"></tbody></table></div></div><div class="pad"><button class="secondary" data-open-games="">Ver tabela completa de jogos</button></div></div>
-<div class="panel" id="scorersPanel"><div class="ph"><h3>ARTILHARIA · TODOS OS ARTILHEIROS</h3><span class="pill">Gols</span></div><div class="scorers" id="frontScorers"><div class="empty">Os artilheiros aparecerão conforme os gols forem lançados.</div></div></div>
+
+<details class="panel classification-full" id="classificationPanel">
+  <summary class="ph" style="cursor:pointer;list-style:none;">
+    <h3>CLASSIFICAÇÃO / TABELAS DA COMPETIÇÃO</h3>
+    <span class="pill">TOQUE PARA ABRIR ▼</span>
+  </summary>
+
+  <div id="classificationTables">
+    <div class="tablewrap">
+      <table class="front-table">
+        <thead>
+          <tr>
+            <th>Pos.</th>
+            <th>Equipe</th>
+            <th>Pts</th>
+            <th>J</th>
+            <th>V</th>
+            <th>E</th>
+            <th>D</th>
+            <th>GP</th>
+            <th>GC</th>
+            <th>SG</th>
+            <th>Aprov. %</th>
+          </tr>
+        </thead>
+        <tbody id="frontStandings"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="pad">
+    <button class="secondary" data-open-games="">
+      Ver tabela completa de jogos
+    </button>
+  </div>
+</details>
+
 <div class="panel" id="cardControlPanel"><div class="ph"><h3>CONTROLE DE CARTÕES</h3><span class="pill">Amarelos e vermelhos por atleta</span></div><div class="pad"><div class="front-grid"><div class="box"><h4>🟨 Cartões amarelos</h4><div class="scorers" id="yellowCardsList"><div class="empty">Nenhum cartão amarelo registrado.</div></div></div><div class="box"><h4>🟥 Cartões vermelhos</h4><div class="scorers" id="redCardsList"><div class="empty">Nenhum cartão vermelho registrado.</div></div></div></div><p class="small muted">Os totais são exibidos a partir dos cartões registrados nas fichas dos atletas.</p></div></div>
 <div class="panel" id="teamPanel"><div class="ph"><h3>Equipes da competição</h3><span class="pill">Clique para abrir</span></div><div class="teams" id="teamList"></div></div>
 <div class="panel" id="rosterPanel"><div class="ph"><h3 id="rosterTitle">Boletim da equipe</h3><span class="pill" id="rosterDataStatus">Dados do Supabase</span></div><div class="search"><input id="q" placeholder="Buscar atleta ou número BID"/><select id="filter"><option value="">Todas as situações</option><option value="free">Pode transferir</option><option value="played">Já atuou</option></select></div><div class="tablewrap"><table><thead><tr><th>Foto</th><th>Nº BID</th><th>Atleta</th><th>Nascimento</th><th>Naturalidade / Cidade</th><th>CPF mascarado</th><th>Atuou?</th><th>Transferência</th><th>🟨</th><th>🟥</th><th>Gols</th><th>Ficha</th></tr></thead><tbody id="rows"></tbody></table></div><div class="empty hidden" id="noRows">Nenhum atleta encontrado.</div></div>
@@ -2885,7 +2920,20 @@ overflow: visible !important;
   <div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
 </div></section>
 <section class="hidden" id="gameView">
-<div class="panel"><div class="ph"><h3>Súmula pronta do jogo</h3><span class="pill">Puxar equipes e atletas</span></div><div class="pad"><p class="small">Selecione um jogo já cadastrado na Tabela de jogos. O sistema puxa automaticamente os nomes das duas equipes e a lista de atletas cadastrados em cada uma. Você pode imprimir a súmula ou salvar em PDF pelo navegador.</p><div class="formgrid"><label>Jogo<select id="sheetMatch"></select></label><label>Árbitro (opcional)<input id="sheetReferee" placeholder="Nome do árbitro"/></label><label>Delegado (opcional)<input id="sheetDelegate" placeholder="Nome do delegado"/></label></div><div class="actions"><button class="gold" id="loadSheet" type="button">Puxar súmula</button><button class="secondary" id="printSheet" type="button">Imprimir / Salvar PDF</button></div><div class="match-sheet" id="matchSheet"><p class="empty">Cadastre um jogo na aba “Tabela de jogos” e clique em “Puxar súmula”.</p></div></div></div>
+<details class="panel" id="adminMediaPreviewPanel">
+  <summary class="ph" style="cursor:pointer;list-style:none;">
+    <h3>Mídias e patrocínios</h3>
+    <span class="pill">TOQUE PARA ABRIR ▼</span>
+  </summary>
+  <div class="pad">
+    <p class="small">
+      Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste.
+      Esta área ainda é uma prévia local. Para fotos e vídeos permanentes,
+      precisamos concluir e testar o envio ao Supabase Storage.
+    </p>
+    <div class="formgrid" id="mediaPreview"></div>
+  </div>
+</details>
 <div class="note"><b>Fluxo rápido:</b> depois do jogo, escolha a partida, a equipe e o atleta; selecione “Participou”, “Gol”, “Amarelo” ou “Vermelho” e toque em Registrar. Os totais são atualizados automaticamente nesta prévia.</div>
 <div class="panel admin-only"><div class="ph"><h3>Registrar evento da partida</h3><span class="pill">3 · Súmula</span></div><div class="pad"><div class="formgrid"><label>Nome da partida<input id="gameName" placeholder="Ex.: Português x Grêmio — 1ª rodada"/></label><label>Equipe<select id="gameTeam"></select></label><label>Atleta<select id="gameAthlete"></select></label><label>Evento<select id="gameEvent"><option value="played">Participou da partida</option><option value="goal">Gol</option><option value="yellow">Cartão amarelo</option><option value="red">Cartão vermelho</option></select></label><label>Minuto (opcional)<input id="minute" max="130" min="0" placeholder="Ex.: 37" type="number"/></label><label>Observação (opcional)<input id="eventNote" placeholder="Ex.: gol de falta"/></label></div><div class="actions"><button class="gold" id="addEvent">Registrar evento</button><button class="secondary" id="exportEvents">Baixar súmula (CSV)</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Eventos registrados</h3><span class="pill" id="eventTotal">0 eventos</span></div><div class="pad"><div class="events" id="eventList"></div><div class="empty" id="emptyEvents">Nenhum evento registrado.</div></div></div>
