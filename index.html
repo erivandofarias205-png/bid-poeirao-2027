@@ -2296,7 +2296,39 @@ overflow: visible !important;
 </div>
 <div class="hidden" id="adminProtected">
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
-<div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
+
+<!-- GERENCIAMENTO DA ELEIÇÃO -->
+<div class="panel" id="adminHighlightsPanel">
+  <div class="ph">
+    <h3>🏆 GERENCIAMENTO DA ELEIÇÃO</h3>
+    <span class="pill">Destaques da competição</span>
+  </div>
+
+  <div class="pad">
+    <p>Selecione a competição para organizar os indicados de cada categoria.</p>
+
+    <label>Competição
+      <select id="adminHighlightsCompetition">
+        <option value="">Selecione uma competição</option>
+      </select>
+    </label>
+
+    <div class="actions">
+      <button class="gold" id="loadAdminHighlights">
+        Gerenciar indicados
+      </button>
+    </div>
+
+    <div id="adminHighlightsContent" class="hidden">
+      <p><strong>Categorias da eleição</strong></p>
+      <div id="adminHighlightsCategories">
+        <div class="empty">Selecione uma competição para começar.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Formatar as competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"/></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"/></label><label>Formato da competição<select id="newCompetitionFormat"><option value="grupos">Fase de grupos</option><option value="mata-mata">Mata-mata</option><option value="pontos-corridos">Pontos corridos</option><option value="mista">Mista (grupos + mata-mata)</option></select></label>
  <label>Quantidade total de equipes
   <input id="newCompetitionTotalTeams" type="number" min="2" max="256" value="18" placeholder="Ex.: 18"/>
@@ -3674,8 +3706,25 @@ function updateSelects(){
    if($('gameTeam'))$('gameTeam').value=selectedTeam;
  }
  updateAthleteSelect();
+
+const adminHighlightsSelect=$('adminHighlightsCompetition');
+
+if(adminHighlightsSelect){
+  const previous=adminHighlightsSelect.value;
+
+  adminHighlightsSelect.innerHTML=
+    '<option value="">Selecione uma competição</option>'+
+    competitions.map(c=>
+      `<option value="${esc(c.id)}">${esc(c.name)}${c.season?' · '+esc(c.season):''}</option>`
+    ).join('');
+
+  if(previous&&competitions.some(c=>String(c.id)===String(previous))){
+    adminHighlightsSelect.value=previous;
+  }
 }
-function updateAthleteSelect(preselect){const t=findTeam($('gameTeam').value);$('gameAthlete').innerHTML=(t?.players||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.id)} · ${esc(p.name)}</option>`).join('');if(preselect)$('gameAthlete').value=preselect}
+
+}
+function updateAthleteSelect(preselect){
 $('gameTeam').addEventListener('change',()=>updateAthleteSelect());
 $('saveTeam').addEventListener('click', async ()=>{
  const name=$('teamName').value.trim(),initials=$('teamInitials').value.trim().toUpperCase()||name.split(/\s+/).map(x=>x[0]).join('').slice(0,4);
