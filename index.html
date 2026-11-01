@@ -5448,7 +5448,21 @@ const c = (db.competitions || []).find(x =>
   download('tabela-jogos-poeirao.csv',lines.map(row=>row.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8');
  });
  function renderFrontPage(){
-  const fixtures=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')||(a.time||'').localeCompare(b.time||''));
+ const fixtures = [...(db.matches || [])]
+  .filter(matchBelongsToActiveCompetition)
+  .filter(m => {
+    const round = String(m.round || m.fase || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
+    return !round.includes('final') &&
+           !round.includes('terceiro');
+  })
+  .sort((a, b) =>
+    (a.date || '9999').localeCompare(b.date || '9999') ||
+    (a.time || '').localeCompare(b.time || '')
+  );
   const teamForMatch=(m,side)=>{
     const id=m[side+'Id']??m[side+'_id'];
     const name=m[side+'Name']||m[side+'_name']||'';
