@@ -2022,10 +2022,35 @@ overflow: visible !important;
         <span class="pill">TVFP SPORTS</span>
       </div>
       <div class="pad">
-        <div id="highlightsVoters" class="highlights-voters"></div>
-      </div>
-    </div>
+        
 
+<div id="highlightsVoters" class="highlights-voters">
+
+  <div class="voter-card">
+    <img src="https://lsenoxeiqzceodvzmbnl.supabase.co/storage/v1/object/public/bid-fotos/comissao-votacao/internauta.png" alt="Internauta">
+    <strong>INTERNAUTA</strong>
+    <small>Voto popular</small>
+  </div>
+
+  <div class="voter-card">
+    <img src="https://lsenoxeiqzceodvzmbnl.supabase.co/storage/v1/object/public/bid-fotos/comissao-votacao/prof-elizanio.png" alt="Professor Elizânio Souza">
+    <strong>PROF. ELIZÂNIO SOUZA</strong>
+    <small>Repórter TVFP</small>
+  </div>
+
+  <div class="voter-card">
+    <img src="https://lsenoxeiqzceodvzmbnl.supabase.co/storage/v1/object/public/bid-fotos/comissao-votacao/erivando-farias.png" alt="Erivando Farias">
+    <strong>ERIVANDO FARIAS</strong>
+    <small>Comentarista TVFP</small>
+  </div>
+
+  <div class="voter-card">
+    <img src="https://lsenoxeiqzceodvzmbnl.supabase.co/storage/v1/object/public/bid-fotos/comissao-votacao/benarte.png" alt="Benarte">
+    <strong>BENARTE</strong>
+    <small>Diretor TVFP</small>
+  </div>
+
+</div>
     <!-- REGRAS -->
     <div class="panel">
       <div class="ph">
@@ -2414,6 +2439,61 @@ overflow: visible !important;
     display: none !important;
   }
 }
+
+.highlights-voters{
+  width:100%;
+  max-width:900px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  justify-content:center;
+  align-items:start;
+}
+
+.voter-card{
+  min-width:0;
+  text-align:center;
+  overflow:hidden;
+}
+
+.voter-card img{
+  display:block;
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  border-radius:9px;
+  border:2px solid #d6ad35;
+  background:#080d19;
+}
+
+.voter-card strong{
+  display:block;
+  margin-top:7px;
+  color:#e8bd43;
+  font-size:clamp(8px,1.5vw,13px);
+  line-height:1.2;
+  overflow-wrap:anywhere;
+}
+
+.voter-card small{
+  display:block;
+  margin-top:4px;
+  color:#fff;
+  font-size:clamp(7px,1.2vw,11px);
+}
+
+@media(max-width:480px){
+  .highlights-voters{
+    gap:6px;
+  }
+
+  .voter-card img{
+    border-radius:6px;
+    border-width:1px;
+  }
+}
+
 </style>
  
 <!-- ===== PAINEL DAS SEMIFINAIS ===== -->
