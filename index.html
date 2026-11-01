@@ -563,7 +563,7 @@ header .season {
   text-decoration: none !important;
 }
 @media (max-width: 700px) {
-  .tvfp-contact-grid { grid-template-columns: 1fr !important; padding: 0 12px !important; }
+  .tvfp-contact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; padding: 0 12px !important; }
   .tvfp-contact-card { min-height: 112px; padding: 12px !important; }
   .tvfp-contact-logo { width: 92px !important; }
 }
@@ -8794,7 +8794,7 @@ tbody tr.row-staff td.bid{
 
 @media (max-width: 520px) {
   #publicView #finishedFixtures {
-    grid-template-columns: 1fr !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 /* Painel de partidas finalizadas: mais espaço e todas as fases */
@@ -8827,7 +8827,7 @@ tbody tr.row-staff td.bid{
 
 @media (max-width: 520px) {
   #publicView #finishedFixtures {
-    grid-template-columns: 1fr !important;
+   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
  <style>
