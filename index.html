@@ -5794,35 +5794,59 @@ status:t.status||'Agendado',
 ];
 
  phaseHTML=phaseGroups.map(phase=>{
-   let games =
-  phase.title === 'FINAL' ||
-  phase.title === 'DISPUTA DE 3º E 4º LUGAR'
-    ? []
-    : allMatches.filter(m => {
-        const name = normalizePhase(m);
+let games = [];
 
-        if (phase.exclude?.some(k => name.includes(k))) {
-          return false;
-        }
+if (phase.title === 'FINAL') {
+  if (comp.finalMatchTie) {
+    games.push(toGame({
+      ...comp.finalMatchTie,
+      round: 'Final'
+    }));
+  }
+} else if (phase.title === 'DISPUTA DE 3º E 4º LUGAR') {
+  if (comp.thirdPlaceTie) {
+    games.push(toGame({
+      ...comp.thirdPlaceTie,
+      round: 'Disputa de terceiro lugar'
+    }));
+  }
+} else {
+  games = allMatches.filter(m => {
+    const name = normalizePhase(m);
 
-        return phase.keys.some(k => name.includes(k));
-      });
+    if (phase.exclude?.some(k => name.includes(k))) {
+      return false;
+    }
 
-    savedTies.filter(t=>{
-      const name=normalizePhase(t);
-      if(phase.exclude?.some(k=>name.includes(k)))return false;
-      return phase.keys.some(k=>name.includes(k));
-    }).forEach(t=>{
-      const g=toGame(t);
-      const duplicate=games.some(m=>
-        (String(m.homeId)===String(g.homeId)&&String(m.awayId)===String(g.awayId))||
-        (String(m.homeId)===String(g.awayId)&&String(m.awayId)===String(g.homeId))
-      );
-      if(!duplicate)games.push(g);
-    });
+    return phase.keys.some(k => name.includes(k));
+  });
 
-   if(phase.title==='FINAL'){
-  const semis=allMatches.filter(m=>
+  savedTies.filter(t => {
+    const name = normalizePhase(t);
+
+    if (
+      name.includes('final') ||
+      name.includes('terceiro')
+    ) {
+      return false;
+    }
+
+    return phase.keys.some(k => name.includes(k));
+  }).forEach(t => {
+    const g = toGame(t);
+
+    const duplicate = games.some(m =>
+      (String(m.homeId) === String(g.homeId) &&
+       String(m.awayId) === String(g.awayId)) ||
+      (String(m.homeId) === String(g.awayId) &&
+       String(m.awayId) === String(g.homeId))
+    );
+
+    if (!duplicate) games.push(g);
+  });
+}
+  if (phase.title === 'FINAL') {
+   const semis=allMatches.filter(m=>
     normalizePhase(m).includes('semi')
   );
 
@@ -5871,16 +5895,16 @@ status:t.status||'Agendado',
 const penalties =
   m.penalties1A !== '' && m.penalties1A != null &&
   m.penalties1B !== '' && m.penalties1B != null
-    ? `<small>(Pênaltis: ${esc(m.penalties1A)} × ${esc(m.penalties1B)})</small>`
+  ? `<small style="display:block;margin-top:4px;font-size:10px;font-weight:700;color:#f5c542;text-align:center;">PÊNALTIS: ${esc(m.penalties1A)} × ${esc(m.penalties1B)}</small>`
     : '';  
         
         return `<div class="group-result-row">
           <span>${esc(m.homeName||home.name||home.nome||'A definir')}</span>
           ${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}
-         <div>
-  <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
-  ${penalties}
-</div>
+                  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:75px;">
+            <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
+            ${penalties}
+          </div>
           ${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}
           <span>${esc(m.awayName||away.name||away.nome||'A definir')}</span>
         </div>`;
