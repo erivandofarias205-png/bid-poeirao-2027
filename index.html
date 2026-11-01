@@ -5862,12 +5862,18 @@ status:t.status||'Agendado',
           String(t.id)===String(m.awayId)||String(t.dbId||'')===String(m.awayId))||{};
         const homeLogo=logoOf(home);
         const awayLogo=logoOf(away);
-        const penalties =
+        const finished =
+  String(m.status || '').toLowerCase().includes('finaliz') &&
+  m.homeScore !== null && m.homeScore !== undefined &&
+  m.awayScore !== null && m.awayScore !== undefined &&
+  m.homeScore !== '' && m.awayScore !== '';
+
+const penalties =
   m.penalties1A !== '' && m.penalties1A != null &&
   m.penalties1B !== '' && m.penalties1B != null
     ? `<small>(Pênaltis: ${esc(m.penalties1A)} × ${esc(m.penalties1B)})</small>`
-    : '';
-
+    : '';  
+        
         return `<div class="group-result-row">
           <span>${esc(m.homeName||home.name||home.nome||'A definir')}</span>
           ${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}
