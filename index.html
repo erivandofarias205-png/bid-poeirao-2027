@@ -3160,7 +3160,70 @@ if(votersPanel){
 }
   });
 }
+// GERENCIAMENTO ADMINISTRATIVO DA ELEIÇÃO
+const adminHighlightsButton = $('loadAdminHighlights');
+const adminHighlightsSelect = $('adminHighlightsCompetition');
+const adminHighlightsContent = $('adminHighlightsContent');
+const adminHighlightsCategories = $('adminHighlightsCategories');
 
+if(adminHighlightsButton){
+  adminHighlightsButton.addEventListener('click',()=>{
+    const competitionId = adminHighlightsSelect?.value;
+
+    if(!competitionId){
+      alert('Selecione uma competição primeiro.');
+      return;
+    }
+
+    if(!adminHighlightsContent || !adminHighlightsCategories) return;
+
+    const categories = [
+      {id:'goals',title:'⚽ GOLS MAIS BONITOS',count:3},
+      {id:'saves',title:'🧤 DEFESA MAIS BONITA',count:3},
+      {id:'revelations',title:'🌟 REVELAÇÕES',count:3},
+      {id:'star',title:'🏆 CRAQUE DA COMPETIÇÃO',count:3},
+      {id:'selection',title:'🥇 SELEÇÃO DA COMPETIÇÃO',count:11}
+    ];
+
+    adminHighlightsCategories.innerHTML = `
+      <div class="panel">
+        <h3>⚽ ARTILHEIRO DA COMPETIÇÃO</h3>
+        <p>Categoria automática, calculada pela artilharia do BID.</p>
+      </div>
+      ${categories.map(category=>`
+        <div class="panel" style="margin-top:15px">
+          <h3>${category.title}</h3>
+          ${Array.from({length:category.count},(_,i)=>`
+            <div class="panel" style="padding:12px;margin:10px 0">
+              <strong>${category.id==='selection'?'Posição':'Indicado'} ${i+1}</strong>
+              <label>Nome do atleta</label>
+              <input type="text"
+                id="admin_${category.id}_name_${i}"
+                placeholder="Nome do atleta">
+              <label>Foto do atleta (URL)</label>
+              <input type="url"
+                id="admin_${category.id}_photo_${i}"
+                placeholder="Link da foto">
+              ${category.id==='selection'?`
+                <label>Posição</label>
+                <input type="text"
+                  id="admin_${category.id}_position_${i}"
+                  placeholder="Ex.: Goleiro">
+              `:''}
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    `;
+
+    adminHighlightsContent.classList.remove('hidden');
+
+    adminHighlightsContent.scrollIntoView({
+      behavior:'smooth',
+      block:'start'
+    });
+  });
+}
 function renderHighlightsTopScorer(){
   const out=$('highlightsTopScorer');
   const select=$('highlightsCompetitionSelect');
