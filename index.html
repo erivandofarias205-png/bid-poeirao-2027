@@ -4429,7 +4429,36 @@ const c = (db.competitions || []).find(x =>
           String(m.date || '') === String(date || '');
       });
 
-      if (alreadyExists) return;
+      if (alreadyExists) {
+  const existingFixture = fixtures.find(m => {
+    const sameOrder =
+      String(m.homeId) === String(home?.id || tie.a) &&
+      String(m.awayId) === String(away?.id || tie.b);
+
+    const reverseOrder =
+      String(m.homeId) === String(away?.id || tie.b) &&
+      String(m.awayId) === String(home?.id || tie.a);
+
+    return (sameOrder || reverseOrder) &&
+      String(m.round || '').toLowerCase() === round.toLowerCase() &&
+      String(m.date || '') === String(date || '');
+  });
+
+  if (existingFixture) {
+    const sameOrder =
+      String(existingFixture.homeId) === String(home?.id || tie.a);
+
+    existingFixture.penalties1A = sameOrder
+      ? (tie.penalties1A ?? '')
+      : (tie.penalties1B ?? '');
+
+    existingFixture.penalties1B = sameOrder
+      ? (tie.penalties1B ?? '')
+      : (tie.penalties1A ?? '');
+  }
+
+  return;
+}
 
       fixtures.push({
         id: `phase-${round}-${tie.a}-${tie.b}`,
