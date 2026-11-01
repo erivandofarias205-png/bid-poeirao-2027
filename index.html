@@ -5896,7 +5896,15 @@ if (phase.title === 'FINAL') {
 
   if(!semisFinished)games=[];
 }
-    if(!games.length)return '';
+   console.log('PÊNALTIS NA LISTA PÚBLICA:', phase.title, games.map(m=>({
+  mandante:m.homeName,
+  visitante:m.awayName,
+  placarA:m.homeScore,
+  placarB:m.awayScore,
+  penaltisA:m.penalties1A,
+  penaltisB:m.penalties1B
+}))); 
+   if(!games.length)return '';
 
     games.sort((a,b)=>
       String(a.date||'9999').localeCompare(String(b.date||'9999'))||
