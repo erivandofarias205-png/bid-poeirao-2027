@@ -6387,10 +6387,17 @@ async function compressSponsorImage(file){
       return;
     }
 
-    const cards = files.map(f =>
-      '<div class="sponsor-logo-card"><img loading="eager" src="' +
-      sponsorUrl(f.name) + '" alt="Patrocinador"></div>'
-    ).join('');
+   const cards = files.map(f => {
+  const img = '<img loading="eager" src="' +
+    sponsorUrl(f.name) + '" alt="Patrocinador">';
+
+  if (f.name.toLowerCase().includes('felippe-souza')) {
+    return '<a class="sponsor-logo-card" href="https://banlek.com/felippesouza_mkt" target="_blank" rel="noopener noreferrer">' +
+      img + '</a>';
+  }
+
+  return '<div class="sponsor-logo-card">' + img + '</div>';
+}).join('');
 
     track.innerHTML = cards + cards;
     track.style.animation = files.length > 1 ? 'sponsorsScroll 30s linear infinite' : 'none';
