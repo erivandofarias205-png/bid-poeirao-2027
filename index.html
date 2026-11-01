@@ -2559,7 +2559,21 @@ overflow: visible !important;
   to{transform:translateX(-50%)}
 }
 @media(max-width:700px){#tvfp-sponsors{padding:14px 8px}#tvfp-sponsors .sponsors-row{gap:8px;justify-content:center}#tvfp-sponsors .sponsor-logo-card{height:68px;width:112px;flex-basis:112px;padding:3px;border-radius:6px}}
-@media(max-width:420px){#tvfp-sponsors .sponsors-row{gap:6px}#tvfp-sponsors .sponsor-logo-card{height:64px;width:calc(33.333% - 6px);flex:0 0 calc(33.333% - 6px);padding:2px;border-radius:4px}}
+@media(max-width:420px){
+  #tvfp-sponsors .sponsors-row{
+    gap:10px;
+    flex-wrap:nowrap;
+    justify-content:flex-start;
+  }
+  #tvfp-sponsors .sponsor-logo-card{
+    width:196px;
+    height:auto;
+    flex:0 0 196px;
+    aspect-ratio:7 / 4;
+    padding:0;
+    border-radius:8px;
+  }
+}
 @media(prefers-reduced-motion:reduce){
   #tvfp-sponsors .sponsors-row{
     animation:none;
