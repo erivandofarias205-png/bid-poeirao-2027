@@ -2440,60 +2440,74 @@ overflow: visible !important;
   }
 }
 
-.highlights-voters{
-  width:100%;
-  max-width:900px;
-  margin:0 auto;
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-  justify-content:center;
-  align-items:start;
+
+/* COMISSÃO DE VOTAÇÃO */
+#highlightsVoters.highlights-voters{
+  width:100% !important;
+  max-width:600px !important;
+  margin:0 auto !important;
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,110px)) !important;
+  justify-content:center !important;
+  align-items:start !important;
+  gap:12px !important;
 }
 
-.voter-card{
-  min-width:0;
-  text-align:center;
-  overflow:hidden;
+#highlightsVoters .voter-card{
+  width:100% !important;
+  min-width:0 !important;
+  text-align:center !important;
+  padding:0 !important;
+  margin:0 !important;
 }
 
-.voter-card img{
+#highlightsVoters .voter-card img{
+  display:block !important;
+  width:100% !important;
+  max-width:110px !important;
+  height:auto !important;
+  aspect-ratio:3/4 !important;
+  object-fit:cover !important;
+  border:2px solid #d6ad35 !important;
+  border-radius:5px !important;
+  margin:0 auto !important;
+}
+
+#highlightsVoters .voter-card strong{
   display:block;
-  width:100%;
-  aspect-ratio:3/4;
-  object-fit:cover;
-  border-radius:9px;
-  border:2px solid #d6ad35;
-  background:#080d19;
-}
-
-.voter-card strong{
-  display:block;
-  margin-top:7px;
   color:#e8bd43;
-  font-size:clamp(8px,1.5vw,13px);
+  font-size:11px;
   line-height:1.2;
+  margin-top:6px;
   overflow-wrap:anywhere;
 }
 
-.voter-card small{
+#highlightsVoters .voter-card small{
   display:block;
-  margin-top:4px;
   color:#fff;
-  font-size:clamp(7px,1.2vw,11px);
+  font-size:9px;
+  margin-top:3px;
 }
 
 @media(max-width:480px){
-  .highlights-voters{
-    gap:6px;
+  #highlightsVoters.highlights-voters{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:5px !important;
+    max-width:100% !important;
   }
 
-  .voter-card img{
-    border-radius:6px;
-    border-width:1px;
+  #highlightsVoters .voter-card img{
+    max-width:100% !important;
+  }
+
+  #highlightsVoters .voter-card strong{
+    font-size:8px;
+  }
+
+  #highlightsVoters .voter-card small{
+    font-size:7px;
   }
 }
-
 </style>
  
 <!-- ===== PAINEL DAS SEMIFINAIS ===== -->
