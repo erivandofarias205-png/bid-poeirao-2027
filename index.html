@@ -3637,11 +3637,13 @@ if(!t){
  const q=$('q').value.trim().toLowerCase(),f=$('filter').value;
  const ps=t.players.filter(p=>(!q||(p.name+' '+p.id).toLowerCase().includes(q))&&(!f||(f==='free'?!p.played:p.played)));
  const NAO_ATLETAS=new Set(['BID-0020','BID-0021','BID-0022','BID-0023']);
-$('rows').innerHTML=ps.map(p=>`<tr class="${['diretor','musa','treinador','auxiliar','massagista'].includes(String(p.role||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button> <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button> <button class="secondary" data-transfer-athlete="${esc(p.id)}">TRANSFERIR</button></td></tr>`).join('');
+$('rows').innerHTML=ps.map(p=>`<tr class="${['diretor','musa','treinador','auxiliar','massagista'].includes(String(p.role||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button> <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button> <button class="secondary" data-change-photo="${esc(p.id)}">MUDAR FOTO</button>
+<button class="secondary" data-transfer-athlete="${esc(p.id)}">TRANSFERIR</button></td></tr>`).join('');
  $('noRows').classList.toggle('hidden',ps.length>0);
  document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>renderProfile(b.dataset.profile));
   document.querySelectorAll('[data-edit-athlete]').forEach(b=>b.onclick=()=>editAthlete(b.dataset.editAthlete));
   document.querySelectorAll('[data-transfer-athlete]').forEach(b=>b.onclick=()=>transferAthlete(b.dataset.transferAthlete));
+  document.querySelectorAll('[data-change-photo]').forEach(b=>b.onclick=()=>replaceAthletePhoto(b.dataset.changePhoto));
 }
 function renderProfile(id){
  const f=findAth(id);if(!f)return;const {p,t}=f;
@@ -3825,7 +3827,146 @@ async function editAthlete(id){
     alert('Erro ao atualizar atleta: '+(error.message||error));
   }
 }
-    async function transferAthlete(id){
+  
+async function replaceAthletePhoto(id){
+  const f = findAth(id);
+  if(!f) return;
+
+  const {p} = f;
+
+  let newPath = null;
+
+  try{
+    // Verificar login
+    const {data:sessionData,error:sessionError} =
+      await supabaseClient.auth.getSession();
+
+    if(sessionError) throw sessionError;
+
+    if(!sessionData?.session){
+      alert('Entre com o login de administrador.');
+      return;
+    }
+
+    // Verificar autorização
+    const {data:adminCheck,error:adminError} =
+      await supabaseClient.rpc('is_admin');
+
+    if(adminError || adminCheck !== true){
+      alert('Acesso permitido somente ao administrador.');
+      return;
+    }
+
+    // Selecionar nova foto
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/jpeg,image/png,image/webp';
+
+    const file = await new Promise(resolve=>{
+      fileInput.onchange = () =>
+        resolve(fileInput.files[0] || null);
+      fileInput.click();
+    });
+
+    if(!file) return;
+
+    if(!file.type.startsWith('image/')){
+      alert('Selecione uma imagem válida.');
+      return;
+    }
+
+    if(file.size > 3*1024*1024){
+      alert('A foto deve ter até 3 MB.');
+      return;
+    }
+
+    if(!confirm('Trocar a foto de '+p.name+'?')){
+      return;
+    }
+
+    const oldUrl = p.foto_url || p.photo || '';
+
+    // Criar caminho exclusivo para a nova foto
+    const ext = file.type === 'image/png' ? 'png' :
+                file.type === 'image/webp' ? 'webp' : 'jpg';
+
+    newPath = 'atletas/'+crypto.randomUUID()+'.'+ext;
+
+    // Enviar nova foto
+    const {error:uploadError} = await supabaseClient
+      .storage.from('bid-fotos')
+      .upload(newPath,file,{
+        upsert:false,
+        contentType:file.type
+      });
+
+    if(uploadError) throw uploadError;
+
+    const newUrl = supabaseClient.storage
+      .from('bid-fotos')
+      .getPublicUrl(newPath).data.publicUrl;
+
+    // Atualizar cadastro
+    const {error:updateError} = await supabaseClient
+      .from('ATLETAS')
+      .update({foto_url:newUrl})
+      .eq('id',p.dbId);
+
+    if(updateError) throw updateError;
+
+    // Atualizar os dados locais
+    p.photo = newUrl;
+    p.foto_url = newUrl;
+
+    saveDb();
+
+    // Identificar foto antiga dentro do bucket
+    let oldPath = null;
+
+    try{
+      const marker = '/storage/v1/object/public/bid-fotos/';
+
+      if(oldUrl && oldUrl.includes(marker)){
+        oldPath = decodeURIComponent(
+          oldUrl.split(marker)[1].split('?')[0]
+        );
+      }
+    }catch(e){
+      console.warn('Não foi possível identificar a foto antiga:',e);
+    }
+
+    // Excluir foto antiga somente depois de salvar a nova
+    if(oldPath && oldPath !== newPath){
+      const {error:deleteError} = await supabaseClient
+        .storage.from('bid-fotos')
+        .remove([oldPath]);
+
+      if(deleteError){
+        console.warn('Nova foto salva, mas a antiga não foi apagada:',deleteError);
+        alert('Foto atualizada! Atenção: não foi possível apagar a foto antiga do Storage.');
+      }
+    }
+
+    await loadSupabaseTeams();
+    renderAll();
+
+    alert('Foto do atleta atualizada com sucesso!');
+
+  }catch(error){
+
+    // Se falhar, tentar apagar a nova foto enviada
+    if(newPath){
+      await supabaseClient
+        .storage.from('bid-fotos')
+        .remove([newPath]);
+    }
+
+    console.error('Erro ao trocar foto:',error);
+    alert('Erro ao trocar foto: '+(error.message||error));
+  }
+}
+  
+  async function transferAthlete(id){
   const f = findAth(id);
   if(!f) return;
 
