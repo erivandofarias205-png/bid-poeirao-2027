@@ -3835,15 +3835,16 @@ async function replaceAthletePhoto(id){
 
   const {p} = f;
   let newPath = null;
-  let updatedInDatabase = false;
+  let saved = false;
 
   try{
-    // Verificar identificação do atleta
-    if(!p._remote || !p.dbId){
-      throw new Error('Atleta sem ID válido no Supabase.');
+    const isPersonnel = p._remotePersonnel === true;
+    const table = isPersonnel ? 'equipe_pessoal' : 'ATLETAS';
+
+    if((!p._remote && !isPersonnel) || !p.dbId){
+      throw new Error('Cadastro sem ID válido no Supabase.');
     }
 
-    // Verificar administrador
     const {data:sessionData,error:sessionError} =
       await supabaseClient.auth.getSession();
 
@@ -3862,7 +3863,6 @@ async function replaceAthletePhoto(id){
       return;
     }
 
-    // Selecionar fotografia
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/jpeg,image/png,image/webp';
@@ -3887,16 +3887,11 @@ async function replaceAthletePhoto(id){
       return;
     }
 
-    // Guardar endereço antigo
-    const oldUrl = p.foto_url || p.photo || '';
-
-    // Criar nome exclusivo
     const ext = file.type === 'image/png' ? 'png' :
                 file.type === 'image/webp' ? 'webp' : 'jpg';
 
     newPath = 'atletas/'+crypto.randomUUID()+'.'+ext;
 
-    // Enviar nova fotografia
     const {error:uploadError} = await supabaseClient
       .storage.from('bid-fotos')
       .upload(newPath,file,{
@@ -3910,10 +3905,9 @@ async function replaceAthletePhoto(id){
       .from('bid-fotos')
       .getPublicUrl(newPath).data.publicUrl;
 
-    // Atualizar e exigir confirmação do banco
     const {data:updatedRows,error:updateError} =
       await supabaseClient
-        .from('ATLETAS')
+        .from(table)
         .update({foto_url:newUrl})
         .eq('id',p.dbId)
         .select('id,foto_url');
@@ -3922,58 +3916,51 @@ async function replaceAthletePhoto(id){
 
     if(!updatedRows || updatedRows.length !== 1){
       throw new Error(
-        'O Supabase não confirmou a atualização. ID: '+p.dbId
+        'Nenhum registro foi atualizado na tabela '+table+
+        '. ID: '+p.dbId
       );
     }
 
-    if(String(updatedRows[0].id) !== String(p.dbId)){
-      throw new Error('O ID atualizado não corresponde ao atleta.');
-    }
-
     if(updatedRows[0].foto_url !== newUrl){
-      throw new Error('O endereço da nova foto não foi confirmado.');
+      throw new Error('O Supabase não confirmou a nova foto.');
     }
 
-    updatedInDatabase = true;
+    saved = true;
 
-    // Atualizar dados locais
     p.photo = newUrl;
     p.foto_url = newUrl;
 
     saveDb();
 
-    // Recarregar dados do Supabase
     await loadSupabaseTeams();
     renderAll();
 
     alert(
-      'Foto atualizada e confirmada no Supabase!\n\n'+
-      'Atleta: '+p.name+'\n'+
-      'ID: '+p.dbId+
-      '\n\nA foto antiga foi preservada por segurança.'
+      'Foto atualizada com sucesso!\n\n'+
+      'Nome: '+p.name+
+      '\nTipo: '+(isPersonnel ? 'Dirigente / Musa' : 'Jogador')+
+      '\nTabela: '+table+
+      '\nID: '+p.dbId
     );
 
   }catch(error){
 
     console.error('Erro ao trocar foto:',error);
 
-    // Apagar nova foto somente se o banco não foi atualizado
-    if(newPath && !updatedInDatabase){
+    if(newPath && !saved){
       const {error:cleanupError} = await supabaseClient
         .storage.from('bid-fotos')
         .remove([newPath]);
 
       if(cleanupError){
-        console.error('Falha ao limpar nova foto:',cleanupError);
+        console.error('Erro ao limpar nova foto:',cleanupError);
       }
     }
 
-    alert(
-      'Não foi possível concluir a troca da foto:\n\n'+
-      (error.message || error)
-    );
+    alert('Erro ao trocar foto:\n\n'+(error.message || error));
   }
 }
+
   
   async function transferAthlete(id){
   const f = findAth(id);
