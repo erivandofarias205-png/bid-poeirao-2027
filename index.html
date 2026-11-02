@@ -11142,22 +11142,40 @@ document.addEventListener('DOMContentLoaded', function () {
     return null;
   }
 
-  function findName(text) {
-    const lines = text.split(/\n/).map(line => line.trim()).filter(Boolean);
+ function findName(text) {
+  const lines = text
+    .split(/\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
 
-    for (let i = 0; i < lines.length; i++) {
-      if (/^nome\b/i.test(lines[i])) {
-        const sameLine = lines[i].replace(/^nome\s*:?\s*/i, '').trim();
-        if (sameLine.length > 5) return sameLine;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
 
-        if (lines[i + 1] && lines[i + 1].length > 5) {
-          return lines[i + 1];
-        }
-      }
+    // Não confundir NOME com NOME ESPORTIVO
+    if (/^nome\s+esportivo\b/i.test(line)) continue;
+
+    // Nome na mesma linha
+    const sameLine = line.match(/^nome\s*[:\-]\s*(.+)$/i);
+
+    if (sameLine && sameLine[1].trim().length > 5) {
+      return sameLine[1].trim();
     }
 
-    return null;
+    // Nome na linha seguinte
+    if (/^nome\s*:?\s*$/i.test(line)) {
+      const next = lines[i + 1] || '';
+
+      if (
+        next.length > 5 &&
+        !/^(nome esportivo|data de nascimento|documento|cpf)/i.test(next)
+      ) {
+        return next;
+      }
+    }
   }
+
+  return null;
+}
 
   button.addEventListener('click', async function () {
     const fileFront = front.files && front.files[0];
