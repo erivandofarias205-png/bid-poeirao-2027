@@ -11211,7 +11211,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } finally {
         await worker.terminate();
       }
-
+console.log('TEXTO BRUTO DO OCR:', fullText);
       const name = findName(fullText);
       const cpf = findCPF(fullText);
       const birth = findBirth(fullText);
