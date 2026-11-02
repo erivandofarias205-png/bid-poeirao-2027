@@ -7234,7 +7234,7 @@ shirtNumber = (athleteCompetitionRows.find(a =>
 
 
 
-        const personId = String(person.numero_inscricao || ('PESSOAL-' + person.id));
+       const personId = String(person.numero_inscricao || ('BID-P' + String(person.id).padStart(4, '0')));
         const alreadyExists = team.players.some(p =>
           String(p.id) === personId ||
           (p._remotePersonnel && String(p.dbId) === String(person.id))
