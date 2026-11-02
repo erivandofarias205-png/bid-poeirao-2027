@@ -3758,11 +3758,12 @@ async function renderHighlightsSelection(){
 
         if(found){
           return {
-            id: found.id,
-            name: found.name || found.nome || 'Cadastro',
-            photo: found.photo || found.foto_url || '',
-            team: team.name || team.nome || ''
-          };
+  id: found.id,
+  name: found.name || found.nome || 'Cadastro',
+  photo: found.photo || found.foto_url || '',
+  team: team.name || team.nome || '',
+  logo: team.logo || team.escudo_url || ''
+};
         }
       }
 
@@ -3809,7 +3810,12 @@ async function renderHighlightsSelection(){
               }
 
               <h4 style="margin:8px 0 3px">${esc(person.name)}</h4>
-              <small>${esc(person.team)}</small>
+             <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:6px">
+  ${person.logo
+    ? `<img src="${esc(person.logo)}" style="width:28px;height:28px;object-fit:contain" alt="Escudo">`
+    : ''}
+  <small>${esc(person.team)}</small>
+</div>
 
               <div class="vote-result"
                    id="vote_result_${i}_${esc(id)}"></div>
@@ -3830,10 +3836,11 @@ async function renderHighlightsSelection(){
 
       return `
         <div class="panel" style="margin:12px 0;padding:12px">
-          <h3>${esc(position)}</h3>
-          ${cards || '<div class="empty">Nenhum indicado encontrado nesta posição.</div>'}
-        </div>
-      `;
+  <h3>${esc(position)}</h3>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+    ${cards || '<div class="empty">Nenhum indicado encontrado nesta posição.</div>'}
+  </div>
+</div>      `;
     }).join('');
 
     async function showResults(index){
