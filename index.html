@@ -3195,6 +3195,7 @@ if(!comp)return !(db.competitions||[]).length;
   
       renderHighlightsTopScorer();
          renderHighlightsSelection();
+      renderHighlightsCategories();
       const selectedCompetition=
     (db.competitions||[]).find(c=>
       String(c.id||c.dbId)===String(highlightsSelect.value)
@@ -3944,6 +3945,111 @@ async function renderHighlightsSelection(){
 }
 
 (async function setupDedicatedViews(){
+  async function renderHighlightsCategories(){
+  const competitionId = $('highlightsCompetitionSelect')?.value;
+  if(!competitionId) return;
+
+  const categories = [
+    {key:'goals', id:'highlightsGoals', title:'GOLS MAIS BONITOS'},
+    {key:'saves', id:'highlightsSaves', title:'DEFESA MAIS BONITA'},
+    {key:'revelations', id:'highlightsRevelations', title:'REVELAÇÕES'},
+    {key:'star', id:'highlightsStar', title:'CRAQUE DA COMPETIÇÃO'}
+  ];
+
+  try{
+    const {data,error} = await supabaseClient
+      .from('eleicao_indicados')
+      .select('dados')
+      .eq('competicao_id',competitionId)
+      .maybeSingle();
+
+    if(error) throw error;
+
+    const dados = data?.dados || {};
+
+    categories.forEach(category=>{
+      const out = $(category.id);
+      if(!out) return;
+
+      const candidates = dados[category.key] || [];
+
+      if(!candidates.length){
+        out.innerHTML = '<div class="empty">Nenhum indicado cadastrado nesta categoria.</div>';
+        return;
+      }
+
+      out.innerHTML = `
+        <h3>${category.title}</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+          ${candidates.map(item=>{
+            const athleteId = String(item.athleteId || '');
+
+            let person = null;
+            let team = null;
+
+            (db.teams || []).some(t=>{
+              const found = (t.players || []).find(p=>
+                String(p.id) === athleteId
+              );
+
+              if(found){
+                person = found;
+                team = t;
+                return true;
+              }
+              return false;
+            });
+
+            if(!person){
+              return `
+                <div class="panel" style="padding:12px">
+                  <div class="empty">Indicado não encontrado no cadastro: ${esc(athleteId)}</div>
+                </div>
+              `;
+            }
+
+            const photo = person.photo || person.foto_url || '';
+            const logo = team.logo || team.escudo_url || '';
+            const video = String(item.tiktok || '').trim();
+            const safeVideo = /^https?:\/\//i.test(video) ? video : '';
+
+            return `
+              <div class="panel" style="padding:12px;text-align:center">
+                ${photo ? `
+                  <img src="${esc(photo)}" alt=""
+                    style="width:100%;height:180px;object-fit:cover;border-radius:8px">
+                ` : ''}
+                <h3>${esc(person.name || person.nome || 'Atleta')}</h3>
+                <div style="display:flex;align-items:center;justify-content:center;gap:7px">
+                  ${logo ? `<img src="${esc(logo)}" alt=""
+                    style="width:28px;height:28px;object-fit:contain">` : ''}
+                  <small>${esc(team.name || team.nome || '')}</small>
+                </div>
+                ${safeVideo ? `
+                  <a href="${esc(safeVideo)}" target="_blank"
+                    rel="noopener noreferrer"
+                    class="gold"
+                    style="display:block;margin-top:12px;padding:10px;border-radius:6px;text-decoration:none">
+                    ▶ ASSISTIR VÍDEO
+                  </a>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    });
+
+  }catch(error){
+    console.error('Erro ao carregar categorias:',error);
+    categories.forEach(category=>{
+      const out = $(category.id);
+      if(out){
+        out.innerHTML = '<div class="empty">Erro ao carregar os indicados.</div>';
+      }
+    });
+  }
+}
   const classification=$('classificationView');
   const teams=$('teamsView');
 
