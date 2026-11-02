@@ -3719,45 +3719,6 @@ async function renderHighlightsSelection(){
       return;
     }
 
-    const comp = (db.competitions || []).find(c =>
-      [c.id,c.dbId,c.db_id].some(v =>
-        v != null && String(v) === String(competitionId)
-      )
-    );
-
-    if(!comp){
-      out.innerHTML = '<div class="empty">Competição não encontrada.</div>';
-      return;
-    }
-
-    const compIds = [comp.id,comp.dbId,comp.db_id]
-      .filter(v => v != null && v !== '')
-      .map(String);
-
-    const compNames = [
-      comp.name,
-      `${comp.name || ''} ${comp.season || ''}`
-    ].filter(Boolean).map(v => String(v).trim().toLowerCase());
-
-    const compTeams = (db.teams || []).filter(t => {
-      const ids = [
-        ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
-        ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
-      ].map(String);
-
-      const direct = [
-        t.competitionId,
-        t.competition_id,
-        t.competitionDbId,
-        t.competicao_id,
-        t.competition
-      ].filter(v => v != null && v !== '').map(String);
-
-      return ids.some(id => compIds.includes(id)) ||
-        direct.some(id => compIds.includes(id)) ||
-        direct.some(v => compNames.includes(v.trim().toLowerCase()));
-    });
-
     const positions = [
       'Goleiro',
       'Lateral-direito',
@@ -3774,7 +3735,7 @@ async function renderHighlightsSelection(){
     ];
 
     function findCandidate(id,isCoach){
-      for(const team of compTeams){
+      for(const team of (db.teams || [])){
         const found = (team.players || []).find(p => {
           const personnel = p._remotePersonnel === true;
 
@@ -3795,6 +3756,7 @@ async function renderHighlightsSelection(){
 
         if(found){
           return {
+            id: found.id,
             name: found.name || found.nome || 'Cadastro',
             photo: found.photo || found.foto_url || '',
             team: team.name || team.nome || ''
@@ -3805,266 +3767,170 @@ async function renderHighlightsSelection(){
       return null;
     }
 
-    function getEleitorToken(){
-      let token = localStorage.getItem('bid_eleicao_eleitor_token');
+    const tokenKey = 'bid_eleicao_eleitor_token';
+    let eleitorToken = localStorage.getItem(tokenKey);
 
-      if(!token){
-        token = crypto.randomUUID();
-        localStorage.setItem('bid_eleicao_eleitor_token',token);
-      }
-
-      return token;
+    if(!eleitorToken){
+      eleitorToken = crypto.randomUUID();
+      localStorage.setItem(tokenKey,eleitorToken);
     }
 
-    const eleitorToken = getEleitorToken();
-const acessoPWA =
-  window.matchMedia('(display-mode: standalone)').matches ||
-  window.navigator.standalone === true;
-    
+    out.innerHTML = positions.map((position,i) => {
+      const candidates = selection[i]?.candidates || [];
+      const isCoach = position === 'Treinador';
+
+      const cards = candidates
+        .filter(id => id !== null && id !== undefined && id !== '')
+        .map(id => {
+          const person = findCandidate(id,isCoach);
+          if(!person) return '';
+
+          const voted = localStorage.getItem(
+            `bid_votou_${competitionId}_selection_${i}`
+          ) === '1';
+
+          return `
+            <div style="
+              background:#07152f;
+              border:1px solid #33496d;
+              border-radius:12px;
+              padding:12px;
+              margin:10px 0;
+              text-align:center;
+            ">
+              ${
+                person.photo
+                  ? `<img src="${esc(person.photo)}"
+                      style="width:110px;height:130px;object-fit:cover;border-radius:9px"
+                      alt="Foto de ${esc(person.name)}">`
+                  : '<div style="font-size:55px">⚽</div>'
+              }
+
+              <h4 style="margin:8px 0 3px">${esc(person.name)}</h4>
+              <small>${esc(person.team)}</small>
+
+              <div class="vote-result"
+                   id="vote_result_${i}_${esc(id)}"></div>
+
+              <button
+                type="button"
+                class="gold"
+                data-vote-index="${i}"
+                data-vote-candidate="${esc(id)}"
+                ${voted ? 'disabled' : ''}
+                style="display:block;width:100%;margin-top:12px;
+                  ${voted ? 'background:#555;cursor:not-allowed' : ''}">
+                ${voted ? 'VOTO REGISTRADO' : 'VOTAR'}
+              </button>
+            </div>
+          `;
+        }).join('');
+
+      return `
+        <div class="panel" style="margin:12px 0;padding:12px">
+          <h3>${esc(position)}</h3>
+          ${cards || '<div class="empty">Nenhum indicado encontrado nesta posição.</div>'}
+        </div>
+      `;
+    }).join('');
+
     async function showResults(index){
       const categoria = `selection_${index}`;
 
       const {data,error} = await supabaseClient.rpc(
         'consultar_resultado_eleicao',
         {
-          p_competicao_id: competitionId,
-          p_categoria: categoria
+          p_competicao_id:competitionId,
+          p_categoria:categoria
         }
       );
 
       if(error) throw error;
 
       const results = data || [];
+      const total = results.reduce(
+        (sum,item) => sum + Number(item.total_votos || 0),0
+      );
 
-      out.querySelectorAll(`[data-vote-result="${index}"]`)
-        .forEach(el => {
-          const id = el.dataset.candidate;
-          const result = results.find(r =>
-            String(r.indicado_id) === String(id)
-          );
-
-          const percent = result ? Number(result.percentual) : 0;
-          el.textContent = `${percent.toFixed(1)}%`;
-          el.style.display = 'block';
-        });
-    }
-
-    out.innerHTML = positions.map((position,i) => {
-      const item = selection[i] || {};
-      const candidates = item.candidates || [];
-      const isCoach = position === 'Treinador';
-      const voteKey = `bid_votou_${competitionId}_selection_${i}`;
-      const alreadyVoted = localStorage.getItem(voteKey) === '1';
-
-      const cards = candidates
-        .filter(id => id !== null && id !== undefined && id !== '')
-        .map(id => {
-          const person = findCandidate(id,isCoach);
-
-          if(!person) return '';
-
-          return `
-            <div class="panel" style="
-              margin:10px 0;
-              padding:12px;
-              text-align:center;
-              border:1px solid #444;
-              border-radius:12px;
-            ">
-              ${
-                person.photo
-                  ? `<img src="${esc(person.photo)}"
-                      alt="Foto de ${esc(person.name)}"
-                      style="width:110px;height:130px;object-fit:cover;border-radius:10px">`
-                  : '<div style="font-size:48px">⚽</div>'
-              }
-
-              <div style="margin-top:8px">
-                <b>${esc(person.name)}</b>
-                <div><small>${esc(person.team)}</small></div>
-
-                <div
-                  data-vote-result="${i}"
-                  data-candidate="${esc(String(id))}"
-                  style="display:${alreadyVoted ? 'block' : 'none'};
-                    font-size:20px;font-weight:bold;color:#d4af37;margin:8px">
-                  0.0%
-                </div>
-
-                <button
-                  type="button"
-                  data-vote-index="${i}"
-                  data-vote-candidate="${esc(String(id))}"
-                  ${alreadyVoted ? 'disabled' : ''}
-                  style="
-                    width:100%;
-                    margin-top:10px;
-                    padding:12px;
-                    border:0;
-                    border-radius:8px;
-                    background:${alreadyVoted ? '#555' : '#d4af37'};
-                    color:#111;
-                    font-weight:bold;
-                    cursor:pointer;
-                  "
-                >${alreadyVoted ? 'VOTO REGISTRADO' : 'VOTAR'}</button>
-              </div>
+      results.forEach(item => {
+        const el = $(`vote_result_${index}_${item.indicado_id}`);
+        if(el){
+          el.innerHTML = `
+            <div style="margin-top:10px;font-weight:bold;color:#e4bd43">
+              ${Number(item.percentual || 0).toFixed(1)}%
             </div>
+            <small>${item.total_votos} voto(s)</small>
           `;
-        }).join('');
-
-      return `
-        <div class="panel" style="margin:14px 0;padding:14px">
-          <h3 style="text-align:center">${esc(position)}</h3>
-          <div style="
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-            gap:12px;
-          ">
-            ${cards || '<div class="empty">Nenhum indicado cadastrado.</div>'}
-          </div>
-          ${alreadyVoted
-            ? '<p style="text-align:center;color:#d4af37">Voto registrado nesta categoria</p>'
-            : ''}
-        </div>
-      `;
-    }).join('');
-
-    for(let i=0;i<positions.length;i++){
-      const voteKey = `bid_votou_${competitionId}_selection_${i}`;
-
-      if(localStorage.getItem(voteKey) === '1'){
-        await showResults(i);
-      }
-    }
-
-out.querySelectorAll('[data-vote-index]').forEach(button => {
-  button.addEventListener('click', async () => {
-    const index = Number(button.dataset.voteIndex);
-    const candidateId = button.dataset.voteCandidate;
-    const categoria = `selection_${index}`;
-    const voteKey = `bid_votou_${competitionId}_${categoria}`;
-if(!acessoPWA){
-  const {data: userData,error:userError} =
-    await supabaseClient.auth.getUser();
-
-  if(userError) throw userError;
-
-  if(!userData.user){
-    const email = prompt('Informe seu e-mail para votar:');
-
-    if(!email || !email.trim()) return;
-
-    const {error:emailError} =
-      await supabaseClient.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: window.location.origin
         }
       });
-
-    if(emailError) throw emailError;
-
-    alert('Enviamos um link de acesso para seu e-mail. Abra o link e volte para votar.');
-    return;
-  }
-}
-    try {
-      const { data: sessionData, error: sessionError } =
-        await supabaseClient.auth.getSession();
-
-      if(sessionError) throw sessionError;
-
-      let session = sessionData.session;
-
-      if(!session){
-        const email = prompt(
-          'Informe seu e-mail para participar da votação:'
-        );
-
-        if(!email || !email.includes('@')){
-          alert('Informe um e-mail válido.');
-          return;
-        }
-
-        const { error: loginError } =
-          await supabaseClient.auth.signInWithOtp({
-            email: email.trim(),
-            options: {
-              emailRedirectTo: window.location.origin
-            }
-          });
-
-        if(loginError) throw loginError;
-
-        alert(
-          'Enviamos um link de confirmação para seu e-mail. ' +
-          'Abra a mensagem, confirme o acesso e volte para votar.'
-        );
-
-        return;
-      }
-
-      const eleitorToken = session.user.id;
-
-      if(localStorage.getItem(voteKey) === '1'){
-        alert('Você já votou nesta categoria.');
-        return;
-      }
-
-      if(!confirm(
-        'Confirma seu voto? Depois de registrado, não será possível trocar.'
-      )){
-        return;
-      }
-
-      button.disabled = true;
-      button.textContent = 'REGISTRANDO...';
-
-     const { data: authData, error: authError } =
-  await supabaseClient.auth.getUser();
-
-if(authError) throw authError;
-
-const eleitorUid = authData.user?.id || null;
-
-const { error } = await supabaseClient.rpc(
-  'registrar_voto_eleicao',
-  {
-    p_competicao_id: competitionId,
-    p_categoria: categoria,
-    p_eleitor_token: eleitorToken,
-    p_indicado_id: candidateId,
-    p_eleitor_uid: eleitorUid
-  }
-);
-
-      if(error) throw error;
-
-      localStorage.setItem(voteKey,'1');
 
       out.querySelectorAll(`[data-vote-index="${index}"]`)
         .forEach(btn => {
           btn.disabled = true;
           btn.textContent = 'VOTO REGISTRADO';
           btn.style.background = '#555';
-          btn.style.cursor = 'not-allowed';
         });
 
-      await showResults(index);
-      alert('Seu voto foi registrado com sucesso!');
-
-    }catch(error){
-      console.error('Erro ao registrar voto:',error);
-      button.disabled = false;
-      button.textContent = 'VOTAR';
-      alert(error.message || 'Não foi possível registrar seu voto.');
+      return total;
     }
-  });
-});
+
+    for(let i=0;i<positions.length;i++){
+      if(localStorage.getItem(
+        `bid_votou_${competitionId}_selection_${i}`
+      ) === '1'){
+        await showResults(i);
+      }
+    }
+
+    out.querySelectorAll('[data-vote-index]').forEach(button => {
+      button.addEventListener('click',async()=>{
+        const index = Number(button.dataset.voteIndex);
+        const candidateId = button.dataset.voteCandidate;
+        const categoria = `selection_${index}`;
+        const voteKey = `bid_votou_${competitionId}_${categoria}`;
+
+        if(localStorage.getItem(voteKey) === '1'){
+          alert('Você já votou nesta categoria.');
+          return;
+        }
+
+        if(!confirm('Confirma seu voto? Depois de registrado, não será possível trocar.')){
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = 'REGISTRANDO...';
+
+        try{
+          const {error} = await supabaseClient.rpc(
+            'registrar_voto_eleicao',
+            {
+              p_competicao_id:competitionId,
+              p_categoria:categoria,
+              p_eleitor_token:eleitorToken,
+              p_indicado_id:candidateId
+            }
+          );
+
+          if(error) throw error;
+
+          localStorage.setItem(voteKey,'1');
+
+          await showResults(index);
+          alert('Seu voto foi registrado com sucesso!');
+
+        }catch(error){
+          console.error('Erro ao registrar voto:',error);
+          button.disabled = false;
+          button.textContent = 'VOTAR';
+          alert(error.message || 'Não foi possível registrar seu voto.');
+        }
+      });
+    });
+
   }catch(error){
     console.error('Erro ao exibir seleção:',error);
-    out.innerHTML = '<div class="empty">Não foi possível carregar a seleção.</div>';
+    out.innerHTML = '<div class="empty">Não foi possível carregar a seleção: '+esc(error.message)+'</div>';
   }
 }
 
