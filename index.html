@@ -2361,10 +2361,15 @@ overflow: visible !important;
       <div id="adminHighlightsCategories">
         <div class="empty">Selecione uma competição para começar.</div>
       </div>
-    </div>
+      <div class="actions" style="margin-top:20px">
+  <button class="gold" id="saveAdminHighlights">
+    💾 SALVAR ELEIÇÃO
+  </button>
+</div>
+    
   </div>
 </div>
-
+  </div>
   <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Formatar as competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"/></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"/></label><label>Formato da competição<select id="newCompetitionFormat"><option value="grupos">Fase de grupos</option><option value="mata-mata">Mata-mata</option><option value="pontos-corridos">Pontos corridos</option><option value="mista">Mista (grupos + mata-mata)</option></select></label>
  <label>Quantidade total de equipes
@@ -3222,18 +3227,19 @@ if(adminHighlightsButton){
     if(!adminHighlightsContent || !adminHighlightsCategories) return;
 
 
+
 const positions = [
-  'Goleiro — CAMISA 01',
-  'Lateral-direito — CAMISA 02',
-  'Zagueiro — CAMISA 03',
-  'Zagueiro — CAMISA 04',
-  'Volante — CAMISA 05',
-  'Lateral-esquerdo — CAMISA 06',
-  'Atacante — CAMISA 07',
-  'Volante — CAMISA 08',
-  'Atacante — CAMISA 09',
-  'Meia — CAMISA 10',
-  'Meia — CAMISA 11',
+  'Goleiro',
+  'Lateral-direito',
+  'Primeiro zagueiro',
+  'Segundo zagueiro',
+  'Lateral-esquerdo',
+  'Primeiro volante',
+  'Segundo volante',
+  'Meia-esquerdo',
+  'Meia-direito',
+  'Atacante',
+  'Atacante',
   'Treinador'
 ];
 
@@ -3422,6 +3428,7 @@ categories.forEach(category => {
   alert('Não foram encontrados atletas nem treinadores nesta competição.');
 }
 
+    carregarEleicaoIndicados(competitionId);
 adminHighlightsContent.classList.remove('hidden');
     
     adminHighlightsContent.scrollIntoView({
@@ -3430,7 +3437,147 @@ adminHighlightsContent.classList.remove('hidden');
     });
   });
 }
-function renderHighlightsTopScorer(){
+
+async function carregarEleicaoIndicados(competitionId){
+  try{
+    const {data,error} = await supabaseClient
+      .from('eleicao_indicados')
+      .select('dados')
+      .eq('competicao_id',competitionId)
+      .maybeSingle();
+
+    if(error) throw error;
+    if(!data || !data.dados) return;
+
+    const dados = data.dados;
+
+    ['goals','saves','revelations','star'].forEach(category=>{
+      (dados[category] || []).forEach((item,i)=>{
+        const select = $(`admin_${category}_athlete_${i}_0`);
+        const photo = $(`admin_${category}_photo_${i}_0`);
+
+        if(select && item.athleteId){
+          select.value = String(item.athleteId);
+          select.dispatchEvent(new Event('change'));
+        }
+
+        const tiktok = $(`admin_${category}_tiktok_${i}_0`);
+        if(tiktok) tiktok.value = item.tiktok || '';
+      });
+    });
+
+    (dados.selection || []).forEach((item,i)=>{
+      (item.candidates || []).forEach((athleteId,j)=>{
+        const select = $(`admin_selection_athlete_${i}_${j}`);
+
+        if(select && athleteId){
+          select.value = String(athleteId);
+          select.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+
+    console.log('Eleição recuperada:',dados);
+
+  }catch(error){
+    console.error('Erro ao carregar eleição:',error);
+    alert('Não foi possível carregar os indicados: '+error.message);
+  }
+}
+
+
+const saveAdminHighlights = $('saveAdminHighlights');
+
+if(saveAdminHighlights){
+  saveAdminHighlights.addEventListener('click',async()=>{
+    const competitionId = adminHighlightsSelect?.value;
+
+    if(!competitionId){
+      alert('Selecione uma competição.');
+      return;
+    }
+
+    const dados = {
+      goals:[],
+      saves:[],
+      revelations:[],
+      star:[],
+      selection:[]
+    };
+
+    ['goals','saves','revelations','star'].forEach(category=>{
+      for(let i=0;i<3;i++){
+        const select = $(`admin_${category}_athlete_${i}_0`);
+        const tiktok = $(`admin_${category}_tiktok_${i}_0`);
+
+        dados[category].push({
+          athleteId: select?.value || '',
+          tiktok: tiktok?.value || ''
+        });
+      }
+    });
+
+   
+const positions = [
+  'Goleiro',
+  'Lateral-direito',
+  'Primeiro zagueiro',
+  'Segundo zagueiro',
+  'Lateral-esquerdo',
+  'Primeiro volante',
+  'Segundo volante',
+  'Meia-esquerdo',
+  'Meia-direito',
+  'Atacante',
+  'Atacante',
+  'Treinador'
+];
+
+
+    positions.forEach((position,i)=>{
+      const candidates = [];
+
+      for(let j=0;j<3;j++){
+        const select = $(`admin_selection_athlete_${i}_${j}`);
+        candidates.push(select?.value || '');
+      }
+
+      dados.selection.push({
+        position,
+        candidates
+      });
+    });
+
+    try{
+      saveAdminHighlights.disabled = true;
+      saveAdminHighlights.textContent = 'SALVANDO...';
+
+      const {error} = await supabaseClient
+        .from('eleicao_indicados')
+        .upsert({
+          competicao_id:competitionId,
+          dados:dados,
+          atualizado_em:new Date().toISOString()
+        },{
+          onConflict:'competicao_id'
+        });
+
+      if(error) throw error;
+
+      alert('Eleição salva com sucesso!');
+
+    }catch(error){
+      console.error('Erro ao salvar eleição:',error);
+      alert('Erro ao salvar eleição: '+error.message);
+
+    }finally{
+      saveAdminHighlights.disabled = false;
+      saveAdminHighlights.textContent = '💾 SALVAR ELEIÇÃO';
+    }
+  });
+}
+
+  function renderHighlightsTopScorer(){
   const out=$('highlightsTopScorer');
   const select=$('highlightsCompetitionSelect');
 
