@@ -3716,6 +3716,7 @@ const positions = [
 (function setupDedicatedViews(){
   
 
+
 async function renderHighlightsSelection(){
   const out = $('highlightsSelection');
   const select = $('highlightsCompetitionSelect');
@@ -3843,7 +3844,10 @@ async function renderHighlightsSelection(){
     }
 
     const eleitorToken = getEleitorToken();
-
+const acessoPWA =
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.navigator.standalone === true;
+    
     async function showResults(index){
       const categoria = `selection_${index}`;
 
@@ -3859,8 +3863,7 @@ async function renderHighlightsSelection(){
 
       const results = data || [];
 
-      document
-        .querySelectorAll(`[data-vote-result="${index}"]`)
+      out.querySelectorAll(`[data-vote-result="${index}"]`)
         .forEach(el => {
           const id = el.dataset.candidate;
           const result = results.find(r =>
@@ -3868,7 +3871,6 @@ async function renderHighlightsSelection(){
           );
 
           const percent = result ? Number(result.percentual) : 0;
-
           el.textContent = `${percent.toFixed(1)}%`;
           el.style.display = 'block';
         });
@@ -3889,62 +3891,72 @@ async function renderHighlightsSelection(){
           if(!person) return '';
 
           return `
-            <div class="scorer" style="
+            <div class="panel" style="
               margin:10px 0;
               padding:12px;
+              text-align:center;
               border:1px solid #444;
               border-radius:12px;
-              display:flex;
-              align-items:center;
-              gap:12px;
-              flex-wrap:wrap;
             ">
               ${
                 person.photo
-                  ? `<img class="scorer-photo" src="${esc(person.photo)}" alt="Foto de ${esc(person.name)}">`
-                  : '<span class="scorer-photo">⚽</span>'
+                  ? `<img src="${esc(person.photo)}"
+                      alt="Foto de ${esc(person.name)}"
+                      style="width:110px;height:130px;object-fit:cover;border-radius:10px">`
+                  : '<div style="font-size:48px">⚽</div>'
               }
 
-              <div class="scorer-info" style="flex:1">
+              <div style="margin-top:8px">
                 <b>${esc(person.name)}</b>
-                <small>${esc(person.team)}</small>
+                <div><small>${esc(person.team)}</small></div>
 
                 <div
                   data-vote-result="${i}"
                   data-candidate="${esc(String(id))}"
-                  style="display:${alreadyVoted ? 'block' : 'none'};font-weight:bold;margin-top:6px;color:#d4af37"
-                >0.0%</div>
-              </div>
+                  style="display:${alreadyVoted ? 'block' : 'none'};
+                    font-size:20px;font-weight:bold;color:#d4af37;margin:8px">
+                  0.0%
+                </div>
 
-              <button
-                type="button"
-                data-vote-index="${i}"
-                data-vote-candidate="${esc(String(id))}"
-                ${alreadyVoted ? 'disabled' : ''}
-                style="
-                  padding:10px 20px;
-                  border:0;
-                  border-radius:8px;
-                  background:${alreadyVoted ? '#555' : '#d4af37'};
-                  color:#111;
-                  font-weight:bold;
-                  cursor:${alreadyVoted ? 'not-allowed' : 'pointer'};
-                "
-              >${alreadyVoted ? 'VOTO REGISTRADO' : 'VOTAR'}</button>
+                <button
+                  type="button"
+                  data-vote-index="${i}"
+                  data-vote-candidate="${esc(String(id))}"
+                  ${alreadyVoted ? 'disabled' : ''}
+                  style="
+                    width:100%;
+                    margin-top:10px;
+                    padding:12px;
+                    border:0;
+                    border-radius:8px;
+                    background:${alreadyVoted ? '#555' : '#d4af37'};
+                    color:#111;
+                    font-weight:bold;
+                    cursor:pointer;
+                  "
+                >${alreadyVoted ? 'VOTO REGISTRADO' : 'VOTAR'}</button>
+              </div>
             </div>
           `;
         }).join('');
 
       return `
-        <div class="panel" style="margin:10px 0;padding:12px">
-          <h3>${esc(position)}</h3>
-          ${cards || '<div class="empty">Nenhum indicado cadastrado.</div>'}
-          ${alreadyVoted ? '<small style="color:#d4af37">Você já votou nesta categoria. Resultado:</small>' : ''}
+        <div class="panel" style="margin:14px 0;padding:14px">
+          <h3 style="text-align:center">${esc(position)}</h3>
+          <div style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+            gap:12px;
+          ">
+            ${cards || '<div class="empty">Nenhum indicado cadastrado.</div>'}
+          </div>
+          ${alreadyVoted
+            ? '<p style="text-align:center;color:#d4af37">Voto registrado nesta categoria</p>'
+            : ''}
         </div>
       `;
     }).join('');
 
-    // Carrega percentuais apenas para categorias já votadas neste navegador.
     for(let i=0;i<positions.length;i++){
       const voteKey = `bid_votou_${competitionId}_selection_${i}`;
 
@@ -3953,61 +3965,130 @@ async function renderHighlightsSelection(){
       }
     }
 
-    // Ação dos botões de votação.
-    out.querySelectorAll('[data-vote-index]').forEach(button => {
-      button.addEventListener('click',async () => {
-        const index = Number(button.dataset.voteIndex);
-        const candidateId = button.dataset.voteCandidate;
-        const categoria = `selection_${index}`;
-        const voteKey = `bid_votou_${competitionId}_${categoria}`;
+out.querySelectorAll('[data-vote-index]').forEach(button => {
+  button.addEventListener('click', async () => {
+    const index = Number(button.dataset.voteIndex);
+    const candidateId = button.dataset.voteCandidate;
+    const categoria = `selection_${index}`;
+    const voteKey = `bid_votou_${competitionId}_${categoria}`;
+if(!acessoPWA){
+  const {data: userData,error:userError} =
+    await supabaseClient.auth.getUser();
 
-        if(localStorage.getItem(voteKey) === '1'){
-          alert('Você já votou nesta categoria.');
-          return;
-        }
+  if(userError) throw userError;
 
-        if(!confirm('Confirma seu voto? Depois de registrado, não será possível trocar.')){
-          return;
-        }
+  if(!userData.user){
+    const email = prompt('Informe seu e-mail para votar:');
 
-        button.disabled = true;
-        button.textContent = 'REGISTRANDO...';
+    if(!email || !email.trim()) return;
 
-        try{
-          const {error} = await supabaseClient.rpc(
-            'registrar_voto_eleicao',
-            {
-              p_competicao_id: competitionId,
-              p_categoria: categoria,
-              p_eleitor_token: eleitorToken,
-              p_indicado_id: candidateId
-            }
-          );
-
-          if(error) throw error;
-
-          localStorage.setItem(voteKey,'1');
-
-          out.querySelectorAll(`[data-vote-index="${index}"]`).forEach(btn => {
-            btn.disabled = true;
-            btn.textContent = 'VOTO REGISTRADO';
-            btn.style.background = '#555';
-            btn.style.cursor = 'not-allowed';
-          });
-
-          await showResults(index);
-
-          alert('Seu voto foi registrado com sucesso!');
-
-        }catch(error){
-          console.error('Erro ao registrar voto:',error);
-          button.disabled = false;
-          button.textContent = 'VOTAR';
-          alert(error.message || 'Não foi possível registrar seu voto.');
+    const {error:emailError} =
+      await supabaseClient.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: window.location.origin
         }
       });
-    });
 
+    if(emailError) throw emailError;
+
+    alert('Enviamos um link de acesso para seu e-mail. Abra o link e volte para votar.');
+    return;
+  }
+}
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if(sessionError) throw sessionError;
+
+      let session = sessionData.session;
+
+      if(!session){
+        const email = prompt(
+          'Informe seu e-mail para participar da votação:'
+        );
+
+        if(!email || !email.includes('@')){
+          alert('Informe um e-mail válido.');
+          return;
+        }
+
+        const { error: loginError } =
+          await supabaseClient.auth.signInWithOtp({
+            email: email.trim(),
+            options: {
+              emailRedirectTo: window.location.origin
+            }
+          });
+
+        if(loginError) throw loginError;
+
+        alert(
+          'Enviamos um link de confirmação para seu e-mail. ' +
+          'Abra a mensagem, confirme o acesso e volte para votar.'
+        );
+
+        return;
+      }
+
+      const eleitorToken = session.user.id;
+
+      if(localStorage.getItem(voteKey) === '1'){
+        alert('Você já votou nesta categoria.');
+        return;
+      }
+
+      if(!confirm(
+        'Confirma seu voto? Depois de registrado, não será possível trocar.'
+      )){
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'REGISTRANDO...';
+
+     const { data: authData, error: authError } =
+  await supabaseClient.auth.getUser();
+
+if(authError) throw authError;
+
+const eleitorUid = authData.user?.id || null;
+
+const { error } = await supabaseClient.rpc(
+  'registrar_voto_eleicao',
+  {
+    p_competicao_id: competitionId,
+    p_categoria: categoria,
+    p_eleitor_token: eleitorToken,
+    p_indicado_id: candidateId,
+    p_eleitor_uid: eleitorUid
+  }
+);
+
+      if(error) throw error;
+
+      localStorage.setItem(voteKey,'1');
+
+      out.querySelectorAll(`[data-vote-index="${index}"]`)
+        .forEach(btn => {
+          btn.disabled = true;
+          btn.textContent = 'VOTO REGISTRADO';
+          btn.style.background = '#555';
+          btn.style.cursor = 'not-allowed';
+        });
+
+      await showResults(index);
+      alert('Seu voto foi registrado com sucesso!');
+
+    }catch(error){
+      console.error('Erro ao registrar voto:',error);
+      button.disabled = false;
+      button.textContent = 'VOTAR';
+      alert(error.message || 'Não foi possível registrar seu voto.');
+    }
+  });
+});
   }catch(error){
     console.error('Erro ao exibir seleção:',error);
     out.innerHTML = '<div class="empty">Não foi possível carregar a seleção.</div>';
