@@ -2900,7 +2900,30 @@ overflow: visible !important;
 </div>
 <!-- FIM CADASTRO SEMI-AUTOMÁTICO -->
 
-<div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
+<!-- GERENCIAMENTO EQUIPE OFF -->
+<div class="panel" id="offPendingPanel">
+  <div class="ph">
+    <h3>CADASTROS PENDENTES — EQUIPE OFF</h3>
+    <span class="pill" id="offPendingCount">0 pendentes</span>
+  </div>
+
+  <div class="pad">
+    <div class="actions">
+      <button class="gold" id="refreshOffPending" type="button">
+        ATUALIZAR CADASTROS
+      </button>
+    </div>
+
+    <div id="offPendingList">
+      <p class="small muted">
+        Os cadastros enviados aparecerão aqui para conferência.
+      </p>
+    </div>
+  </div>
+</div>
+<!-- FIM GERENCIAMENTO EQUIPE OFF -->
+
+  <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
 <div class="panel" id="adminGamePromoPanel"><div class="ph"><h3>Divulgação de jogos</h3><span class="pill">Adicionar / remover artes</span></div><div class="pad"><p class="small">Envie uma ou várias artes promocionais. Elas serão exibidas no mural público em sequência e podem ser removidas depois que o jogo passar. Use imagens horizontais na proporção 7 × 4.</p><div class="formgrid"><label class="wide">Selecionar artes dos jogos<input accept="image/*" id="gamePromoUpload" multiple="" type="file"/></label></div><div class="actions"><button class="gold" id="uploadGamePromoBtn" type="button">Enviar artes para o mural</button><button class="secondary" id="refreshGamePromoBtn" type="button">Atualizar lista</button></div><p aria-live="polite" class="small" id="gamePromoAdminStatus" role="status">As artes serão carregadas do armazenamento do site quando disponível.</p><div class="game-promo-admin-list" id="gamePromoAdminList"></div></div></div>
  
 <div class="panel" id="adminSponsorsPanel">
@@ -4876,7 +4899,64 @@ if(role!=='jogador'){
     b.onclick=()=>deleteMatchEvent(b.dataset.deleteEvent);
   });
 }
- function renderAdminList(){
+async function loadOffPending() {
+  const list = document.getElementById('offPendingList');
+  const count = document.getElementById('offPendingCount');
+
+  if (!list) return;
+
+  if (!window.__BID_ADMIN_VERIFIED) {
+    list.textContent = 'Acesso exclusivo do administrador.';
+    return;
+  }
+
+  list.textContent = 'Carregando cadastros pendentes...';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('cadastros_off')
+      .select('id,nome_completo,nome_esportivo,cpf,equipe_pretendida,funcao,competicao,status,criado_em')
+      .eq('status', 'pendente')
+      .order('criado_em', { ascending: false });
+
+    if (error) throw error;
+
+    const records = data || [];
+
+    if (count) {
+      count.textContent = records.length + ' pendentes';
+    }
+
+    if (!records.length) {
+      list.innerHTML = '<p class="small muted">Nenhum cadastro pendente.</p>';
+      return;
+    }
+
+    list.innerHTML = records.map(item => `
+      <div style="padding:12px;margin-bottom:10px;border:1px solid #d6ad36;border-radius:8px;">
+        <strong>${esc(item.nome_completo || 'Nome ainda não identificado')}</strong>
+        <p class="small">Nome esportivo: ${esc(item.nome_esportivo || 'Não informado')}</p>
+        <p class="small">CPF: ${esc(item.cpf || 'Não identificado')}</p>
+        <p class="small">Equipe pretendida: ${esc(item.equipe_pretendida || 'EQUIPE OFF')}</p>
+        <p class="small">Função: ${esc(item.funcao || 'jogador')}</p>
+        <p class="small">Competição: ${esc(item.competicao || 'Sem competição')}</p>
+        <span class="pill">PENDENTE · Nº ${esc(item.id)}</span>
+      </div>
+    `).join('');
+
+  } catch (error) {
+    console.error('Erro ao carregar EQUIPE OFF:', error);
+    list.textContent = 'Erro ao carregar cadastros: ' + error.message;
+  }
+}
+
+const refreshOffButton = document.getElementById('refreshOffPending');
+
+if (refreshOffButton) {
+  refreshOffButton.addEventListener('click', loadOffPending);
+}
+
+  function renderAdminList(){
 
 $('adminList').innerHTML=activeCompetitionTeams().map(t=>`<div style="padding:12px 0;border-bottom:1px solid #d6ad36"><div style="display:flex;align-items:center;gap:10px;min-width:0"><img src="${esc(t.logo||t.escudo_url||'')}" alt="Escudo ${esc(t.name)}" onerror="this.style.display='none'" style="width:42px;height:42px;object-fit:contain;flex:0 0 42px;border-radius:7px;background:#fff;padding:3px;border:1px solid #d6ad36">${t.logo||t.escudo_url?'':' '}<div style="min-width:0"><b>${esc(t.name)}</b> <span class="muted small">(${t.players.length} pessoas)</span></div></div><div class="small muted" style="margin-top:8px">${t.players.map(p=>`<span style="display:flex;width:100%;box-sizing:border-box;gap:6px;align-items:center;margin:3px 0;padding:8px 10px;border-radius:6px;background:${p.role&&p.role!=='jogador'?'#d6ad36':'transparent'};color:${p.role&&p.role!=='jogador'?'#111':'inherit'}">${esc(p.id)} · ${esc(p.name)} <b>(${esc(({jogador:'Jogador',diretor:'Diretor',musa:'Musa',treinador:'Treinador',auxiliar:'Auxiliar',massagista:'Massagista'}[p.role]||'Jogador'))})</b> <button type="button" class="secondary" data-edit-athlete="${esc(p.id)}" style="padding:4px 8px;font-size:11px">Editar</button></span>`).join('')||'Sem atletas cadastrados'}</div><div class="actions"><button class="secondary" data-select-team="${esc(t.id)}">Abrir equipe</button><button class="danger" data-delete-team="${esc(t.id)}">Excluir equipe</button></div></div>`).join('')||'<p class="muted">Nenhuma equipe cadastrada.</p>';
   document.querySelectorAll('[data-select-team]').forEach(b=>b.onclick=()=>{selectedTeam=b.dataset.selectTeam;renderAll();showTab('public')});
@@ -7384,6 +7464,7 @@ remoteTeams.push({
     logoutBtn.classList.remove('hidden');
     message.textContent = 'Acesso administrativo confirmado.';
     await loadSupabaseTeams();
+    await loadOffPending();
     return true;
   }
 
@@ -10935,5 +11016,178 @@ document.addEventListener('DOMContentLoaded', function () {
   content: '－';
 }
 </style>
+  
+<script id="bid-semi-automatic-registration">
+(function () {
+  const button = document.getElementById('offSubmitDocuments');
+  const front = document.getElementById('offDocumentFront');
+  const back = document.getElementById('offDocumentBack');
+  const status = document.getElementById('offRegistrationStatus');
+
+  if (!button || !front || !status) return;
+
+  function message(text) {
+    status.textContent = text;
+  }
+
+  function loadOCR() {
+    return new Promise((resolve, reject) => {
+      if (window.Tesseract) return resolve();
+
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Não foi possível carregar o leitor de documentos.'));
+      document.head.appendChild(script);
+    });
+  }
+
+  function findCPF(text) {
+    const match = text.match(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/);
+    return match ? match[0].replace(/\D/g, '') : null;
+  }
+
+  function findBirth(text) {
+    const patterns = [
+      /(?:nascimento|nasc\.?|data de nascimento)[^\d]{0,25}(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i,
+      /\b(\d{2}[\/.-]\d{2}[\/.-]\d{4})\b/
+    ];
+
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (!match) continue;
+
+      const parts = match[1].split(/[\/.-]/);
+      const day = Number(parts[0]);
+      const month = Number(parts[1]);
+      const year = Number(parts[2]);
+
+      const date = new Date(year, month - 1, day);
+
+      if (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
+      ) {
+        return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      }
+    }
+
+    return null;
+  }
+
+  function findName(text) {
+    const lines = text.split(/\n/).map(line => line.trim()).filter(Boolean);
+
+    for (let i = 0; i < lines.length; i++) {
+      if (/^nome\b/i.test(lines[i])) {
+        const sameLine = lines[i].replace(/^nome\s*:?\s*/i, '').trim();
+        if (sameLine.length > 5) return sameLine;
+
+        if (lines[i + 1] && lines[i + 1].length > 5) {
+          return lines[i + 1];
+        }
+      }
+    }
+
+    return null;
+  }
+
+  button.addEventListener('click', async function () {
+    const fileFront = front.files && front.files[0];
+    const fileBack = back && back.files && back.files[0];
+
+    if (!fileFront) {
+      message('Selecione a foto do documento.');
+      return;
+    }
+
+    if (!window.__BID_ADMIN_VERIFIED) {
+      message('Entre como administrador antes de enviar.');
+      return;
+    }
+
+    button.disabled = true;
+
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        throw new Error('Sessão administrativa não encontrada.');
+      }
+
+      const { data: adminCheck, error: adminError } =
+        await supabaseClient.rpc('is_admin');
+
+      if (adminError || adminCheck !== true) {
+        throw new Error('Acesso permitido somente ao administrador.');
+      }
+
+      message('Preparando leitura dos documentos...');
+      await loadOCR();
+
+      const worker = await Tesseract.createWorker('por');
+
+      let fullText = '';
+
+      try {
+        const files = [fileFront];
+        if (fileBack) files.push(fileBack);
+
+        for (let i = 0; i < files.length; i++) {
+          message(`Lendo documento ${i + 1} de ${files.length}...`);
+
+          const result = await worker.recognize(files[i]);
+          fullText += '\n' + (result.data.text || '');
+        }
+      } finally {
+        await worker.terminate();
+      }
+
+      const name = findName(fullText);
+      const cpf = findCPF(fullText);
+      const birth = findBirth(fullText);
+
+      message('Gravando cadastro pendente...');
+
+      const record = {
+        nome_completo: name,
+        cpf: cpf,
+        data_nascimento: birth,
+        funcao: 'jogador',
+        status: 'pendente'
+      };
+
+      const { data, error } = await supabaseClient
+        .from('cadastros_off')
+        .insert(record)
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      message(
+        `Cadastro enviado para EQUIPE OFF! Protocolo: ${data.id}. ` +
+        'Confira os dados antes da aprovação.'
+      );
+
+     } finally {
+  front.value = '';
+  if (back) back.value = '';
+  button.disabled = false;
+}
+
+    } catch (error) {
+      console.error('Erro no cadastro semi-automático:', error);
+      message('Não foi possível enviar: ' + (error.message || error));
+    } finally {
+      button.disabled = false;
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
