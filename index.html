@@ -3944,7 +3944,6 @@ async function renderHighlightsSelection(){
   }
 }
 
-(async function setupDedicatedViews(){
   async function renderHighlightsCategories(){
   const competitionId = $('highlightsCompetitionSelect')?.value;
   if(!competitionId) return;
@@ -4050,7 +4049,8 @@ async function renderHighlightsSelection(){
     });
   }
 }
-  const classification=$('classificationView');
+ (async function setupDedicatedViews(){
+   const classification=$('classificationView');
   const teams=$('teamsView');
 
   ['classificationPanel','scorersPanel','cardControlPanel'].forEach(id=>{
