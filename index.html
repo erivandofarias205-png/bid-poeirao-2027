@@ -11173,18 +11173,15 @@ document.addEventListener('DOMContentLoaded', function () {
         'Confira os dados antes da aprovação.'
       );
 
-     } finally {
+    
+    } catch (error) {
+      console.error('Erro no cadastro semi-automático:', error);
+      message('Não foi possível enviar: ' + (error.message || error));
+   } finally {
   front.value = '';
   if (back) back.value = '';
   button.disabled = false;
 }
-
-    } catch (error) {
-      console.error('Erro no cadastro semi-automático:', error);
-      message('Não foi possível enviar: ' + (error.message || error));
-    } finally {
-      button.disabled = false;
-    }
   });
 })();
 </script>
