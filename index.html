@@ -7230,6 +7230,8 @@ if (typeof window.refreshPhotoCompetitionSelect === 'function') {
 
 // Carrega equipes, vínculos de competição e atletas do Supabase.
 async function loadSupabaseTeams() {
+    const db = window.db;
+  if (!db) throw new Error('Banco de dados ainda não foi inicializado.');
   try {
     const { data, error } = await supabaseClient.from('EQUIPES').select('id,nome,escudo_url').order('nome');
     if (error) throw error;
