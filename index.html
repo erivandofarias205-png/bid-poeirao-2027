@@ -3688,7 +3688,7 @@ const positions = [
   }).join('');
 }
 
-(function setupDedicatedViews(){
+async function renderHighlightsSelection(){
   
 
 
@@ -3952,7 +3952,6 @@ const positions = [
 
   showTab('games');
 })();
-
 function normalizeAthleteSearch(value){return String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
 function searchAthletes(){
  const input=$('athleteSearchInput');if(!input)return;
