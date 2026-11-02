@@ -3192,7 +3192,7 @@ if(highlightsSelect){
     }
 
     renderHighlightsTopScorer();
-    renderHighlightsSelection();
+       renderHighlightsSelection();
     const selectedCompetition=
   (db.competitions||[]).find(c=>
     String(c.id||c.dbId)===String(highlightsSelect.value)
@@ -3870,6 +3870,163 @@ async function renderHighlightsSelection(){
 }
 
 (function setupDedicatedViews(){
+  
+async function renderHighlightsSelection(){
+  const out = $('highlightsSelection');
+  const select = $('highlightsCompetitionSelect');
+
+  if(!out || !select) return;
+
+  const competitionId = select.value;
+
+  if(!competitionId){
+    out.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  try{
+    const {data,error} = await supabaseClient
+      .from('eleicao_indicados')
+      .select('dados')
+      .eq('competicao_id',competitionId)
+      .maybeSingle();
+
+    if(error) throw error;
+
+    const selection = data?.dados?.selection || [];
+
+    if(!selection.length){
+      out.innerHTML = '<div class="empty">Seleção ainda não cadastrada.</div>';
+      return;
+    }
+
+    const comp = (db.competitions || []).find(c =>
+      [c.id,c.dbId,c.db_id].some(v =>
+        v != null && String(v) === String(competitionId)
+      )
+    );
+
+    if(!comp){
+      out.innerHTML = '<div class="empty">Competição não encontrada.</div>';
+      return;
+    }
+
+    const compIds = [comp.id,comp.dbId,comp.db_id]
+      .filter(v => v != null && v !== '')
+      .map(String);
+
+    const compNames = [
+      comp.name,
+      `${comp.name || ''} ${comp.season || ''}`
+    ].filter(Boolean).map(v => String(v).trim().toLowerCase());
+
+    const compTeams = (db.teams || []).filter(t => {
+      const ids = [
+        ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
+        ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
+      ].map(String);
+
+      const direct = [
+        t.competitionId,
+        t.competition_id,
+        t.competitionDbId,
+        t.competicao_id,
+        t.competition
+      ].filter(v => v != null && v !== '').map(String);
+
+      return ids.some(id => compIds.includes(id)) ||
+        direct.some(id => compIds.includes(id)) ||
+        direct.some(v => compNames.includes(v.trim().toLowerCase()));
+    });
+
+    const positions = [
+      'Goleiro',
+      'Lateral-direito',
+      'Primeiro zagueiro',
+      'Segundo zagueiro',
+      'Lateral-esquerdo',
+      'Primeiro volante',
+      'Segundo volante',
+      'Meia-esquerdo',
+      'Meia-direito',
+      'Atacante',
+      'Atacante',
+      'Treinador'
+    ];
+
+    function findCandidate(id,isCoach){
+      for(const team of compTeams){
+        const found = (team.players || []).find(p => {
+          const personnel = p._remotePersonnel === true;
+
+          if(isCoach && !personnel) return false;
+          if(!isCoach && personnel) return false;
+
+          if(isCoach){
+            const role = String(p.role || p.funcao || '')
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g,'')
+              .toLowerCase().trim();
+
+            if(role !== 'treinador') return false;
+          }
+
+          return String(p.id) === String(id);
+        });
+
+        if(found){
+          return {
+            name: found.name || found.nome || 'Cadastro',
+            photo: found.photo || found.foto_url || '',
+            team: team.name || team.nome || ''
+          };
+        }
+      }
+
+      return null;
+    }
+
+    out.innerHTML = positions.map((position,i) => {
+      const item = selection[i] || {};
+      const candidates = item.candidates || [];
+      const isCoach = position === 'Treinador';
+
+      const cards = candidates
+        .filter(id => id !== null && id !== undefined && id !== '')
+        .map(id => {
+          const person = findCandidate(id,isCoach);
+
+          if(!person) return '';
+
+          return `
+            <div class="scorer" style="margin:8px 0">
+              ${
+                person.photo
+                  ? `<img class="scorer-photo" src="${esc(person.photo)}" alt="Foto de ${esc(person.name)}">`
+                  : '<span class="scorer-photo">⚽</span>'
+              }
+              <div class="scorer-info">
+                <b>${esc(person.name)}</b>
+                <small>${esc(person.team)}</small>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      return `
+        <div class="panel" style="margin:10px 0;padding:12px">
+          <h3>${esc(position)}</h3>
+          ${cards || '<div class="empty">Nenhum indicado cadastrado.</div>'}
+        </div>
+      `;
+    }).join('');
+
+  }catch(error){
+    console.error('Erro ao exibir seleção:',error);
+    out.innerHTML = '<div class="empty">Não foi possível carregar a seleção.</div>';
+  }
+}
+
   const classification=$('classificationView');
   const teams=$('teamsView');
 
