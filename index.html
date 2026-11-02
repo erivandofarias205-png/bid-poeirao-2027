@@ -3713,164 +3713,9 @@ const positions = [
   }).join('');
 }
 
-async function renderHighlightsSelection(){
-  const out = $('highlightsSelection');
-  const select = $('highlightsCompetitionSelect');
-
-  if(!out || !select) return;
-
-  const competitionId = select.value;
-
-  if(!competitionId){
-    out.innerHTML = '<div class="empty">Selecione uma competição.</div>';
-    return;
-  }
-
-  try{
-    const {data,error} = await supabaseClient
-      .from('eleicao_indicados')
-      .select('dados')
-      .eq('competicao_id',competitionId)
-      .maybeSingle();
-
-    if(error) throw error;
-
-    const selection = data?.dados?.selection || [];
-
-    if(!selection.length){
-      out.innerHTML = '<div class="empty">Seleção ainda não cadastrada.</div>';
-      return;
-    }
-
-    const comp = (db.competitions || []).find(c =>
-      [c.id,c.dbId,c.db_id].some(v =>
-        v != null && String(v) === String(competitionId)
-      )
-    );
-
-    if(!comp){
-      out.innerHTML = '<div class="empty">Competição não encontrada.</div>';
-      return;
-    }
-
-    const compIds = [comp.id,comp.dbId,comp.db_id]
-      .filter(v => v != null && v !== '')
-      .map(String);
-
-    const compNames = [
-      comp.name,
-      `${comp.name || ''} ${comp.season || ''}`
-    ].filter(Boolean).map(v => String(v).trim().toLowerCase());
-
-    const compTeams = (db.teams || []).filter(t => {
-      const ids = [
-        ...(Array.isArray(t.competitionIds) ? t.competitionIds : []),
-        ...(Array.isArray(t.competition_ids) ? t.competition_ids : [])
-      ].map(String);
-
-      const direct = [
-        t.competitionId,
-        t.competition_id,
-        t.competitionDbId,
-        t.competicao_id,
-        t.competition
-      ].filter(v => v != null && v !== '').map(String);
-
-      return ids.some(id => compIds.includes(id)) ||
-        direct.some(id => compIds.includes(id)) ||
-        direct.some(v => compNames.includes(v.trim().toLowerCase()));
-    });
-
-    const positions = [
-      'Goleiro',
-      'Lateral-direito',
-      'Primeiro zagueiro',
-      'Segundo zagueiro',
-      'Lateral-esquerdo',
-      'Primeiro volante',
-      'Segundo volante',
-      'Meia-esquerdo',
-      'Meia-direito',
-      'Atacante',
-      'Atacante',
-      'Treinador'
-    ];
-
-    function findCandidate(id,isCoach){
-      for(const team of compTeams){
-        const found = (team.players || []).find(p => {
-          const personnel = p._remotePersonnel === true;
-
-          if(isCoach && !personnel) return false;
-          if(!isCoach && personnel) return false;
-
-          if(isCoach){
-            const role = String(p.role || p.funcao || '')
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g,'')
-              .toLowerCase().trim();
-
-            if(role !== 'treinador') return false;
-          }
-
-          return String(p.id) === String(id);
-        });
-
-        if(found){
-          return {
-            name: found.name || found.nome || 'Cadastro',
-            photo: found.photo || found.foto_url || '',
-            team: team.name || team.nome || ''
-          };
-        }
-      }
-
-      return null;
-    }
-
-    out.innerHTML = positions.map((position,i) => {
-      const item = selection[i] || {};
-      const candidates = item.candidates || [];
-      const isCoach = position === 'Treinador';
-
-      const cards = candidates
-        .filter(id => id !== null && id !== undefined && id !== '')
-        .map(id => {
-          const person = findCandidate(id,isCoach);
-
-          if(!person) return '';
-
-          return `
-            <div class="scorer" style="margin:8px 0">
-              ${
-                person.photo
-                  ? `<img class="scorer-photo" src="${esc(person.photo)}" alt="Foto de ${esc(person.name)}">`
-                  : '<span class="scorer-photo">⚽</span>'
-              }
-              <div class="scorer-info">
-                <b>${esc(person.name)}</b>
-                <small>${esc(person.team)}</small>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-      return `
-        <div class="panel" style="margin:10px 0;padding:12px">
-          <h3>${esc(position)}</h3>
-          ${cards || '<div class="empty">Nenhum indicado cadastrado.</div>'}
-        </div>
-      `;
-    }).join('');
-
-  }catch(error){
-    console.error('Erro ao exibir seleção:',error);
-    out.innerHTML = '<div class="empty">Não foi possível carregar a seleção.</div>';
-  }
-}
-
 (function setupDedicatedViews(){
   
+
 async function renderHighlightsSelection(){
   const out = $('highlightsSelection');
   const select = $('highlightsCompetitionSelect');
@@ -3986,10 +3831,55 @@ async function renderHighlightsSelection(){
       return null;
     }
 
+    function getEleitorToken(){
+      let token = localStorage.getItem('bid_eleicao_eleitor_token');
+
+      if(!token){
+        token = crypto.randomUUID();
+        localStorage.setItem('bid_eleicao_eleitor_token',token);
+      }
+
+      return token;
+    }
+
+    const eleitorToken = getEleitorToken();
+
+    async function showResults(index){
+      const categoria = `selection_${index}`;
+
+      const {data,error} = await supabaseClient.rpc(
+        'consultar_resultado_eleicao',
+        {
+          p_competicao_id: competitionId,
+          p_categoria: categoria
+        }
+      );
+
+      if(error) throw error;
+
+      const results = data || [];
+
+      document
+        .querySelectorAll(`[data-vote-result="${index}"]`)
+        .forEach(el => {
+          const id = el.dataset.candidate;
+          const result = results.find(r =>
+            String(r.indicado_id) === String(id)
+          );
+
+          const percent = result ? Number(result.percentual) : 0;
+
+          el.textContent = `${percent.toFixed(1)}%`;
+          el.style.display = 'block';
+        });
+    }
+
     out.innerHTML = positions.map((position,i) => {
       const item = selection[i] || {};
       const candidates = item.candidates || [];
       const isCoach = position === 'Treinador';
+      const voteKey = `bid_votou_${competitionId}_selection_${i}`;
+      const alreadyVoted = localStorage.getItem(voteKey) === '1';
 
       const cards = candidates
         .filter(id => id !== null && id !== undefined && id !== '')
@@ -3999,16 +3889,48 @@ async function renderHighlightsSelection(){
           if(!person) return '';
 
           return `
-            <div class="scorer" style="margin:8px 0">
+            <div class="scorer" style="
+              margin:10px 0;
+              padding:12px;
+              border:1px solid #444;
+              border-radius:12px;
+              display:flex;
+              align-items:center;
+              gap:12px;
+              flex-wrap:wrap;
+            ">
               ${
                 person.photo
                   ? `<img class="scorer-photo" src="${esc(person.photo)}" alt="Foto de ${esc(person.name)}">`
                   : '<span class="scorer-photo">⚽</span>'
               }
-              <div class="scorer-info">
+
+              <div class="scorer-info" style="flex:1">
                 <b>${esc(person.name)}</b>
                 <small>${esc(person.team)}</small>
+
+                <div
+                  data-vote-result="${i}"
+                  data-candidate="${esc(String(id))}"
+                  style="display:${alreadyVoted ? 'block' : 'none'};font-weight:bold;margin-top:6px;color:#d4af37"
+                >0.0%</div>
               </div>
+
+              <button
+                type="button"
+                data-vote-index="${i}"
+                data-vote-candidate="${esc(String(id))}"
+                ${alreadyVoted ? 'disabled' : ''}
+                style="
+                  padding:10px 20px;
+                  border:0;
+                  border-radius:8px;
+                  background:${alreadyVoted ? '#555' : '#d4af37'};
+                  color:#111;
+                  font-weight:bold;
+                  cursor:${alreadyVoted ? 'not-allowed' : 'pointer'};
+                "
+              >${alreadyVoted ? 'VOTO REGISTRADO' : 'VOTAR'}</button>
             </div>
           `;
         }).join('');
@@ -4017,9 +3939,74 @@ async function renderHighlightsSelection(){
         <div class="panel" style="margin:10px 0;padding:12px">
           <h3>${esc(position)}</h3>
           ${cards || '<div class="empty">Nenhum indicado cadastrado.</div>'}
+          ${alreadyVoted ? '<small style="color:#d4af37">Você já votou nesta categoria. Resultado:</small>' : ''}
         </div>
       `;
     }).join('');
+
+    // Carrega percentuais apenas para categorias já votadas neste navegador.
+    for(let i=0;i<positions.length;i++){
+      const voteKey = `bid_votou_${competitionId}_selection_${i}`;
+
+      if(localStorage.getItem(voteKey) === '1'){
+        await showResults(i);
+      }
+    }
+
+    // Ação dos botões de votação.
+    out.querySelectorAll('[data-vote-index]').forEach(button => {
+      button.addEventListener('click',async () => {
+        const index = Number(button.dataset.voteIndex);
+        const candidateId = button.dataset.voteCandidate;
+        const categoria = `selection_${index}`;
+        const voteKey = `bid_votou_${competitionId}_${categoria}`;
+
+        if(localStorage.getItem(voteKey) === '1'){
+          alert('Você já votou nesta categoria.');
+          return;
+        }
+
+        if(!confirm('Confirma seu voto? Depois de registrado, não será possível trocar.')){
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = 'REGISTRANDO...';
+
+        try{
+          const {error} = await supabaseClient.rpc(
+            'registrar_voto_eleicao',
+            {
+              p_competicao_id: competitionId,
+              p_categoria: categoria,
+              p_eleitor_token: eleitorToken,
+              p_indicado_id: candidateId
+            }
+          );
+
+          if(error) throw error;
+
+          localStorage.setItem(voteKey,'1');
+
+          out.querySelectorAll(`[data-vote-index="${index}"]`).forEach(btn => {
+            btn.disabled = true;
+            btn.textContent = 'VOTO REGISTRADO';
+            btn.style.background = '#555';
+            btn.style.cursor = 'not-allowed';
+          });
+
+          await showResults(index);
+
+          alert('Seu voto foi registrado com sucesso!');
+
+        }catch(error){
+          console.error('Erro ao registrar voto:',error);
+          button.disabled = false;
+          button.textContent = 'VOTAR';
+          alert(error.message || 'Não foi possível registrar seu voto.');
+        }
+      });
+    });
 
   }catch(error){
     console.error('Erro ao exibir seleção:',error);
