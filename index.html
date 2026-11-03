@@ -3760,7 +3760,7 @@ async function renderHighlightsSelection(){
         if(found){
           return {
   id: found.id,
-  name: found.name || found.nome || 'Cadastro',
+  name: found.sportsName || found.nome_esportivo || found.sports_name || found.name || found.nome || 'Cadastro',
   photo: found.photo || found.foto_url || '',
   team: team.name || team.nome || '',
   logo: team.logo || team.escudo_url || ''
