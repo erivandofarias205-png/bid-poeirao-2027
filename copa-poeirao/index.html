@@ -43,7 +43,8 @@ header{
  gap:15px;flex-wrap:wrap;
 }
 .brand{display:flex;align-items:center;gap:13px}
-.brand img{width:65px;height:65px;object-fit:contain}\n.brand .tvfp-logo{width:58px;height:58px;padding-left:10px;border-left:1px solid #596273}
+.brand img{width:62px;height:62px;object-fit:contain;flex:0 0 62px}
+.top > .tvfp-logo{width:58px;height:58px;max-width:58px;max-height:58px;object-fit:contain;flex:0 0 58px;padding-left:10px;border-left:1px solid #596273}
 .brand strong{font-size:21px;color:var(--gold)}
 .brand small{display:block;color:#c1c9d8;margin-top:5px}
 nav{display:flex;gap:8px;flex-wrap:wrap}
@@ -91,7 +92,7 @@ nav a:hover{background:#26344c;color:var(--gold)}
 .card h3{font-size:16px}
 .card p{font-size:12px;color:var(--muted)}
 .trophy-panel{display:grid;grid-template-columns:minmax(180px,320px) 1fr;gap:28px;align-items:center}
-.trophy-panel img{width:100%;max-height:340px;object-fit:contain;border-radius:12px}
+.trophy-panel img{display:block;width:100%;max-width:300px;height:300px;max-height:300px;object-fit:contain;border-radius:12px;margin:0 auto}
 .trophy-panel h3{color:var(--gold);font-size:24px;margin:8px 0}
 @media(max-width:650px){.trophy-panel{grid-template-columns:1fr;text-align:center}.trophy-panel img{max-height:280px}}
 .table-wrap{overflow-x:auto;border:1px solid #303846;border-radius:10px}
@@ -113,6 +114,7 @@ footer{
  font-size:12px;line-height:2;
 }
 footer strong{color:var(--gold)}
+footer img{width:64px!important;height:64px!important;max-width:64px;object-fit:contain}
 @media(max-width:750px){
  .stats{grid-template-columns:repeat(2,1fr)}
  .grid{grid-template-columns:repeat(2,1fr)}
@@ -124,7 +126,7 @@ footer strong{color:var(--gold)}
 @media(max-width:420px){
  .grid{grid-template-columns:1fr}
  .brand strong{font-size:16px}
- .brand .tvfp-logo{width:48px;height:48px}
+ .top > .tvfp-logo{width:46px;height:46px;max-width:46px;max-height:46px;flex-basis:46px}
 }
 </style>
 </head>
