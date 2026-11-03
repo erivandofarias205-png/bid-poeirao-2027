@@ -3153,6 +3153,216 @@ if(!comp)return !(db.competitions||[]).length;
    document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   }
   document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+ 
+async function renderHighlightsAdminResults(){
+  const out = $('highlightsResults');
+  const competitionId = $('highlightsCompetitionSelect')?.value;
+
+  if(!out) return;
+
+  if(window.__BID_ADMIN_VERIFIED !== true){
+    out.innerHTML = '';
+    return;
+  }
+
+  if(!competitionId){
+    out.innerHTML = '<div class="empty">Selecione uma competição.</div>';
+    return;
+  }
+
+  const categories = [
+    {key:'goals',title:'GOLS MAIS BONITOS'},
+    {key:'saves',title:'DEFESA MAIS BONITA'},
+    {key:'revelations',title:'REVELAÇÕES'},
+    {key:'star',title:'CRAQUE DA COMPETIÇÃO'}
+  ];
+
+  const positions = [
+    'Goleiro',
+    'Lateral-direito',
+    'Primeiro zagueiro',
+    'Segundo zagueiro',
+    'Lateral-esquerdo',
+    'Primeiro volante',
+    'Segundo volante',
+    'Meia-esquerdo',
+    'Meia-direito',
+    'Atacante',
+    'Atacante',
+    'Treinador'
+  ];
+
+  function findAthlete(id){
+    for(const team of (db.teams || [])){
+      const person = (team.players || []).find(p=>
+        String(p.id) === String(id)
+      );
+
+      if(person){
+        return {
+          name: person.sportsName ||
+                person.nome_esportivo ||
+                person.sports_name ||
+                person.name ||
+                person.nome ||
+                'Atleta',
+          team: team.name || team.nome || ''
+        };
+      }
+    }
+
+    return {name:'Cadastro não encontrado',team:''};
+  }
+
+  async function getResults(category){
+    const {data,error} = await supabaseClient.rpc(
+      'consultar_resultado_eleicao',
+      {
+        p_competicao_id:competitionId,
+        p_categoria:category
+      }
+    );
+
+    if(error) throw error;
+
+    return data || [];
+  }
+
+  try{
+    out.innerHTML = '<div class="empty">Carregando apuração...</div>';
+
+    const {data,error} = await supabaseClient
+      .from('eleicao_indicados')
+      .select('dados')
+      .eq('competicao_id',competitionId)
+      .maybeSingle();
+
+    if(error) throw error;
+
+    const dados = data?.dados || {};
+    let html = '';
+
+    for(const category of categories){
+      const candidates = dados[category.key] || [];
+      const results = await getResults(category.key);
+
+      const resultMap = new Map(
+        results.map(item=>[
+          String(item.indicado_id),
+          item
+        ])
+      );
+
+      const rows = candidates
+        .filter(item=>item.athleteId)
+        .map(item=>{
+          const id = String(item.athleteId);
+          const person = findAthlete(id);
+          const result = resultMap.get(id);
+
+          return {
+            name:person.name,
+            team:person.team,
+            votes:Number(result?.total_votos || 0),
+            percentage:Number(result?.percentual || 0)
+          };
+        })
+        .sort((a,b)=>b.votes-a.votes);
+
+      html += `
+        <div class="panel" style="margin:12px 0;padding:12px">
+          <h3>${category.title}</h3>
+          ${
+            rows.length
+              ? rows.map(item=>`
+                <div style="display:flex;justify-content:space-between;
+                  align-items:center;gap:10px;padding:10px;
+                  border-bottom:1px solid #33496d">
+                  <div>
+                    <b>${esc(item.name)}</b>
+                    <br><small>${esc(item.team)}</small>
+                  </div>
+                  <div style="text-align:right;white-space:nowrap">
+                    <b style="color:#e4bd43">
+                      ${item.percentage.toFixed(1)}%
+                    </b>
+                    <br><small>${item.votes} voto(s)</small>
+                  </div>
+                </div>
+              `).join('')
+              : '<div class="empty">Nenhum indicado cadastrado.</div>'
+          }
+        </div>
+      `;
+    }
+
+    const selection = dados.selection || [];
+
+    for(let i=0;i<positions.length;i++){
+      const candidates = selection[i]?.candidates || [];
+      const results = await getResults(`selection_${i}`);
+
+      const resultMap = new Map(
+        results.map(item=>[
+          String(item.indicado_id),
+          item
+        ])
+      );
+
+      const rows = candidates
+        .filter(id=>id !== null && id !== undefined && id !== '')
+        .map(id=>{
+          const person = findAthlete(id);
+          const result = resultMap.get(String(id));
+
+          return {
+            name:person.name,
+            team:person.team,
+            votes:Number(result?.total_votos || 0),
+            percentage:Number(result?.percentual || 0)
+          };
+        })
+        .sort((a,b)=>b.votes-a.votes);
+
+      html += `
+        <div class="panel" style="margin:12px 0;padding:12px">
+          <h3>SELEÇÃO — ${esc(positions[i])}</h3>
+          ${
+            rows.length
+              ? rows.map(item=>`
+                <div style="display:flex;justify-content:space-between;
+                  align-items:center;gap:10px;padding:10px;
+                  border-bottom:1px solid #33496d">
+                  <div>
+                    <b>${esc(item.name)}</b>
+                    <br><small>${esc(item.team)}</small>
+                  </div>
+                  <div style="text-align:right;white-space:nowrap">
+                    <b style="color:#e4bd43">
+                      ${item.percentage.toFixed(1)}%
+                    </b>
+                    <br><small>${item.votes} voto(s)</small>
+                  </div>
+                </div>
+              `).join('')
+              : '<div class="empty">Nenhum indicado cadastrado.</div>'
+          }
+        </div>
+      `;
+    }
+
+    if(window.__BID_ADMIN_VERIFIED === true){
+      out.innerHTML = html;
+    }
+
+  }catch(error){
+    console.error('Erro na apuração geral:',error);
+    out.innerHTML =
+      '<div class="empty">Erro ao carregar resultados: '+
+      esc(error.message)+'</div>';
+  }
+}
+
   function loadHighlightsCompetitions(){
     const select=$('highlightsCompetitionSelect');
     if(!select)return;
@@ -3196,6 +3406,7 @@ if(!comp)return !(db.competitions||[]).length;
       renderHighlightsTopScorer();
          renderHighlightsSelection();
       renderHighlightsCategories();
+      renderHighlightsAdminResults();
       const selectedCompetition=
     (db.competitions||[]).find(c=>
       String(c.id||c.dbId)===String(highlightsSelect.value)
@@ -8079,6 +8290,10 @@ if(resultsPanel) resultsPanel.style.display = 'block';
     logoutBtn.classList.remove('hidden');
     message.textContent = 'Acesso administrativo confirmado.';
     await loadSupabaseTeams();
+
+   if($('highlightsCompetitionSelect')?.value){
+  await renderHighlightsAdminResults();
+}
        return true;
   }
 
