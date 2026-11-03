@@ -2130,6 +2130,27 @@ margin: 0;
     ← VOLTAR AO BID
   </button>
 </div>
+  <div class="panel next-match-panel" id="areaModalidadeSorteio" hidden>
+
+  <div class="ph">
+    <h3 id="tituloModalidadeSorteio">GERADOR DE SORTEIOS</h3>
+    <span class="pill">TVFP SPORTS</span>
+  </div>
+
+  <div id="conteudoModalidadeSorteio" style="padding:15px;"></div>
+
+  <div style="text-align:center;margin:18px 0;">
+    <button class="tab" type="button"
+      onclick="
+        document.getElementById('areaModalidadeSorteio').hidden = true;
+        document.getElementById('centralSorteios').hidden = false;
+      "
+      style="background:#c99b32;color:#111;font-weight:900;">
+      ← VOLTAR À CENTRAL DE SORTEIOS
+    </button>
+  </div>
+
+</div>
 </div>
 <script>
 
@@ -2141,7 +2162,8 @@ function abrirModalidadeSorteio(tipo) {
   const conteudo = document.getElementById('conteudoModalidadeSorteio');
 
   area.hidden = false;
-
+document.getElementById('centralSorteios').hidden = true;
+  
   if (tipo !== 'equipes') {
     titulo.textContent = 'MODALIDADE EM PREPARAÇÃO';
     conteudo.innerHTML = '<p style="color:white">Esta ferramenta será desenvolvida na próxima etapa.</p>';
