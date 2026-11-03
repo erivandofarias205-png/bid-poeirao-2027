@@ -1,1 +1,462 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Copa Poeirão | Futebol Amador</title>
+<meta name="description" content="Portal oficial da Copa Poeirão. Acompanhe competições, equipes, jogos, resultados, classificação e artilharia do futebol amador.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://bidgeralfutebolamador.vercel.app/copa-poeirao/">
+
+<meta property="og:title" content="Copa Poeirão | Futebol Amador">
+<meta property="og:description" content="Acompanhe a história, os campeonatos e os resultados da Copa Poeirão.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+ --gold:#e5bb42;
+ --gold2:#f8dc80;
+ --black:#080a0e;
+ --panel:#111722;
+ --blue:#101d35;
+ --muted:#aab2c2;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;background:var(--black);color:#fff;
+ font-family:Montserrat,Arial,sans-serif;
+}
+a{color:inherit;text-decoration:none}
+header{
+ background:linear-gradient(120deg,#090c13,#14213b);
+ border-bottom:2px solid var(--gold);
+ position:sticky;top:0;z-index:10;
+}
+.top{
+ max-width:1200px;margin:auto;padding:14px 20px;
+ display:flex;align-items:center;justify-content:space-between;
+ gap:15px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:13px}
+.brand img{width:65px;height:65px;object-fit:contain}
+.brand strong{font-size:21px;color:var(--gold)}
+.brand small{display:block;color:#c1c9d8;margin-top:5px}
+nav{display:flex;gap:8px;flex-wrap:wrap}
+nav a{
+ padding:10px 12px;border-radius:8px;
+ font-size:11px;font-weight:800;
+}
+nav a:hover{background:#26344c;color:var(--gold)}
+.hero{
+ min-height:440px;padding:65px 20px;
+ display:flex;align-items:center;justify-content:center;text-align:center;
+ background:linear-gradient(90deg,rgba(3,5,10,.94),rgba(8,15,30,.72)),
+ url("https://images.unsplash.com/photo-1508098682722-e99c643e7f0b?auto=format&fit=crop&w=1800&q=85") center/cover;
+ border-bottom:3px solid var(--gold);
+}
+.hero-content{max-width:850px}
+.eyebrow{color:var(--gold);font-weight:900;letter-spacing:4px;font-size:12px}
+.hero h1{font-size:clamp(38px,7vw,76px);margin:18px 0 12px;font-weight:900}
+.hero h1 span{color:var(--gold)}
+.hero p{color:#d0d6e1;line-height:1.8}
+.btn{
+ display:inline-block;padding:15px 22px;border-radius:9px;
+ background:linear-gradient(120deg,var(--gold2),#bd9024);
+ color:#101010;font-weight:900;font-size:12px;margin:10px 5px;
+}
+.btn.outline{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.container{max-width:1200px;margin:auto;padding:35px 20px}
+.section-title{margin-bottom:22px}
+.section-title small{color:var(--gold);font-weight:800;letter-spacing:2px}
+.section-title h2{font-size:27px;margin:9px 0}
+.section-title p{color:var(--muted);line-height:1.7}
+.stats{
+ display:grid;grid-template-columns:repeat(4,1fr);gap:13px;
+}
+.stat,.panel,.card{
+ background:linear-gradient(145deg,#151b26,#0e121a);
+ border:1px solid #343b48;border-top:3px solid var(--gold);
+ border-radius:13px;padding:20px;
+}
+.stat span{color:var(--muted);font-size:11px;font-weight:700}
+.stat strong{display:block;color:var(--gold);font-size:30px;margin-top:12px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{text-align:center}
+.card img{width:75px;height:75px;object-fit:contain;margin-bottom:12px}
+.card h3{font-size:16px}
+.card p{font-size:12px;color:var(--muted)}
+.table-wrap{overflow-x:auto;border:1px solid #303846;border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{padding:14px;text-align:left;border-bottom:1px solid #29313e;font-size:12px}
+th{background:#17233a;color:var(--gold)}
+td{color:#e1e5ec}
+tr:last-child td{border:0}
+.position{color:var(--gold);font-weight:900}
+.empty{padding:25px;text-align:center;color:var(--muted);font-size:13px}
+select{
+ background:#182338;color:white;border:1px solid var(--gold);
+ border-radius:8px;padding:12px;width:100%;max-width:420px;
+}
+.notice{color:var(--muted);font-size:11px;line-height:1.7}
+footer{
+ background:#0d1421;border-top:2px solid var(--gold);
+ padding:35px 20px;text-align:center;color:var(--muted);
+ font-size:12px;line-height:2;
+}
+footer strong{color:var(--gold)}
+@media(max-width:750px){
+ .stats{grid-template-columns:repeat(2,1fr)}
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .top{justify-content:center}
+ nav{justify-content:center}
+ .hero{min-height:390px}
+ .container{padding:28px 14px}
+}
+@media(max-width:420px){
+ .grid{grid-template-columns:1fr}
+ .brand strong{font-size:16px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="top">
+  <div class="brand">
+   <img src="../icons/icon-192.png" alt="Símbolo da Copa Poeirão">
+   <div>
+    <strong>COPA POEIRÃO</strong>
+    <small>FUTEBOL AMADOR</small>
+   </div>
+  </div>
+  <nav>
+   <a href="#inicio">INÍCIO</a>
+   <a href="#competicoes">COMPETIÇÕES</a>
+   <a href="#equipes">EQUIPES</a>
+   <a href="#jogos">JOGOS</a>
+   <a href="#artilharia">ARTILHARIA</a>
+   <a href="https://bidgeralfutebolamador.vercel.app/">BID</a>
+  </nav>
+ </div>
+</header>
+
+<section class="hero" id="inicio">
+ <div class="hero-content">
+  <div class="eyebrow">TRADIÇÃO • PAIXÃO • FUTEBOL</div>
+  <h1>COPA <span>POEIRÃO</span></h1>
+  <p>
+   A paixão pelo futebol amador, a força das equipes
+   e a história de uma competição que movimenta nossa região.
+  </p>
+  <a class="btn" href="#competicoes">ACOMPANHAR COMPETIÇÕES</a>
+  <a class="btn outline" href="https://bidgeralfutebolamador.vercel.app/">ACESSAR O BID</a>
+ </div>
+</section>
+
+<main>
+<section class="container">
+ <div class="stats">
+  <div class="stat"><span>COMPETIÇÕES</span><strong id="totalComp">—</strong></div>
+  <div class="stat"><span>EQUIPES</span><strong id="totalTeams">—</strong></div>
+  <div class="stat"><span>PARTIDAS</span><strong id="totalMatches">—</strong></div>
+  <div class="stat"><span>ATLETAS</span><strong id="totalPlayers">—</strong></div>
+ </div>
+</section>
+
+<section class="container" id="competicoes">
+ <div class="section-title">
+  <small>CAMPEONATOS</small>
+  <h2>Competições da Copa Poeirão</h2>
+  <p>Selecione uma competição para consultar suas informações.</p>
+ </div>
+ <select id="competitionSelect">
+  <option value="">Carregando competições...</option>
+ </select>
+ <div id="competitionInfo" class="panel" style="margin-top:18px">
+  Carregando informações...
+ </div>
+</section>
+
+<section class="container" id="equipes">
+ <div class="section-title">
+  <small>PARTICIPANTES</small>
+  <h2>Equipes da competição</h2>
+  <p>Conheça as equipes participantes.</p>
+ </div>
+ <div id="teamsList" class="grid">
+  <div class="empty">Carregando equipes...</div>
+ </div>
+</section>
+
+<section class="container" id="jogos">
+ <div class="section-title">
+  <small>CALENDÁRIO</small>
+  <h2>Jogos e resultados</h2>
+  <p>Acompanhe as partidas cadastradas no BID.</p>
+ </div>
+ <div class="table-wrap">
+  <table>
+   <thead><tr>
+    <th>DATA</th><th>RODADA</th><th>PARTIDA</th><th>RESULTADO</th><th>STATUS</th>
+   </tr></thead>
+   <tbody id="matchesList">
+    <tr><td colspan="5">Carregando partidas...</td></tr>
+   </tbody>
+  </table>
+ </div>
+</section>
+
+<section class="container" id="classificacao">
+ <div class="section-title">
+  <small>DISPUTA</small>
+  <h2>Classificação</h2>
+  <p>Classificação calculada a partir das partidas finalizadas.</p>
+ </div>
+ <div class="table-wrap">
+  <table>
+   <thead><tr>
+    <th>POS.</th><th>EQUIPE</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>PTS</th>
+   </tr></thead>
+   <tbody id="standingList">
+    <tr><td colspan="8">Aguardando resultados...</td></tr>
+   </tbody>
+  </table>
+ </div>
+</section>
+
+<section class="container" id="artilharia">
+ <div class="section-title">
+  <small>DESTAQUES</small>
+  <h2>Artilharia</h2>
+  <p>Atletas e gols registrados no cadastro público do BID.</p>
+ </div>
+ <div class="table-wrap">
+  <table>
+   <thead><tr><th>POS.</th><th>ATLETA</th><th>EQUIPE</th><th>GOLS</th></tr></thead>
+   <tbody id="scorerList">
+    <tr><td colspan="4">Carregando artilharia...</td></tr>
+   </tbody>
+  </table>
+ </div>
+</section>
+
+<section class="container">
+ <div class="panel" style="text-align:center;padding:35px">
+  <div class="eyebrow">INFORMAÇÃO OFICIAL</div>
+  <h2>Consulte o BID Futebol Amador</h2>
+  <p class="notice">Cadastros, fichas, competições, jogos e informações dos atletas.</p>
+  <a class="btn" href="https://bidgeralfutebolamador.vercel.app/">ENTRAR NO BID GERAL</a>
+ </div>
+</section>
+</main>
+
+<footer>
+ <strong>COPA POEIRÃO</strong><br>
+ Portal oficial da competição<br>
+ <strong>TVFP ESPORTES</strong> • Futebol amador<br>
+ <a href="https://bidgeralfutebolamador.vercel.app/">BID GERAL FUTEBOL AMADOR</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://lsenoxeiqzceodvzmbnl.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_lDnODTcqGCPz9WH-KZbWHA_RIBG-iMN";
+
+const supabaseClient = window.supabase.createClient(
+ SUPABASE_URL, SUPABASE_ANON_KEY
+);
+
+const $ = id => document.getElementById(id);
+const safe = v => String(v ?? '').replace(/[&<>"']/g,c=>({
+ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+const number = v => Number(v || 0);
+const dateBR = v => {
+ if(!v)return '—';
+ const d = new Date(v);
+ return isNaN(d) ? safe(v) : d.toLocaleDateString('pt-BR');
+};
+
+let competitions=[];
+let teams=[];
+let matches=[];
+let athletes=[];
+let associations=[];
+let selectedComp='';
+
+async function loadPortal(){
+ try{
+  const [c,t,m,a] = await Promise.all([
+   supabaseClient.from('COMPETICOES').select('id,nome'),
+   supabaseClient.from('EQUIPES').select('id,nome,escudo_url'),
+   supabaseClient.from('jogos').select(
+    'id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,data_hora,local_jogo,gols_mandante,gols_visitante,status'
+   ),
+   supabaseClient.from('ATLETAS').select('id,nome,gols,equipe_id')
+  ]);
+
+  if(c.error)throw new Error('Competições: '+c.error.message);
+  if(t.error)throw new Error('Equipes: '+t.error.message);
+  if(m.error)throw new Error('Jogos: '+m.error.message);
+  if(a.error)throw new Error('Atletas: '+a.error.message);
+
+  competitions=c.data||[];
+  teams=t.data||[];
+  matches=m.data||[];
+  athletes=a.data||[];
+
+  $('totalComp').textContent=competitions.length;
+  $('totalTeams').textContent=teams.length;
+  $('totalMatches').textContent=matches.length;
+  $('totalPlayers').textContent=athletes.length;
+
+  const select=$('competitionSelect');
+  select.innerHTML='<option value="">Selecione uma competição</option>'+
+   competitions.map(c=>`<option value="${safe(c.id)}">${safe(c.nome)}</option>`).join('');
+
+  if(competitions.length){
+   const preferred=competitions.find(c=>String(c.nome||'').toLowerCase().includes('poeirão'))||competitions[0];
+   selectedComp=String(preferred.id);
+   select.value=selectedComp;
+   await renderCompetition();
+  }else{
+   showEmpty('Nenhuma competição pública encontrada.');
+  }
+
+  select.onchange=async()=>{
+   selectedComp=select.value;
+   await renderCompetition();
+  };
+
+ }catch(error){
+  console.error('Erro ao carregar Portal Copa Poeirão:',error);
+  $('competitionInfo').textContent='Não foi possível carregar os dados. Confira as permissões de leitura pública no Supabase.';
+  $('teamsList').innerHTML='<div class="empty">Dados indisponíveis.</div>';
+  $('matchesList').innerHTML='<tr><td colspan="5">Dados indisponíveis.</td></tr>';
+ }
+}
+
+function showEmpty(message){
+ $('competitionInfo').textContent=message;
+ $('teamsList').innerHTML='<div class="empty">Nenhuma equipe encontrada.</div>';
+ $('matchesList').innerHTML='<tr><td colspan="5">Nenhuma partida encontrada.</td></tr>';
+ $('standingList').innerHTML='<tr><td colspan="8">Sem classificação disponível.</td></tr>';
+ $('scorerList').innerHTML='<tr><td colspan="4">Sem artilheiros disponíveis.</td></tr>';
+}
+
+async function renderCompetition(){
+ if(!selectedComp){showEmpty('Selecione uma competição.');return}
+
+ const {data:links,error}=await supabaseClient
+  .from('competicao_equipes')
+  .select('competicao_id,equipe_id,grupo,status')
+  .eq('competicao_id',selectedComp);
+
+ if(error){
+  console.error('Erro ao carregar vínculos:',error);
+  $('competitionInfo').textContent='Não foi possível consultar as equipes desta competição.';
+  return;
+ }
+
+ associations=links||[];
+ const ids=associations.map(x=>String(x.equipe_id));
+ const comp=competitions.find(c=>String(c.id)===selectedComp);
+
+ const compTeams=teams.filter(t=>ids.includes(String(t.id)));
+ const compMatches=matches.filter(m=>String(m.competicao_id)===selectedComp);
+ const compAthletes=athletes.filter(a=>ids.includes(String(a.equipe_id)));
+
+ $('competitionInfo').innerHTML=`
+  <div class="eyebrow">COMPETIÇÃO SELECIONADA</div>
+  <h2 style="color:var(--gold)">${safe(comp?.nome||'Copa Poeirão')}</h2>
+  <p style="color:var(--muted)">Equipes: ${compTeams.length} · Partidas: ${compMatches.length}</p>
+ `;
+
+ $('teamsList').innerHTML=compTeams.length?compTeams.map(t=>`
+  <div class="card">
+   ${t.escudo_url?`<img src="${safe(t.escudo_url)}" alt="Escudo ${safe(t.nome)}">`:'<div style="font-size:35px">⚽</div>'}
+   <h3>${safe(t.nome)}</h3>
+   <p>Equipe participante</p>
+  </div>
+ `).join(''):'<div class="empty">Nenhuma equipe vinculada a esta competição.</div>';
+
+ const teamName=id=>compTeams.find(t=>String(t.id)===String(id))?.nome||'Equipe';
+
+ const sorted=[...compMatches].sort((x,y)=>
+  String(x.data_hora||'').localeCompare(String(y.data_hora||''))
+ );
+
+ $('matchesList').innerHTML=sorted.length?sorted.map(m=>`
+  <tr>
+   <td>${dateBR(m.data_hora)}</td>
+   <td>${safe(m.rodada||'—')}</td>
+   <td><b>${safe(teamName(m.equipe_mandante_id))} × ${safe(teamName(m.equipe_visitante_id))}</b></td>
+   <td><b>${m.gols_mandante??'—'} : ${m.gols_visitante??'—'}</b></td>
+   <td>${safe(m.status||'Agendado')}</td>
+  </tr>
+ `).join(''):'<tr><td colspan="5">Nenhuma partida cadastrada.</td></tr>';
+
+ renderStandings(compTeams,compMatches);
+ renderScorers(compTeams,compAthletes);
+}
+
+function renderStandings(compTeams,compMatches){
+ const stats={};
+ compTeams.forEach(t=>stats[t.id]={
+  team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0
+ });
+
+ compMatches.filter(m=>
+  String(m.status||'').toLowerCase().includes('finaliz') &&
+  m.gols_mandante!==null && m.gols_visitante!==null
+ ).forEach(m=>{
+  const h=stats[m.equipe_mandante_id];
+  const a=stats[m.equipe_visitante_id];
+  if(!h||!a)return;
+  const hs=number(m.gols_mandante),as=number(m.gols_visitante);
+  h.j++;a.j++;h.gp+=hs;h.gc+=as;
+  a.gp+=as;a.gc+=hs;
+  if(hs>as){h.v++;h.pts+=3;a.d++}
+  else if(hs<as){a.v++;a.pts+=3;h.d++}
+  else{h.e++;a.e++;h.pts++;a.pts++}
+ });
+
+ const rows=Object.values(stats).sort((a,b)=>
+  b.pts-a.pts || (b.gp-b.gc)-(a.gp-a.gc)
+ );
+
+ $('standingList').innerHTML=rows.length?rows.map((s,i)=>`
+  <tr>
+   <td class="position">${i+1}º</td>
+   <td><b>${safe(s.team.nome)}</b></td>
+   <td>${s.j}</td><td>${s.v}</td><td>${s.e}</td><td>${s.d}</td>
+   <td>${s.gp-s.gc}</td><td><b>${s.pts}</b></td>
+  </tr>
+ `).join(''):'<tr><td colspan="8">Sem classificação.</td></tr>';
+}
+
+function renderScorers(compTeams,compAthletes){
+ const teamName=id=>compTeams.find(t=>String(t.id)===String(id))?.nome||'—';
+ const rows=[...compAthletes].sort((a,b)=>number(b.gols)-number(a.gols));
+ $('scorerList').innerHTML=rows.length?rows.map((a,i)=>`
+  <tr>
+   <td class="position">${i+1}º</td>
+   <td><b>${safe(a.nome)}</b></td>
+   <td>${safe(teamName(a.equipe_id))}</td>
+   <td><b>${number(a.gols)}</b></td>
+  </tr>
+ `).join(''):'<tr><td colspan="4">Nenhum atleta com cadastro público encontrado.</td></tr>';
+}
+
+loadPortal();
+</script>
+</body>
+</html>
+
