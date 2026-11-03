@@ -2214,8 +2214,8 @@ overflow: visible !important;
 <div class="pad" id="highlightsSelection"></div>
 </div>
 
-<!-- RESULTADOS -->
-<div class="panel">
+<!-- RESULTADOS - SOMENTE ADMINISTRADOR -->
+<div class="panel hidden" id="highlightsResultsPanel">
   <div class="ph">
     <h3>📊 RESULTADOS DA ELEIÇÃO</h3>
   </div>
@@ -4025,7 +4025,7 @@ async function renderHighlightsCategories(){
                     style="width:auto;max-width:130px;height:130px;object-fit:contain;border-radius:8px">
                 ` : ''}
 
-                <h3>${esc(person.name || person.nome || 'Atleta')}</h3>
+              <h3>${esc(person.sportsName || person.nome_esportivo || person.sports_name || person.name || person.nome || 'Atleta')}</h3>
 
                 <div style="display:flex;align-items:center;justify-content:center;gap:7px">
                   ${logo ? `<img src="${esc(logo)}" alt=""
@@ -8069,6 +8069,10 @@ remoteTeams.push({
       return false;
     }
    window.__BID_ADMIN_VERIFIED = true;
+  
+    const resultsPanel = $('highlightsResultsPanel');
+if(resultsPanel) resultsPanel.classList.remove('hidden');
+    
     panel.classList.remove('hidden');
     protectedArea.classList.remove('hidden');
     loginBtn.classList.add('hidden');
@@ -8107,6 +8111,9 @@ remoteTeams.push({
     await supabaseClient.auth.signOut();
     passwordInput.value = '';
     showSignedOut('Você saiu da área administrativa.');
+
+    const resultsPanel = $('highlightsResultsPanel');
+    if(resultsPanel) resultsPanel.classList.add('hidden');
   });
 
 
