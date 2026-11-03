@@ -3944,7 +3944,8 @@ async function renderHighlightsSelection(){
   }
 }
 
-  async function renderHighlightsCategories(){
+ 
+async function renderHighlightsCategories(){
   const competitionId = $('highlightsCompetitionSelect')?.value;
   if(!competitionId) return;
 
@@ -3966,6 +3967,14 @@ async function renderHighlightsSelection(){
 
     const dados = data?.dados || {};
 
+    const tokenKey = 'bid_eleicao_eleitor_token';
+    let eleitorToken = localStorage.getItem(tokenKey);
+
+    if(!eleitorToken){
+      eleitorToken = crypto.randomUUID();
+      localStorage.setItem(tokenKey,eleitorToken);
+    }
+
     categories.forEach(category=>{
       const out = $(category.id);
       if(!out) return;
@@ -3976,6 +3985,9 @@ async function renderHighlightsSelection(){
         out.innerHTML = '<div class="empty">Nenhum indicado cadastrado nesta categoria.</div>';
         return;
       }
+
+      const voteKey = `bid_votou_${competitionId}_${category.key}`;
+      const voted = localStorage.getItem(voteKey) === '1';
 
       out.innerHTML = `
         <h3>${category.title}</h3>
@@ -3999,13 +4011,7 @@ async function renderHighlightsSelection(){
               return false;
             });
 
-            if(!person){
-              return `
-                <div class="panel" style="padding:12px">
-                  <div class="empty">Indicado não encontrado no cadastro: ${esc(athleteId)}</div>
-                </div>
-              `;
-            }
+            if(!person) return '';
 
             const photo = person.photo || person.foto_url || '';
             const logo = team.logo || team.escudo_url || '';
@@ -4018,12 +4024,15 @@ async function renderHighlightsSelection(){
                   <img src="${esc(photo)}" alt=""
                     style="width:auto;max-width:130px;height:130px;object-fit:contain;border-radius:8px">
                 ` : ''}
+
                 <h3>${esc(person.name || person.nome || 'Atleta')}</h3>
+
                 <div style="display:flex;align-items:center;justify-content:center;gap:7px">
                   ${logo ? `<img src="${esc(logo)}" alt=""
                     style="width:28px;height:28px;object-fit:contain">` : ''}
                   <small>${esc(team.name || team.nome || '')}</small>
                 </div>
+
                 ${safeVideo ? `
                   <a href="${esc(safeVideo)}" target="_blank"
                     rel="noopener noreferrer"
@@ -4032,11 +4041,112 @@ async function renderHighlightsSelection(){
                     ▶ ASSISTIR VÍDEO
                   </a>
                 ` : ''}
+
+                <div class="vote-result"
+                  id="vote_result_${category.key}_${esc(athleteId)}"></div>
+
+                <button
+                  type="button"
+                  class="gold"
+                  data-highlight-category="${category.key}"
+                  data-highlight-candidate="${esc(athleteId)}"
+                  ${voted ? 'disabled' : ''}
+                  style="display:block;width:100%;margin-top:12px;
+                    ${voted ? 'background:#555;cursor:not-allowed' : ''}">
+                  ${voted ? 'VOTO REGISTRADO' : 'VOTAR'}
+                </button>
               </div>
             `;
           }).join('')}
         </div>
       `;
+
+      async function showResults(){
+        const {data,error} = await supabaseClient.rpc(
+          'consultar_resultado_eleicao',
+          {
+            p_competicao_id:competitionId,
+            p_categoria:category.key
+          }
+        );
+
+        if(error) throw error;
+
+        (data || []).forEach(item=>{
+          const el = document.getElementById(
+            `vote_result_${category.key}_${item.indicado_id}`
+          );
+
+          if(el){
+            el.innerHTML = `
+              <div style="margin-top:10px;font-weight:bold;color:#e4bd43">
+                ${Number(item.percentual || 0).toFixed(1)}%
+              </div>
+              <small>${item.total_votos} voto(s)</small>
+            `;
+          }
+        });
+
+        out.querySelectorAll(
+          `[data-highlight-category="${category.key}"]`
+        ).forEach(btn=>{
+          btn.disabled = true;
+          btn.textContent = 'VOTO REGISTRADO';
+          btn.style.background = '#555';
+        });
+      }
+
+      if(voted){
+        showResults().catch(error=>{
+          console.error('Erro ao consultar votação:',error);
+        });
+      }
+
+      out.querySelectorAll(
+        `[data-highlight-category="${category.key}"]`
+      ).forEach(button=>{
+        button.addEventListener('click',async()=>{
+          const candidateId = button.dataset.highlightCandidate;
+
+          if(localStorage.getItem(voteKey) === '1'){
+            alert('Você já votou nesta categoria.');
+            return;
+          }
+
+          if(!confirm('Confirma seu voto? Depois de registrado, não será possível trocar.')){
+            return;
+          }
+
+          button.disabled = true;
+          button.textContent = 'REGISTRANDO...';
+
+          try{
+            const {error} = await supabaseClient.rpc(
+              'registrar_voto_eleicao',
+              {
+                p_competicao_id:competitionId,
+                p_categoria:category.key,
+                p_eleitor_token:eleitorToken,
+                p_indicado_id:candidateId
+              }
+            );
+
+            if(error) throw error;
+
+            localStorage.setItem(voteKey,'1');
+
+            await showResults();
+
+            alert('Seu voto foi registrado com sucesso!');
+
+          }catch(error){
+            console.error('Erro ao registrar voto:',error);
+            button.disabled = false;
+            button.textContent = 'VOTAR';
+            alert(error.message || 'Não foi possível registrar seu voto.');
+          }
+        });
+      });
     });
 
   }catch(error){
@@ -4049,6 +4159,7 @@ async function renderHighlightsSelection(){
     });
   }
 }
+
  (async function setupDedicatedViews(){
    const classification=$('classificationView');
   const teams=$('teamsView');
