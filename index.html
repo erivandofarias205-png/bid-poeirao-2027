@@ -3374,7 +3374,6 @@ async function renderHighlightsAdminResults(){
   }
 }
 
-  function loadHighlightsCompetitions(){
     
 async function renderAdminDashboard(){
   const out = $('adminDashboardContent');
@@ -3514,8 +3513,7 @@ async function renderAdminDashboard(){
           </div>
         `).join('')}
       </div>
-        </div>
-      <small style="display:block;margin-top:12px;opacity:.7">
+           <small style="display:block;margin-top:12px;opacity:.7">
         Dados registrados no Supabase. Período mensal: mês fechado anterior.
       </small>
     `;
@@ -3528,6 +3526,7 @@ async function renderAdminDashboard(){
   }
 }
 
+  function loadHighlightsCompetitions(){
     const select=$('highlightsCompetitionSelect');
     if(!select)return;
   
