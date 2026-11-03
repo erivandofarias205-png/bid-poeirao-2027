@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Copa Poeirão | Futebol Amador</title>
-<meta name="description" content="Portal oficial da Copa Poeirão. Acompanhe competições, equipes, jogos, resultados, classificação e artilharia do futebol amador.">
+<title>Copa Poeirão | Futebol Amador de Santana do Acaraú</title>
+<meta name="description" content="Portal oficial da Copa Poeirão, em Santana do Acaraú-CE. Acompanhe competições, equipes, jogos, resultados, classificação e artilharia do futebol amador.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://bidgeralfutebolamador.vercel.app/copa-poeirao/">
 
@@ -44,7 +43,7 @@ header{
  gap:15px;flex-wrap:wrap;
 }
 .brand{display:flex;align-items:center;gap:13px}
-.brand img{width:65px;height:65px;object-fit:contain}
+.brand img{width:65px;height:65px;object-fit:contain}\n.brand .tvfp-logo{width:58px;height:58px;padding-left:10px;border-left:1px solid #596273}
 .brand strong{font-size:21px;color:var(--gold)}
 .brand small{display:block;color:#c1c9d8;margin-top:5px}
 nav{display:flex;gap:8px;flex-wrap:wrap}
@@ -91,6 +90,10 @@ nav a:hover{background:#26344c;color:var(--gold)}
 .card img{width:75px;height:75px;object-fit:contain;margin-bottom:12px}
 .card h3{font-size:16px}
 .card p{font-size:12px;color:var(--muted)}
+.trophy-panel{display:grid;grid-template-columns:minmax(180px,320px) 1fr;gap:28px;align-items:center}
+.trophy-panel img{width:100%;max-height:340px;object-fit:contain;border-radius:12px}
+.trophy-panel h3{color:var(--gold);font-size:24px;margin:8px 0}
+@media(max-width:650px){.trophy-panel{grid-template-columns:1fr;text-align:center}.trophy-panel img{max-height:280px}}
 .table-wrap{overflow-x:auto;border:1px solid #303846;border-radius:10px}
 table{width:100%;border-collapse:collapse;min-width:650px}
 th,td{padding:14px;text-align:left;border-bottom:1px solid #29313e;font-size:12px}
@@ -121,6 +124,7 @@ footer strong{color:var(--gold)}
 @media(max-width:420px){
  .grid{grid-template-columns:1fr}
  .brand strong{font-size:16px}
+ .brand .tvfp-logo{width:48px;height:48px}
 }
 </style>
 </head>
@@ -129,55 +133,57 @@ footer strong{color:var(--gold)}
 
 <header>
  <div class="top">
-  <div class="brand">
-<img src="logo-copa-poeirao.png" alt="Escudo oficial da Copa Poeirão">
-   <div>
-    <strong>COPA POEIRÃO</strong>
-    <small>FUTEBOL AMADOR</small>
-   </div>
-  </div>
-  <nav>
-   <a href="#inicio">INÍCIO</a>
-   <a href="#competicoes">COMPETIÇÕES</a>
-   <a href="#equipes">EQUIPES</a>
-   <a href="#jogos">JOGOS</a>
-   <a href="#artilharia">ARTILHARIA</a>
-   <a href="https://bidgeralfutebolamador.vercel.app/">BID</a>
-  </nav>
+ <div class="brand">
+ <img src="logo-copa-poeirao.png" alt="Escudo oficial da Copa Poeirão">
+ <div>
+ <strong>COPA POEIRÃO</strong>
+ <small>FUTEBOL AMADOR</small>
+ </div>
+ </div>
+ <img class="tvfp-logo" src="logo-tvfp.png" alt="Logo TVFP Esportes">
+ <nav>
+ <a href="#inicio">INÍCIO</a>
+ <a href="#competicoes">COMPETIÇÕES</a>
+ <a href="#equipes">EQUIPES</a>
+ <a href="#jogos">JOGOS</a>
+ <a href="#artilharia">ARTILHARIA</a>
+ <a href="#trofeu">TROFÉU</a>
+ <a href="https://bidgeralfutebolamador.vercel.app/">BID</a>
+ </nav>
  </div>
 </header>
 
 <section class="hero" id="inicio">
  <div class="hero-content">
-  <div class="eyebrow">TRADIÇÃO • PAIXÃO • FUTEBOL</div>
-  <h1>COPA <span>POEIRÃO</span></h1>
-  <p>
+ <div class="eyebrow">TRADIÇÃO • PAIXÃO • FUTEBOL</div>
+ <h1>COPA <span>POEIRÃO</span></h1>
+ <p>
    A paixão pelo futebol amador, a força das equipes
    e a história de uma competição que movimenta nossa região.
-  </p>
-  <a class="btn" href="#competicoes">ACOMPANHAR COMPETIÇÕES</a>
-  <a class="btn outline" href="https://bidgeralfutebolamador.vercel.app/">ACESSAR O BID</a>
+ </p>
+ <a class="btn" href="#competicoes">ACOMPANHAR COMPETIÇÕES</a>
+ <a class="btn outline" href="https://bidgeralfutebolamador.vercel.app/">ACESSAR O BID</a>
  </div>
 </section>
 
 <main>
 <section class="container">
  <div class="stats">
-  <div class="stat"><span>COMPETIÇÕES</span><strong id="totalComp">—</strong></div>
-  <div class="stat"><span>EQUIPES</span><strong id="totalTeams">—</strong></div>
-  <div class="stat"><span>PARTIDAS</span><strong id="totalMatches">—</strong></div>
-  <div class="stat"><span>ATLETAS</span><strong id="totalPlayers">—</strong></div>
+ <div class="stat"><span>COMPETIÇÕES</span><strong id="totalComp">—</strong></div>
+ <div class="stat"><span>EQUIPES</span><strong id="totalTeams">—</strong></div>
+ <div class="stat"><span>PARTIDAS</span><strong id="totalMatches">—</strong></div>
+ <div class="stat"><span>ATLETAS</span><strong id="totalPlayers">—</strong></div>
  </div>
 </section>
 
 <section class="container" id="competicoes">
  <div class="section-title">
-  <small>CAMPEONATOS</small>
-  <h2>Competições da Copa Poeirão</h2>
-  <p>Selecione uma competição para consultar suas informações.</p>
+ <small>CAMPEONATOS</small>
+ <h2>Competições da Copa Poeirão</h2>
+ <p>Selecione uma competição para consultar suas informações.</p>
  </div>
  <select id="competitionSelect">
-  <option value="">Carregando competições...</option>
+ <option value="">Carregando competições...</option>
  </select>
  <div id="competitionInfo" class="panel" style="margin-top:18px">
   Carregando informações...
@@ -186,78 +192,96 @@ footer strong{color:var(--gold)}
 
 <section class="container" id="equipes">
  <div class="section-title">
-  <small>PARTICIPANTES</small>
-  <h2>Equipes da competição</h2>
-  <p>Conheça as equipes participantes.</p>
+ <small>PARTICIPANTES</small>
+ <h2>Equipes da competição</h2>
+ <p>Conheça as equipes participantes.</p>
  </div>
  <div id="teamsList" class="grid">
-  <div class="empty">Carregando equipes...</div>
+ <div class="empty">Carregando equipes...</div>
  </div>
 </section>
 
 <section class="container" id="jogos">
  <div class="section-title">
-  <small>CALENDÁRIO</small>
-  <h2>Jogos e resultados</h2>
-  <p>Acompanhe as partidas cadastradas no BID.</p>
+ <small>CALENDÁRIO</small>
+ <h2>Jogos e resultados</h2>
+ <p>Acompanhe as partidas cadastradas no BID.</p>
  </div>
  <div class="table-wrap">
-  <table>
-   <thead><tr>
-    <th>DATA</th><th>RODADA</th><th>PARTIDA</th><th>RESULTADO</th><th>STATUS</th>
-   </tr></thead>
-   <tbody id="matchesList">
-    <tr><td colspan="5">Carregando partidas...</td></tr>
-   </tbody>
-  </table>
+ <table>
+ <thead><tr>
+ <th>DATA</th><th>RODADA</th><th>PARTIDA</th><th>RESULTADO</th><th>STATUS</th>
+ </tr></thead>
+ <tbody id="matchesList">
+ <tr><td colspan="5">Carregando partidas...</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
 <section class="container" id="classificacao">
  <div class="section-title">
-  <small>DISPUTA</small>
-  <h2>Classificação</h2>
-  <p>Classificação calculada a partir das partidas finalizadas.</p>
+ <small>DISPUTA</small>
+ <h2>Classificação</h2>
+ <p>Classificação calculada a partir das partidas finalizadas.</p>
  </div>
  <div class="table-wrap">
-  <table>
-   <thead><tr>
-    <th>POS.</th><th>EQUIPE</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>PTS</th>
-   </tr></thead>
-   <tbody id="standingList">
-    <tr><td colspan="8">Aguardando resultados...</td></tr>
-   </tbody>
-  </table>
+ <table>
+ <thead><tr>
+ <th>POS.</th><th>EQUIPE</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th><th>PTS</th>
+ </tr></thead>
+ <tbody id="standingList">
+ <tr><td colspan="8">Aguardando resultados...</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
 <section class="container" id="artilharia">
  <div class="section-title">
-  <small>DESTAQUES</small>
-  <h2>Artilharia</h2>
-  <p>Atletas e gols registrados no cadastro público do BID.</p>
+ <small>DESTAQUES</small>
+ <h2>Artilharia</h2>
+ <p>Atletas e gols registrados no cadastro público do BID.</p>
  </div>
  <div class="table-wrap">
-  <table>
-   <thead><tr><th>POS.</th><th>ATLETA</th><th>EQUIPE</th><th>GOLS</th></tr></thead>
-   <tbody id="scorerList">
-    <tr><td colspan="4">Carregando artilharia...</td></tr>
-   </tbody>
-  </table>
+ <table>
+ <thead><tr><th>POS.</th><th>ATLETA</th><th>EQUIPE</th><th>GOLS</th></tr></thead>
+ <tbody id="scorerList">
+ <tr><td colspan="4">Carregando artilharia...</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<section class="container" id="trofeu">
+ <div class="section-title">
+  <small>PREMIAÇÃO E HISTÓRIA</small>
+  <h2>Troféu João Braz</h2>
+  <p>Uma homenagem à tradição e à história da Copa Poeirão.</p>
+ </div>
+ <div class="panel trophy-panel">
+  <img src="trofeu-joao-braz.png" alt="Troféu João Braz da Copa Poeirão">
+  <div>
+   <div class="eyebrow">SÍMBOLO DA COMPETIÇÃO</div>
+   <h3>Troféu João Braz</h3>
+   <p class="notice">A taça representa a paixão pelo futebol amador, a união das equipes e a história construída em cada edição da Copa Poeirão.</p>
+   <p class="notice">Acompanhe neste portal as competições, partidas, classificação e artilharia.</p>
+  </div>
  </div>
 </section>
 
 <section class="container">
  <div class="panel" style="text-align:center;padding:35px">
-  <div class="eyebrow">INFORMAÇÃO OFICIAL</div>
-  <h2>Consulte o BID Futebol Amador</h2>
-  <p class="notice">Cadastros, fichas, competições, jogos e informações dos atletas.</p>
-  <a class="btn" href="https://bidgeralfutebolamador.vercel.app/">ENTRAR NO BID GERAL</a>
+ <div class="eyebrow">INFORMAÇÃO OFICIAL</div>
+ <h2>Consulte o BID Futebol Amador</h2>
+ <p class="notice">Cadastros, fichas, competições, jogos e informações dos atletas.</p>
+ <a class="btn" href="https://bidgeralfutebolamador.vercel.app/">ENTRAR NO BID GERAL</a>
  </div>
 </section>
 </main>
 
 <footer>
+ <img src="logo-tvfp.png" alt="TVFP Esportes" style="width:78px;height:78px;object-fit:contain;display:block;margin:0 auto 12px">
  <strong>COPA POEIRÃO</strong><br>
  Portal oficial da competição<br>
  <strong>TVFP ESPORTES</strong> • Futebol amador<br>
@@ -459,4 +483,3 @@ loadPortal();
 </script>
 </body>
 </html>
-
