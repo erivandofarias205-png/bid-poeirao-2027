@@ -2333,7 +2333,18 @@ overflow: visible !important;
 </div>
 <div class="hidden" id="adminProtected">
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
-
+<!-- PAINEL GERAL ADMINISTRATIVO -->
+<div class="panel" id="adminDashboard">
+  <div class="ph">
+    <h3>📊 PAINEL GERAL DO BID</h3>
+    <button type="button" class="gold" id="refreshAdminDashboard">
+      🔄 ATUALIZAR
+    </button>
+  </div>
+  <div class="pad" id="adminDashboardContent">
+    <div class="empty">Aguardando carregamento dos indicadores...</div>
+  </div>
+</div>
 <!-- GERENCIAMENTO DA ELEIÇÃO -->
 <div class="panel" id="adminHighlightsPanel">
   <div class="ph">
@@ -3364,6 +3375,158 @@ async function renderHighlightsAdminResults(){
 }
 
   function loadHighlightsCompetitions(){
+    
+async function renderAdminDashboard(){
+  const out = $('adminDashboardContent');
+
+  if(!out) return;
+
+  if(window.__BID_ADMIN_VERIFIED !== true){
+    out.innerHTML = '';
+    return;
+  }
+
+  const button = $('refreshAdminDashboard');
+
+  if(button && !button.dataset.bound){
+    button.dataset.bound = '1';
+    button.addEventListener('click',renderAdminDashboard);
+  }
+
+  out.innerHTML = '<div class="empty">Atualizando indicadores...</div>';
+
+  const events = [
+    {key:'visita_site',label:'Visitas ao site',icon:'🌐'},
+    {key:'abertura_app',label:'Aberturas do aplicativo',icon:'📱'},
+    {key:'instalacao_app',label:'Instalações do aplicativo',icon:'⬇️'},
+    {key:'clique_instalar',label:'Cliques em instalar',icon:'👆'},
+    {key:'whatsapp_1',label:'Cliques no WhatsApp 1',icon:'💬'},
+    {key:'whatsapp_2',label:'Cliques no WhatsApp 2',icon:'💬'}
+  ];
+
+  try{
+    const now = new Date();
+    const currentMonthStart = new Date(
+      now.getFullYear(),now.getMonth(),1
+    );
+    const previousMonthStart = new Date(
+      now.getFullYear(),now.getMonth()-1,1
+    );
+
+    const monthLabel = previousMonthStart.toLocaleDateString(
+      'pt-BR',
+      {month:'long',year:'numeric'}
+    );
+
+    async function countEvents(eventKey,period){
+      let query = supabaseClient
+        .from('bid_metricas_eventos')
+        .select('id',{count:'exact',head:true})
+        .eq('evento',eventKey);
+
+      if(period === 'lastMonth'){
+        query = query
+          .gte('criado_em',previousMonthStart.toISOString())
+          .lt('criado_em',currentMonthStart.toISOString());
+      }
+
+      const {count,error} = await query;
+
+      if(error) throw error;
+
+      return count || 0;
+    }
+
+    const results = await Promise.all(
+      events.map(async event=>({
+        ...event,
+        total:await countEvents(event.key,'all'),
+        month:await countEvents(event.key,'lastMonth')
+      }))
+    );
+    async function countRows(table){
+      const {count,error} = await supabaseClient
+        .from(table)
+        .select('*',{count:'exact',head:true});
+
+      if(error) throw error;
+      return count || 0;
+    }
+
+    const registrations = await Promise.all([
+      countRows('ATLETAS'),
+      countRows('EQUIPES'),
+      countRows('COMPETICOES'),
+      countRows('jogos')
+    ]);
+
+    const registrationLabels = [
+      'Atletas cadastrados',
+      'Equipes cadastradas',
+      'Competições cadastradas',
+      'Jogos cadastrados'
+    ];
+    if(window.__BID_ADMIN_VERIFIED !== true) return;
+
+    out.innerHTML = `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:12px">INDICADOR</th>
+              <th style="text-align:center;padding:12px">GERAL</th>
+              <th style="text-align:center;padding:12px;text-transform:capitalize">
+                ${esc(monthLabel)}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            ${results.map(item=>`
+              <tr style="border-top:1px solid #33496d">
+                <td style="padding:13px 8px">
+                  ${item.icon} <b>${item.label}</b>
+                </td>
+                <td style="text-align:center;color:#e4bd43;font-weight:bold">
+                  ${item.total.toLocaleString('pt-BR')}
+                </td>
+                <td style="text-align:center;font-weight:bold">
+                  ${item.month.toLocaleString('pt-BR')}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+            <h3 style="margin-top:22px;color:#e4bd43">
+        📋 CADASTROS DO BID
+      </h3>
+
+      <div style="
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:12px;
+      ">
+        ${registrations.map((total,i)=>`
+          <div class="panel" style="padding:15px;text-align:center">
+            <div style="font-size:25px;color:#e4bd43;font-weight:bold">
+              ${total.toLocaleString('pt-BR')}
+            </div>
+            <b>${registrationLabels[i]}</b>
+          </div>
+        `).join('')}
+      </div>
+      <small style="display:block;margin-top:12px;opacity:.7">
+        Dados registrados no Supabase. Período mensal: mês fechado anterior.
+      </small>
+    `;
+
+  }catch(error){
+    console.error('Erro no painel administrativo:',error);
+    out.innerHTML =
+      '<div class="empty">Erro ao carregar indicadores: '+
+      esc(error.message)+'</div>';
+  }
+}
+
     const select=$('highlightsCompetitionSelect');
     if(!select)return;
   
@@ -8291,6 +8454,8 @@ if(resultsPanel) resultsPanel.style.display = 'block';
     message.textContent = 'Acesso administrativo confirmado.';
     await loadSupabaseTeams();
 
+    await renderAdminDashboard();
+    
    if($('highlightsCompetitionSelect')?.value){
   await renderHighlightsAdminResults();
 }
