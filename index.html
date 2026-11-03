@@ -2132,6 +2132,9 @@ margin: 0;
 </div>
 </div>
 <script>
+
+let sorteioTVFP = null;
+
 function abrirModalidadeSorteio(tipo) {
   const area = document.getElementById('areaModalidadeSorteio');
   const titulo = document.getElementById('tituloModalidadeSorteio');
@@ -2139,101 +2142,400 @@ function abrirModalidadeSorteio(tipo) {
 
   area.hidden = false;
 
-  if (tipo === 'equipes') {
-    titulo.textContent = 'CRIADOR DE EQUIPES E GRUPOS';
+  if (tipo !== 'equipes') {
+    titulo.textContent = 'MODALIDADE EM PREPARAÇÃO';
+    conteudo.innerHTML = '<p style="color:white">Esta ferramenta será desenvolvida na próxima etapa.</p>';
+    return;
+  }
 
-    conteudo.innerHTML = `
-      <label style="color:white;">Nomes dos participantes (um por linha)</label>
+  titulo.textContent = 'GERADOR PROFISSIONAL DE SORTEIOS';
 
-      <textarea id="nomesEquipes"
-        placeholder="Digite um nome por linha..."
-        style="width:100%;min-height:180px;padding:12px;
-        margin:10px 0;border-radius:8px;"></textarea>
+  conteudo.innerHTML = `
+    <div class="sorteio-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
 
-      <label style="color:white;">Quantidade de grupos</label>
+      <div>
+        <label>Nome da competição</label>
+        <input id="stCompeticao" type="text" placeholder="Nome do torneio">
+      </div>
 
-      <input id="quantidadeGrupos" type="number"
-        min="2" value="4"
-        style="width:100%;padding:12px;margin:10px 0;
-        border-radius:8px;">
+      <div>
+        <label>Data da competição</label>
+        <input id="stData" type="date">
+      </div>
 
-      <button type="button" onclick="sortearEquipes()"
-        style="width:100%;padding:15px;background:#c99b32;
-        color:#111;font-weight:900;border:0;border-radius:8px;">
-        REALIZAR SORTEIO
+      <div>
+        <label>Local / campo / arena</label>
+        <input id="stLocal" type="text" placeholder="Nome do local">
+      </div>
+
+      <div>
+        <label>Modalidade</label>
+        <select id="stModalidade">
+          <option value="Futebol de campo">Futebol de campo</option>
+          <option value="Torneio de pênaltis">Torneio de pênaltis</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Formato da competição</label>
+        <select id="stFormato" onchange="atualizarCamposSorteio()">
+          <option value="grupos">Fase de grupos</option>
+          <option value="mata">Mata-mata</option>
+          <option value="completa">Competição completa</option>
+          <option value="primeira">Somente primeira fase</option>
+        </select>
+      </div>
+
+      <div id="stCampoGrupos">
+        <label>Quantidade de grupos</label>
+        <input id="stGrupos" type="number" min="1" value="4">
+      </div>
+
+      <div id="stCampoPorGrupo">
+        <label>Participantes por grupo</label>
+        <input id="stPorGrupo" type="number" min="2" value="4">
+      </div>
+
+      <div>
+        <label>Modo de sorteio</label>
+        <select id="stModo">
+          <option value="todos">Sortear tudo de uma vez</option>
+          <option value="um">Sortear um por vez</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <label style="color:#e5bd45;font-weight:900;">LISTA DE EQUIPES OU PARTICIPANTES</label>
+      <p style="color:white;font-size:13px;">Digite um nome por linha. Todos os dados são livres e independentes do cadastro do BID.</p>
+
+      <textarea id="stParticipantes" placeholder="EQUIPE 01&#10;EQUIPE 02&#10;EQUIPE 03&#10;EQUIPE 04"
+        style="width:100%;min-height:200px;padding:12px;border-radius:9px;"></textarea>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:15px;">
+      <button type="button" onclick="iniciarSorteioTVFP()"
+        style="background:#c99b32;color:#111;font-weight:900;padding:14px;border:0;border-radius:8px;flex:1;">
+        INICIAR SORTEIO
       </button>
 
-      <div id="resultadoEquipes"
-        style="margin-top:20px;color:white;"></div>
-    `;
-  }
+      <button type="button" onclick="iniciarSorteioCompletoTVFP()"
+        style="background:#c99b32;color:#111;font-weight:900;padding:14px;border:0;border-radius:8px;flex:1;">
+        SORTear TUDO
+      </button>
+    </div>
+
+    <div id="resultadoEquipes" style="margin-top:22px;color:white;"></div>
+  `;
+
+  atualizarCamposSorteio();
 }
 
-function sortearEquipes() {
-  const texto = document.getElementById('nomesEquipes').value;
+function atualizarCamposSorteio() {
+  const formato = document.getElementById('stFormato')?.value;
+  const grupos = document.getElementById('stCampoGrupos');
+  const porGrupo = document.getElementById('stCampoPorGrupo');
 
-  const participantes = texto.split('\n')
-    .map(nome => nome.trim())
-    .filter(nome => nome !== '');
+  if (grupos) grupos.hidden = formato === 'mata' || formato === 'primeira';
+  if (porGrupo) porGrupo.hidden = formato === 'mata' || formato === 'primeira';
+}
 
-  const quantidade = Number(
-    document.getElementById('quantidadeGrupos').value
-  );
+function iniciarSorteioTVFP() {
+  const nomes = document.getElementById('stParticipantes').value
+    .split('\n').map(n => n.trim()).filter(Boolean);
 
-  const resultado = document.getElementById('resultadoEquipes');
-
-  if (participantes.length < 2) {
-    alert('Digite pelo menos dois participantes.');
+  if (nomes.length < 2) {
+    alert('Informe pelo menos dois participantes.');
     return;
   }
 
-  if (!Number.isInteger(quantidade) ||
-      quantidade < 2 ||
-      quantidade > participantes.length) {
-    alert('Informe uma quantidade válida de grupos.');
-    return;
+  const modalidade = document.getElementById('stModalidade').value;
+  const formato = document.getElementById('stFormato').value;
+  const quantidadeGrupos = Number(document.getElementById('stGrupos').value);
+  const porGrupo = Number(document.getElementById('stPorGrupo').value);
+
+  if (['grupos','completa'].includes(formato)) {
+    if (!Number.isInteger(quantidadeGrupos) || quantidadeGrupos < 1 ||
+        !Number.isInteger(porGrupo) || porGrupo < 2) {
+      alert('Confira a quantidade de grupos e participantes por grupo.');
+      return;
+    }
+
+    if (quantidadeGrupos * porGrupo < nomes.length) {
+      alert('A capacidade dos grupos é menor que a quantidade de participantes.');
+      return;
+    }
   }
+
+  const participantes = [...nomes];
 
   for (let i = participantes.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [participantes[i], participantes[j]] =
-      [participantes[j], participantes[i]];
+    [participantes[i], participantes[j]] = [participantes[j], participantes[i]];
   }
 
-  const grupos = Array.from(
-    { length: quantidade },
-    () => []
-  );
+  sorteioTVFP = {
+    competicao: document.getElementById('stCompeticao').value.trim(),
+    data: document.getElementById('stData').value,
+    local: document.getElementById('stLocal').value.trim(),
+    modalidade,
+    formato,
+    grupos: quantidadeGrupos,
+    porGrupo,
+    participantes,
+    proximo: 0,
+    resultado: [],
+    rodada: []
+  };
 
-  participantes.forEach((nome, indice) => {
-    grupos[indice % quantidade].push(nome);
-  });
+  if (formato === 'grupos' || formato === 'completa') {
+    sorteioTVFP.resultado = Array.from({length: quantidadeGrupos}, () => []);
+  }
+
+  const modo = document.getElementById('stModo').value;
+
+  if (modo === 'todos') {
+    sortearEquipes();
+  } else {
+    mostrarProximoSorteio();
+  }
+}
+
+function mostrarProximoSorteio() {
+  if (!sorteioTVFP) return;
+
+  const s = sorteioTVFP;
+  const resultado = document.getElementById('resultadoEquipes');
+
+  if (s.proximo >= s.participantes.length) {
+    renderizarResultadoTVFP();
+    return;
+  }
+
+  const nome = s.participantes[s.proximo];
+
+  if (s.resultado.length) {
+    const grupo = s.resultado
+      .map((g,i) => ({i, tamanho:g.length}))
+      .filter(g => g.tamanho < s.porGrupo)
+      .sort((a,b) => a.tamanho-b.tamanho);
+
+    if (!grupo.length) {
+      alert('Não há mais vagas nos grupos.');
+      return;
+    }
+
+    const menor = grupo[0].tamanho;
+    const empatados = grupo.filter(g => g.tamanho === menor);
+    const escolhido = empatados[Math.floor(Math.random()*empatados.length)];
+
+    s.resultado[escolhido.i].push(nome);
+  } else {
+    s.rodada.push(nome);
+  }
+
+  s.proximo++;
 
   resultado.innerHTML = `
-    <h3 style="color:#e5bd45;text-align:center;">
-      RESULTADO DO SORTEIO
-    </h3>
-    <div style="display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:12px;">
-      ${grupos.map((grupo, indice) => `
-        <div style="background:#172744;padding:12px;
-          border:1px solid #c99b32;border-radius:10px;">
-          <h3 style="color:#e5bd45;">GRUPO ${indice + 1}</h3>
-          ${grupo.map(nome => `
-            <p style="color:white;margin:8px 0;">
-              ${nome.replace(/&/g,'&amp;')
-                    .replace(/</g,'&lt;')
-                    .replace(/>/g,'&gt;')}
-            </p>
-          `).join('')}
-        </div>
-      `).join('')}
+    <div style="background:#172744;border:1px solid #c99b32;border-radius:12px;padding:18px;text-align:center;">
+      <h3 style="color:#e5bd45;">PARTICIPANTE SORTEADO</h3>
+      <h2>${escaparSorteio(nome)}</h2>
+      <p>${s.proximo} de ${s.participantes.length}</p>
+      <button type="button" onclick="mostrarProximoSorteio()"
+        style="background:#c99b32;padding:13px 22px;border:0;border-radius:8px;font-weight:900;">
+        ${s.proximo === s.participantes.length ? 'VER RESULTADO' : 'PRÓXIMO SORTEIO'}
+      </button>
     </div>
   `;
 }
+function iniciarSorteioCompletoTVFP() {
+  document.getElementById('stModo').value = 'todos';
+  iniciarSorteioTVFP();
+}
+  
+function sortearEquipes() {
+  if (!sorteioTVFP) iniciarSorteioTVFP();
+  if (!sorteioTVFP) return;
+
+  const s = sorteioTVFP;
+
+  if (s.resultado.length) {
+    s.participantes.forEach(nome => {
+      const vagas = s.resultado
+        .map((g,i) => ({i,t:g.length}))
+        .filter(g => g.t < s.porGrupo)
+        .sort((a,b) => a.t-b.t);
+
+      if (!vagas.length) return;
+
+      const menor = vagas[0].t;
+      const empatados = vagas.filter(g => g.t === menor);
+      const escolhido = empatados[Math.floor(Math.random()*empatados.length)];
+
+      s.resultado[escolhido.i].push(nome);
+    });
+  } else {
+    s.rodada = [...s.participantes];
+  }
+
+  s.proximo = s.participantes.length;
+  renderizarResultadoTVFP();
+}
+
+function escaparSorteio(valor) {
+  return String(valor).replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  })[c]);
+}
+
+function renderizarResultadoTVFP() {
+  const s = sorteioTVFP;
+  const resultado = document.getElementById('resultadoEquipes');
+
+  let html = `
+    <div id="documentoSorteioTVFP" style="background:#10213d;border:1px solid #c99b32;border-radius:12px;padding:18px;">
+      <h2 style="color:#e5bd45;text-align:center;">${escaparSorteio(s.competicao || 'COMPETIÇÃO')}</h2>
+      <p style="text-align:center;">${escaparSorteio(s.modalidade)} | ${escaparSorteio(s.local)}</p>
+      <p style="text-align:center;">Data: ${escaparSorteio(s.data || 'Não informada')}</p>
+      <h3 style="color:#e5bd45;text-align:center;">RESULTADO DO SORTEIO</h3>
+  `;
+
+  if (s.resultado.length) {
+    s.resultado.forEach((grupo,i) => {
+      html += `<div style="border:1px solid #c99b32;border-radius:8px;padding:12px;margin:12px 0;">
+        <h3 style="color:#e5bd45;">GRUPO ${i+1}</h3>
+        ${grupo.map((nome,j) => `<p>${j+1}. ${escaparSorteio(nome)}</p>`).join('')}
+      </div>`;
+    });
+  } else {
+    const confrontos = [];
+    for (let i=0;i<s.rodada.length;i+=2) {
+      confrontos.push([s.rodada[i],s.rodada[i+1] || 'AGUARDANDO ADVERSÁRIO']);
+    }
+
+    confrontos.forEach((jogo,i) => {
+      html += `<div style="border:1px solid #c99b32;border-radius:8px;padding:12px;margin:10px 0;">
+        <strong>JOGO ${i+1}</strong>
+        <p>${escaparSorteio(jogo[0])} × ${escaparSorteio(jogo[1])}</p>
+      </div>`;
+    });
+  }
+
+  html += `
+      <div style="margin-top:24px;text-align:center;border-top:1px solid #c99b32;padding-top:12px;">
+        <strong>BID FUTEBOL AMADOR - TVFP SPORTS</strong><br>
+        Erivando Farias | WhatsApp: (88) 99662-3259<br>
+        https://bidgeralfutebolamador.vercel.app/
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;">
+      <button type="button" onclick="copiarResultadoTVFP()" style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">COPIAR RESULTADO</button>
+      <button type="button" onclick="imprimirResultadoTVFP()" style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">GERAR PDF A4</button>
+    </div>
+  `;
+
+  resultado.innerHTML = html;
+}
+
+function copiarResultadoTVFP() {
+  const s = sorteioTVFP;
+  let texto = `${s.competicao}\n${s.modalidade}\n${s.local}\n${s.data}\n\n`;
+
+  if (s.resultado.length) {
+    s.resultado.forEach((g,i) => {
+      texto += `GRUPO ${i+1}\n`;
+      g.forEach((n,j) => texto += `${j+1}. ${n}\n`);
+      texto += '\n';
+    });
+  } else {
+    for (let i=0;i<s.rodada.length;i+=2) {
+      texto += `JOGO ${i/2+1}: ${s.rodada[i]} × ${s.rodada[i+1] || 'AGUARDANDO ADVERSÁRIO'}\n`;
+    }
+  }
+
+  texto += '\nBID FUTEBOL AMADOR - TVFP SPORTS\nErivando Farias | WhatsApp: (88) 99662-3259\nhttps://bidgeralfutebolamador.vercel.app/';
+
+  navigator.clipboard.writeText(texto)
+    .then(() => alert('Resultado copiado!'))
+    .catch(() => alert('Não foi possível copiar automaticamente.'));
+}
+
+function imprimirResultadoTVFP() {
+  const documento = document.getElementById('documentoSorteioTVFP');
+  if (!documento) return;
+
+  const janela = window.open('', '_blank');
+
+  if (!janela) {
+    alert('Permita a abertura de janelas para gerar o PDF.');
+    return;
+  }
+
+  janela.document.write(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Resultado do Sorteio - TVFP SPORTS</title>
+
+      <style>
+        @page {
+          size: A4;
+          margin: 15mm;
+        }
+
+        body {
+          font-family: Arial, sans-serif;
+          color: #111;
+          background: #fff;
+          margin: 0;
+        }
+
+        #documentoSorteioTVFP {
+          background: #fff !important;
+          color: #111 !important;
+          border: 2px solid #c99b32 !important;
+          border-radius: 0 !important;
+          padding: 20px !important;
+        }
+
+        #documentoSorteioTVFP p,
+        #documentoSorteioTVFP strong {
+          color: #111 !important;
+        }
+
+        #documentoSorteioTVFP h2,
+        #documentoSorteioTVFP h3 {
+          color: #8b6810 !important;
+        }
+
+        #documentoSorteioTVFP > div {
+          background: #fff !important;
+          border-color: #c99b32 !important;
+          break-inside: avoid;
+        }
+
+        #documentoSorteioTVFP > div:last-child {
+          border-top: 1px solid #c99b32 !important;
+          margin-top: 24px !important;
+          padding-top: 12px !important;
+          text-align: center;
+          font-size: 10px;
+        }
+      </style>
+    </head>
+
+    <body>
+      ${documento.innerHTML}
+    </body>
+    </html>
+  `);
+
+  janela.document.close();
+  janela.onload = () => janela.print();
+} 
   function abrirCentralSorteios() {
-  document.getElementById('publicView').hidden = true;
+    document.getElementById('publicView').hidden = true;
   document.getElementById('centralSorteios').hidden = false;
   document.getElementById('areaModalidadeSorteio').hidden = true;
 }
