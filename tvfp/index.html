@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080808">
+  <title>TVFP SPORTS | Futebol de Poeira</title>
+  <meta name="description" content="TVFP SPORTS — transmissões ao vivo, jogos completos, melhores momentos e cobertura do futebol amador.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://bidgeralfutebolamador.vercel.app/tvfp/">
+  <meta property="og:title" content="TVFP SPORTS | Futebol de Poeira">
+  <meta property="og:description" content="Acompanhe as transmissões e os vídeos do futebol amador na TVFP SPORTS.">
+  <meta property="og:type" content="website">
+  <style>
+    :root{--bg:#080808;--panel:#141414;--panel2:#1c1c1c;--silver:#d7d7d7;--muted:#a6a6a6;--gold:#c9a85b;--line:#303030}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#343434 0,#111 38%,var(--bg) 72%);color:#f5f5f5;font-family:Arial,Helvetica,sans-serif}
+    a{color:inherit;text-decoration:none}.wrap{width:min(1180px,92%);margin:auto}.top{border-bottom:1px solid #343434;background:#090909eF}.nav{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 0}.brand{display:flex;align-items:center;gap:13px}.brand img{width:58px;height:58px;object-fit:contain;border-radius:50%}.brand strong{display:block;letter-spacing:2px;font-size:19px}.brand small{color:var(--muted);letter-spacing:2px}.links{display:flex;gap:22px;flex-wrap:wrap;color:#ddd;font-size:14px}.links a:hover{color:var(--gold)}
+    .hero{padding:48px 0 38px;text-align:center}.hero img{width:min(260px,60vw);height:auto;filter:drop-shadow(0 12px 22px #000)}.eyebrow{color:var(--gold);font-weight:bold;letter-spacing:4px;font-size:12px;margin:20px 0 8px}.hero h1{font-size:clamp(30px,5vw,54px);margin:0;text-transform:uppercase;letter-spacing:2px}.hero p{color:#c7c7c7;max-width:650px;margin:12px auto 22px;line-height:1.6}.btn{display:inline-block;background:linear-gradient(135deg,#e5e5e5,#9c9c9c);color:#111;padding:12px 20px;border-radius:4px;font-weight:bold;letter-spacing:.5px}.btn.secondary{background:#202020;color:#eee;border:1px solid #555;margin-left:8px}
+    section{padding:28px 0 42px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}.section-head h2{font-size:25px;margin:0;text-transform:uppercase;letter-spacing:1px}.section-head p{color:var(--muted);margin:7px 0 0;font-size:14px}.goldline{height:3px;width:65px;background:var(--gold);margin-top:12px}.livebox{background:#111;border:1px solid #424242;border-radius:10px;padding:12px;box-shadow:0 18px 45px #0008}.ratio{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;overflow:hidden}.ratio iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.live-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px 2px;color:#ddd}.live-caption strong{letter-spacing:1px}.live-caption span{color:var(--muted);font-size:13px}
+    .videos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.video{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;transition:.2s}.video:hover{transform:translateY(-3px);border-color:#777}.thumb{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#222}.vinfo{padding:12px}.vinfo h3{font-size:15px;line-height:1.4;margin:0 0 8px}.vinfo small{color:var(--muted)}.play{color:var(--gold);font-size:12px;font-weight:bold;letter-spacing:1px;margin-top:10px;display:inline-block}.status{color:var(--muted);background:#141414;border:1px solid var(--line);border-radius:8px;padding:20px;line-height:1.6}.categories{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.cat{padding:22px 14px;text-align:center;background:linear-gradient(145deg,#202020,#111);border:1px solid #383838;border-radius:8px;font-weight:bold;letter-spacing:1px}.cat span{display:block;font-size:25px;margin-bottom:10px}.about{background:linear-gradient(120deg,#171717,#0b0b0b);border:1px solid #333;border-radius:10px;padding:25px;line-height:1.7;color:#ccc}.about strong{color:#fff}.footer{border-top:1px solid #333;padding:25px 0;color:#999;text-align:center;font-size:13px}.footer a{color:#ddd}
+    @media(max-width:800px){.videos{grid-template-columns:repeat(2,minmax(0,1fr))}.categories{grid-template-columns:repeat(2,1fr)}.links{gap:12px;font-size:12px}}
+    @media(max-width:520px){.nav{align-items:flex-start}.brand img{width:48px;height:48px}.brand strong{font-size:16px}.links{justify-content:flex-end;max-width:150px}.videos{grid-template-columns:1fr}.hero{padding-top:30px}.section-head{display:block}.live-caption{display:block}.live-caption span{display:block;margin-top:5px}.btn.secondary{margin:10px 0 0}}
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap nav">
+    <a class="brand" href="#inicio"><img src="logo-tvfp.png" alt="Logo oficial TVFP SPORTS"><span><strong>TVFP SPORTS</strong><small>FUTEBOL DE POEIRA</small></span></a>
+    <nav class="links"><a href="#ao-vivo">AO VIVO</a><a href="#videos">VÍDEOS</a><a href="#categorias">CONTEÚDO</a><a href="#sobre">SOBRE</a></nav>
+  </div></header>
+  <main>
+    <section class="hero wrap" id="inicio">
+      <img src="logo-tvfp.png" alt="Equipe Esportiva TVFP — Futebol de Poeira">
+      <div class="eyebrow">A CASA DO FUTEBOL AMADOR</div>
+      <h1>TVFP SPORTS</h1>
+      <p>Transmissões, jogos completos, gols, pênaltis e os grandes momentos do futebol de poeira. Acompanhe a nossa cobertura esportiva.</p>
+      <a class="btn" href="https://www.youtube.com/@tvfpsports_futpoeira" target="_blank" rel="noopener">INSCREVA-SE NO CANAL</a>
+      <a class="btn secondary" href="https://bidgeralfutebolamador.vercel.app/">ACESSAR O BID</a>
+    </section>
+    <section class="wrap" id="ao-vivo">
+      <div class="section-head"><div><h2>TVFP AO VIVO / REPLAYS</h2><div class="goldline"></div><p>Player do canal com acesso às transmissões e aos vídeos publicados.</p></div></div>
+      <div class="livebox"><div class="ratio"><iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=UUQNahqcqXTnqt74EekvRQow" title="Vídeos da TVFP SPORTS no YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div><div class="live-caption"><strong>CANAL TVFP SPORTS</strong><span>Selecione um vídeo na lista do player para assistir.</span></div></div>
+    </section>
+    <section class="wrap" id="videos">
+      <div class="section-head"><div><h2>ÚLTIMOS 10 VÍDEOS</h2><div class="goldline"></div><p>Atualização automática a partir das publicações do canal.</p></div><a class="btn" href="https://www.youtube.com/@tvfpsports_futpoeira/videos" target="_blank" rel="noopener">VER TODOS</a></div>
+      <div id="videoGrid" class="videos"><div class="status">Carregando os vídeos mais recentes da TVFP SPORTS…</div></div>
+    </section>
+    <section class="wrap" id="categorias">
+      <div class="section-head"><div><h2>NOSSA COBERTURA</h2><div class="goldline"></div></div></div>
+      <div class="categories"><div class="cat"><span>🏆</span>CAMPEONATOS</div><div class="cat"><span>⚽</span>JOGOS COMPLETOS</div><div class="cat"><span>🎯</span>PÊNALTIS E GOLS</div><div class="cat"><span>🎥</span>MELHORES MOMENTOS</div></div>
+    </section>
+    <section class="wrap" id="sobre"><div class="section-head"><div><h2>SOBRE A TVFP</h2><div class="goldline"></div></div></div><div class="about"><strong>TVFP SPORTS — Equipe Esportiva Futebol de Poeira.</strong><br>Valorizando o futebol amador, os atletas, as equipes e as competições da nossa região. Acompanhe as transmissões e fique por dentro de cada emoção dentro de campo.<br><br><a href="https://www.youtube.com/@tvfpsports_futpoeira" target="_blank" rel="noopener">Acesse o canal oficial no YouTube →</a></div></section>
+  </main>
+  <footer class="footer"><div class="wrap">© <span id="year"></span> TVFP SPORTS · FUTEBOL DE POEIRA · <a href="https://bidgeralfutebolamador.vercel.app/">BID GERAL FUTEBOL AMADOR</a></div></footer>
+  <script>
+    const CHANNEL_ID = 'UCQNahqcqXTnqt74EekvRQow';
+    const UPLOADS_PLAYLIST = 'UUQNahqcqXTnqt74EekvRQow';
+    const grid = document.getElementById('videoGrid');
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    async function loadVideos(){
+      const feed = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+      const endpoint = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`;
+      try {
+        const response = await fetch(endpoint);
+        if(!response.ok) throw new Error('Feed indisponível');
+        const data = await response.json();
+        if(data.status !== 'ok' || !Array.isArray(data.items) || !data.items.length) throw new Error('Sem vídeos no feed');
+        grid.innerHTML = data.items.slice(0,10).map(item => {
+          const id = item.guid?.split(':').pop() || item.link?.split('v=')[1]?.split('&')[0];
+          if(!id) return '';
+          const title = esc(item.title || 'Vídeo TVFP SPORTS');
+          const date = item.pubDate ? new Date(item.pubDate).toLocaleDateString('pt-BR') : '';
+          return `<article class="video"><a href="https://www.youtube.com/watch?v=${encodeURIComponent(id)}" target="_blank" rel="noopener"><img class="thumb" loading="lazy" src="https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg" alt="Miniatura: ${title}"></a><div class="vinfo"><h3>${title}</h3><small>${date}</small><br><a class="play" href="https://www.youtube.com/watch?v=${encodeURIComponent(id)}" target="_blank" rel="noopener">▶ ASSISTIR NO YOUTUBE</a></div></article>`;
+        }).join('');
+        if(!grid.innerHTML.trim()) throw new Error('Não foi possível montar a lista');
+      } catch(error) {
+        grid.innerHTML = `<div class="status" style="grid-column:1/-1">Não foi possível carregar os cartões dos últimos vídeos automaticamente neste momento. Você ainda pode assistir ao acervo completo pelo player acima ou <a style="color:#d8b96c;font-weight:bold" href="https://www.youtube.com/@tvfpsports_futpoeira/videos" target="_blank" rel="noopener">abrir todos os vídeos no YouTube</a>.</div>`;
+      }
+    }
+    loadVideos();
+  </script>
+</body>
+</html>
 
