@@ -2084,10 +2084,150 @@ overflow: visible !important;
 <div class="stats"><div class="stat"><small>Equipes cadastradas</small><strong id="nTeams">0</strong></div><div class="stat"><small>Atletas cadastrados</small><strong id="nPlayers">0</strong></div><div class="stat"><small>Partidas com eventos</small><strong id="nMatches">0</strong></div></div>
 <div class="tabs"><button class="tab" data-tab="classification">Classificação</button><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" data-tab="game">Pós-jogo / súmulas</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button><button class="tab" type="button" data-tab="photos">FOTOS</button><button class="tab" type="button" data-tab="highlights">DESTAQUES DA COMPETIÇÃO</button>
 <button class="tab" type="button"
-  onclick="window.location.href='/sorteios/'"
+  onclick="document.getElementById('centralSorteios').hidden =
+  !document.getElementById('centralSorteios').hidden"
   style="background:#c99b32;color:#111;font-weight:900;">
   ⚽ FAÇA SEU SORTEIO
 </button>
+
+<div id="centralSorteios" hidden
+  style="padding:20px;margin:12px 0;background:#080f20;
+  border:2px solid #c99b32;border-radius:14px;">
+
+  <h2 style="color:#e5bd45;text-align:center;">
+    CENTRAL DE SORTEIOS
+  </h2>
+
+  <p style="color:#fff;text-align:center;">
+    Escolha a modalidade do seu sorteio:
+  </p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+
+ <button class="tab" type="button"
+  onclick="abrirModalidadeSorteio('equipes')"
+  style="background:#c99b32;color:#111;font-weight:900;">
+  ⚽ CRIADOR DE EQUIPES E GRUPOS
+</button>
+
+<button class="tab" type="button"
+  onclick="abrirModalidadeSorteio('numeros')"
+  style="background:#c99b32;color:#111;font-weight:900;">
+  🔢 GERADOR DE NÚMEROS
+</button>
+
+<button class="tab" type="button"
+  onclick="abrirModalidadeSorteio('nomes')"
+  style="background:#c99b32;color:#111;font-weight:900;">
+  🎯 SORTEIO DE NOMES
+</button>
+
+ 
+  </div>
+</div>
+<script>
+function abrirModalidadeSorteio(tipo) {
+  const area = document.getElementById('areaModalidadeSorteio');
+  const titulo = document.getElementById('tituloModalidadeSorteio');
+  const conteudo = document.getElementById('conteudoModalidadeSorteio');
+
+  area.hidden = false;
+
+  if (tipo === 'equipes') {
+    titulo.textContent = 'CRIADOR DE EQUIPES E GRUPOS';
+
+    conteudo.innerHTML = `
+      <label style="color:white;">Nomes dos participantes (um por linha)</label>
+
+      <textarea id="nomesEquipes"
+        placeholder="Digite um nome por linha..."
+        style="width:100%;min-height:180px;padding:12px;
+        margin:10px 0;border-radius:8px;"></textarea>
+
+      <label style="color:white;">Quantidade de grupos</label>
+
+      <input id="quantidadeGrupos" type="number"
+        min="2" value="4"
+        style="width:100%;padding:12px;margin:10px 0;
+        border-radius:8px;">
+
+      <button type="button" onclick="sortearEquipes()"
+        style="width:100%;padding:15px;background:#c99b32;
+        color:#111;font-weight:900;border:0;border-radius:8px;">
+        REALIZAR SORTEIO
+      </button>
+
+      <div id="resultadoEquipes"
+        style="margin-top:20px;color:white;"></div>
+    `;
+  }
+}
+
+function sortearEquipes() {
+  const texto = document.getElementById('nomesEquipes').value;
+
+  const participantes = texto.split('\n')
+    .map(nome => nome.trim())
+    .filter(nome => nome !== '');
+
+  const quantidade = Number(
+    document.getElementById('quantidadeGrupos').value
+  );
+
+  const resultado = document.getElementById('resultadoEquipes');
+
+  if (participantes.length < 2) {
+    alert('Digite pelo menos dois participantes.');
+    return;
+  }
+
+  if (!Number.isInteger(quantidade) ||
+      quantidade < 2 ||
+      quantidade > participantes.length) {
+    alert('Informe uma quantidade válida de grupos.');
+    return;
+  }
+
+  for (let i = participantes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [participantes[i], participantes[j]] =
+      [participantes[j], participantes[i]];
+  }
+
+  const grupos = Array.from(
+    { length: quantidade },
+    () => []
+  );
+
+  participantes.forEach((nome, indice) => {
+    grupos[indice % quantidade].push(nome);
+  });
+
+  resultado.innerHTML = `
+    <h3 style="color:#e5bd45;text-align:center;">
+      RESULTADO DO SORTEIO
+    </h3>
+    <div style="display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:12px;">
+      ${grupos.map((grupo, indice) => `
+        <div style="background:#172744;padding:12px;
+          border:1px solid #c99b32;border-radius:10px;">
+          <h3 style="color:#e5bd45;">GRUPO ${indice + 1}</h3>
+          ${grupo.map(nome => `
+            <p style="color:white;margin:8px 0;">
+              ${nome.replace(/&/g,'&amp;')
+                    .replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;')}
+            </p>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+</script>
+</div>
   <section id="publicView">
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMAS PARTIDAS</h3><span class="pill">Próximos confrontos</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
 <div class="panel finished-match-panel"><div class="ph"><h3>PARTIDAS FINALIZADAS</h3><span class="pill">Resultados oficiais</span></div><div class="fixtures" id="finishedFixtures"><div class="empty">Nenhuma partida finalizada ainda.</div></div></div>
