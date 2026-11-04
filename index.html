@@ -2295,6 +2295,95 @@ function abrirModalidadeSorteio(tipo) {
   atualizarCamposSorteio();
 }
 
+  titulo.textContent = 'GERADOR PROFISSIONAL DE SORTEIOS';
+
+  conteudo.innerHTML = `
+    <div class="sorteio-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+
+      <div>
+        <label>Nome da competição</label>
+        <input id="stCompeticao" type="text" placeholder="Nome do torneio">
+      </div>
+
+      <div>
+        <label>Data da competição</label>
+        <input id="stData" type="date">
+      </div>
+
+      <div>
+        <label>Local / campo / arena</label>
+        <input id="stLocal" type="text" placeholder="Nome do local">
+      </div>
+
+      <div>
+        <label>Modalidade</label>
+        <select id="stModalidade">
+          <option value="Futebol de campo">Futebol de campo</option>
+          <option value="Torneio de pênaltis">Torneio de pênaltis</option>
+        </select>
+      </div>
+<div>
+  <label>Tipo de participante</label>
+  <select id="stTipoParticipante">
+    <option value="Equipes">Equipes</option>
+    <option value="Duplas">Duplas</option>
+  </select>
+</div>
+      <div>
+        <label>Formato da competição</label>
+        <select id="stFormato" onchange="atualizarCamposSorteio()">
+          <option value="grupos">Fase de grupos</option>
+          <option value="mata">Mata-mata</option>
+          <option value="completa">Competição completa</option>
+          <option value="primeira">Somente primeira fase</option>
+        </select>
+      </div>
+
+      <div id="stCampoGrupos">
+        <label>Quantidade de grupos</label>
+        <input id="stGrupos" type="number" min="1" value="4">
+      </div>
+
+      <div id="stCampoPorGrupo">
+        <label>Participantes por grupo</label>
+        <input id="stPorGrupo" type="number" min="2" value="4">
+      </div>
+
+      <div>
+        <label>Modo de sorteio</label>
+        <select id="stModo">
+          <option value="todos">Sortear tudo de uma vez</option>
+          <option value="um">Sortear um por vez</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <label style="color:#e5bd45;font-weight:900;">LISTA DE EQUIPES OU PARTICIPANTES</label>
+      <p style="color:white;font-size:13px;">Digite um nome por linha. Todos os dados são livres e independentes do cadastro do BID.</p>
+
+      <textarea id="stParticipantes" placeholder="EQUIPE 01&#10;EQUIPE 02&#10;EQUIPE 03&#10;EQUIPE 04"
+        style="width:100%;min-height:200px;padding:12px;border-radius:9px;"></textarea>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:15px;">
+      <button type="button" onclick="iniciarSorteioTVFP()"
+        style="background:#c99b32;color:#111;font-weight:900;padding:14px;border:0;border-radius:8px;flex:1;">
+        INICIAR SORTEIO
+      </button>
+
+      <button type="button" onclick="iniciarSorteioCompletoTVFP()"
+        style="background:#c99b32;color:#111;font-weight:900;padding:14px;border:0;border-radius:8px;flex:1;">
+        SORTear TUDO
+      </button>
+    </div>
+
+    <div id="resultadoEquipes" style="margin-top:22px;color:white;"></div>
+  `;
+
+  atualizarCamposSorteio();
+}
+
 function atualizarCamposSorteio() {
   const formato = document.getElementById('stFormato')?.value;
   const grupos = document.getElementById('stCampoGrupos');
@@ -2785,30 +2874,48 @@ function renderizarResultadoTVFP() {
       </div>
     </div>
 
-<button type="button" onclick="copiarResultadoTVFP()"
-  style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
-  COPIAR RESULTADO
-</button>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;">
+      <button type="button" onclick="copiarResultadoTVFP()"
+        style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
+        COPIAR RESULTADO
+      </button>
 
-<button type="button" onclick="imprimirResultadoTVFP()"
-  style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
-  GERAR PDF A4
-</button>
-</div>
-`;
+      <button type="button" onclick="imprimirResultadoTVFP()"
+        style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
+        GERAR PDF A4
+      </button>
+    </div>
+  `;
 
-resultado.innerHTML = html;
+  resultado.innerHTML = html;
+}
+function copiarResultadoTVFP() {
+  const s = sorteioTVFP;
+  let texto = `${s.competicao}\n${s.modalidade}\n${s.local}\n${s.data}\n\n`;
+
+  if (s.resultado.length) {
+    s.resultado.forEach((g,i) => {
+      texto += `GRUPO ${i+1}\n`;
+      g.forEach((n,j) => texto += `${j+1}. ${n}\n`);
+      texto += '\n';
+    });
+  } else {
+    for (let i=0;i<s.rodada.length;i+=2) {
+      texto += `JOGO ${i/2+1}: ${s.rodada[i]} × ${s.rodada[i+1] || 'AGUARDANDO ADVERSÁRIO'}\n`;
+    }
+  }
+
+  texto += '\nBID FUTEBOL AMADOR - TVFP SPORTS\nErivando Farias | WhatsApp: (88) 99662-3259\nhttps://bidgeralfutebolamador.vercel.app/';
+
+  navigator.clipboard.writeText(texto)
+    .then(() => alert('Resultado copiado!'))
+    .catch(() => alert('Não foi possível copiar automaticamente.'));
 }
 
-function imprimirResultadoTVFP() {
-     
+
 function imprimirResultadoTVFP() {
   const documento = document.getElementById('documentoSorteioTVFP');
-
-  if (!documento) {
-    alert('Gere o resultado do sorteio antes de imprimir.');
-    return;
-  }
+  if (!documento) return;
 
   const janela = window.open('', '_blank');
 
@@ -2817,94 +2924,51 @@ function imprimirResultadoTVFP() {
     return;
   }
 
-  const filhos = Array.from(documento.children);
-
-  // Cabeçalho original da competição
-  const cabecalho = filhos
+  // Cabeçalho da competição
+  const cabecalho = Array.from(documento.children)
     .filter(el => ['H2', 'H3', 'P'].includes(el.tagName))
     .map(el => el.outerHTML)
     .join('');
 
-  // Localizar o rodapé institucional
-  const indiceRodape = filhos.findIndex(el =>
-    el.textContent.includes('BID FUTEBOL AMADOR')
-  );
+  // Blocos de jogos ou grupos
+  const blocos = Array.from(documento.children)
+    .filter(el => el.tagName === 'DIV');
 
-  const rodape = indiceRodape >= 0
-    ? filhos[indiceRodape].outerHTML
-    : `<div>
-        <strong>BID FUTEBOL AMADOR - TVFP SPORTS</strong><br>
-        Erivando Farias | WhatsApp: (88) 99662-3259<br>
-        https://bidgeralfutebolamador.vercel.app/
-      </div>`;
+  // O último bloco é o rodapé institucional
+  const rodape = blocos.length
+    ? blocos[blocos.length - 1].outerHTML
+    : '';
 
-  // Localizar os blocos de jogos e grupos
-  const jogos = filhos.filter((el, i) =>
-    el.tagName === 'DIV' &&
-    i !== indiceRodape &&
-    (
-      el.textContent.includes('JOGO') ||
-      el.textContent.includes('GRUPO')
-    )
-  );
-
-  if (!jogos.length) {
-    alert('Nenhum jogo foi encontrado no resultado. Gere o sorteio novamente.');
-    janela.close();
-    return;
-  }
-
-  // Separar em páginas com até 10 confrontos
+  const jogos = blocos.slice(0, -1);
   const paginas = [];
 
+  // Separar em até 10 jogos por folha
   for (let i = 0; i < jogos.length; i += 10) {
     paginas.push(jogos.slice(i, i + 10));
   }
 
-  const totalPaginas = paginas.length;
+  if (!paginas.length) {
+    paginas.push([]);
+  }
 
-  const conteudoPaginas = paginas.map((pagina, indice) => {
-    const blocos = pagina.map((jogo, i) => `
-      <div class="jogo">
-        ${jogo.innerHTML}
-      </div>
-    `).join('');
-
-    // Dois espaços extras para preenchimento manual
-    const extras = `
-      <div class="jogo jogo-vazio">
-        <strong>JOGO ${String(pagina.length + 1).padStart(2, '0')}</strong>
-        <p>____________________________ × ____________________________</p>
-        <div class="bolinhas">○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ × ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○</div>
-        <div class="linha-gols">________________________________________ × ________________________________________</div>
+  const conteudoPaginas = paginas.map((pagina, indice) => `
+    <section class="pagina">
+      <div class="cabecalho">
+        ${cabecalho}
+        <p class="numero-pagina">
+          FOLHA ${indice + 1} DE ${paginas.length}
+        </p>
       </div>
 
-      <div class="jogo jogo-vazio">
-        <strong>JOGO ${String(pagina.length + 2).padStart(2, '0')}</strong>
-        <p>____________________________ × ____________________________</p>
-        <div class="bolinhas">○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ × ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○</div>
-        <div class="linha-gols">________________________________________ × ________________________________________</div>
+      <div class="lista-jogos">
+        ${pagina.map(jogo => jogo.outerHTML).join('')}
       </div>
-    `;
 
-    return `
-      <section class="pagina">
-        <header class="cabecalho">
-          ${cabecalho}
-          <p class="numero-pagina">
-            FOLHA ${indice + 1} DE ${totalPaginas}
-          </p>
-        </header>
-
-        <main class="lista-jogos">
-          ${blocos}
-          ${extras}
-        </main>
-
-        <footer>${rodape}</footer>
-      </section>
-    `;
-  }).join('');
+      <footer>
+        ${rodape}
+      </footer>
+    </section>
+  `).join('');
 
   janela.document.write(`
     <!DOCTYPE html>
@@ -2916,7 +2980,7 @@ function imprimirResultadoTVFP() {
       <style>
         @page {
           size: A4;
-          margin: 8mm;
+          margin: 10mm;
         }
 
         * {
@@ -2925,7 +2989,6 @@ function imprimirResultadoTVFP() {
 
         body {
           font-family: Arial, sans-serif;
-          font-size: 12pt;
           color: #111;
           background: #fff;
           margin: 0;
@@ -2933,9 +2996,9 @@ function imprimirResultadoTVFP() {
 
         .pagina {
           width: 100%;
-          min-height: 281mm;
-          padding: 3mm;
-          border: 1px solid #c99b32;
+          min-height: 277mm;
+          padding: 5mm;
+          border: 2px solid #c99b32;
           display: flex;
           flex-direction: column;
           page-break-after: always;
@@ -2949,83 +3012,70 @@ function imprimirResultadoTVFP() {
 
         .cabecalho {
           text-align: center;
-          border-bottom: 1px solid #c99b32;
-          padding-bottom: 5px;
-          margin-bottom: 8px;
+          border-bottom: 2px solid #c99b32;
+          padding-bottom: 8px;
+          margin-bottom: 12px;
         }
 
-        .cabecalho h2,
-        .cabecalho h3 {
+        .cabecalho h2 {
           color: #8b6810 !important;
-          font-size: 12pt !important;
+          font-size: 19px;
           margin: 5px 0;
         }
 
+        .cabecalho h3 {
+          color: #8b6810 !important;
+          font-size: 15px;
+          margin: 8px 0;
+        }
+
         .cabecalho p {
-          font-size: 12pt !important;
+          color: #111 !important;
+          font-size: 11px;
           margin: 4px 0;
         }
 
         .numero-pagina {
           font-weight: bold;
+          margin-top: 8px !important;
         }
 
         .lista-jogos {
           flex: 1;
-          display: flex;
-          flex-direction: column;
         }
 
-        .jogo {
-          text-align: center;
+        .lista-jogos > div {
+          background: #fff !important;
           color: #111 !important;
-          border-bottom: 1px solid #c99b32;
-          padding: 5px 0;
-          margin: 0;
+          border: 1px solid #c99b32 !important;
+          border-radius: 5px !important;
+          padding: 7px 10px !important;
+          margin: 5px 0 !important;
           break-inside: avoid;
+          page-break-inside: avoid;
         }
 
-        .jogo h2,
-        .jogo h3,
-        .jogo strong,
-        .jogo p {
+        .lista-jogos p,
+        .lista-jogos strong {
           color: #111 !important;
-          font-size: 12pt !important;
+          font-size: 11px;
         }
 
-        .jogo-vazio {
-          min-height: 65px;
-        }
-
-        .jogo-vazio p {
-          margin: 5px 0;
-        }
-
-        .bolinhas {
-          font-size: 12pt;
-          margin: 5px 0;
-          white-space: nowrap;
-        }
-
-        .linha-gols {
-          width: 100%;
-          font-size: 12pt;
-          white-space: nowrap;
-          text-align: center;
-          margin: 5px auto;
+        .lista-jogos h3 {
+          color: #8b6810 !important;
+          font-size: 13px;
         }
 
         footer {
           margin-top: auto;
-          padding-top: 7px;
+          padding-top: 8px;
           border-top: 1px solid #c99b32;
           text-align: center;
-          font-size: 12pt;
+          font-size: 9px;
         }
 
         footer p,
         footer strong {
-          font-size: 12pt !important;
           color: #111 !important;
         }
 
@@ -3052,15 +3102,14 @@ function imprimirResultadoTVFP() {
 
   janela.document.close();
 }
-
   function abrirCentralSorteios() {
     document.getElementById('publicView').hidden = true;
   document.getElementById('centralSorteios').hidden = false;
   document.getElementById('areaModalidadeSorteio').hidden = true;
 }
-</script>
+<\/script>
 </div>
-<section id="publicView">
+  <section id="publicView">
 <div class="panel next-match-panel"><div class="ph"><h3>PRÓXIMAS PARTIDAS</h3><span class="pill">Próximos confrontos</span></div><div class="fixtures" id="frontFixtures"><div class="fixture-date">DATA: XX/XX/2026</div><div class="fixture"><span class="fixture-team">EQUIPE XX</span><span class="versus">×</span><span class="fixture-team">EQUIPE XX</span></div></div></div>
 <div class="panel finished-match-panel"><div class="ph"><h3>PARTIDAS FINALIZADAS</h3><span class="pill">Resultados oficiais</span></div><div class="fixtures" id="finishedFixtures"><div class="empty">Nenhuma partida finalizada ainda.</div></div></div>
 
