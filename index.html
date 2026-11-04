@@ -2785,12 +2785,22 @@ function renderizarResultadoTVFP() {
       </div>
     </div>
 
-    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;">
-      <button type="button" onclick="copiarResultadoTVFP()"
-        style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
-        COPIAR RESULTADO
-      </button>
+<button type="button" onclick="copiarResultadoTVFP()"
+  style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
+  COPIAR RESULTADO
+</button>
 
+<button type="button" onclick="imprimirResultadoTVFP()"
+  style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
+  GERAR PDF A4
+</button>
+</div>
+`;
+
+resultado.innerHTML = html;
+}
+
+function imprimirResultadoTVFP() {
      
 function imprimirResultadoTVFP() {
   const documento = document.getElementById('documentoSorteioTVFP');
