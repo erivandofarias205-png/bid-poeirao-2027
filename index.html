@@ -2165,7 +2165,7 @@ onclick="document.getElementById('publicView').hidden=true;document.getElementBy
 let sorteioTVFP = null;
 
 
-window.abrirModalidadeSorteio = function(tipo) {{
+function abrirModalidadeSorteio(tipo) {
   const area = document.getElementById('areaModalidadeSorteio');
   const titulo = document.getElementById('tituloModalidadeSorteio');
   const conteudo = document.getElementById('conteudoModalidadeSorteio');
@@ -2293,7 +2293,7 @@ window.abrirModalidadeSorteio = function(tipo) {{
   `;
 
   atualizarCamposSorteio();
-};
+}
 
 function atualizarCamposSorteio() {
   const formato = document.getElementById('stFormato')?.value;
