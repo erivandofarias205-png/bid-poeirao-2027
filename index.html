@@ -2791,42 +2791,14 @@ function renderizarResultadoTVFP() {
         COPIAR RESULTADO
       </button>
 
-      <button type="button" onclick="imprimirResultadoTVFP()"
-        style="background:#c99b32;padding:13px;border:0;border-radius:8px;font-weight:900;">
-        GERAR PDF A4
-      </button>
-    </div>
-  `;
-
-  resultado.innerHTML = html;
-}
-function copiarResultadoTVFP() {
-  const s = sorteioTVFP;
-  let texto = `${s.competicao}\n${s.modalidade}\n${s.local}\n${s.data}\n\n`;
-
-  if (s.resultado.length) {
-    s.resultado.forEach((g,i) => {
-      texto += `GRUPO ${i+1}\n`;
-      g.forEach((n,j) => texto += `${j+1}. ${n}\n`);
-      texto += '\n';
-    });
-  } else {
-    for (let i=0;i<s.rodada.length;i+=2) {
-      texto += `JOGO ${i/2+1}: ${s.rodada[i]} × ${s.rodada[i+1] || 'AGUARDANDO ADVERSÁRIO'}\n`;
-    }
-  }
-
-  texto += '\nBID FUTEBOL AMADOR - TVFP SPORTS\nErivando Farias | WhatsApp: (88) 99662-3259\nhttps://bidgeralfutebolamador.vercel.app/';
-
-  navigator.clipboard.writeText(texto)
-    .then(() => alert('Resultado copiado!'))
-    .catch(() => alert('Não foi possível copiar automaticamente.'));
-}
-
-
+     
 function imprimirResultadoTVFP() {
   const documento = document.getElementById('documentoSorteioTVFP');
-  if (!documento) return;
+
+  if (!documento) {
+    alert('Gere o resultado do sorteio antes de imprimir.');
+    return;
+  }
 
   const janela = window.open('', '_blank');
 
@@ -2835,51 +2807,94 @@ function imprimirResultadoTVFP() {
     return;
   }
 
-  // Cabeçalho da competição
-  const cabecalho = Array.from(documento.children)
+  const filhos = Array.from(documento.children);
+
+  // Cabeçalho original da competição
+  const cabecalho = filhos
     .filter(el => ['H2', 'H3', 'P'].includes(el.tagName))
     .map(el => el.outerHTML)
     .join('');
 
-  // Blocos de jogos ou grupos
-  const blocos = Array.from(documento.children)
-    .filter(el => el.tagName === 'DIV');
+  // Localizar o rodapé institucional
+  const indiceRodape = filhos.findIndex(el =>
+    el.textContent.includes('BID FUTEBOL AMADOR')
+  );
 
-  // O último bloco é o rodapé institucional
-  const rodape = blocos.length
-    ? blocos[blocos.length - 1].outerHTML
-    : '';
+  const rodape = indiceRodape >= 0
+    ? filhos[indiceRodape].outerHTML
+    : `<div>
+        <strong>BID FUTEBOL AMADOR - TVFP SPORTS</strong><br>
+        Erivando Farias | WhatsApp: (88) 99662-3259<br>
+        https://bidgeralfutebolamador.vercel.app/
+      </div>`;
 
-  const jogos = blocos.slice(0, -1);
+  // Localizar os blocos de jogos e grupos
+  const jogos = filhos.filter((el, i) =>
+    el.tagName === 'DIV' &&
+    i !== indiceRodape &&
+    (
+      el.textContent.includes('JOGO') ||
+      el.textContent.includes('GRUPO')
+    )
+  );
+
+  if (!jogos.length) {
+    alert('Nenhum jogo foi encontrado no resultado. Gere o sorteio novamente.');
+    janela.close();
+    return;
+  }
+
+  // Separar em páginas com até 10 confrontos
   const paginas = [];
 
-  // Separar em até 10 jogos por folha
   for (let i = 0; i < jogos.length; i += 10) {
     paginas.push(jogos.slice(i, i + 10));
   }
 
-  if (!paginas.length) {
-    paginas.push([]);
-  }
+  const totalPaginas = paginas.length;
 
-  const conteudoPaginas = paginas.map((pagina, indice) => `
-    <section class="pagina">
-      <div class="cabecalho">
-        ${cabecalho}
-        <p class="numero-pagina">
-          FOLHA ${indice + 1} DE ${paginas.length}
-        </p>
+  const conteudoPaginas = paginas.map((pagina, indice) => {
+    const blocos = pagina.map((jogo, i) => `
+      <div class="jogo">
+        ${jogo.innerHTML}
+      </div>
+    `).join('');
+
+    // Dois espaços extras para preenchimento manual
+    const extras = `
+      <div class="jogo jogo-vazio">
+        <strong>JOGO ${String(pagina.length + 1).padStart(2, '0')}</strong>
+        <p>____________________________ × ____________________________</p>
+        <div class="bolinhas">○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ × ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○</div>
+        <div class="linha-gols">________________________________________ × ________________________________________</div>
       </div>
 
-      <div class="lista-jogos">
-        ${pagina.map(jogo => jogo.outerHTML).join('')}
+      <div class="jogo jogo-vazio">
+        <strong>JOGO ${String(pagina.length + 2).padStart(2, '0')}</strong>
+        <p>____________________________ × ____________________________</p>
+        <div class="bolinhas">○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ × ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○ ○</div>
+        <div class="linha-gols">________________________________________ × ________________________________________</div>
       </div>
+    `;
 
-      <footer>
-        ${rodape}
-      </footer>
-    </section>
-  `).join('');
+    return `
+      <section class="pagina">
+        <header class="cabecalho">
+          ${cabecalho}
+          <p class="numero-pagina">
+            FOLHA ${indice + 1} DE ${totalPaginas}
+          </p>
+        </header>
+
+        <main class="lista-jogos">
+          ${blocos}
+          ${extras}
+        </main>
+
+        <footer>${rodape}</footer>
+      </section>
+    `;
+  }).join('');
 
   janela.document.write(`
     <!DOCTYPE html>
@@ -2891,7 +2906,7 @@ function imprimirResultadoTVFP() {
       <style>
         @page {
           size: A4;
-          margin: 10mm;
+          margin: 8mm;
         }
 
         * {
@@ -2900,6 +2915,7 @@ function imprimirResultadoTVFP() {
 
         body {
           font-family: Arial, sans-serif;
+          font-size: 12pt;
           color: #111;
           background: #fff;
           margin: 0;
@@ -2907,9 +2923,9 @@ function imprimirResultadoTVFP() {
 
         .pagina {
           width: 100%;
-          min-height: 277mm;
-          padding: 5mm;
-          border: 2px solid #c99b32;
+          min-height: 281mm;
+          padding: 3mm;
+          border: 1px solid #c99b32;
           display: flex;
           flex-direction: column;
           page-break-after: always;
@@ -2923,70 +2939,83 @@ function imprimirResultadoTVFP() {
 
         .cabecalho {
           text-align: center;
-          border-bottom: 2px solid #c99b32;
-          padding-bottom: 8px;
-          margin-bottom: 12px;
+          border-bottom: 1px solid #c99b32;
+          padding-bottom: 5px;
+          margin-bottom: 8px;
         }
 
-        .cabecalho h2 {
+        .cabecalho h2,
+        .cabecalho h3 {
           color: #8b6810 !important;
-          font-size: 19px;
+          font-size: 12pt !important;
           margin: 5px 0;
         }
 
-        .cabecalho h3 {
-          color: #8b6810 !important;
-          font-size: 15px;
-          margin: 8px 0;
-        }
-
         .cabecalho p {
-          color: #111 !important;
-          font-size: 11px;
+          font-size: 12pt !important;
           margin: 4px 0;
         }
 
         .numero-pagina {
           font-weight: bold;
-          margin-top: 8px !important;
         }
 
         .lista-jogos {
           flex: 1;
+          display: flex;
+          flex-direction: column;
         }
 
-        .lista-jogos > div {
-          background: #fff !important;
+        .jogo {
+          text-align: center;
           color: #111 !important;
-          border: 1px solid #c99b32 !important;
-          border-radius: 5px !important;
-          padding: 7px 10px !important;
-          margin: 5px 0 !important;
+          border-bottom: 1px solid #c99b32;
+          padding: 5px 0;
+          margin: 0;
           break-inside: avoid;
-          page-break-inside: avoid;
         }
 
-        .lista-jogos p,
-        .lista-jogos strong {
+        .jogo h2,
+        .jogo h3,
+        .jogo strong,
+        .jogo p {
           color: #111 !important;
-          font-size: 11px;
+          font-size: 12pt !important;
         }
 
-        .lista-jogos h3 {
-          color: #8b6810 !important;
-          font-size: 13px;
+        .jogo-vazio {
+          min-height: 65px;
+        }
+
+        .jogo-vazio p {
+          margin: 5px 0;
+        }
+
+        .bolinhas {
+          font-size: 12pt;
+          margin: 5px 0;
+          white-space: nowrap;
+        }
+
+        .linha-gols {
+          width: 100%;
+          font-size: 12pt;
+          white-space: nowrap;
+          text-align: center;
+          margin: 5px auto;
         }
 
         footer {
           margin-top: auto;
-          padding-top: 8px;
+          padding-top: 7px;
           border-top: 1px solid #c99b32;
           text-align: center;
-          font-size: 9px;
+          font-size: 12pt;
         }
 
         footer p,
         footer strong {
+          font-size: 12pt !important;
           color: #111 !important;
         }
 
@@ -3013,6 +3042,7 @@ function imprimirResultadoTVFP() {
 
   janela.document.close();
 }
+
   function abrirCentralSorteios() {
     document.getElementById('publicView').hidden = true;
   document.getElementById('centralSorteios').hidden = false;
