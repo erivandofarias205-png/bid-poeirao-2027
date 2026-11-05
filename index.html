@@ -1343,9 +1343,11 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
 #matchSheet .sheet-personnel-grid{
   display:grid!important;
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:3mm!important;
+  gap:1mm!important;
   width:100%!important;
   align-items:start!important;
+  margin-top:0!important;
+  padding-top:0!important;
 }
 
 #matchSheet .sheet-personnel-grid section{
@@ -1353,12 +1355,15 @@ body:has(#profileContent){background:linear-gradient(135deg,#071f2c 0%,#123d4a 4
   width:100%!important;
 }
 
-#matchSheet .sheet-personnel-grid .sheet-director-line{
+  #matchSheet .sheet-personnel-grid .sheet-director-line{
   display:grid!important;
   grid-template-columns:7mm minmax(0,1fr) 17mm!important;
-  gap:1mm!important;
-  min-height:6mm!important;
+  gap:0.5mm!important;
+  min-height:5mm!important;
+  height:5mm!important;
   align-items:center!important;
+  padding:0!important;
+  margin:0!important;
 }
 
 #matchSheet .sheet-personnel-grid .sheet-director-photo{
@@ -1869,10 +1874,11 @@ overflow: visible !important;
   }
 
   #matchSheet .sheet-page-two .sheet-page-title {
-    font-size: 10pt !important;
-    padding: 2mm !important;
-    margin: 0 0 1.5mm !important;
-  }
+  font-size: 8pt !important;
+  padding: 1mm !important;
+  margin: 0 0 0.5mm !important;
+  line-height: 1.1 !important;
+}
 
   /* EQUIPE PESSOAL */
   #matchSheet .sheet-page-two .sheet-personnel-grid {
@@ -8675,7 +8681,7 @@ function getSheetPlayerStats(player, team){
   return stats;
 }
   const teamName=(team,fallback)=>team?.name||fallback||'Equipe';
-  const compLogo=comp?.logo||comp?.symbol||comp?.escudo||'';
+  const compLogo=comp?.logo||comp?.symbol||comp?.escudo||comp?.logo_url||comp?.escudo_url||comp?.logoUrl||comp?.image||comp?.imagem||'';
   const teamLogo=team=>team?.logo||team?.escudo_url||team?.escudoUrl||team?.crest||'';
   const staffNames=(team,keys)=>{for(const k of keys){const v=team?.[k];if(typeof v==='string'&&v.trim())return esc(v);if(Array.isArray(v)&&v.length)return esc(v.map(x=>typeof x==='string'?x:(x.name||x.nome||'')).filter(Boolean).join(', '));}
     if(keys.some(k=>['director','dirigente','president','presidente','representative'].includes(k))){const ds=(team?.players||[]).filter(p=>{const r=String(p?.role||p?.funcao||p?.function||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();return r.includes('diretor')||r.includes('dirigente')||r.includes('representante')||r.includes('presidente');}).map(p=>p.name||p.nome).filter(Boolean);if(ds.length)return esc(ds.join(', '));}
@@ -8801,12 +8807,26 @@ const person=r.second?matching[1]:matching[0];
     ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
   </section>
 </div>
-  <div class="sheet-substitution-grid"><section><h3>SUBSTITUIÇÕES — MANDANTE</h3>${Array.from({length:3},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section><section><h3>SUBSTITUIÇÕES — VISITANTE</h3>${Array.from({length:3},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section></div>
-  <section class="sheet-referee-grid"><h3>ARBITRAGEM / OFICIAIS</h3><div><b>Árbitro central:</b> ${esc($('sheetReferee')?.value||'____________________________________________')}</div><div><b>Assistente 1:</b> ________________________________________________</div><div><b>Assistente 2:</b> ________________________________________________</div><div><b>4º árbitro:</b> __________________________________________________</div><div><b>Delegado:</b> ${esc($('sheetDelegate')?.value||'____________________________________________')}</div></section>
-  <section class="sheet-report"><h3>RELATÓRIO DO ÁRBITRO / OCORRÊNCIAS</h3>${Array.from({length:12},()=>'<div></div>').join('')}</section>
-  <div class="sheet-sign-row"><span>Assinatura do árbitro: ______________________________</span><span>Data: ____/____/________</span></div>
-  <div style="text-align:center;font-family:Cambria,serif;font-size:7pt;color:#555;margin-top:3mm;white-space:nowrap;">
-BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app
+  <div class="sheet-substitution-grid">
+  <section>
+    <h3>SUBSTITUIÇÕES — MANDANTE</h3>
+    ${Array.from({length:3},(_,i)=>`
+      <div class="event-line">
+        <b>${i+1}.</b> Sai nº: ____ Entra nº: ____ Min.: ____
+      </div>
+    `).join('')}
+  </section>
+  <section>
+    <h3>SUBSTITUIÇÕES — VISITANTE</h3>
+    ${Array.from({length:3},(_,i)=>`
+      <div class="event-line">
+        <b>${i+1}.</b> Sai nº: ____ Entra nº: ____ Min.: ____
+      </div>
+    `).join('')}
+  </section>
+</div>
+ <div style="text-align:center;font-family:Arial,sans-serif;font-size:5pt;color:#555;margin-top:1mm;white-space:nowrap;line-height:1;">
+BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app - WhatsApp: (88) 99662-3259
 </div>
 </div></div>`;
  }$('loadSheet')?.addEventListener('click',buildMatchSheet);
@@ -10812,17 +10832,21 @@ if(gameView){
 .official-sheet *{box-sizing:border-box}
 .sheet-page{background:#fff!important;color:#111!important;width:100%;padding:5mm;break-after:auto;page-break-after:auto}
 .sheet-page:last-child{break-after:auto;page-break-after:auto}
-.sheet-heading{text-align:center;border-bottom:1px solid #111;padding-bottom:3mm}
+.sheet-heading{
+  text-align:center;
+  border-bottom:1px solid #111;
+  padding:0!important;
+  padding-bottom:1mm!important;
+  margin:0!important;
+  overflow:visible!important;
+}
+
 .sheet-competition-logo{
   width:16mm!important;
   height:16mm!important;
   object-fit:contain!important;
   display:block!important;
-  margin:0 auto 2mm!important;
-}
-.sheet-heading{
-  padding-top:2mm!important;
-  overflow:visible!important;
+  margin:0 auto 1mm!important;
 }
 .sheet-heading h2{font-size:16pt!important;margin:1mm 0!important;color:#111!important}
 .sheet-subtitle{font-weight:900;font-size:12pt;margin:1mm 0}
@@ -10848,8 +10872,24 @@ if(gameView){
 .sheet-page-title{text-align:center;font-size:14pt;font-weight:900;border-bottom:2px solid #111;padding:2mm;margin-bottom:3mm}
 .sheet-event-grid{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
 .sheet-event-grid section,.sheet-referee-grid,.sheet-report{border:1px solid #333;break-inside:avoid}
-.sheet-event-grid h3,.sheet-referee-grid h3,.sheet-report h3{background:#f3c75a;color:#111;font-size:8pt;margin:0;padding:2mm;border-bottom:1px solid #333}
-.event-line{height:7mm;border-bottom:1px solid #aaa;padding:1.5mm;font-size:7pt}
+.sheet-event-grid h3,.sheet-referee-grid h3,.sheet-report h3{
+  background:#f3c75a;
+  color:#111;
+  font-size:7pt;
+  margin:0;
+  padding:1mm;
+  border-bottom:1px solid #333;
+}
+.event-line{
+  height:5mm;
+  min-height:5mm;
+  box-sizing:border-box;
+  border-bottom:1px solid #aaa;
+  padding:0.5mm 1mm;
+  margin:0;
+  font-size:7pt;
+  line-height:4mm;
+}
 /* ESPAÇOS MAIORES PARA GOLS E CARTÕES */
 .sheet-event-grid .event-pair{
   display:grid;
@@ -10883,7 +10923,7 @@ if(gameView){
 .sheet-report div{height:7mm;border-bottom:1px solid #aaa}
 @media screen{.sheet-page{margin-bottom:12px;border:1px solid #ddd;box-shadow:0 2px 8px #0001}}
 @media print{
- @page{size:A4 portrait;margin:10mm}
+@page{size:A4 portrait;margin:0}
  body *{visibility:hidden!important}
  #matchSheet,#matchSheet *{visibility:visible!important}
  #matchSheet{position:absolute!important;left:0!important;top:0!important;width:100%!important;margin:0!important;padding:0!important;border:0!important;overflow:visible!important}
@@ -10941,8 +10981,8 @@ if(gameView){
  #matchSheet .sheet-page {background:#fff!important;color:#111!important;box-shadow:none!important}
 #matchSheet .sheet-page{
   width:210mm!important;
-  height:287mm!important;
-  min-height:287mm!important;
+ height:297mm!important;
+min-height:297mm!important;
   box-sizing:border-box!important;
   margin:0!important;
   padding:5mm!important;
