@@ -2841,16 +2841,20 @@ function imprimirResultadoTVFP() {
     .map(el => el.outerHTML)
     .join('');
 
-  // Blocos de jogos ou grupos
-  const blocos = Array.from(documento.children)
-    .filter(el => el.tagName === 'DIV');
+// Blocos de jogos ou grupos
+const elementos = Array.from(documento.children);
 
-  // O último bloco é o rodapé institucional
-  const rodape = blocos.length
-    ? blocos[blocos.length - 1].outerHTML
-    : '';
+const blocos = elementos.filter(el =>
+  !['H2', 'H3', 'P'].includes(el.tagName) &&
+  !el.querySelector('button')
+);
 
-  const jogos = blocos.slice(0, -1);
+// O último bloco é o rodapé institucional
+const rodape = blocos.length
+  ? blocos[blocos.length - 1].outerHTML
+  : '';
+
+const jogos = blocos.slice(0, -1);
   const paginas = [];
 
   // Separar em até 10 jogos por folha
