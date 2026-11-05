@@ -3050,9 +3050,24 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
   janela.document.close();
 }
   function abrirCentralSorteios() {
-    document.getElementById('publicView').hidden = true;
-  document.getElementById('centralSorteios').hidden = false;
-  document.getElementById('areaModalidadeSorteio').hidden = true;
+  const central = document.getElementById('centralSorteios');
+  const modalidade = document.getElementById('areaModalidadeSorteio');
+
+  if (!central) {
+    alert('Central de Sorteios não encontrada.');
+    return;
+  }
+
+  central.hidden = false;
+
+  if (modalidade) {
+    modalidade.hidden = true;
+  }
+
+  central.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
 }
 </script>
 </div>
