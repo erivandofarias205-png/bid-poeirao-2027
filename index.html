@@ -8801,7 +8801,7 @@ const person=r.second?matching[1]:matching[0];
     ${Array.from({length:5},(_,i)=>`<div class="event-pair"><span><b>${i+1}.</b> Nº camisa: ____ Min.: ____</span><span><b>${i+6}.</b> Nº camisa: ____ Min.: ____</span></div>`).join('')}
   </section>
 </div>
-  <div class="sheet-substitution-grid"><section><h3>SUBSTITUIÇÕES — MANDANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section><section><h3>SUBSTITUIÇÕES — VISITANTE</h3>${Array.from({length:8},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section></div>
+  <div class="sheet-substitution-grid"><section><h3>SUBSTITUIÇÕES — MANDANTE</h3>${Array.from({length:3},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section><section><h3>SUBSTITUIÇÕES — VISITANTE</h3>${Array.from({length:3},(_,i)=>`<div class="event-line"><b>${i+1}.</b> Sai: __________________ Entra: __________________ Min.: ____</div>`).join('')}</section></div>
   <section class="sheet-referee-grid"><h3>ARBITRAGEM / OFICIAIS</h3><div><b>Árbitro central:</b> ${esc($('sheetReferee')?.value||'____________________________________________')}</div><div><b>Assistente 1:</b> ________________________________________________</div><div><b>Assistente 2:</b> ________________________________________________</div><div><b>4º árbitro:</b> __________________________________________________</div><div><b>Delegado:</b> ${esc($('sheetDelegate')?.value||'____________________________________________')}</div></section>
   <section class="sheet-report"><h3>RELATÓRIO DO ÁRBITRO / OCORRÊNCIAS</h3>${Array.from({length:12},()=>'<div></div>').join('')}</section>
   <div class="sheet-sign-row"><span>Assinatura do árbitro: ______________________________</span><span>Data: ____/____/________</span></div>
@@ -10810,10 +10810,20 @@ if(gameView){
 <style id="official-two-page-sumula">
 .official-sheet{background:#fff!important;color:#111!important;padding:0!important;border:0!important;font:9px Arial,sans-serif!important}
 .official-sheet *{box-sizing:border-box}
-.sheet-page{background:#fff!important;color:#111!important;width:100%;padding:5mm;break-after:page;page-break-after:always}
+.sheet-page{background:#fff!important;color:#111!important;width:100%;padding:5mm;break-after:auto;page-break-after:auto}
 .sheet-page:last-child{break-after:auto;page-break-after:auto}
 .sheet-heading{text-align:center;border-bottom:1px solid #111;padding-bottom:3mm}
-.sheet-competition-logo{width:22mm;height:22mm;object-fit:contain;display:block;margin:0 auto 2mm}
+.sheet-competition-logo{
+  width:16mm!important;
+  height:16mm!important;
+  object-fit:contain!important;
+  display:block!important;
+  margin:0 auto 2mm!important;
+}
+.sheet-heading{
+  padding-top:2mm!important;
+  overflow:visible!important;
+}
 .sheet-heading h2{font-size:16pt!important;margin:1mm 0!important;color:#111!important}
 .sheet-subtitle{font-weight:900;font-size:12pt;margin:1mm 0}
 .sheet-location{margin:0 0 2mm}
@@ -10908,7 +10918,12 @@ if(gameView){
 #matchSheet .sheet-staff, #matchSheet .sheet-sign-row {color:#111!important}
 #matchSheet .sheet-photo-empty {background:#fff!important;border:1px solid #aaa!important}
 #matchSheet .sheet-team-logo, #matchSheet .sheet-competition-logo {background:#fff!important}
-#matchSheet .sheet-substitution-grid {display:grid!important;grid-template-columns:1fr 1fr;gap:3mm!important;margin:2mm 0!important}
+#matchSheet .sheet-substitution-grid {
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:1mm!important;
+  margin:1mm 0!important;
+}
 #matchSheet .sheet-substitution-grid .event-line {background:#fff!important;color:#111!important;border-bottom:1px solid #bbb!important}
 @media print {
  html,body {background:#fff!important;color:#111!important}
@@ -10924,10 +10939,10 @@ if(gameView){
   break-inside:avoid!important;
   page-break-inside:avoid!important;
 }
-#matchSheet .sheet-page-one{
+#matchSheet .sheet-page-two{
   display:block!important;
-  break-after:page!important;
-  page-break-after:always!important;
+  break-before:auto!important;
+  page-break-before:auto!important;
 }
 #matchSheet .sheet-page-two{
   display:block!important;
