@@ -12643,6 +12643,99 @@ function renderPlacementMatch(panelId, cardClass, title, data, prefix) {
   updatePenalties();
 }
 
+// ===== SINCRONIZAR FINAL E DISPUTA DE 3º LUGAR =====
+async function sincronizarColocacaoSupabase(c, property, fase, chave) {
+  if (!c?.dbId) {
+    throw new Error('A competição precisa estar cadastrada no Supabase.');
+  }
+
+  const m = c[property];
+  if (!m?.a || !m?.b) {
+    throw new Error(`Defina as duas equipes da fase: ${fase}.`);
+  }
+
+  const equipes = teams(c);
+
+  const obterEquipe = id => equipes.find(t =>
+    String(t.id) === String(id) ||
+    String(t.dbId) === String(id)
+  );
+
+  const mandante = obterEquipe(m.a);
+  const visitante = obterEquipe(m.b);
+
+  const mandanteId = mandante?.dbId;
+  const visitanteId = visitante?.dbId;
+
+  if (!mandanteId || !visitanteId) {
+    throw new Error(`Não foi possível identificar as equipes de ${fase}.`);
+  }
+
+  const status = {
+    agendado: 'Agendado',
+    em_andamento: 'Em andamento',
+    finalizado: 'Finalizado'
+  }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+  let dataHora = null;
+
+  if (m.date1) {
+    const dt = new Date(`${m.date1}T${m.time1 || '12:00'}:00`);
+
+    if (Number.isNaN(dt.getTime())) {
+      throw new Error(`Confira a data e o horário: ${fase}.`);
+    }
+
+    dataHora = dt.toISOString();
+  }
+
+  const payload = {
+    competicao_id: c.dbId,
+    chave_fase: chave,
+    equipe_mandante_id: Number(mandanteId),
+    equipe_visitante_id: Number(visitanteId),
+    fase,
+    rodada: null,
+    formato: 'unico',
+    data_hora: dataHora,
+    local_jogo: m.venue1 || null,
+    gols_mandante:
+      m.score1A === '' || m.score1A == null
+        ? null : Number(m.score1A),
+    gols_visitante:
+      m.score1B === '' || m.score1B == null
+        ? null : Number(m.score1B),
+    status
+  };
+
+  const { data: existentes, error: buscaErro } = await supabaseClient
+    .from('jogos')
+    .select('id')
+    .eq('competicao_id', c.dbId)
+    .eq('chave_fase', chave);
+
+  if (buscaErro) throw buscaErro;
+
+  if (existentes?.length > 1) {
+    throw new Error(`Existem partidas duplicadas em ${fase}.`);
+  }
+
+  if (existentes?.length === 1) {
+    const { error } = await supabaseClient
+      .from('jogos')
+      .update(payload)
+      .eq('id', existentes[0].id);
+
+    if (error) throw error;
+  } else {
+    const { error } = await supabaseClient
+      .from('jogos')
+      .insert(payload);
+
+    if (error) throw error;
+  }
+}
+
 function renderFinalMatch() {
   const c = comp();
   renderPlacementMatch(
@@ -12778,8 +12871,17 @@ $p('saveFinalMatch')?.addEventListener('click', async () => {
   try {
     savePlacementFields(c, 'final', 'finalMatchTie');
     save();
-    await saveCompetitionPhaseConfig(c);
-    renderFinalMatch();
+  await saveCompetitionPhaseConfig(c);
+
+await sincronizarColocacaoSupabase(
+  c,
+  'finalMatchTie',
+  'Final',
+  'final-jogo-1'
+);
+
+await loadSupabaseMatches();
+renderFinalMatch();
     alert('Final salva no Supabase!');
   } catch (error) {
     console.error('Erro ao salvar final:', error);
@@ -12795,7 +12897,16 @@ $p('saveThirdPlace')?.addEventListener('click', async () => {
     savePlacementFields(c, 'third', 'thirdPlaceTie');
     save();
     await saveCompetitionPhaseConfig(c);
-    renderFinalMatch();
+
+await sincronizarColocacaoSupabase(
+  c,
+  'thirdPlaceTie',
+  'Disputa de 3º lugar',
+  'terceiro-lugar-jogo-1'
+);
+
+await loadSupabaseMatches();
+renderFinalMatch();
     alert('Disputa de 3º e 4º lugar salva no Supabase!');
   } catch (error) {
     console.error('Erro ao salvar disputa de colocação:', error);
