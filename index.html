@@ -3640,7 +3640,53 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
     <div id="quarterQualifiersList" class="tablewrap"></div>
   </div>
 </div>
+<!-- SÚMULA OFICIAL -->
+<div class="panel" id="officialMatchSheetPanel">
+  <div class="ph">
+    <h3>📋 SÚMULA OFICIAL DA PARTIDA</h3>
+    <span class="pill">Gerar PDF</span>
+  </div>
 
+  <div class="pad">
+    <p class="small muted">
+      Selecione a competição e a partida para gerar a súmula oficial.
+    </p>
+
+    <div class="formgrid">
+      <label>Competição
+        <select id="sheetCompetition">
+          <option value="">Selecione a competição</option>
+        </select>
+      </label>
+
+      <label>Partida
+        <select id="sheetMatch">
+          <option value="">Selecione um jogo cadastrado</option>
+        </select>
+      </label>
+
+      <label>Árbitro central
+        <input id="sheetReferee" placeholder="Nome do árbitro">
+      </label>
+
+      <label>Delegado
+        <input id="sheetDelegate" placeholder="Nome do delegado">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="gold" type="button" id="loadSheet">
+        CARREGAR SÚMULA
+      </button>
+      <button class="secondary" type="button" id="printSheet">
+        IMPRIMIR / SALVAR PDF
+      </button>
+    </div>
+
+    <div id="matchSheet"></div>
+  </div>
+</div>
+<!-- FIM DA SÚMULA OFICIAL -->
 <style id="quarter-finals-style">
   #quarterFinalsPanel .quarter-finals-grid {
     display: grid;
@@ -8274,19 +8320,169 @@ const groupsHTML=orderedGroups.map(([g,list])=>{
   $('redCardsList').innerHTML=cardMarkup(discipline.red,'#ff7777');
   document.querySelectorAll('[data-open-games]').forEach(b=>b.onclick=()=>showTab('games'));
  }
- function renderMatchSheet(){
-  const sel=$('sheetMatch'); if(!sel)return;
-  const old=sel.value;
-  const matches=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
-  sel.innerHTML='<option value="">Selecione um jogo cadastrado</option>'+matches.map(m=>`<option value="${esc(m.id)}">${dateBR(m.date)} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
-  if(matches.some(m=>String(m.id)===old))sel.value=old;
- }
+function renderMatchSheet(){
+  const compSel = $('sheetCompetition');
+  const matchSel = $('sheetMatch');
+  if(!compSel || !matchSel) return;
+
+  const oldComp = compSel.value;
+  const oldMatch = matchSel.value;
+  const competitions = db.competitions || [];
+
+  compSel.innerHTML =
+    '<option value="">Selecione a competição</option>' +
+    competitions.map(c =>
+      `<option value="${esc(c.id)}">${esc(c.name)}${c.season ? ' · '+esc(c.season) : ''}</option>`
+    ).join('');
+
+  const selectedComp = competitions.find(c =>
+    String(c.id) === String(oldComp)
+  ) || competitions.find(c =>
+    String(c.id) === String(db.activeCompetitionId)
+  );
+
+  if(selectedComp){
+    compSel.value = selectedComp.id;
+  }
+
+  const comp = competitions.find(c =>
+    String(c.id) === String(compSel.value)
+  );
+
+  if(!comp){
+    matchSel.innerHTML =
+      '<option value="">Selecione primeiro a competição</option>';
+    return;
+  }
+
+  const compIds = [comp.id, comp.dbId, comp.db_id]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  const matches = (db.matches || []).filter(m => {
+    const matchComp = [
+      m.competitionId,
+      m.competicao_id,
+      m.competitionDbId
+    ].filter(v => v !== undefined && v !== null && v !== '')
+     .map(String);
+
+    if(matchComp.length){
+      return matchComp.some(id => compIds.includes(id));
+    }
+
+    const home = findTeam(m.homeId) || {};
+    const away = findTeam(m.awayId) || {};
+
+    const belongs = team => {
+      const ids = [
+        ...(Array.isArray(team.competitionIds) ? team.competitionIds : []),
+        ...(Array.isArray(team.competition_ids) ? team.competition_ids : []),
+        team.competitionId,
+        team.competition_id,
+        team.competitionDbId,
+        team.competicao_id,
+        team.competition
+      ].filter(v => v !== undefined && v !== null && v !== '')
+       .map(String);
+
+      return ids.some(id => compIds.includes(id));
+    };
+
+    return belongs(home) && belongs(away);
+  }).sort((a,b) =>
+    (a.date || '9999').localeCompare(b.date || '9999')
+  );
+
+  matchSel.innerHTML =
+    '<option value="">Selecione um jogo cadastrado</option>' +
+    matches.map(m =>
+      `<option value="${esc(m.id)}">${dateBR(m.date)} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round ? ' · '+esc(m.round) : ''}</option>`
+    ).join('');
+
+  if(matches.some(m => String(m.id) === String(oldMatch))){
+    matchSel.value = oldMatch;
+  }
+}
  function buildMatchSheet(){
   const id=$('sheetMatch')?.value;
   const m=(db.matches||[]).find(x=>String(x.id)===String(id));
   const out=$('matchSheet'); if(!out)return;
   if(!m){out.innerHTML='<p class="empty">Selecione um jogo cadastrado para puxar as equipes e os atletas.</p>';return;}
-  const home=findTeam(m.homeId),away=findTeam(m.awayId),comp=activeCompetition();
+ const home=findTeam(m.homeId),away=findTeam(m.awayId);
+const comp=(db.competitions||[]).find(c =>
+  String(c.id) === String($('sheetCompetition')?.value)
+) || activeCompetition();
+   // Estatísticas dos atletas somente na competição selecionada.
+const competitionIds = [
+  comp?.id,
+  comp?.dbId,
+  comp?.db_id
+].filter(v => v !== undefined && v !== null && v !== '')
+ .map(String);
+
+const competitionMatches = (db.matches || []).filter(match => {
+  const ids = [
+    match.competitionId,
+    match.competicao_id,
+    match.competitionDbId
+  ].filter(v => v !== undefined && v !== null && v !== '')
+   .map(String);
+
+  if(ids.length){
+    return ids.some(id => competitionIds.includes(id));
+  }
+
+  const home = findTeam(match.homeId) || {};
+  const away = findTeam(match.awayId) || {};
+
+  const belongs = team => {
+    const ids = [
+      ...(team.competitionIds || []),
+      ...(team.competition_ids || []),
+      team.competitionId,
+      team.competition_id,
+      team.competitionDbId,
+      team.competicao_id,
+      team.competition
+    ].filter(v => v !== undefined && v !== null && v !== '')
+     .map(String);
+
+    return ids.some(id => competitionIds.includes(id));
+  };
+
+  return belongs(home) && belongs(away);
+});
+
+const competitionMatchIds = new Set(
+  competitionMatches.flatMap(m => [m.id, m.dbId])
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String)
+);
+
+function getSheetPlayerStats(player, team){
+  const stats = {goals:0, yellow:0, red:0};
+
+  (db.events || []).forEach(e => {
+    if(!competitionMatchIds.has(String(e.matchId))) return;
+
+    const sameTeam =
+      String(e.teamId) === String(team.id) ||
+      String(e.teamId) === String(team.dbId);
+
+    const samePlayer =
+      String(e.playerId) === String(player.id) ||
+      String(e.playerId) === String(player.dbId);
+
+    if(!sameTeam || !samePlayer) return;
+
+    if(e.type === 'goal') stats.goals++;
+    if(e.type === 'yellow') stats.yellow++;
+    if(e.type === 'red') stats.red++;
+  });
+
+  return stats;
+}
   const teamName=(team,fallback)=>team?.name||fallback||'Equipe';
   const compLogo=comp?.logo||comp?.symbol||comp?.escudo||'';
   const teamLogo=team=>team?.logo||team?.escudo_url||team?.escudoUrl||team?.crest||'';
@@ -8313,7 +8509,21 @@ const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
     let body='';
     for(let i=0;i<30;i++){
       const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
-      body+=`<tr><td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td><td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td><td class="player-name">${p?esc(p.name||p.nome||''):''}</td><td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td></tr>`;
+     const stats = p ? getSheetPlayerStats(p,team) : null;
+
+body+=`<tr>
+  <td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td>
+  <td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td>
+  <td class="player-name">
+    ${p?`
+      <span style="font-size:8px;font-weight:bold;white-space:nowrap">
+        ⚽ ${stats.goals} &nbsp; 🟨 ${stats.yellow} &nbsp; 🟥 ${stats.red}
+      </span>
+      <br>${esc(p.name||p.nome||'')}
+    `:''}
+  </td>
+  <td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td>
+</tr>`;
     }
 return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div></div></section>`;
   };
@@ -8409,6 +8619,14 @@ BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app
 </div></div>`;
  }$('loadSheet')?.addEventListener('click',buildMatchSheet);
  $('sheetMatch')?.addEventListener('change',buildMatchSheet);
+  $('sheetCompetition')?.addEventListener('change',()=>{
+  renderMatchSheet();
+
+  if($('matchSheet')){
+    $('matchSheet').innerHTML =
+      '<p class="empty">Selecione uma partida para carregar a súmula.</p>';
+  }
+});
  $('printSheet')?.addEventListener('click',()=>{if(!$('sheetMatch')?.value){alert('Selecione um jogo primeiro.');return;}if(!$('matchSheet')?.querySelector('.sheet-heading'))buildMatchSheet();window.print();});
  
  
