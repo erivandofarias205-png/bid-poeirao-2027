@@ -3620,27 +3620,29 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
       font-size: 12px;
     }
 
-    #profissionalView .prof-section {
-      background: #151515;
-      border: 1px solid #393939;
-      border-radius: 10px;
-      padding: 15px;
-      margin: 14px 0;
-    }
+   #profissionalView .prof-section {
+  background: linear-gradient(135deg,#f0ca4e,#c99b32);
+  border: 2px solid #e4bd43;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 14px 0;
+  color: #111 !important;
+}
+
+#profissionalView .prof-section h3 {
+  color: #111 !important;
+  margin-top: 0;
+  font-weight: 900;
+}
+
+#profissionalView .prof-section .small,
+#profissionalView .prof-section div {
+  color: #111;
+}
+
 #profissionalView #profissionalDetalhes[hidden] {
   display: none !important;
 }
-    #profissionalView .prof-section h3 {
-      color: #e4bd43;
-      margin-top: 0;
-    }
-
-    @media(max-width:600px) {
-      #profissionalView .prof-grid {
-        grid-template-columns: repeat(2,minmax(0,1fr));
-      }
-    }
-  </style>
 
   <div class="prof-header">
     <h2>⚽ FUTEBOL PROFISSIONAL</h2>
@@ -3653,8 +3655,6 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
   <div class="prof-grid">
 
     
-<div class="prof-grid">
-
   <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE A')">
     <div class="icon">🏆</div>
     <strong>BRASILEIRÃO SÉRIE A</strong>
