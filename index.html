@@ -439,8 +439,16 @@ html, body { margin:0; padding:0; }
 
 .official-sheet .sheet-heading{
   text-align:center;
-  padding:0 0 2px;
+  padding:0;
+  margin:0;
   border-bottom:1px solid #111;
+}
+.official-sheet .sheet-competition-logo{
+  display:block;
+  width:42px;
+  height:42px;
+  object-fit:contain;
+  margin:0 auto 2px;
 }
 
 .official-sheet .sheet-heading h2{
@@ -479,6 +487,9 @@ html, body { margin:0; padding:0; }
 .official-sheet .sheet-team{
   min-width:0;
   margin:0;
+  display:flex;
+  flex-direction:column;
+  height:100%;
 }
 
 .official-sheet .sheet-team h3{
@@ -10902,7 +10913,27 @@ if(gameView){
 @media print {
  html,body {background:#fff!important;color:#111!important}
  #matchSheet .sheet-page {background:#fff!important;color:#111!important;box-shadow:none!important}
- #matchSheet .sheet-page-one {break-after:page!important;page-break-after:always!important}
+#matchSheet .sheet-page{
+  width:210mm!important;
+  height:287mm!important;
+  min-height:287mm!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:5mm!important;
+  overflow:hidden!important;
+  break-inside:avoid!important;
+  page-break-inside:avoid!important;
+}
+#matchSheet .sheet-page-one{
+  display:block!important;
+  break-after:page!important;
+  page-break-after:always!important;
+}
+#matchSheet .sheet-page-two{
+  display:block!important;
+  break-before:page!important;
+  page-break-before:always!important;
+}
   #matchSheet .sheet-page-one .sheet-subs {display:none!important}
  #matchSheet .sheet-page-two {background:#fff!important}
  #matchSheet .sheet-page-two .sheet-event-grid h3,
