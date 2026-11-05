@@ -2774,8 +2774,7 @@ function renderizarResultadoTVFP() {
 
 html += `</section>`;
       
-               
-      html += `</section>`;
+
     });
   }
 
@@ -2856,8 +2855,8 @@ const rodape = documento.querySelector(
   'div[style*="border-top:1px solid #c99b32"]'
 );
 
-const secoesFases = elementos.filter(el =>
-  el.tagName === 'SECTION'
+const secoesFases = Array.from(
+  documento.querySelectorAll('section')
 );
 
 const jogos = [];
@@ -2869,8 +2868,9 @@ secoesFases.forEach(secao => {
     ? tituloFase.outerHTML
     : '';
 
-  const confrontos = Array.from(secao.children)
-    .filter(el => el.tagName === 'DIV');
+  const confrontos = Array.from(
+  secao.querySelectorAll(':scope > div')
+).filter(el => el.querySelector('p'));
 
   confrontos.forEach((jogo, indice) => {
     jogos.push({
