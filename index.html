@@ -2890,9 +2890,12 @@ secoesFases.forEach(secao => {
     ? tituloFase.outerHTML
     : '';
 
-  const confrontos = Array.from(
+ const confrontos = Array.from(
   secao.querySelectorAll(':scope > div')
-).filter(el => el.querySelector('p'));
+).filter(el =>
+  el.querySelector('h3') &&
+  el.querySelector('h3').textContent.includes('JOGO')
+);
 
   confrontos.forEach((jogo, indice) => {
     jogos.push({
