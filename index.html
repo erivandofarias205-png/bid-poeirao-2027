@@ -2731,48 +2731,57 @@ function renderizarResultadoTVFP() {
       `;
 
       jogos.forEach((jogo, i) => {
-        const equipe1 = jogo.equipe1
-          ? escaparSorteio(jogo.equipe1)
-          : '________________';
+  const equipe1 = jogo.equipe1
+    ? escaparSorteio(jogo.equipe1)
+    : '________________';
 
-        const equipe2 = jogo.equipe2
-          ? escaparSorteio(jogo.equipe2)
-          : '________________';
+  const equipe2 = jogo.equipe2
+    ? escaparSorteio(jogo.equipe2)
+    : '________________';
 
-        html += `
-          <div style="
-            background:#fff;
-            color:#111;
-            border:1px solid #c99b32;
-            border-radius:8px;
-            padding:14px 8px;
-            margin:12px 0;
-            text-align:center;
-          ">
-            <h3 style="color:#8b6810;margin:5px;">
-              JOGO ${String(i + 1).padStart(2, '0')}
-            </h3>
+  html += `
+    <div style="
+      background:#fff;
+      color:#111;
+      border:1px solid #c99b32;
+      border-radius:4px;
+      padding:3px 8px;
+      margin:2px 0;
+      text-align:center;
+      break-inside:avoid;
+    ">
+      <h3 style="color:#8b6810;margin:2px 0;font-size:10px;">
+        JOGO ${String(i + 1).padStart(2, '0')}
+      </h3>
 
-            <p style="color:#111;font-size:16px;font-weight:bold;">
-              ${equipe1} × ${equipe2}
-            </p>
+      <p style="color:#111;font-size:12px;font-weight:bold;margin:2px 0;">
+        ${equipe1} × ${equipe2}
+      </p>
 
-            <p style="color:#111;font-size:15px;letter-spacing:2px;">
-              000000000000 × 000000000000
-            </p>
+      <div style="display:flex;width:100%;align-items:center;gap:12px;margin:3px 0;font-size:12px;color:#111;">
+        <span style="flex:1;text-align:center;border-bottom:1px solid #111;padding-bottom:3px;">000000000000</span>
+        <strong>×</strong>
+        <span style="flex:1;text-align:center;border-bottom:1px solid #111;padding-bottom:3px;">000000000000</span>
+      </div>
 
-            <p style="color:#111;font-size:14px;">
-              __________________ × __________________
-            </p>
-          </div>
-        `;
-      });
+      <div style="display:flex;width:100%;gap:12px;margin:3px 0;">
+        <span style="flex:1;border-bottom:1px solid #111;height:16px;"></span>
+        <span style="flex:1;border-bottom:1px solid #111;height:16px;"></span>
+      </div>
+    </div>
+  `;
+});
 
+html += `</section>`;
+      
+               
       html += `</section>`;
     });
   }
 
   html += `
+  DIL0
+`;
       <div style="
         margin-top:24px;
         text-align:center;
@@ -2841,32 +2850,50 @@ function imprimirResultadoTVFP() {
     .map(el => el.outerHTML)
     .join('');
 
-// Blocos de jogos ou grupos
+// Separar os confrontos individuais de cada fase
 const elementos = Array.from(documento.children);
 
-const blocos = elementos.filter(el =>
-  !['H2', 'H3', 'P'].includes(el.tagName) &&
-  !el.querySelector('button')
+// O último bloco DIV é o rodapé institucional
+const rodape = documento.querySelector(
+  'div[style*="border-top:1px solid #c99b32"]'
 );
 
-// O último bloco é o rodapé institucional
-const rodape = blocos.length
-  ? blocos[blocos.length - 1].outerHTML
-  : '';
+const secoesFases = elementos.filter(el =>
+  el.tagName === 'SECTION'
+);
 
-const jogos = blocos.slice(0, -1);
-  const paginas = [];
+const jogos = [];
 
-  // Separar em até 10 jogos por folha
-  for (let i = 0; i < jogos.length; i += 10) {
-    paginas.push(jogos.slice(i, i + 10));
-  }
+secoesFases.forEach(secao => {
+  const tituloFase = secao.querySelector('h3');
 
-  if (!paginas.length) {
-    paginas.push([]);
-  }
+  const nomeFase = tituloFase
+    ? tituloFase.outerHTML
+    : '';
 
-  const conteudoPaginas = paginas.map((pagina, indice) => `
+  const confrontos = Array.from(secao.children)
+    .filter(el => el.tagName === 'DIV');
+
+  confrontos.forEach((jogo, indice) => {
+    jogos.push({
+      fase: nomeFase,
+      html: jogo.outerHTML
+    });
+  });
+});
+
+const paginas = [];
+
+// Separar em até 10 confrontos por folha
+for (let i = 0; i < jogos.length; i += 10) {
+  paginas.push(jogos.slice(i, i + 10));
+}
+
+if (!paginas.length) {
+  paginas.push([]);
+}
+
+const conteudoPaginas = paginas.map((pagina, indice) => `
     <section class="pagina">
       <div class="cabecalho">
         ${cabecalho}
@@ -2876,11 +2903,15 @@ const jogos = blocos.slice(0, -1);
       </div>
 
       <div class="lista-jogos">
-        ${pagina.map(jogo => jogo.outerHTML).join('')}
+       ${pagina.map((jogo, indice) =>
+  (indice === 0 || jogo.fase !== pagina[indice - 1].fase
+    ? jogo.fase
+    : '') + jogo.html
+).join('')}
       </div>
 
       <footer>
-        ${rodape}
+     ${rodape ? rodape.outerHTML : ''}
       </footer>
     </section>
   `).join('');
@@ -2959,29 +2990,30 @@ const jogos = blocos.slice(0, -1);
           flex: 1;
         }
 
-        .lista-jogos > div {
-          background: #fff !important;
-          color: #111 !important;
-          border: 1px solid #c99b32 !important;
-          border-radius: 5px !important;
-          padding: 7px 10px !important;
-          margin: 5px 0 !important;
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
+       .lista-jogos > div {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid #c99b32 !important;
+  border-radius: 3px !important;
+  padding: 3px 8px !important;
+  margin: 2px 0 !important;
+  min-height: 0 !important;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
 
-        .lista-jogos p,
-        .lista-jogos strong {
-          color: #111 !important;
-          font-size: 11px;
-        }
+.lista-jogos > div h3 {
+  font-size: 10px !important;
+  margin: 2px 0 !important;
+}
 
-        .lista-jogos h3 {
-          color: #8b6810 !important;
-          font-size: 13px;
-        }
+.lista-jogos > div p {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  margin: 2px 0 !important;
+}
 
-        footer {
+               footer {
           margin-top: auto;
           padding-top: 8px;
           border-top: 1px solid #c99b32;
