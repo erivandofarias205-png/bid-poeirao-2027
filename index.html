@@ -13552,5 +13552,132 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 </style>
   
+<style id="sumula-ajuste-final-duas-folhas">
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 5mm;
+  }
+
+  #matchSheet .official-sheet {
+    width: 200mm !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 7pt !important;
+  }
+
+  #matchSheet .sheet-page {
+    width: 200mm !important;
+    height: 287mm !important;
+    min-height: 287mm !important;
+    max-height: 287mm !important;
+    box-sizing: border-box !important;
+    padding: 3mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  #matchSheet .sheet-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
+  /* ATLETAS: LINHAS MAIS BAIXAS */
+  #matchSheet .sheet-team th,
+  #matchSheet .sheet-team td {
+    height: 3mm !important;
+    min-height: 0 !important;
+    padding: 0.2mm 0.5mm !important;
+    font-size: 5.5pt !important;
+    line-height: 1 !important;
+  }
+
+  #matchSheet .sheet-player-photo,
+  #matchSheet .sheet-player-photo img {
+    width: 3.5mm !important;
+    height: 3.5mm !important;
+    min-height: 3.5mm !important;
+    object-fit: cover !important;
+  }
+
+  #matchSheet .sheet-team h3 {
+    padding: 1mm !important;
+    margin: 0 !important;
+    font-size: 8pt !important;
+  }
+
+  /* GOLS E CARTÕES: QUADRADOS COM MENOS ESPAÇO */
+  #matchSheet .sheet-event-grid {
+    gap: 1mm !important;
+  }
+
+  #matchSheet .sheet-event-grid .event-pair {
+    min-height: 5mm !important;
+    height: auto !important;
+    padding: 0.5mm !important;
+    gap: 1mm !important;
+    font-size: 7pt !important;
+    line-height: 1.1 !important;
+  }
+
+  #matchSheet .sheet-event-grid .event-pair span {
+    padding: 0.5mm !important;
+    line-height: 1.1 !important;
+  }
+
+  /* SUBSTITUIÇÕES */
+  #matchSheet .sheet-substitution-grid {
+    gap: 1mm !important;
+    margin: 1mm 0 !important;
+  }
+
+  #matchSheet .sheet-substitution-grid .event-line {
+    min-height: 5mm !important;
+    height: auto !important;
+    padding: 0.5mm !important;
+    font-size: 6.5pt !important;
+    line-height: 1.1 !important;
+  }
+
+  /* CABEÇALHOS E IDENTIFICAÇÃO */
+  #matchSheet .sheet-heading {
+    padding-bottom: 1mm !important;
+  }
+
+  #matchSheet .sheet-meta {
+    gap: 1mm !important;
+    margin: 1mm 0 !important;
+  }
+
+  #matchSheet .sheet-meta span {
+    padding: 1mm !important;
+  }
+
+  #matchSheet .sheet-staff,
+  #matchSheet .sheet-subs {
+    padding: 1mm !important;
+    line-height: 1.2 !important;
+    font-size: 6.5pt !important;
+  }
+
+  #matchSheet .sheet-referee-grid,
+  #matchSheet .sheet-report {
+    margin-top: 1mm !important;
+  }
+
+  #matchSheet .sheet-referee-grid div,
+  #matchSheet .sheet-report div {
+    padding: 1mm !important;
+  }
+
+  #matchSheet .sheet-sign-row {
+    margin-top: 1mm !important;
+    gap: 2mm !important;
+  }
+}
+</style>
+
 </body>
 </html>
