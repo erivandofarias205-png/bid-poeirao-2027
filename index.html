@@ -3650,87 +3650,113 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
 
   <div class="prof-grid">
 
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>BRASILEIRÃO SÉRIE A</strong>
-    </div>
+    
+<div class="prof-grid">
 
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>BRASILEIRÃO SÉRIE B</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>BRASILEIRÃO SÉRIE C</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>BRASILEIRÃO SÉRIE D</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>COPA DO BRASIL</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>LIBERTADORES</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>SUL-AMERICANA</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>FUTEBOL FEMININO</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🏆</div>
-      <strong>CAMPEONATOS ESTADUAIS</strong>
-    </div>
-
-    <div class="prof-card">
-      <div class="icon">🌎</div>
-      <strong>FUTEBOL INTERNACIONAL</strong>
-    </div>
-
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE A')">
+    <div class="icon">🏆</div>
+    <strong>BRASILEIRÃO SÉRIE A</strong>
   </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE B')">
+    <div class="icon">🏆</div>
+    <strong>BRASILEIRÃO SÉRIE B</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE C')">
+    <div class="icon">🏆</div>
+    <strong>BRASILEIRÃO SÉRIE C</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE D')">
+    <div class="icon">🏆</div>
+    <strong>BRASILEIRÃO SÉRIE D</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('COPA DO BRASIL')">
+    <div class="icon">🏆</div>
+    <strong>COPA DO BRASIL</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('LIBERTADORES')">
+    <div class="icon">🏆</div>
+    <strong>LIBERTADORES</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('SUL-AMERICANA')">
+    <div class="icon">🏆</div>
+    <strong>SUL-AMERICANA</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('FUTEBOL FEMININO')">
+    <div class="icon">🏆</div>
+    <strong>FUTEBOL FEMININO</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('CAMPEONATOS ESTADUAIS')">
+    <div class="icon">🏆</div>
+    <strong>CAMPEONATOS ESTADUAIS</strong>
+  </div>
+
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('FUTEBOL INTERNACIONAL')">
+    <div class="icon">🌎</div>
+    <strong>FUTEBOL INTERNACIONAL</strong>
+  </div>
+
+</div>
+
+<div id="profissionalDetalhes" class="prof-section" hidden>
+  <h3 id="profissionalTitulo"></h3>
 
   <div class="prof-section">
     <h3>📅 JOGOS E RESULTADOS</h3>
-    <div class="small">
-      Área destinada aos jogos do dia, partidas ao vivo,
-      próximos confrontos e resultados finalizados.
+    <div id="profissionalJogos">
+      Dados dos jogos serão carregados aqui.
     </div>
   </div>
 
   <div class="prof-section">
     <h3>📊 CLASSIFICAÇÃO</h3>
-    <div class="small">
-      Tabelas de classificação das principais competições.
+    <div id="profissionalClassificacao">
+      Dados da classificação serão carregados aqui.
     </div>
   </div>
 
   <div class="prof-section">
     <h3>⚽ ARTILHARIA</h3>
-    <div class="small">
-      Ranking dos principais goleadores.
+    <div id="profissionalArtilharia">
+      Dados dos artilheiros serão carregados aqui.
     </div>
   </div>
 
-  <div class="prof-section">
-    <h3>📰 NOTÍCIAS DO FUTEBOL</h3>
-    <div class="small">
-      Espaço para notícias e atualizações do futebol brasileiro
-      e internacional.
-    </div>
+  <button class="tab" type="button"
+    onclick="fecharCompeticaoProfissional()"
+    style="background:#c99b32;color:#111;font-weight:900">
+    ← VOLTAR ÀS COMPETIÇÕES
+  </button>
+</div>
+
+<div class="prof-section">
+  <h3>📰 NOTÍCIAS DO FUTEBOL</h3>
+  <div class="small">
+    Notícias e atualizações do futebol brasileiro e internacional.
   </div>
+</div>
+
+<script>
+function abrirCompeticaoProfissional(nome) {
+  document.getElementById('profissionalTitulo').textContent = nome;
+
+  document.getElementById('profissionalDetalhes').hidden = false;
+
+  document.getElementById('profissionalDetalhes')
+    .scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function fecharCompeticaoProfissional() {
+  document.getElementById('profissionalDetalhes').hidden = true;
+}
+</script>
 
   <div style="text-align:center;margin:20px 0">
     <button class="tab" type="button"
