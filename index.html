@@ -11493,7 +11493,95 @@ equipe_visitante_id: Number(visitanteId),
     }
   }
 }
- // ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
+async function sincronizarSemifinaisSupabase(c) {
+  if (!c?.dbId) {
+    throw new Error('Competição sem vínculo com o Supabase.');
+  }
+
+  const confrontos = c.semiFinalTies || [];
+  const equipes = teams(c);
+
+  const obterEquipe = id =>
+    equipes.find(t =>
+      String(t.id) === String(id) ||
+      String(t.dbId) === String(id)
+    );
+
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
+
+    if (!m?.a || !m?.b) continue;
+
+    const mandante = obterEquipe(m.a);
+    const visitante = obterEquipe(m.b);
+
+    const mandanteId = mandante?.dbId;
+    const visitanteId = visitante?.dbId;
+
+    if (!mandanteId || !visitanteId) {
+      throw new Error(
+        `Equipes não identificadas no Supabase na semifinal ${i + 1}.`
+      );
+    }
+
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+    const dataHora = m.date1
+      ? new Date(`${m.date1}T${m.time1 || '12:00'}:00`).toISOString()
+      : null;
+
+    const chave = `semifinal-${i + 1}-jogo-1`;
+
+    const payload = {
+      competicao_id: c.dbId,
+      chave_fase: chave,
+      equipe_mandante_id: mandanteId,
+      equipe_visitante_id: visitanteId,
+      fase: 'Semifinais',
+      rodada: null,
+      formato: 'unico',
+      data_hora: dataHora,
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null ? null : Number(m.score1B),
+      status
+    };
+
+    const { data: existentes, error: buscaErro } = await supabaseClient
+      .from('jogos')
+      .select('id')
+      .eq('competicao_id', c.dbId)
+      .eq('chave_fase', chave);
+
+    if (buscaErro) throw buscaErro;
+
+    if (existentes?.length > 1) {
+      throw new Error(`Semifinal ${i + 1} possui partidas duplicadas.`);
+    }
+
+    if (existentes?.length === 1) {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .update(payload)
+        .eq('id', existentes[0].id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .insert(payload);
+
+      if (error) throw error;
+    }
+  }
+}
+  // ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
  function renderQuarterFinals() {
   const c = comp();
   const panel = $p('quarterFinalsTies');
@@ -11980,8 +12068,11 @@ $p('saveSemiFinals')?.addEventListener('click', async () => {
   save();
 
   try {
-    await saveCompetitionPhaseConfig(c);
-    renderSemiFinals();
+  await saveCompetitionPhaseConfig(c);
+await sincronizarSemifinaisSupabase(c);
+await loadSupabaseMatches();
+
+renderSemiFinals();
     alert('Semifinais salvas no Supabase!');
   } catch (error) {
     console.error('Erro ao salvar semifinais:', error);
