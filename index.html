@@ -7952,7 +7952,22 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({
   penaltisA:m.penalties1A,
   penaltisB:m.penalties1B
 })));
-  const normalizePhase=m=>String(m.round||m.fase||m.publicRound||'')
+ const publicMatchDate = m => {
+  const raw = String(m.date || '').trim();
+  if (!raw) return '';
+
+  let date = raw;
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (iso) {
+    date = `${iso[3]}/${iso[2]}/${iso[1]}`;
+  }
+
+  const time = String(m.time || '').trim();
+
+  return `📅 ${date}${time ? ' • ' + time : ''}`;
+};
+     const normalizePhase=m=>String(m.round||m.fase||m.publicRound||'')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g,'')
     .toLowerCase();
@@ -8128,11 +8143,16 @@ const penalties =
         return `<div class="group-result-row">
           <span>${esc(m.homeName||home.name||home.nome||'A definir')}</span>
           ${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}
-                  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:75px;">
-            <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
-            ${penalties}
-          </div>
-          ${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}
+               <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:75px;">
+  <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
+  ${penalties}
+  ${publicMatchDate(m) ? `
+    <small style="display:block;margin-top:5px;font-size:10px;font-weight:800;color:#f5d45b;text-align:center;">
+      ${esc(publicMatchDate(m))}
+    </small>
+  ` : ''}
+</div>
+${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}
           <span>${esc(m.awayName||away.name||away.nome||'A definir')}</span>
         </div>`;
       }).join('')}</div>
@@ -8184,7 +8204,16 @@ const groupsHTML=orderedGroups.map(([g,list])=>{
         const homeLogo=home.logo||home.escudo_url||home.escudoUrl||'';
         const awayLogo=away.logo||away.escudo_url||away.escudoUrl||'';
         const finished=String(m.status||'').toLowerCase().includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!=='';
-        return `<div class="group-result-row"><span>${esc(m.homeName||home.name||'Equipe')}</span>${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}<b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}<span>${esc(m.awayName||away.name||'Equipe')}</span></div>`;
+        return `<div class="group-result-row">
+  <span>${esc(m.homeName||home.name||'Equipe')}</span>
+  ${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:75px;">
+    <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
+    ${publicMatchDate(m) ? `<small style="margin-top:5px;font-size:10px;font-weight:800;color:#f5d45b;text-align:center;">${esc(publicMatchDate(m))}</small>` : ''}
+  </div>
+  ${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}
+  <span>${esc(m.awayName||away.name||'Equipe')}</span>
+</div>`;
       }).join('')}</div>`
     : '';
   return tableHTML(title,list)+results;
