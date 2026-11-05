@@ -3567,7 +3567,181 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
 </div>
 <div class="panel"><div class="ph"><h3>Classificação demonstrativa</h3><span class="pill">Atualização manual nesta prévia</span></div><div class="tablewrap"><table><thead><tr><th>Pos.</th><th>Equipe</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Aprov. %</th></tr></thead><tbody id="standingRows"></tbody></table></div><div class="pad small muted">A classificação será calculada a partir dos jogos finalizados cadastrados nesta prévia.</div></div>
 </section>
-<section class="hidden" id="adminView">
+<section class="hidden" id="profissionalView">
+
+  <style>
+    #profissionalView {
+      color: #fff;
+    }
+
+    #profissionalView .prof-header {
+      background: linear-gradient(135deg,#080808,#242424);
+      border: 1px solid #c99b32;
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #profissionalView .prof-header h2 {
+      color: #e4bd43;
+      margin: 0 0 8px;
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    #profissionalView .prof-grid {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 12px;
+      margin: 18px 0 25px;
+    }
+
+    #profissionalView .prof-card {
+      background: #151515;
+      border: 1px solid #a9822d;
+      border-radius: 10px;
+      padding: 15px 7px;
+      text-align: center;
+      min-height: 125px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+    }
+
+    #profissionalView .prof-card .icon {
+      font-size: 36px;
+    }
+
+    #profissionalView .prof-card strong {
+      color: #e4bd43;
+      font-size: 12px;
+    }
+
+    #profissionalView .prof-section {
+      background: #151515;
+      border: 1px solid #393939;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 14px 0;
+    }
+
+    #profissionalView .prof-section h3 {
+      color: #e4bd43;
+      margin-top: 0;
+    }
+
+    @media(max-width:600px) {
+      #profissionalView .prof-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+      }
+    }
+  </style>
+
+  <div class="prof-header">
+    <h2>⚽ FUTEBOL PROFISSIONAL</h2>
+    <div>TVFP SPORTS • BID GERAL FUTEBOL AMADOR</div>
+    <p>O mundo do futebol em um só lugar</p>
+  </div>
+
+  <h3 style="color:#e4bd43">PRINCIPAIS COMPETIÇÕES 2026</h3>
+
+  <div class="prof-grid">
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>BRASILEIRÃO SÉRIE A</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>BRASILEIRÃO SÉRIE B</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>BRASILEIRÃO SÉRIE C</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>BRASILEIRÃO SÉRIE D</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>COPA DO BRASIL</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>LIBERTADORES</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>SUL-AMERICANA</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>FUTEBOL FEMININO</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🏆</div>
+      <strong>CAMPEONATOS ESTADUAIS</strong>
+    </div>
+
+    <div class="prof-card">
+      <div class="icon">🌎</div>
+      <strong>FUTEBOL INTERNACIONAL</strong>
+    </div>
+
+  </div>
+
+  <div class="prof-section">
+    <h3>📅 JOGOS E RESULTADOS</h3>
+    <div class="small">
+      Área destinada aos jogos do dia, partidas ao vivo,
+      próximos confrontos e resultados finalizados.
+    </div>
+  </div>
+
+  <div class="prof-section">
+    <h3>📊 CLASSIFICAÇÃO</h3>
+    <div class="small">
+      Tabelas de classificação das principais competições.
+    </div>
+  </div>
+
+  <div class="prof-section">
+    <h3>⚽ ARTILHARIA</h3>
+    <div class="small">
+      Ranking dos principais goleadores.
+    </div>
+  </div>
+
+  <div class="prof-section">
+    <h3>📰 NOTÍCIAS DO FUTEBOL</h3>
+    <div class="small">
+      Espaço para notícias e atualizações do futebol brasileiro
+      e internacional.
+    </div>
+  </div>
+
+  <div style="text-align:center;margin:20px 0">
+    <button class="tab" type="button"
+      onclick="showTab('public')"
+      style="background:#c99b32;color:#111;font-weight:900">
+      ← VOLTAR AO BID
+    </button>
+  </div>
+
+</section>
+  <section class="hidden" id="adminView">
 <div class="panel" id="adminLoginPanel">
 <div class="ph"><h3>Login do administrador</h3><span class="pill">Acesso protegido</span></div>
 <div class="pad">
@@ -4454,7 +4628,7 @@ if(!comp)return !(db.competitions||[]).length;
   }
   function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
   function showTab(name){
-   const views=['public','admin','games','game','profile','classification','teams','photos','highlights'];
+   const views=['public','admin','games','game','profile','classification','teams','photos','highlights','profissional'];
    views.forEach(x=>{const el=$(x+'View');if(el)el.classList.toggle('hidden',x!==name)});
    document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   }
