@@ -10590,7 +10590,27 @@ document.addEventListener('DOMContentLoaded', function () {
   gamesView.querySelectorAll(':scope > .panel').forEach(function (panel) {
     if (panel.querySelector('#standingRows')) adminProtected.appendChild(panel);
   });
+/* Registro e exclusão de eventos somente para o administrador. */
+const gameView = $id('gameView');
 
+if(gameView){
+  const eventPanels = Array.from(
+    gameView.querySelectorAll(':scope > .panel')
+  );
+
+  eventPanels.forEach(function(panel){
+    if(
+      panel.querySelector('#gameName') ||
+      panel.querySelector('#eventList') ||
+      panel.querySelector('#eventTotal')
+    ){
+      adminProtected.appendChild(panel);
+    }
+  });
+
+  const quickNote = gameView.querySelector(':scope > .note');
+  if(quickNote) quickNote.remove();
+}
   /* Se o painel público de jogos estiver vazio, apresentar mensagem clara. */
   if (!gamesView.querySelector('.next-match-panel')) {
     const empty = document.createElement('div');
