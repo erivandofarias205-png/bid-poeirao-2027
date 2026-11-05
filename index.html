@@ -7952,7 +7952,7 @@ console.log('JOGOS ELIMINATÓRIOS:', allMatches.map(m=>({
   penaltisA:m.penalties1A,
   penaltisB:m.penalties1B
 })));
- const publicMatchDate = m => {
+window.publicMatchDate = function(m) {
   const raw = String(m.date || '').trim();
   if (!raw) return '';
 
@@ -8146,9 +8146,9 @@ const penalties =
                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:75px;">
   <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
   ${penalties}
-  ${publicMatchDate(m) ? `
+  ${window.publicMatchDate(m) ? `
     <small style="display:block;margin-top:5px;font-size:10px;font-weight:800;color:#f5d45b;text-align:center;">
-      ${esc(publicMatchDate(m))}
+      ${esc(window.publicMatchDate(m))}
     </small>
   ` : ''}
 </div>
