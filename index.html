@@ -10926,6 +10926,17 @@ if(gameView){
 }
 #matchSheet .sheet-substitution-grid .event-line {background:#fff!important;color:#111!important;border-bottom:1px solid #bbb!important}
 @media print {
+  #matchSheet .sheet-substitution-grid .event-line {
+    min-height:5mm!important;
+    height:5mm!important;
+    padding:0 1mm!important;
+    margin:0!important;
+    line-height:5mm!important;
+    font-size:7pt!important;
+    border-bottom:1px solid #bbb!important;
+  }
+}
+  @media print {
  html,body {background:#fff!important;color:#111!important}
  #matchSheet .sheet-page {background:#fff!important;color:#111!important;box-shadow:none!important}
 #matchSheet .sheet-page{
@@ -10943,11 +10954,6 @@ if(gameView){
   display:block!important;
   break-before:auto!important;
   page-break-before:auto!important;
-}
-#matchSheet .sheet-page-two{
-  display:block!important;
-  break-before:page!important;
-  page-break-before:always!important;
 }
   #matchSheet .sheet-page-one .sheet-subs {display:none!important}
  #matchSheet .sheet-page-two {background:#fff!important}
