@@ -2760,46 +2760,38 @@ html += `
       JOGO ${String(i + 1).padStart(2, '0')}
     </h3>
 
-   <div style="
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  width:100%;
-  gap:5px;
-">
-  <strong style="font-size:16px;text-align:center;">×</strong>
+    <div style="
+      display:grid;
+      grid-template-columns:1fr 24px 1fr;
+      align-items:center;
+      width:100%;
+      gap:5px;
+    ">
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:bold;margin-bottom:7px;">
+          ${equipe1}
+        </div>
+        <div style="display:flex;justify-content:center;gap:3px;flex-wrap:nowrap;">
+          ${Array.from({length:10}, () =>
+            '<span style="display:inline-block;width:11px;height:11px;border:1px solid #111;border-radius:50%;"></span>'
+          ).join('')}
+        </div>
+      </div>
 
-  <div style="
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    width:100%;
-    gap:12px;
-  ">
-    <div style="text-align:center;">
-      <div style="font-size:12px;font-weight:bold;margin-bottom:5px;">
-        ${equipe1}
-      </div>
-      <div style="display:flex;justify-content:center;gap:3px;">
-        ${Array.from({length:10}, () =>
-          '<span style="display:inline-block;width:11px;height:11px;border:1px solid #111;border-radius:50%;"></span>'
-        ).join('')}
-      </div>
-      <div style="border-bottom:1px solid #111;margin-top:5px;width:100%;"></div>
-    </div>
+      <strong style="font-size:16px;text-align:center;">×</strong>
 
-    <div style="text-align:center;">
-      <div style="font-size:12px;font-weight:bold;margin-bottom:5px;">
-        ${equipe2}
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:bold;margin-bottom:7px;">
+          ${equipe2}
+        </div>
+        <div style="display:flex;justify-content:center;gap:3px;flex-wrap:nowrap;">
+          ${Array.from({length:10}, () =>
+            '<span style="display:inline-block;width:11px;height:11px;border:1px solid #111;border-radius:50%;"></span>'
+          ).join('')}
+        </div>
       </div>
-      <div style="display:flex;justify-content:center;gap:3px;">
-        ${Array.from({length:10}, () =>
-          '<span style="display:inline-block;width:11px;height:11px;border:1px solid #111;border-radius:50%;"></span>'
-        ).join('')}
-      </div>
-      <div style="border-bottom:1px solid #111;margin-top:5px;width:100%;"></div>
     </div>
   </div>
-</div>
 `;
 
       });
