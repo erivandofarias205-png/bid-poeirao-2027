@@ -1899,7 +1899,23 @@ overflow: visible !important;
 </style>
 
 </style>
-
+<style id="sumula-fonte-12">
+#matchSheet .official-sheet table{
+  font-size:12px!important;
+}
+#matchSheet .official-sheet th{
+  font-size:11px!important;
+}
+#matchSheet .official-sheet td{
+  font-size:12px!important;
+}
+#matchSheet .sheet-player-photo img{
+  width:8mm!important;
+  height:8mm!important;
+  object-fit:cover!important;
+  display:inline-block!important;
+}
+</style>
 <style id="sumula-ajuste-topo-primeira-folha">
 @media print {
   #matchSheet .sheet-page-one {
@@ -8509,23 +8525,24 @@ const ps=(team?.players||[]).filter(p=>p && !isNonPlayerRole(p)).slice(0,30);
     let body='';
     for(let i=0;i<30;i++){
       const p=ps[i],photo=p&&(p.photo||p.foto_url||p.photoUrl||p.foto||'');
-     const stats = p ? getSheetPlayerStats(p,team) : null;
+    const stats = p ? getSheetPlayerStats(p,team) : null;
 
 body+=`<tr>
   <td class="shirt-cell">${p?esc(p.shirtNumber||p.number||''):''}</td>
-  <td class="sheet-player-photo">${photo?`<img src="${photo}" alt="" crossorigin="anonymous">`:'<span class="sheet-photo-empty"></span>'}</td>
+  <td class="sheet-player-photo">
+    ${photo?`<img src="${esc(photo)}" alt="Foto do atleta">`:'<span class="sheet-photo-empty"></span>'}
+  </td>
   <td class="player-name">
     ${p?`
-      <span style="font-size:8px;font-weight:bold;white-space:nowrap">
+      <span style="font-size:12px;font-weight:bold;white-space:nowrap">
         ⚽ ${stats.goals} &nbsp; 🟨 ${stats.yellow} &nbsp; 🟥 ${stats.red}
       </span>
-      <br>${esc(p.name||p.nome||'')}
+      &nbsp; ${esc(p.name||p.nome||'')}
     `:''}
   </td>
   <td class="bid-cell">${p?esc(p.id||p.bid||p.bidNumber||''):''}</td>
 </tr>`;
-    }
-return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div></div></section>`;
+    }return `<section class="sheet-team"><h3>${teamLogo(team)?`<img class="sheet-team-logo" src="${teamLogo(team)}" alt="">`:''}<span>${esc(teamName(team,fallback))} — ${side==='home'?'MANDANTE':'VISITANTE'}</span></h3><table><thead><tr><th>Nº</th><th>FOTO</th><th>NOME DO ATLETA</th><th>BID</th></tr></thead><tbody>${body}</tbody></table><div class="sheet-staff"><div class="sheet-captain-line"><b>CAPITÃO:</b> __________________________ &nbsp; <b>Nº:</b> _______</div></div></section>`;
   };
   const safeDate=dateBR(m.date);
   out.innerHTML=`<div class="official-sheet">
