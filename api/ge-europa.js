@@ -89,24 +89,6 @@ async function consultarGE(config) {
   const listaJogos = extrairJSON(script, 'listaJogos');
   const classificacao = extrairJSON(script, 'classificacao');
 
- const diagnostico = {
-  camposJogo: Object.keys(listaJogos[0] || {}),
-  camposClassificacao: Object.keys(classificacao || {}),
-  rodada: classificacao.rodada,
-  fasesNavegacao: classificacao.fases_navegacao,
-  listaJogosClassificacao: {
-    total: classificacao.lista_jogos?.length || 0,
-    primeiro: classificacao.lista_jogos?.[0] || null
-  },
-  variaveisArtilharia: [
-    ...script.matchAll(
-      /const\s+([A-Za-z_$][\w$]*)\s*=/g
-    )
-  ]
-    .map(item => item[1])
-    .filter(nome => /artilh|goleador|scorer|marcador/i.test(nome))
-};
-  
   const faseEncontrada = script.match(
     /const\s+fase\s*=\s*(\{[\s\S]*?\});/
   );
@@ -209,7 +191,6 @@ async function consultarGE(config) {
     temporada: edicao?.nome || '',
     fase: fase?.slug || '',
     regulamento: edicao?.regulamento || '',
-    diagnostico,
     jogos,
     total_jogos: jogos.length,
     classificacao: tabela,
