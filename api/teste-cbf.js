@@ -142,7 +142,7 @@ return res.status(200).json({
   otal_equipes: grupoB.length + grupoC.length,
 diagnostico_jogos: diagnosticoJogos,
 diagnostico_partida: diagnosticoPartida,
-diagnostico_estrutura: diagnosticoEstrutura
+diagnostico_estrutura: diagnosticoEstrutura,
 });
 
 
