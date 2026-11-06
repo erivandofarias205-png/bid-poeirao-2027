@@ -20,19 +20,38 @@ export default async function handler(req, res) {
 
     const html = await resposta.text();
 
-function encontrarTrecho(termo) {
-  const posicao = html.toLowerCase().indexOf(termo.toLowerCase());
+function encontrarOcorrencias(termo, limite = 10) {
+  const resultados = [];
+  let inicio = 0;
 
-  return posicao >= 0
-    ? html.slice(Math.max(0, posicao - 1500), posicao + 4000)
-    : 'Não encontrado';
+  while (resultados.length < limite) {
+    const posicao = html.toLowerCase().indexOf(
+      termo.toLowerCase(),
+      inicio
+    );
+
+    if (posicao === -1) break;
+
+    resultados.push({
+      posicao,
+      trecho: html.slice(
+        Math.max(0, posicao - 300),
+        posicao + 1500
+      )
+    });
+
+    inicio = posicao + termo.length;
+  }
+
+  return resultados;
 }
 
 const diagnosticoHTML = {
   tamanho: html.length,
-  trechoPartidas: encontrarTrecho('partidas'),
-  trechoRodada: encontrarTrecho('rodada'),
-  trechoJogos: encontrarTrecho('jogos')
+  partidas: encontrarOcorrencias('"partidas"'),
+  matches: encontrarOcorrencias('"matches"'),
+  jogos: encontrarOcorrencias('Jogo 211'),
+  rodadas: encontrarOcorrencias('"rodada"')
 };
 
     function limpar(texto) {
