@@ -13451,11 +13451,17 @@ async function sincronizarSemifinaisSupabase(c) {
   const confrontos = c.semiFinalTies || [];
   const equipes = teams(c);
 
-  const obterEquipe = id =>
-    equipes.find(t =>
-      String(t.id) === String(id) ||
-      String(t.dbId) === String(id)
+  const obterEquipe = id => {
+    const original = String(id || '');
+    const limpo = original.replace(/^dbteam-/, '');
+
+    return equipes.find(t =>
+      String(t.id) === original ||
+      String(t.dbId) === original ||
+      String(t.id) === limpo ||
+      String(t.dbId) === limpo
     );
+  };
 
   for (let i = 0; i < confrontos.length; i++) {
     const m = confrontos[i];
@@ -13465,12 +13471,20 @@ async function sincronizarSemifinaisSupabase(c) {
     const mandante = obterEquipe(m.a);
     const visitante = obterEquipe(m.b);
 
-    const mandanteId = mandante?.dbId;
-    const visitanteId = visitante?.dbId;
+    const mandanteId = mandante?.dbId ||
+      String(mandante?.id || '').replace(/^dbteam-/, '');
 
-    if (!mandanteId || !visitanteId) {
+    const visitanteId = visitante?.dbId ||
+      String(visitante?.id || '').replace(/^dbteam-/, '');
+
+    if (
+      !mandanteId ||
+      !visitanteId ||
+      !/^\d+$/.test(String(mandanteId)) ||
+      !/^\d+$/.test(String(visitanteId))
+    ) {
       throw new Error(
-        `Equipes não identificadas no Supabase na semifinal ${i + 1}.`
+        `Não foi possível identificar os IDs reais das equipes da semifinal ${i + 1}.`
       );
     }
 
@@ -13489,8 +13503,8 @@ async function sincronizarSemifinaisSupabase(c) {
     const payload = {
       competicao_id: c.dbId,
       chave_fase: chave,
-      equipe_mandante_id: mandanteId,
-      equipe_visitante_id: visitanteId,
+      equipe_mandante_id: Number(mandanteId),
+      equipe_visitante_id: Number(visitanteId),
       fase: 'Semifinais',
       rodada: null,
       formato: 'unico',
@@ -13503,11 +13517,12 @@ async function sincronizarSemifinaisSupabase(c) {
       status
     };
 
-    const { data: existentes, error: buscaErro } = await supabaseClient
-      .from('jogos')
-      .select('id')
-      .eq('competicao_id', c.dbId)
-      .eq('chave_fase', chave);
+    const { data: existentes, error: buscaErro } =
+      await supabaseClient
+        .from('jogos')
+        .select('id')
+        .eq('competicao_id', c.dbId)
+        .eq('chave_fase', chave);
 
     if (buscaErro) throw buscaErro;
 
