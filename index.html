@@ -4301,56 +4301,160 @@ async function carregarArtilhariaProfissional(nome) {
       throw new Error('Artilharia não encontrada.');
     }
 
-    area.innerHTML = `
-      <p>
-        <strong>${escapar(dados.competicao || nome)}</strong>
-        — ${dados.total} jogadores
-      </p>
+   const jogadores = dados.artilheiros;
 
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${dados.artilheiros.map((jogador, indice) => `
+area.innerHTML = `
+  <div style="margin-bottom:10px">
+    <strong style="color:#222">
+      ${escapar(dados.competicao || nome)}
+    </strong>
+    <span style="color:#777;font-size:12px">
+      — ${dados.total} jogadores
+    </span>
+  </div>
+
+  <input
+    id="pesquisaArtilhariaProfissional"
+    type="search"
+    placeholder="🔎 Pesquisar jogador ou clube..."
+    style="
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      background:#fff;
+      color:#222;
+      font-size:14px;
+      margin-bottom:10px;
+      outline:none;
+    "
+  >
+
+  <div id="listaArtilheirosProfissional"
+    style="display:flex;flex-direction:column;gap:5px">
+  </div>
+
+  <p id="avisoArtilhariaProfissional"
+    style="font-size:11px;color:#777;text-align:center;margin-top:8px">
+    Mostrando os 10 primeiros. Pesquise para encontrar os demais.
+  </p>
+`;
+
+const lista = area.querySelector('#listaArtilheirosProfissional');
+const pesquisa = area.querySelector('#pesquisaArtilhariaProfissional');
+const aviso = area.querySelector('#avisoArtilhariaProfissional');
+
+function mostrarArtilheiros(filtro = '') {
+  const termo = normalizar(filtro);
+
+  const encontrados = jogadores.filter(jogador =>
+    normalizar(jogador.nome).includes(termo) ||
+    normalizar(jogador.clube).includes(termo)
+  );
+
+  const exibidos = termo
+    ? encontrados
+    : encontrados.slice(0, 10);
+
+  lista.innerHTML = exibidos.map(jogador => {
+    const indice = jogadores.indexOf(jogador);
+
+    return `
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:8px;
+        padding:5px 8px;
+        min-height:42px;
+        background:#fff;
+        border:1px solid #e5e5e5;
+        border-radius:7px;
+        color:#222;
+      ">
+
+        <strong style="
+          width:20px;
+          text-align:center;
+          color:#b58920;
+          font-size:12px;
+          flex-shrink:0;
+        ">
+          ${indice + 1}
+        </strong>
+
+        <img
+          src="${escapar(jogador.foto)}"
+          alt=""
+          style="
+            width:36px;
+            height:36px;
+            object-fit:cover;
+            border-radius:50%;
+            background:#eee;
+            flex-shrink:0;
+          "
+        >
+
+        <div style="flex:1;min-width:0">
+          <strong style="
+            display:block;
+            color:#222;
+            font-size:12px;
+            line-height:1.2;
+          ">
+            ${escapar(jogador.nome)}
+          </strong>
+
           <div style="
             display:flex;
             align-items:center;
-            gap:10px;
-            padding:9px;
-            background:#171717;
-            border:1px solid #444;
-            border-radius:9px;
-            color:#fff;
+            gap:4px;
+            font-size:10px;
+            color:#666;
+            margin-top:3px;
           ">
-            <strong style="width:25px;text-align:center;color:#e4bd43">
-              ${indice + 1}
-            </strong>
+            ${jogador.escudo ? `
+              <img
+                src="${escapar(jogador.escudo)}"
+                alt=""
+                style="width:15px;height:15px;object-fit:contain"
+              >
+            ` : ''}
 
-            <img
-              src="${escapar(jogador.foto)}"
-              alt=""
-              style="width:43px;height:43px;object-fit:cover;border-radius:50%;background:#333"
-            >
-
-            <div style="flex:1;min-width:0">
-              <strong>${escapar(jogador.nome)}</strong>
-              <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#ccc;margin-top:4px">
-                <img
-                  src="${escapar(jogador.escudo)}"
-                  alt=""
-                  style="width:18px;height:18px;object-fit:contain"
-                >
-                ${escapar(jogador.clube)}
-              </div>
-            </div>
-
-            <div style="text-align:center;min-width:42px">
-              <strong style="font-size:22px;color:#e4bd43">
-                ${Number(jogador.gols) || 0}
-              </strong>
-              <div style="font-size:10px;color:#ccc">GOLS</div>
-            </div>
+            ${escapar(jogador.clube)}
           </div>
-        `).join('')}
+        </div>
+
+        <div style="text-align:center;min-width:35px">
+          <strong style="font-size:19px;color:#b58920">
+            ${Number(jogador.gols) || 0}
+          </strong>
+          <div style="font-size:9px;color:#777">GOLS</div>
+        </div>
+
       </div>
     `;
+  }).join('');
+
+  if (!exibidos.length) {
+    lista.innerHTML = `
+      <p style="color:#777;text-align:center">
+        Nenhum jogador encontrado.
+      </p>
+    `;
+  }
+
+  aviso.textContent = termo
+    ? `Encontrados: ${encontrados.length} jogador(es).`
+    : `Mostrando os 10 primeiros de ${jogadores.length}. Pesquise para encontrar os demais.`;
+}
+
+pesquisa.addEventListener('input', () => {
+  mostrarArtilheiros(pesquisa.value);
+});
+
+mostrarArtilheiros();
   } catch (erro) {
     area.innerHTML = `
       <p>Não foi possível carregar a artilharia.</p>
