@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   try {
-    const url = 'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-c/2026/2013';
+    const url = 'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-c/2026?documento=IMT';
 
     const resposta = await fetch(url, {
       headers: {
