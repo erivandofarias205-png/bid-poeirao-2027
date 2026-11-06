@@ -80,7 +80,7 @@ return linhas.map(linha => {
 
     const grupoB = extrairGrupo('GRUPO B');
     const grupoC = extrairGrupo('GRUPO C');
-const posicaoJogo = html.indexOf('Jogo 211');
+const posicaoJogo = html.indexOf('JOGOS');
 
 const diagnosticoJogos = posicaoJogo >= 0
   ? html.slice(Math.max(0, posicaoJogo - 10000), posicaoJogo + 5000)
