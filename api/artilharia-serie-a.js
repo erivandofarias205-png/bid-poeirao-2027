@@ -20,7 +20,9 @@ export default async function handler(req, res) {
       throw new Error('Artilharia não encontrada na página do ge.');
     }
 
-   const itens = bloco[1]
+   const jogadores = [];
+    
+    const itens = bloco[1]
   .split('class="ranking-item-wrapper"')
   .slice(1);
 
