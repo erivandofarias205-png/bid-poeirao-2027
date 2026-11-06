@@ -47,15 +47,34 @@ export default async function handler(req, res) {
       const tabela = html.slice(inicioTabela, fimTabela + 8);
       const linhas = tabela.match(/<tr\b[\s\S]*?<\/tr>/gi) || [];
      
-      const diagnostico = linhas.slice(1, 2).map(linha => ({
-  equipe: limpar(
-    linha.match(/class="[^"]*styles_teamName[^"]*"[^>]*>([\s\S]*?)<\/strong>/i)?.[1] || ''
-  ),
-  celulas: [...linha.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
-    .map(celula => limpar(celula[1]))
-}));
+     
+return linhas.map(linha => {
+  const nomeEquipe = linha.match(
+    /class="[^"]*styles_teamName[^"]*"[^>]*>([\s\S]*?)<\/strong>/i
+  );
 
-return diagnostico;
+  const celulas = [...linha.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
+    .map(celula => limpar(celula[1]));
+
+  if (!nomeEquipe || celulas.length < 12) return null;
+
+  return {
+    posicao: celulas[0].match(/^\s*(\d+)/)?.[1] || '',
+    equipe: limpar(nomeEquipe[1]),
+    pontos: celulas[1],
+    jogos: celulas[2],
+    vitorias: celulas[3],
+    empates: celulas[4],
+    derrotas: celulas[5],
+    gols_pro: celulas[6],
+    gols_contra: celulas[7],
+    saldo_gols: celulas[8],
+    cartoes_amarelos: celulas[9],
+    cartoes_vermelhos: celulas[10],
+    aproveitamento: celulas[11]
+  };
+}).filter(Boolean);
+
 
          }
 
