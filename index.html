@@ -3793,7 +3793,34 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
 </div>
 
 <div class="prof-section" id="profissionalJogosHoje" hidden>
-  <h3>⚽ JOGOS DE HOJE</h3>
+ <div style="display:flex;align-items:center;justify-content:space-between;
+flex-wrap:wrap;gap:10px;margin-bottom:15px">
+
+   <h3 style="margin:0">⚽ JOGOS DE HOJE</h3>
+
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <input
+      type="date"
+      id="dataConsultaJogos"
+      onchange="carregarJogosHojeProfissional()"
+      style="background:#111;color:#e4bd43;border:1px solid #111;
+      border-radius:8px;padding:9px;font-weight:900"
+    >
+
+    <input
+      type="text"
+      id="buscaEquipeProfissional"
+      list="listaEquipesProfissional"
+      placeholder="SELECIONE SUA EQUIPE"
+      autocomplete="off"
+      oninput="filtrarEquipesProfissional()"
+      style="background:#111;color:#e4bd43;border:1px solid #e4bd43;
+      border-radius:8px;padding:9px;font-weight:900;
+      width:220px;max-width:100%"
+    >
+
+    <datalist id="listaEquipesProfissional"></datalist>
+  </div>
 
   <div id="listaJogosHoje">
     <p>Selecione uma data para consultar os jogos.</p>
@@ -3912,20 +3939,63 @@ async function carregarJogosHojeProfissional() {
   })[caractere]);
 
   try {
-    const agora = new Date();
-    const dataHoje = [
-      agora.getFullYear(),
-      String(agora.getMonth() + 1).padStart(2, '0'),
-      String(agora.getDate()).padStart(2, '0')
-    ].join('-');
+    const campoData = document.getElementById('dataConsultaJogos');
 
-    const url = `https://sportscore.com/api/v1/fixtures/?sport=football&date=${dataHoje}&limit=200`;
+const agora = new Date();
+const dataHoje = [
+  agora.getFullYear(),
+  String(agora.getMonth() + 1).padStart(2, '0'),
+  String(agora.getDate()).padStart(2, '0')
+].join('-');
+
+if (campoData && !campoData.value) {
+  campoData.value = dataHoje;
+}
+
+const dataConsulta = campoData?.value || dataHoje;
+
+    const url = `https://sportscore.com/api/v1/fixtures/?sport=football&date=${dataConsulta}&limit=200`;
 
     const resposta = await fetch(url);
     if (!resposta.ok) throw new Error('Falha ao consultar a SportScore.');
 
     const dados = await resposta.json();
-    const jogos = dados.matches || [];
+const jogos = dados.matches || [];
+
+// Monta a lista de equipes das 14 competições
+const jogosPermitidos = jogos.filter(jogo => {
+  const nomeAPI = normalizar(jogo.competition);
+
+  return competicoesPermitidas.some(competicao =>
+    competicao.aliases.some(alias =>
+      nomeAPI === normalizar(alias)
+    )
+  );
+});
+
+const equipesUnicas = new Map();
+
+jogosPermitidos.forEach(jogo => {
+  [jogo.home, jogo.away].forEach(nome => {
+    if (!nome) return;
+
+    const chave = normalizar(nome);
+    if (!equipesUnicas.has(chave)) {
+      equipesUnicas.set(chave, nome);
+    }
+  });
+});
+
+const listaEquipes = document.getElementById('listaEquipesProfissional');
+
+window.equipesProfissionaisOriginais = [...equipesUnicas.values()];
+
+if (listaEquipes) {
+  listaEquipes.innerHTML = window.equipesProfissionaisOriginais
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    .map(nome => `<option value="${escapar(nome)}"></option>`)
+    .join('');
+}
 
     const grupos = competicoesPermitidas.map(competicao => ({
       nome: competicao.nome,
@@ -4021,6 +4091,36 @@ async function carregarJogosHojeProfissional() {
     console.error('Erro ao carregar jogos:', erro);
     area.innerHTML = '<p>Não foi possível carregar os jogos. Tente novamente.</p>';
   }
+}
+  function filtrarEquipesProfissional() {
+  const campo = document.getElementById('buscaEquipeProfissional');
+  const lista = document.getElementById('listaEquipesProfissional');
+
+  if (!campo || !lista) return;
+
+  const normalizarBusca = texto => String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+
+  const abreviar = nome => nome
+    .replace(/^(SOCIEDADE ESPORTIVA|SOCIEDADE|CLUBE DE REGATAS|CLUBE|ASSOCIACAO|ASSOCIAÇÃO)\s+/i, '')
+    .trim();
+
+  const busca = normalizarBusca(campo.value);
+  const equipes = window.equipesProfissionaisOriginais || [];
+
+  const filtradas = equipes.filter(nome => {
+    const nomeCurto = abreviar(nome);
+    return !busca ||
+      normalizarBusca(nomeCurto).startsWith(busca) ||
+      normalizarBusca(nome).startsWith(busca);
+  });
+
+  lista.innerHTML = filtradas
+    .map(nome => `<option value="${abreviar(nome)}"></option>`)
+    .join('');
 }
 </script>
     
