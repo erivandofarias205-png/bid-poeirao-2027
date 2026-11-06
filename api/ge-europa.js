@@ -192,21 +192,26 @@ async function consultarGE(config, rodadaSolicitada) {
   console.log('URL DE JOGOS GE:', urlJogos);
   
   const respostaJogos = await fetch(urlJogos, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-      'Accept': 'application/json',
-      'Referer': config.url
-    }
-  });
-
-  if (!respostaJogos.ok) {
-    throw new Error(
-      `API de jogos do GE respondeu com HTTP ${respostaJogos.status}.`
-    );
+  headers: {
+    'User-Agent': 'Mozilla/5.0',
+    'Accept': 'application/json',
+    'Referer': config.url,
+    'Origin': 'https://ge.globo.com'
   }
+});
 
-  const listaJogos = await respostaJogos.json();
+const textoResposta = await respostaJogos.text();
 
+console.log('STATUS GE:', respostaJogos.status);
+console.log('RESPOSTA GE:', textoResposta.slice(0, 1000));
+
+if (!respostaJogos.ok) {
+  throw new Error(
+    `API GE HTTP ${respostaJogos.status}: ${textoResposta.slice(0, 300)}`
+  );
+}
+
+const listaJogos = JSON.parse(textoResposta);
   if (!Array.isArray(listaJogos)) {
     throw new Error('O GE não retornou uma lista válida de jogos.');
   }
