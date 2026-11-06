@@ -3918,7 +3918,8 @@ async function abrirCompeticaoProfissional(nome) {
     area.innerHTML = 'Classificação desta competição será disponibilizada em breve.';
     return;
   }
-
+carregarArtilhariaSerieA();
+  
   area.innerHTML = '<p>Carregando classificação do Brasileirão Série A...</p>';
 
   try {
@@ -4050,7 +4051,112 @@ async function abrirCompeticaoProfissional(nome) {
     `;
   }
 }
+async function carregarArtilhariaSerieA() {
+  const area = document.getElementById('profissionalArtilharia');
+  if (!area) return;
 
+  area.innerHTML = '<p>Carregando artilharia do Brasileirão...</p>';
+
+  const escapar = texto => String(texto ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[c]);
+
+  try {
+    const resposta = await fetch('/api/artilharia-serie-a');
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao consultar a artilharia.');
+    }
+
+    const dados = await resposta.json();
+
+    if (!dados.sucesso || !dados.artilheiros?.length) {
+      throw new Error('Nenhum artilheiro encontrado.');
+    }
+
+    area.innerHTML = `
+      <p>
+        <strong>BRASILEIRÃO SÉRIE A</strong>
+        — ${dados.total} jogadores
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+
+        ${dados.artilheiros.map((jogador, indice) => `
+          <div style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:9px;
+            background:#171717;
+            border:1px solid #444;
+            border-radius:9px;
+            color:#fff;
+          ">
+
+            <strong style="
+              width:25px;
+              text-align:center;
+              color:#e4bd43;
+            ">${indice + 1}</strong>
+
+            <img
+              src="${escapar(jogador.foto)}"
+              alt=""
+              style="
+                width:43px;
+                height:43px;
+                object-fit:cover;
+                border-radius:50%;
+                background:#333;
+              "
+            >
+
+            <div style="flex:1;min-width:0">
+              <strong>${escapar(jogador.nome)}</strong>
+
+              <div style="
+                display:flex;
+                align-items:center;
+                gap:5px;
+                font-size:12px;
+                color:#ccc;
+                margin-top:4px;
+              ">
+                <img
+                  src="${escapar(jogador.escudo)}"
+                  alt=""
+                  style="width:18px;height:18px;object-fit:contain"
+                >
+                ${escapar(jogador.clube)}
+              </div>
+            </div>
+
+            <div style="text-align:center;min-width:42px">
+              <strong style="font-size:22px;color:#e4bd43">
+                ${Number(jogador.gols) || 0}
+              </strong>
+              <div style="font-size:10px;color:#ccc">GOLS</div>
+            </div>
+
+          </div>
+        `).join('')}
+
+      </div>
+    `;
+
+  } catch (erro) {
+    area.innerHTML = `
+      <p>Não foi possível carregar a artilharia.</p>
+      <p>${escapar(erro.message)}</p>
+    `;
+  }
+}
+  
 function fecharCompeticaoProfissional() {
   document.getElementById('profissionalDetalhes').hidden = true;
 }
