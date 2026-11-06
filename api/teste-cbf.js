@@ -19,14 +19,22 @@ export default async function handler(req, res) {
     }
 
     const html = await resposta.text();
+
+function encontrarTrecho(termo) {
+  const posicao = html.toLowerCase().indexOf(termo.toLowerCase());
+
+  return posicao >= 0
+    ? html.slice(Math.max(0, posicao - 1500), posicao + 4000)
+    : 'Não encontrado';
+}
+
 const diagnosticoHTML = {
   tamanho: html.length,
-  temPartidas: html.toLowerCase().includes('partidas'),
-  temRodada: html.toLowerCase().includes('rodada'),
-  temMandante: html.toLowerCase().includes('hometeam'),
-  temVisitante: html.toLowerCase().includes('awayteam'),
-  trechoFinal: html.slice(-15000)
+  trechoPartidas: encontrarTrecho('partidas'),
+  trechoRodada: encontrarTrecho('rodada'),
+  trechoJogos: encontrarTrecho('jogos')
 };
+
     function limpar(texto) {
       return texto
         .replace(/<[^>]*>/g, '')
@@ -146,7 +154,7 @@ return res.status(200).json({
     B: grupoB,
     C: grupoC
   },
-  otal_equipes: grupoB.length + grupoC.length,
+  total_equipes: grupoB.length + grupoC.length,
 diagnostico_jogos: diagnosticoJogos,
 diagnostico_partida: diagnosticoPartida,
 diagnostico_estrutura: diagnosticoEstrutura,
