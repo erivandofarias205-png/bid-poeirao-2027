@@ -10000,9 +10000,9 @@ function renderMatchSheet(){
     ].filter(v => v !== undefined && v !== null && v !== '')
      .map(String);
 
-    if(matchComp.length){
-      return matchComp.some(id => compIds.includes(id));
-    }
+   if(matchComp.some(id => compIds.includes(id))){
+  return true;
+}
 
     const home = findTeam(m.homeId) || {};
     const away = findTeam(m.awayId) || {};
@@ -10062,9 +10062,9 @@ const competitionMatches = (db.matches || []).filter(match => {
   ].filter(v => v !== undefined && v !== null && v !== '')
    .map(String);
 
-  if(ids.length){
-    return ids.some(id => competitionIds.includes(id));
-  }
+  if(ids.some(id => competitionIds.includes(id))){
+  return true;
+}
 
   const home = findTeam(match.homeId) || {};
   const away = findTeam(match.awayId) || {};
