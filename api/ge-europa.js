@@ -189,6 +189,8 @@ async function consultarGE(config, rodadaSolicitada) {
     `https://api.globoesporte.globo.com/tabela/` +
     `${config.tabelaId}/fase/${config.faseSlug}/rodada/${rodada}/jogos/`;
 
+  console.log('URL DE JOGOS GE:', urlJogos);
+  
   const respostaJogos = await fetch(urlJogos, {
     headers: {
       'User-Agent': 'Mozilla/5.0',
