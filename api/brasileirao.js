@@ -19,40 +19,41 @@ module.exports = async function handler(req, res) {
     const competencia = await brasileirao.getCompetition(serie);
     const classificacao = await brasileirao.getStandings(serie);
 
-    let tabelas = classificacao.tables || [];
     let rodadas = [];
     let grupos = [];
 
     if (serie === 'd') {
       grupos = await brasileirao.getGroups('d');
 
-      const rodadasPorGrupo = await Promise.all(
-        grupos.map(grupo =>
-          brasileirao.getRounds('d', { group: grupo.name })
-        )
-      );
+      rodadas = await Promise.all(
+        grupos.map(async grupo => {
+          const resultado = await brasileirao.getRounds('d', {
+            group: grupo.name
+          });
 
-      tabelas = grupos;
-
-      rodadas = rodadasPorGrupo.flatMap(item =>
-        item.rounds || []
+          return {
+            grupo: grupo.name,
+            rodadas: resultado.rounds || []
+          };
+        })
       );
     } else {
-      const resultadoRodadas = await brasileirao.getRounds(serie);
-      rodadas = resultadoRodadas.rounds || [];
+      const resultado = await brasileirao.getRounds(serie);
+      rodadas = resultado.rounds || [];
     }
 
-    const partidas = rodadas.flatMap(rodada =>
-      rodada.matches || []
+    const partidas = rodadas.flatMap(item =>
+      item.matches
+        ? item.matches
+        : (item.rodadas || []).flatMap(r => r.matches || [])
     );
 
     return res.status(200).json({
       sucesso: true,
       serie,
       dados: {
-        ...competencia,
         competition: competencia.competition,
-        tables: tabelas,
+        tables: classificacao.tables || [],
         rounds: rodadas,
         matches: partidas,
         grupos
