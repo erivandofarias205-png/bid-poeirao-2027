@@ -4090,7 +4090,145 @@ try {
         `;
       }
     }
+if (areaJogos) {
+  if (!partidasUnicas.length) {
+    areaJogos.innerHTML = `
+      <p>Não há jogos disponíveis nesta fase ou rodada.</p>
+    `;
+  } else {
+    areaJogos.innerHTML = `
+      <p style="
+        color:#d4af37;
+        font-size:12px;
+        font-weight:900;
+        margin:5px 0 8px;
+      ">
+        ${dados.competition.name}
+      </p>
 
+      <div style="
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+      ">
+        ${partidasUnicas.map(jogo => {
+          const data = jogo.date
+            ? jogo.date.split('-').reverse().join('/')
+            : '';
+
+          const placar = jogo.score?.home != null
+            ? `${jogo.score.home} × ${jogo.score.away}`
+            : 'VS';
+
+          const situacao = jogo.status === 'finished'
+            ? 'ENCERRADO'
+            : jogo.status === 'scheduled'
+              ? 'AGENDADO'
+              : 'EM ANDAMENTO';
+
+          const corStatus = jogo.status === 'finished'
+            ? '#239b56'
+            : jogo.status === 'scheduled'
+              ? '#b58920'
+              : '#2685d8';
+
+          return `
+            <div style="
+              background:#172238;
+              border:1px solid #343f50;
+              border-radius:7px;
+              padding:7px 9px;
+              color:white;
+            ">
+
+              <div style="
+                display:grid;
+                grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);
+                align-items:center;
+                gap:3px;
+              ">
+
+                <div style="
+                  display:flex;
+                  align-items:center;
+                  justify-content:flex-start;
+                  gap:5px;
+                  min-width:0;
+                ">
+                  ${jogo.homeTeam?.badge ? `
+                    <img src="${jogo.homeTeam.badge}"
+                      alt=""
+                      style="width:23px;height:23px;object-fit:contain;flex-shrink:0">
+                  ` : ''}
+
+                  <strong style="
+                    font-size:11px;
+                    line-height:1.15;
+                    overflow-wrap:anywhere;
+                  ">
+                    ${jogo.homeTeam?.name || 'A definir'}
+                  </strong>
+                </div>
+
+                <div style="
+                  text-align:center;
+                  font-size:17px;
+                  font-weight:900;
+                  color:#e5bd45;
+                  white-space:nowrap;
+                ">
+                  ${placar}
+                </div>
+
+                <div style="
+                  display:flex;
+                  align-items:center;
+                  justify-content:flex-end;
+                  gap:5px;
+                  min-width:0;
+                  text-align:right;
+                ">
+                  <strong style="
+                    font-size:11px;
+                    line-height:1.15;
+                    overflow-wrap:anywhere;
+                  ">
+                    ${jogo.awayTeam?.name || 'A definir'}
+                  </strong>
+
+                  ${jogo.awayTeam?.badge ? `
+                    <img src="${jogo.awayTeam.badge}"
+                      alt=""
+                      style="width:23px;height:23px;object-fit:contain;flex-shrink:0">
+                  ` : ''}
+                </div>
+
+              </div>
+
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                border-top:1px solid #354052;
+                margin-top:5px;
+                padding-top:4px;
+                font-size:10px;
+                color:#c5cad3;
+              ">
+                <span>${data} ${jogo.time ? '· ' + jogo.time : ''}</span>
+
+                <strong style="color:${corStatus};font-size:9px;">
+                  ${situacao}
+                </strong>
+              </div>
+
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+}
     // CLASSIFICAÇÃO
     const tabelas = dados.tables || [];
 
