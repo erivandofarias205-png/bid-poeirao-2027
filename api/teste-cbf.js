@@ -46,34 +46,18 @@ export default async function handler(req, res) {
 
       const tabela = html.slice(inicioTabela, fimTabela + 8);
       const linhas = tabela.match(/<tr\b[\s\S]*?<\/tr>/gi) || [];
+     
+      const diagnostico = linhas.slice(1, 2).map(linha => ({
+  equipe: limpar(
+    linha.match(/class="[^"]*styles_teamName[^"]*"[^>]*>([\s\S]*?)<\/strong>/i)?.[1] || ''
+  ),
+  celulas: [...linha.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
+    .map(celula => limpar(celula[1]))
+}));
 
-      return linhas.map(linha => {
-        const nomeEquipe = linha.match(
-          /class="[^"]*styles_teamName[^"]*"[^>]*>([\s\S]*?)<\/strong>/i
-        );
+return diagnostico;
 
-        const celulas = [...linha.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
-          .map(celula => limpar(celula[1]));
-
-        if (!nomeEquipe || celulas.length < 10) return null;
-
-        return {
-          posicao: celulas[0],
-          equipe: limpar(nomeEquipe[1]),
-          pontos: celulas[3],
-          jogos: celulas[4],
-          vitorias: celulas[5],
-          empates: celulas[6],
-          derrotas: celulas[7],
-          gols_pro: celulas[8],
-          gols_contra: celulas[9],
-          saldo_gols: celulas[10],
-          cartoes_amarelos: celulas[11],
-          cartoes_vermelhos: celulas[12],
-          aproveitamento: celulas[13]
-        };
-      }).filter(Boolean);
-    }
+         }
 
     const grupoB = extrairGrupo('GRUPO B');
     const grupoC = extrairGrupo('GRUPO C');
