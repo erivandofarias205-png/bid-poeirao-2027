@@ -3976,15 +3976,70 @@ try {
   if (serie === 'a') {
     dados = retorno;
 
-  } else if (serie === 'c') {
+    } else if (serie === 'c') {
 
-    // ADAPTA OS GRUPOS B E C PARA O FORMATO DA TABELA DO PORTAL.
+    // BUSCAR OS JOGOS DA SÉRIE C NA API DA CBF.
+    const respostaJogos = await fetch('/api/serie-c-jogos?rodada=6');
+
+    if (!respostaJogos.ok) {
+      throw new Error('Não foi possível carregar os jogos da Série C.');
+    }
+
+    const retornoJogos = await respostaJogos.json();
+
+    if (retornoJogos.sucesso === false) {
+      throw new Error(retornoJogos.erro || 'Erro ao consultar os jogos.');
+    }
+
+    const jogosCBF = Object.values(retornoJogos.grupos || {}).flat();
+
     dados = {
       competition: {
         name: retorno.competicao || 'Brasileirão Série C 2026'
       },
-      matches: [],
+
+      matches: jogosCBF.map(jogo => {
+        const dataOriginal = String(jogo.data || '').trim();
+
+        let data = dataOriginal;
+
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataOriginal)) {
+          const [dia, mes, ano] = dataOriginal.split('/');
+          data = `${ano}-${mes}-${dia}`;
+        }
+
+        const placarDisponivel =
+          jogo.mandante?.gols !== null &&
+          jogo.mandante?.gols !== '' &&
+          jogo.visitante?.gols !== null &&
+          jogo.visitante?.gols !== '';
+
+        return {
+          id: jogo.id,
+          date: data,
+          time: jogo.hora || '',
+
+          status: placarDisponivel ? 'finished' : 'scheduled',
+
+          homeTeam: {
+            name: jogo.mandante?.nome || '',
+            badge: jogo.mandante?.escudo || ''
+          },
+
+          awayTeam: {
+            name: jogo.visitante?.nome || '',
+            badge: jogo.visitante?.escudo || ''
+          },
+
+          score: placarDisponivel ? {
+            home: Number(jogo.mandante.gols),
+            away: Number(jogo.visitante.gols)
+          } : null
+        };
+      }),
+
       rounds: [],
+
       tables: Object.entries(retorno.grupos || {}).map(([grupo, equipes]) => ({
         name: `GRUPO ${grupo}`,
         entries: equipes.map(item => ({
@@ -4005,6 +4060,7 @@ try {
       }))
     };
 
+     
   } else {
     dados = retorno.dados;
   }
