@@ -4030,67 +4030,7 @@ try {
       ].join('-'), jogo])).values()
     );
 
-    if (areaJogos) {
-      if (!partidasUnicas.length) {
-        areaJogos.innerHTML = `
-          <p>Não há jogos disponíveis nesta fase ou rodada.</p>
-        `;
-      } else {
-        areaJogos.innerHTML = `
-          <p><strong>${dados.competition.name}</strong></p>
-
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${partidasUnicas.map(jogo => {
-              const data = jogo.date
-                ? jogo.date.split('-').reverse().join('/')
-                : '';
-
-              const placar = jogo.score?.home != null
-                ? `${jogo.score.home} x ${jogo.score.away}`
-                : 'VS';
-
-              const situacao = jogo.status === 'finished'
-                ? 'ENCERRADO'
-                : jogo.status === 'scheduled'
-                  ? 'AGENDADO'
-                  : 'EM ANDAMENTO';
-
-              return `
-                <div style="
-                  display:flex;
-                  align-items:center;
-                  justify-content:space-between;
-                  gap:8px;
-                  padding:10px;
-                  border-bottom:1px solid #ccc;
-                  flex-wrap:wrap;
-                  color:#111;
-                ">
-                  <div style="flex:1;display:flex;align-items:center;gap:6px">
-                    <img src="${jogo.homeTeam?.badge || ''}" alt=""
-                      style="width:25px;height:25px;object-fit:contain">
-                    <strong>${jogo.homeTeam?.name || 'A definir'}</strong>
-                  </div>
-
-                  <div style="text-align:center;min-width:95px">
-                    <strong style="font-size:17px;color:#b58920">${placar}</strong>
-                    <div style="font-size:11px">${data} · ${jogo.time || ''}</div>
-                    <div style="font-size:10px">${situacao}</div>
-                  </div>
-
-                  <div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px">
-                    <strong>${jogo.awayTeam?.name || 'A definir'}</strong>
-                    <img src="${jogo.awayTeam?.badge || ''}" alt=""
-                      style="width:25px;height:25px;object-fit:contain">
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-      }
-    }
-if (areaJogos) {
+   if (areaJogos) {
   if (!partidasUnicas.length) {
     areaJogos.innerHTML = `
       <p>Não há jogos disponíveis nesta fase ou rodada.</p>
