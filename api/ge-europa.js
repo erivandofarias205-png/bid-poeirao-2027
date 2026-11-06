@@ -89,9 +89,15 @@ async function consultarGE(config) {
   const listaJogos = extrairJSON(script, 'listaJogos');
   const classificacao = extrairJSON(script, 'classificacao');
 
-  const diagnostico = {
+ const diagnostico = {
   camposJogo: Object.keys(listaJogos[0] || {}),
   camposClassificacao: Object.keys(classificacao || {}),
+  rodada: classificacao.rodada,
+  fasesNavegacao: classificacao.fases_navegacao,
+  listaJogosClassificacao: {
+    total: classificacao.lista_jogos?.length || 0,
+    primeiro: classificacao.lista_jogos?.[0] || null
+  },
   variaveisArtilharia: [
     ...script.matchAll(
       /const\s+([A-Za-z_$][\w$]*)\s*=/g
