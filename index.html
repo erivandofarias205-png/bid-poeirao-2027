@@ -4036,31 +4036,34 @@ if (listaEquipes) {
           const estadio = jogo.venue || jogo.stadium || '';
 
           return `
+  DIL0
+  $DIL1
+`;
             <div style="
               display:flex;
               align-items:center;
-              justify-content:space-between;
+justify-content:flex-start;
               gap:8px;
               padding:8px 4px;
               border-bottom:1px solid rgba(255,255,255,.15);
               color:#fff;
               font-size:12px;
             ">
-              <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0">
-                ${escudoMandante}
-                <strong>${mandante}</strong>
-              </div>
+  <div style="display:flex;align-items:center;gap:5px;flex:0 0 auto">
+    ${escudoMandante}
+    <strong>${mandante}</strong>
+  </div>
 
-              <div style="text-align:center;min-width:65px">
-                <strong style="color:#e4bd43;font-size:14px">${placar}</strong>
-                <div style="color:#e4bd43;font-size:10px">${horario}</div>
-              </div>
+  <div style="text-align:center;min-width:55px">
+    <strong style="color:#b58920;font-size:14px">${placar}</strong>
+    <div style="color:#b58920;font-size:10px">${horario}</div>
+  </div>
 
-              <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1;min-width:0">
-                <strong>${visitante}</strong>
-                ${escudoVisitante}
-              </div>
-            </div>
+  <div style="display:flex;align-items:center;gap:5px;flex:0 0 auto">
+    <strong>${visitante}</strong>
+    ${escudoVisitante}
+  </div>
+</div>
             ${estadio ? `<div style="font-size:10px;color:#bbb;padding:2px 4px 6px">Estádio: ${escapar(estadio)}</div>` : ''}
           `;
         }).join('');
