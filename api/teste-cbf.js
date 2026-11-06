@@ -88,7 +88,25 @@ const linksJogos = [
 ].map(item => item[1]);
 
 const diagnosticoJogos = [...new Set(linksJogos)];
-let diagnosticoPartida = null;
+
+const termosBusca = [
+  'Jogo',
+  'RODADA',
+  'styles_teamPositionContent',
+  'BOT'
+];
+
+const diagnosticoEstrutura = {};
+
+for (const termo of termosBusca) {
+  const posicao = html.toLowerCase().indexOf(termo.toLowerCase());
+
+  diagnosticoEstrutura[termo] = posicao >= 0
+    ? html.slice(Math.max(0, posicao - 1000), posicao + 2500)
+    : 'Não encontrado';
+}
+
+    let diagnosticoPartida = null;
 
 if (diagnosticoJogos.length > 0) {
   const urlPartida = new URL(
@@ -121,9 +139,10 @@ return res.status(200).json({
     B: grupoB,
     C: grupoC
   },
-  total_equipes: grupoB.length + grupoC.length,
+  otal_equipes: grupoB.length + grupoC.length,
 diagnostico_jogos: diagnosticoJogos,
-diagnostico_partida: diagnosticoPartida
+diagnostico_partida: diagnosticoPartida,
+diagnostico_estrutura: diagnosticoEstrutura
 });
 
 
