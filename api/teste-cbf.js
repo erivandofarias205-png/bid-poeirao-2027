@@ -80,11 +80,15 @@ return linhas.map(linha => {
 
     const grupoB = extrairGrupo('GRUPO B');
     const grupoC = extrairGrupo('GRUPO C');
-const posicaoJogo = html.indexOf('JOGOS');
 
-const diagnosticoJogos = posicaoJogo >= 0
-  ? html.slice(Math.max(0, posicaoJogo - 10000), posicaoJogo + 5000)
-  : 'Jogo 211 não encontrado no HTML';
+const linksJogos = [
+  ...html.matchAll(
+    /href="([^"]*\/serie-c\/2026\/2098\/\d+)"/gi
+  )
+].map(item => item[1]);
+
+const diagnosticoJogos = [...new Set(linksJogos)];
+
    
 return res.status(200).json({
   sucesso: true,
