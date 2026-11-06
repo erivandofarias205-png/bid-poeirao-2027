@@ -1,1 +1,6 @@
-
+{
+  "private": true,
+  "dependencies": {
+    "campeonato-brasileiro-api": "github:ezefranca/campeonato-brasileiro-api"
+  }
+}
