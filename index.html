@@ -3914,11 +3914,12 @@ async function abrirCompeticaoProfissional(nome) {
     .toUpperCase()
     .trim();
 
-  if (normalizar(nome) !== 'BRASILEIRAO SERIE A') {
-    area.innerHTML = 'Classificação desta competição será disponibilizada em breve.';
-    return;
-  }
-carregarArtilhariaSerieA();
+  carregarArtilhariaProfissional(nome);
+
+if (normalizar(nome) !== 'BRASILEIRAO SERIE A') {
+  area.innerHTML = 'Classificação desta competição será disponibilizada em breve.';
+  return;
+}
   
   area.innerHTML = '<p>Carregando classificação do Brasileirão Série A...</p>';
 
@@ -4051,11 +4052,35 @@ carregarArtilhariaSerieA();
     `;
   }
 }
-async function carregarArtilhariaSerieA() {
+
+async function carregarArtilhariaProfissional(nome) {
   const area = document.getElementById('profissionalArtilharia');
   if (!area) return;
 
-  area.innerHTML = '<p>Carregando artilharia do Brasileirão...</p>';
+  const normalizar = texto => String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+
+  const chave = normalizar(nome);
+
+  const fontes = {
+    'BRASILEIRAO SERIE A': '/api/artilharia-serie-a',
+    'BRASILEIRAO SERIE B': '/api/artilharia?competicao=serie-b',
+    'COPA DO BRASIL': '/api/artilharia?competicao=copa-do-brasil',
+    'LIBERTADORES': '/api/artilharia?competicao=libertadores',
+    'SUL-AMERICANA': '/api/artilharia?competicao=sul-americana'
+  };
+
+  const endereco = fontes[chave];
+
+  if (!endereco) {
+    area.innerHTML = '<p>Artilharia ainda não disponível para esta competição.</p>';
+    return;
+  }
+
+  area.innerHTML = '<p>Carregando artilharia...</p>';
 
   const escapar = texto => String(texto ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;',
@@ -4066,7 +4091,7 @@ async function carregarArtilhariaSerieA() {
   })[c]);
 
   try {
-    const resposta = await fetch('/api/artilharia-serie-a');
+    const resposta = await fetch(endereco);
 
     if (!resposta.ok) {
       throw new Error('Erro ao consultar a artilharia.');
@@ -4075,17 +4100,16 @@ async function carregarArtilhariaSerieA() {
     const dados = await resposta.json();
 
     if (!dados.sucesso || !dados.artilheiros?.length) {
-      throw new Error('Nenhum artilheiro encontrado.');
+      throw new Error('Artilharia não encontrada.');
     }
 
     area.innerHTML = `
       <p>
-        <strong>BRASILEIRÃO SÉRIE A</strong>
+        <strong>${escapar(dados.competicao || nome)}</strong>
         — ${dados.total} jogadores
       </p>
 
       <div style="display:flex;flex-direction:column;gap:8px">
-
         ${dados.artilheiros.map((jogador, indice) => `
           <div style="
             display:flex;
@@ -4097,36 +4121,19 @@ async function carregarArtilhariaSerieA() {
             border-radius:9px;
             color:#fff;
           ">
-
-            <strong style="
-              width:25px;
-              text-align:center;
-              color:#e4bd43;
-            ">${indice + 1}</strong>
+            <strong style="width:25px;text-align:center;color:#e4bd43">
+              ${indice + 1}
+            </strong>
 
             <img
               src="${escapar(jogador.foto)}"
               alt=""
-              style="
-                width:43px;
-                height:43px;
-                object-fit:cover;
-                border-radius:50%;
-                background:#333;
-              "
+              style="width:43px;height:43px;object-fit:cover;border-radius:50%;background:#333"
             >
 
             <div style="flex:1;min-width:0">
               <strong>${escapar(jogador.nome)}</strong>
-
-              <div style="
-                display:flex;
-                align-items:center;
-                gap:5px;
-                font-size:12px;
-                color:#ccc;
-                margin-top:4px;
-              ">
+              <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#ccc;margin-top:4px">
                 <img
                   src="${escapar(jogador.escudo)}"
                   alt=""
@@ -4142,13 +4149,10 @@ async function carregarArtilhariaSerieA() {
               </strong>
               <div style="font-size:10px;color:#ccc">GOLS</div>
             </div>
-
           </div>
         `).join('')}
-
       </div>
     `;
-
   } catch (erro) {
     area.innerHTML = `
       <p>Não foi possível carregar a artilharia.</p>
@@ -4156,6 +4160,7 @@ async function carregarArtilhariaSerieA() {
     `;
   }
 }
+
   
 function fecharCompeticaoProfissional() {
   document.getElementById('profissionalDetalhes').hidden = true;
