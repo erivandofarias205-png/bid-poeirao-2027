@@ -3897,7 +3897,7 @@ margin-bottom:15px;
   </button>
 </div>
 
-<script>
+
 async function abrirCompeticaoProfissional(nome) {
   document.getElementById('profissionalTitulo').textContent = nome;
 
@@ -3906,6 +3906,8 @@ async function abrirCompeticaoProfissional(nome) {
   detalhes.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const area = document.getElementById('profissionalClassificacao');
+  const areaJogos = document.getElementById('profissionalJogos');
+
   if (!area) return;
 
   const normalizar = texto => String(texto || '')
@@ -3914,37 +3916,90 @@ async function abrirCompeticaoProfissional(nome) {
     .toUpperCase()
     .trim();
 
+  const competicao = normalizar(nome);
+
+  // CARREGAR ARTILHARIA DA COMPETIÇÃO
   carregarArtilhariaProfissional(nome);
 
-if (normalizar(nome) !== 'BRASILEIRAO SERIE A') {
-  area.innerHTML = 'Classificação desta competição será disponibilizada em breve.';
-  return;
-}
-  
-  area.innerHTML = '<p>Carregando classificação do Brasileirão Série A...</p>';
+  // IDENTIFICAR AS SÉRIES DO BRASILEIRÃO
+  const series = {
+    'BRASILEIRAO SERIE A': 'a',
+    'BRASILEIRAO SERIE B': 'b',
+    'BRASILEIRAO SERIE C': 'c',
+    'BRASILEIRAO SERIE D': 'd'
+  };
 
-  try {
-    const resposta = await fetch('/api/serie-a');
+  const serie = series[competicao];
 
-    if (!resposta.ok) {
-      throw new Error('Erro ao consultar a classificação.');
-    }
-
-    const dados = await resposta.json();
-        // CARREGAR JOGOS E RESULTADOS DO GE
-    const areaJogos = document.getElementById('profissionalJogos');
-
-    const partidas = dados.matches || [];
+  if (!serie) {
+    area.innerHTML = `
+      <p>Classificação desta competição será conectada na próxima etapa.</p>
+    `;
 
     if (areaJogos) {
-      if (!partidas.length) {
-        areaJogos.innerHTML = '<p>Nenhum jogo encontrado nesta rodada.</p>';
+      areaJogos.innerHTML = `
+        <p>Os jogos desta competição serão carregados na próxima etapa.</p>
+      `;
+    }
+    return;
+  }
+
+  area.innerHTML = '<p>Carregando classificação...</p>';
+
+  if (areaJogos) {
+    areaJogos.innerHTML = '<p>Carregando jogos e resultados...</p>';
+  }
+
+  try {
+    // SÉRIE A USA A ROTA ORIGINAL.
+    // SÉRIES B, C E D USAM A API GERAL.
+    const endereco = serie === 'a'
+      ? '/api/serie-a'
+      : `/api/brasileirao?serie=${serie}`;
+
+    const resposta = await fetch(endereco);
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível consultar esta competição.');
+    }
+
+    const retorno = await resposta.json();
+
+    if (retorno.sucesso === false) {
+      throw new Error(retorno.erro || 'Erro ao consultar o Brasileirão.');
+    }
+
+    const dados = serie === 'a' ? retorno : retorno.dados;
+
+    if (!dados || !dados.competition) {
+      throw new Error('Dados da competição não encontrados.');
+    }
+
+    // JOGOS E RESULTADOS
+    const partidas = [
+      ...(dados.matches || []),
+      ...(dados.rounds || []).flatMap(rodada => rodada.matches || [])
+    ];
+
+    const partidasUnicas = Array.from(
+      new Map(partidas.map(jogo => [jogo.id || [
+        jogo.date,
+        jogo.homeTeam?.name,
+        jogo.awayTeam?.name
+      ].join('-'), jogo])).values()
+    );
+
+    if (areaJogos) {
+      if (!partidasUnicas.length) {
+        areaJogos.innerHTML = `
+          <p>Não há jogos disponíveis nesta fase ou rodada.</p>
+        `;
       } else {
         areaJogos.innerHTML = `
-          <p><strong>${dados.competition.name}</strong> — ${partidas[0].round}ª rodada</p>
+          <p><strong>${dados.competition.name}</strong></p>
 
           <div style="display:flex;flex-direction:column;gap:8px">
-            ${partidas.map(jogo => {
+            ${partidasUnicas.map(jogo => {
               const data = jogo.date
                 ? jogo.date.split('-').reverse().join('/')
                 : '';
@@ -3971,88 +4026,112 @@ if (normalizar(nome) !== 'BRASILEIRAO SERIE A') {
                   color:#111;
                 ">
                   <div style="flex:1;display:flex;align-items:center;gap:6px">
-                    <img src="${jogo.homeTeam.badge}" alt=""
+                    <img src="${jogo.homeTeam?.badge || ''}" alt=""
                       style="width:25px;height:25px;object-fit:contain">
-                    <strong>${jogo.homeTeam.name}</strong>
+                    <strong>${jogo.homeTeam?.name || 'A definir'}</strong>
                   </div>
 
                   <div style="text-align:center;min-width:95px">
                     <strong style="font-size:17px;color:#b58920">${placar}</strong>
                     <div style="font-size:11px">${data} · ${jogo.time || ''}</div>
-                  <div style="font-size:10px">${situacao}</div>
+                    <div style="font-size:10px">${situacao}</div>
                   </div>
 
                   <div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:6px">
-                    <strong>${jogo.awayTeam.name}</strong>
-                    <img src="${jogo.awayTeam.badge}" alt=""
+                    <strong>${jogo.awayTeam?.name || 'A definir'}</strong>
+                    <img src="${jogo.awayTeam?.badge || ''}" alt=""
                       style="width:25px;height:25px;object-fit:contain">
                   </div>
                 </div>
-             `;
-}).join('')}
-</div>
-`;
+              `;
+            }).join('')}
+          </div>
+        `;
       }
     }
-    const tabela = dados.tables?.find(item => item.id === 'overall');
-    const equipes = tabela?.entries || [];
 
-    if (!equipes.length) {
-      throw new Error('A classificação não foi encontrada.');
+    // CLASSIFICAÇÃO
+    const tabelas = dados.tables || [];
+
+    const tabelasValidas = tabelas.filter(
+      tabela => tabela.entries && tabela.entries.length
+    );
+
+    if (!tabelasValidas.length) {
+      area.innerHTML = `
+        <p><strong>${dados.competition.name}</strong></p>
+        <p>A classificação desta fase ainda não está disponível na fonte consultada.</p>
+      `;
+      return;
     }
 
-    area.innerHTML = `
-      <p><strong>${dados.competition.name}</strong> — ${tabela.round.label}</p>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;min-width:650px">
-          <thead>
-            <tr>
-              <th>POS</th>
-              <th style="text-align:left">CLUBE</th>
-              <th>PTS</th>
-              <th>J</th>
-              <th>V</th>
-              <th>E</th>
-              <th>D</th>
-              <th>GP</th>
-              <th>GC</th>
-              <th>SG</th>
-              <th>AP%</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${equipes.map(item => `
-              <tr style="border-bottom:1px solid #444;text-align:center">
-                <td>${item.position}</td>
-                <td style="text-align:left;white-space:nowrap">
-                  <img src="${item.team.badge}"
-                       alt=""
-                       style="width:23px;height:23px;object-fit:contain;vertical-align:middle;margin-right:7px">
-                  ${item.team.name}
-                </td>
-                <td><strong>${item.points}</strong></td>
-                <td>${item.matches}</td>
-                <td>${item.wins}</td>
-                <td>${item.draws}</td>
-                <td>${item.losses}</td>
-                <td>${item.goalsFor}</td>
-                <td>${item.goalsAgainst}</td>
-                <td>${item.goalDifference}</td>
-                <td>${item.efficiency}%</td>
+    area.innerHTML = tabelasValidas.map(tabela => `
+      <div style="margin-bottom:25px">
+        <h3 style="color:#d4af37">
+          ${tabela.name || 'CLASSIFICAÇÃO'}
+          ${tabela.round?.label ? ' — ' + tabela.round.label : ''}
+        </h3>
+
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:650px">
+            <thead>
+              <tr>
+                <th>POS</th>
+                <th style="text-align:left">CLUBE</th>
+                <th>PTS</th>
+                <th>J</th>
+                <th>V</th>
+                <th>E</th>
+                <th>D</th>
+                <th>GP</th>
+                <th>GC</th>
+                <th>SG</th>
+                <th>AP%</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              ${tabela.entries.map(item => `
+                <tr style="border-bottom:1px solid #444;text-align:center">
+                  <td>${item.position ?? '-'}</td>
+
+                  <td style="text-align:left;white-space:nowrap">
+                    <img src="${item.team?.badge || ''}"
+                      alt=""
+                      style="width:23px;height:23px;object-fit:contain;vertical-align:middle;margin-right:7px">
+                    ${item.team?.name || 'Clube'}
+                  </td>
+
+                  <td><strong>${item.points ?? '-'}</strong></td>
+                  <td>${item.matches ?? '-'}</td>
+                  <td>${item.wins ?? '-'}</td>
+                  <td>${item.draws ?? '-'}</td>
+                  <td>${item.losses ?? '-'}</td>
+                  <td>${item.goalsFor ?? '-'}</td>
+                  <td>${item.goalsAgainst ?? '-'}</td>
+                  <td>${item.goalDifference ?? '-'}</td>
+                  <td>${item.efficiency ?? '-'}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
-    `;
+    `).join('');
+
   } catch (erro) {
     area.innerHTML = `
       <p>Não foi possível carregar a classificação.</p>
       <p>${erro.message}</p>
     `;
+
+    if (areaJogos) {
+      areaJogos.innerHTML = `
+        <p>Não foi possível carregar os jogos.</p>
+      `;
+    }
   }
 }
-
 async function carregarArtilhariaProfissional(nome) {
   const area = document.getElementById('profissionalArtilharia');
   if (!area) return;
