@@ -20,10 +20,9 @@ export default async function handler(req, res) {
       throw new Error('Artilharia não encontrada na página do ge.');
     }
 
-    const jogadores = [];
-    const itens = bloco[1].match(
-      /<div class="ranking-item-wrapper">[\s\S]*?<\/div>\s*<\/div>/g
-    ) || [];
+   const itens = bloco[1]
+  .split('class="ranking-item-wrapper"')
+  .slice(1);
 
     const limpar = texto =>
       texto
