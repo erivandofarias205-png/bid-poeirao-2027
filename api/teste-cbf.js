@@ -80,17 +80,24 @@ return linhas.map(linha => {
 
     const grupoB = extrairGrupo('GRUPO B');
     const grupoC = extrairGrupo('GRUPO C');
+const posicaoJogo = html.indexOf('Jogo 211');
 
-    return res.status(200).json({
-      sucesso: true,
-      fonte: 'CBF',
-      competicao: 'Brasileirão Série C 2026',
-      grupos: {
-        B: grupoB,
-        C: grupoC
-      },
-      total_equipes: grupoB.length + grupoC.length
-    });
+const diagnosticoJogos = posicaoJogo >= 0
+  ? html.slice(Math.max(0, posicaoJogo - 10000), posicaoJogo + 5000)
+  : 'Jogo 211 não encontrado no HTML';
+   
+return res.status(200).json({
+  sucesso: true,
+  fonte: 'CBF',
+  competicao: 'Brasileirão Série C 2026',
+  grupos: {
+    B: grupoB,
+    C: grupoC
+  },
+  total_equipes: grupoB.length + grupoC.length,
+  diagnostico_jogos: diagnosticoJogos
+});
+
 
   } catch (erro) {
     return res.status(500).json({
