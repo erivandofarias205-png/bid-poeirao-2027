@@ -88,7 +88,30 @@ const linksJogos = [
 ].map(item => item[1]);
 
 const diagnosticoJogos = [...new Set(linksJogos)];
+let diagnosticoPartida = null;
 
+if (diagnosticoJogos.length > 0) {
+  const urlPartida = new URL(
+    diagnosticoJogos[0],
+    'https://www.cbf.com.br'
+  ).toString();
+
+  const respostaPartida = await fetch(urlPartida, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'text/html'
+    }
+  });
+
+  const htmlPartida = await respostaPartida.text();
+
+  diagnosticoPartida = {
+    status: respostaPartida.status,
+    tamanho: htmlPartida.length,
+    titulo: htmlPartida.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '',
+    html: htmlPartida.slice(0, 8000)
+  };
+}
    
 return res.status(200).json({
   sucesso: true,
@@ -99,7 +122,8 @@ return res.status(200).json({
     C: grupoC
   },
   total_equipes: grupoB.length + grupoC.length,
-  diagnostico_jogos: diagnosticoJogos
+diagnostico_jogos: diagnosticoJogos,
+diagnostico_partida: diagnosticoPartida
 });
 
 
