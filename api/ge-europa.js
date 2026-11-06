@@ -35,14 +35,43 @@ export default async function handler(req, res) {
       const descricao =
         html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)/i)?.[1] || '';
 
-      const scripts = [
-        ...html.matchAll(/<script[^>]*id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/script>/gi)
-      ].map(item => ({
-        id: item[1],
-        tamanho: item[2].length,
-        contemDados: /jogo|partida|classifica|team|score|fixture/i.test(item[2])
-      }));
+     const scripts = [
+  ...html.matchAll(/<script[^>]*id=["']([^"']+)["'][^>]*>([\s\S]*?)<\/script>/gi)
+].map(item => {
+  const conteudo = item[2];
 
+  const palavras = [
+    'jogos',
+    'partidas',
+    'classificacao',
+    'classificação',
+    'standings',
+    'matches',
+    'fixtures',
+    'artilharia'
+  ];
+
+  const trechos = [];
+
+  for (const palavra of palavras) {
+    const posicao = conteudo.toLowerCase().indexOf(palavra);
+
+    if (posicao >= 0) {
+      trechos.push(
+        conteudo.slice(
+          Math.max(0, posicao - 500),
+          Math.min(conteudo.length, posicao + 1500)
+        )
+      );
+    }
+  }
+
+  return {
+    id: item[1],
+    tamanho: conteudo.length,
+    trechos: [...new Set(trechos)].slice(0, 5)
+  };
+});
       resultados[chave] = {
         competicao: competicao.nome,
         fonte: competicao.url,
