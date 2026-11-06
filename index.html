@@ -3571,8 +3571,9 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
 
   <style>
     #profissionalView {
-      color: #fff;
-    }
+  color: #111;
+  background: #fff;
+}
 
     #profissionalView .prof-header {
       background: linear-gradient(135deg,#080808,#242424);
@@ -3675,8 +3676,8 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
   font-size: 11px;
   font-weight: 900;
 }
-   #profissionalView .prof-section {
-  background: linear-gradient(135deg,#f0ca4e,#c99b32);
+  #profissionalView .prof-section {
+  background: #fff;
   border: 2px solid #e4bd43;
   border-radius: 10px;
   padding: 15px;
@@ -3878,13 +3879,6 @@ flex-wrap:wrap;gap:10px;margin-bottom:15px">
   </button>
 </div>
 
-<div class="prof-section">
-  <h3>📰 NOTÍCIAS DO FUTEBOL</h3>
-  <div class="small">
-    Notícias e atualizações do futebol brasileiro e internacional.
-  </div>
-</div>
-
 <script>
 function abrirCompeticaoProfissional(nome) {
   document.getElementById('profissionalTitulo').textContent = nome;
@@ -3997,15 +3991,15 @@ if (listaEquipes) {
     .join('');
 }
 
-    const grupos = competicoesPermitidas.map(competicao => ({
-      nome: competicao.nome,
-      jogos: jogos.filter(jogo => {
-        const nomeAPI = normalizar(jogo.competition);
-        return competicao.aliases.some(alias =>
-          nomeAPI === normalizar(alias)
-        );
-      })
-    })).filter(grupo => grupo.jogos.length > 0);
+   const grupos = competicoesPermitidas.map(competicao => ({
+  nome: competicao.nome,
+  jogos: jogos.filter(jogo => {
+    const nomeAPI = normalizar(jogo.competition);
+    return competicao.aliases.some(alias =>
+      nomeAPI === normalizar(alias)
+    );
+  })
+}));
 
     if (!grupos.length) {
       area.innerHTML = '<p>Nenhum jogo encontrado hoje nas 14 competições selecionadas.</p>';
