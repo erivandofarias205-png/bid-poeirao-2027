@@ -19,7 +19,14 @@ export default async function handler(req, res) {
     }
 
     const html = await resposta.text();
-
+const diagnosticoHTML = {
+  tamanho: html.length,
+  temPartidas: html.toLowerCase().includes('partidas'),
+  temRodada: html.toLowerCase().includes('rodada'),
+  temMandante: html.toLowerCase().includes('hometeam'),
+  temVisitante: html.toLowerCase().includes('awayteam'),
+  trechoFinal: html.slice(-15000)
+};
     function limpar(texto) {
       return texto
         .replace(/<[^>]*>/g, '')
@@ -143,6 +150,7 @@ return res.status(200).json({
 diagnostico_jogos: diagnosticoJogos,
 diagnostico_partida: diagnosticoPartida,
 diagnostico_estrutura: diagnosticoEstrutura,
+  diagnostico_html: diagnosticoHTML,
 });
 
 
