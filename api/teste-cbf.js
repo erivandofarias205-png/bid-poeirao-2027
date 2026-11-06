@@ -59,7 +59,7 @@ return linhas.map(linha => {
   if (!nomeEquipe || celulas.length < 12) return null;
 
   return {
-    posicao: celulas[0].match(/^\s*(\d+)/)?.[1] || '',
+   posicao: celulas[0].match(/^\s*(\d)/)?.[1] || '',
     equipe: limpar(nomeEquipe[1]),
     pontos: celulas[1],
     jogos: celulas[2],
