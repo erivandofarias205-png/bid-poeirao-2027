@@ -3670,7 +3670,20 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
   font-size: 27px;
   line-height: 1;
 }
+#profissionalView .prof-categoria {
+  color: #e4bd43;
+  font-size: 15px;
+  font-weight: 900;
+  border-left: 4px solid #e4bd43;
+  padding: 7px 10px;
+  margin: 25px 0 5px;
+  background: linear-gradient(90deg,rgba(228,189,67,.13),transparent);
+}
 
+#profissionalView .prof-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 16px rgba(228,189,67,.25);
+}
 #profissionalView .prof-card strong {
   color: #111 !important;
   font-size: 11px;
@@ -3710,8 +3723,10 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
   
 <h3 style="color:#e4bd43">PRINCIPAIS COMPETIÇÕES 2026</h3>
 
-<div class="prof-grid">
 
+<!-- JOGOS DO DIA -->
+<h3 class="prof-categoria">⚽ ACOMPANHE OS JOGOS</h3>
+<div class="prof-grid">
   <div class="prof-card" onclick="
     document.getElementById('profissionalJogosHoje').hidden = false;
     document.getElementById('profissionalJogosHoje').scrollIntoView({behavior:'smooth'});
@@ -3720,77 +3735,70 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
     <div class="icon">⚽</div>
     <strong>JOGOS DE HOJE</strong>
   </div>
-
-    
-<div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE A')">
-  <div class="icon">A</div>
-  <strong>BRASILEIRÃO SÉRIE A</strong>
 </div>
 
-<div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE B')">
-  <div class="icon">B</div>
-  <strong>BRASILEIRÃO SÉRIE B</strong>
+<!-- FUTEBOL BRASILEIRO -->
+<h3 class="prof-categoria">🇧🇷 FUTEBOL BRASILEIRO</h3>
+<div class="prof-grid">
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE A')">
+    <div class="icon">A</div>
+    <strong>BRASILEIRÃO SÉRIE A</strong>
+  </div>
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE B')">
+    <div class="icon">B</div>
+    <strong>BRASILEIRÃO SÉRIE B</strong>
+  </div>
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE C')">
+    <div class="icon">C</div>
+    <strong>BRASILEIRÃO SÉRIE C</strong>
+  </div>
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE D')">
+    <div class="icon">D</div>
+    <strong>BRASILEIRÃO SÉRIE D</strong>
+  </div>
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('COPA DO BRASIL')">
+    <div class="icon">🏆</div>
+    <strong>COPA DO BRASIL</strong>
+  </div>
 </div>
 
-<div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE C')">
-  <div class="icon">C</div>
-  <strong>BRASILEIRÃO SÉRIE C</strong>
+<!-- COMPETIÇÕES INTERNACIONAIS -->
+<h3 class="prof-categoria">🌎 COMPETIÇÕES INTERNACIONAIS</h3>
+<div class="prof-grid">
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('LIBERTADORES')">
+    <div class="icon">🏆</div>
+    <strong>LIBERTADORES</strong>
+  </div>
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('SUL-AMERICANA')">
+    <div class="icon">🏆</div>
+    <strong>SUL-AMERICANA</strong>
+  </div>
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('EUROPA LEAGUE')">
+    <div class="icon">🏆</div>
+    <strong>EUROPA LEAGUE</strong>
+  </div>
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('CHAMPIONS LEAGUE')">
+    <div class="icon">⭐</div>
+    <strong>CHAMPIONS LEAGUE</strong>
+  </div>
 </div>
 
-<div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE D')">
-  <div class="icon">D</div>
-  <strong>BRASILEIRÃO SÉRIE D</strong>
+<!-- FUTEBOL INTERNACIONAL -->
+<h3 class="prof-categoria">🌍 FUTEBOL INTERNACIONAL</h3>
+<div class="prof-grid">
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('INTERNACIONAL')">
+    <div class="icon">🌍</div>
+    <strong>PRINCIPAIS LIGAS DO MUNDO</strong>
+  </div>
 </div>
 
-<div class="prof-card" onclick="abrirCompeticaoProfissional('COPA DO BRASIL')">
-  <div class="icon">CB</div>
-  <strong>COPA DO BRASIL</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('LIBERTADORES')">
-  <div class="icon">LIB</div>
-  <strong>LIBERTADORES</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('SUL-AMERICANA')">
-  <div class="icon">SUD</div>
-  <strong>SUL-AMERICANA</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('CHAMPIONS LEAGUE')">
-  <div class="icon">UCL</div>
-  <strong>CHAMPIONS LEAGUE</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('EUROPA LEAGUE')">
-  <div class="icon">UEL</div>
-  <strong>EUROPA LEAGUE</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('PREMIER LEAGUE')">
-  <div class="icon">PL</div>
-  <strong>PREMIER LEAGUE</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('LA LIGA')">
-  <div class="icon">LL</div>
-  <strong>LA LIGA</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('CAMPEONATO ITALIANO')">
-  <div class="icon">ITA</div>
-  <strong>CAMPEONATO ITALIANO</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('BUNDESLIGA')">
-  <div class="icon">BL</div>
-  <strong>BUNDESLIGA</strong>
-</div>
-
-<div class="prof-card" onclick="abrirCompeticaoProfissional('CAMPEONATO FRANCÊS')">
-  <div class="icon">FRA</div>
-  <strong>CAMPEONATO FRANCÊS</strong>
-</div>
+<!-- SELEÇÕES -->
+<h3 class="prof-categoria">🏳️ FUTEBOL DE SELEÇÕES</h3>
+<div class="prof-grid">
+  <div class="prof-card" onclick="abrirCompeticaoProfissional('SELEÇÕES')">
+    <div class="icon">🏆</div>
+    <strong>PRÓXIMOS JOGOS DAS SELEÇÕES</strong>
+  </div>
 </div>
 <div class="prof-section" id="profissionalJogosHoje" hidden>
 
