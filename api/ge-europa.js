@@ -191,7 +191,7 @@ async function consultarGE(config, rodadaSolicitada) {
 
   console.log('URL DE JOGOS GE:', urlJogos);
   
-  const respostaJogos = await fetch(urlJogos, {
+  const listaJogos = await respostaJogos.json();
   headers: {
     'User-Agent': 'Mozilla/5.0',
     'Accept': 'application/json',
