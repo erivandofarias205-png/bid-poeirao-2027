@@ -184,28 +184,7 @@ async function consultarGE(config, rodadaSolicitada) {
     );
   }
 
-  // Busca os jogos diretamente na API oficial do GE.
-  const urlJogos =
-    `https://api.globoesporte.globo.com/tabela/` +
-    `${config.tabelaId}/fase/${config.faseSlug}/rodada/${rodada}/jogos/`;
-
-  console.log('URL DE JOGOS GE:', urlJogos);
-  
-  const listaJogos = await respostaJogos.json();
-  headers: {
-    'User-Agent': 'Mozilla/5.0',
-    'Accept': 'application/json',
-    'Referer': config.url,
-    'Origin': 'https://ge.globo.com'
-  }
-});
-
-const textoResposta = await respostaJogos.text();
-
-console.log('STATUS GE:', respostaJogos.status);
-console.log('RESPOSTA GE:', textoResposta.slice(0, 1000));
-
-
+ 
   // Busca os jogos diretamente na API oficial do GE.
   const urlJogos =
     `https://api.globoesporte.globo.com/tabela/` +
@@ -233,17 +212,11 @@ console.log('RESPOSTA GE:', textoResposta.slice(0, 1000));
     );
   }
 
-  const listaJogos = JSON.parse(textoResposta);
-
-  if (!Array.isArray(listaJogos)) {
-    throw new Error('O GE não retornou uma lista válida de jogos.');
-  }
-
 const listaJogos = JSON.parse(textoResposta);
-  if (!Array.isArray(listaJogos)) {
-    throw new Error('O GE não retornou uma lista válida de jogos.');
-  }
 
+if (!Array.isArray(listaJogos)) {
+  throw new Error('O GE não retornou uma lista válida de jogos.');
+}
   const jogos = mapearJogos(listaJogos);
 
   // Mantém a classificação original do GE.
@@ -307,8 +280,8 @@ export default async function handler(req, res) {
 
       url: 'https://ge.globo.com/futebol/futebol-internacional/liga-europa/',
 
-      tabelaId: '39ef948e-c896-45bf-b844-06cc70872b52',
-
+      tabelaId: '39ef948e-c896-45bf-b844-06cc70827b52',
+      
       faseSlug: 'primeira-fase-liga-europa-2026-27'
     }
   };
