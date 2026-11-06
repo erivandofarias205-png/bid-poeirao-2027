@@ -3950,30 +3950,71 @@ async function abrirCompeticaoProfissional(nome) {
     areaJogos.innerHTML = '<p>Carregando jogos e resultados...</p>';
   }
 
-  try {
-    // SÉRIE A USA A ROTA ORIGINAL.
-    // SÉRIES B, C E D USAM A API GERAL.
-    const endereco = serie === 'a'
-      ? '/api/serie-a'
+ 
+try {
+  // CADA SÉRIE USA SUA ROTA.
+  const endereco = serie === 'a'
+    ? '/api/serie-a'
+    : serie === 'c'
+      ? '/api/serie-c'
       : `/api/brasileirao?serie=${serie}`;
 
-    const resposta = await fetch(endereco);
+  const resposta = await fetch(endereco);
 
-    if (!resposta.ok) {
-      throw new Error('Não foi possível consultar esta competição.');
-    }
+  if (!resposta.ok) {
+    throw new Error('Não foi possível consultar esta competição.');
+  }
 
-    const retorno = await resposta.json();
+  const retorno = await resposta.json();
 
-    if (retorno.sucesso === false) {
-      throw new Error(retorno.erro || 'Erro ao consultar o Brasileirão.');
-    }
+  if (retorno.sucesso === false) {
+    throw new Error(retorno.erro || 'Erro ao consultar o Brasileirão.');
+  }
 
-    const dados = serie === 'a' ? retorno : retorno.dados;
+  let dados;
 
-    if (!dados || !dados.competition) {
-      throw new Error('Dados da competição não encontrados.');
-    }
+  if (serie === 'a') {
+    dados = retorno;
+
+  } else if (serie === 'c') {
+
+    // ADAPTA OS GRUPOS B E C PARA O FORMATO DA TABELA DO PORTAL.
+    dados = {
+      competition: {
+        name: retorno.competicao || 'Brasileirão Série C 2026'
+      },
+      matches: [],
+      rounds: [],
+      tables: Object.entries(retorno.grupos || {}).map(([grupo, equipes]) => ({
+        name: `GRUPO ${grupo}`,
+        entries: equipes.map(item => ({
+          position: item.posicao,
+          team: {
+            name: item.equipe
+          },
+          points: item.pontos,
+          matches: item.jogos,
+          wins: item.vitorias,
+          draws: item.empates,
+          losses: item.derrotas,
+          goalsFor: item.gols_pro,
+          goalsAgainst: item.gols_contra,
+          goalDifference: item.saldo_gols,
+          efficiency: item.aproveitamento
+        }))
+      }))
+    };
+
+  } else {
+    dados = retorno.dados;
+  }
+
+  if (!dados || !dados.competition) {
+    throw new Error('Dados da competição não encontrados.');
+  }
+
+  // A PARTIR DAQUI, MANTER O CÓDIGO ORIGINAL.
+
 
     // JOGOS E RESULTADOS
     const partidas = [
