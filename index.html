@@ -3599,9 +3599,26 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
 
 /* JOGOS EM 3 COLUNAS */
 #profissionalView #listaJogosHoje {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  display: block;
+  width: 100%;
+}
+
+#profissionalView #listaJogosHoje > div {
+  display: block;
+  margin: 5px 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 7px;
+}
+
+#profissionalView #listaJogosHoje img {
+  width: 23px;
+  height: 23px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+#profissionalView #listaJogosHoje strong {
+  font-size: 12px;
 }
 
 #profissionalView #listaJogosHoje > div {
@@ -3840,11 +3857,43 @@ function fecharCompeticaoProfissional() {
 }
 
 
+
 async function carregarJogosHojeProfissional() {
   const area = document.getElementById('listaJogosHoje');
   if (!area) return;
 
-  area.innerHTML = '<p>Buscando partidas de hoje...</p>';
+  area.innerHTML = '<p>Buscando partidas...</p>';
+
+  const competicoesPermitidas = [
+    { nome: 'BRASILEIRÃO SÉRIE A', aliases: ['BRAZILIAN SERIE A', 'BRAZIL SERIE A', 'BRASILEIRÃO SÉRIE A'] },
+    { nome: 'BRASILEIRÃO SÉRIE B', aliases: ['BRAZILIAN SERIE B', 'BRAZIL SERIE B', 'BRASILEIRÃO SÉRIE B'] },
+    { nome: 'BRASILEIRÃO SÉRIE C', aliases: ['BRAZILIAN SERIE C', 'BRAZIL SERIE C', 'BRASILEIRÃO SÉRIE C'] },
+    { nome: 'BRASILEIRÃO SÉRIE D', aliases: ['BRAZILIAN SERIE D', 'BRAZIL SERIE D', 'BRASILEIRÃO SÉRIE D'] },
+    { nome: 'COPA DO BRASIL', aliases: ['COPA DO BRASIL', 'BRAZILIAN CUP'] },
+    { nome: 'LIBERTADORES', aliases: ['COPA LIBERTADORES', 'CONMEBOL LIBERTADORES', 'LIBERTADORES'] },
+    { nome: 'SUL-AMERICANA', aliases: ['CONMEBOL SUDAMERICANA', 'COPA SUDAMERICANA', 'SUL-AMERICANA', 'SUDAMERICANA'] },
+    { nome: 'CHAMPIONS LEAGUE', aliases: ['UEFA CHAMPIONS LEAGUE', 'CHAMPIONS LEAGUE'] },
+    { nome: 'EUROPA LEAGUE', aliases: ['UEFA EUROPA LEAGUE', 'EUROPA LEAGUE'] },
+    { nome: 'PREMIER LEAGUE', aliases: ['ENGLISH PREMIER LEAGUE', 'PREMIER LEAGUE'] },
+    { nome: 'LA LIGA', aliases: ['SPANISH LA LIGA', 'LA LIGA', 'LALIGA'] },
+    { nome: 'CAMPEONATO ITALIANO', aliases: ['ITALIAN SERIE A', 'ITALY SERIE A', 'SERIE A ITALY'] },
+    { nome: 'BUNDESLIGA', aliases: ['GERMAN BUNDESLIGA', 'BUNDESLIGA'] },
+    { nome: 'CAMPEONATO FRANCÊS', aliases: ['FRENCH LIGUE 1', 'FRANCE LIGUE 1', 'LIGUE 1'] }
+  ];
+
+  const normalizar = texto => String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+
+  const escapar = texto => String(texto ?? '').replace(/[&<>"']/g, caractere => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[caractere]);
 
   try {
     const agora = new Date();
@@ -3862,58 +3911,92 @@ async function carregarJogosHojeProfissional() {
     const dados = await resposta.json();
     const jogos = dados.matches || [];
 
-    if (!jogos.length) {
-      area.innerHTML = '<p>Nenhuma partida encontrada para hoje.</p>';
+    const grupos = competicoesPermitidas.map(competicao => ({
+      nome: competicao.nome,
+      jogos: jogos.filter(jogo => {
+        const nomeAPI = normalizar(jogo.competition);
+        return competicao.aliases.some(alias =>
+          nomeAPI === normalizar(alias)
+        );
+      })
+    })).filter(grupo => grupo.jogos.length > 0);
+
+    if (!grupos.length) {
+      area.innerHTML = '<p>Nenhum jogo encontrado hoje nas 14 competições selecionadas.</p>';
       return;
     }
 
-    jogos.sort((a, b) => new Date(a.time) - new Date(b.time));
+    area.innerHTML = grupos.map(grupo => {
+      const linhas = grupo.jogos
+        .sort((a, b) => new Date(a.time) - new Date(b.time))
+        .map(jogo => {
+          const horario = jogo.time
+            ? new Date(jogo.time).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Fortaleza'
+              })
+            : '--:--';
 
-    area.innerHTML = jogos.map(jogo => {
-      const horario = new Date(jogo.time).toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'America/Fortaleza'
-      });
+          const placar = jogo.home_score != null && jogo.away_score != null
+            ? `${escapar(jogo.home_score)} x ${escapar(jogo.away_score)}`
+            : 'VS';
 
-      const placar = jogo.home_score !== null && jogo.away_score !== null
-        ? `${jogo.home_score} x ${jogo.away_score}`
-        : 'VS';
+          const mandante = escapar(jogo.home || 'A definir');
+          const visitante = escapar(jogo.away || 'A definir');
 
-      const escudo = (url, nome) => url
-        ? `<img src="${url}" alt="${nome}" style="width:34px;height:34px;object-fit:contain">`
-        : '';
+          const escudoMandante = jogo.home_logo
+            ? `<img src="${escapar(jogo.home_logo)}" alt="" style="width:23px;height:23px;object-fit:contain">`
+            : '';
+
+          const escudoVisitante = jogo.away_logo
+            ? `<img src="${escapar(jogo.away_logo)}" alt="" style="width:23px;height:23px;object-fit:contain">`
+            : '';
+
+          const estadio = jogo.venue || jogo.stadium || '';
+
+          return `
+            <div style="
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+              gap:8px;
+              padding:8px 4px;
+              border-bottom:1px solid rgba(255,255,255,.15);
+              color:#fff;
+              font-size:12px;
+            ">
+              <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0">
+                ${escudoMandante}
+                <strong>${mandante}</strong>
+              </div>
+
+              <div style="text-align:center;min-width:65px">
+                <strong style="color:#e4bd43;font-size:14px">${placar}</strong>
+                <div style="color:#e4bd43;font-size:10px">${horario}</div>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;flex:1;min-width:0">
+                <strong>${visitante}</strong>
+                ${escudoVisitante}
+              </div>
+            </div>
+            ${estadio ? `<div style="font-size:10px;color:#bbb;padding:2px 4px 6px">Estádio: ${escapar(estadio)}</div>` : ''}
+          `;
+        }).join('');
 
       return `
-        <div style="background:#111;color:#fff;border:1px solid #c99b32;
-          border-radius:10px;padding:12px;margin:9px 0;text-align:center">
-
-          <div style="display:flex;align-items:center;justify-content:center;gap:7px;
-            color:#e4bd43;font-size:11px;font-weight:900;margin-bottom:10px">
-            ${jogo.competition_logo ? `<img src="${jogo.competition_logo}"
-              style="width:22px;height:22px;object-fit:contain">` : ''}
-            ${jogo.competition || 'Futebol'}
+        <div style="margin-bottom:13px">
+          <div style="
+            color:#111;
+            font-weight:900;
+            font-size:13px;
+            padding:7px 5px;
+            border-bottom:2px solid #111;
+          ">
+            ${grupo.nome}
           </div>
-
-          <div style="display:grid;grid-template-columns:1fr auto 1fr;
-            align-items:center;gap:8px">
-
-            <div>
-              ${escudo(jogo.home_logo, jogo.home)}
-              <div><strong>${jogo.home || 'A definir'}</strong></div>
-            </div>
-
-            <strong style="color:#e4bd43;font-size:21px">${placar}</strong>
-
-            <div>
-              ${escudo(jogo.away_logo, jogo.away)}
-              <div><strong>${jogo.away || 'A definir'}</strong></div>
-            </div>
-          </div>
-
-          <div style="color:#e4bd43;font-size:12px;margin-top:10px">
-            ${horario} • ${jogo.status_text || 'Agendado'}
-          </div>
+          ${linhas}
         </div>
       `;
     }).join('');
@@ -3924,7 +4007,8 @@ async function carregarJogosHojeProfissional() {
   }
 }
 </script>
-  <div style="text-align:center;margin:20px 0">
+    
+    <div style="text-align:center;margin:20px 0">
     <button class="tab" type="button"
       onclick="showTab('public')"
       style="background:#c99b32;color:#111;font-weight:900">
