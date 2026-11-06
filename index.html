@@ -3707,31 +3707,18 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
   </div>
 
   
-<div class="prof-section" id="profissionalJogosHoje">
-  <h3>⚽ JOGOS DE HOJE</h3>
+<h3 style="color:#e4bd43">PRINCIPAIS COMPETIÇÕES 2026</h3>
 
-  <div id="listaJogosHoje">
-    <p>Carregando partidas...</p>
+<div class="prof-grid">
+
+  <div class="prof-card" onclick="
+    document.getElementById('profissionalJogosHoje').hidden = false;
+    document.getElementById('profissionalJogosHoje').scrollIntoView({behavior:'smooth'});
+    carregarJogosHojeProfissional();
+  ">
+    <div class="icon">⚽</div>
+    <strong>JOGOS DE HOJE</strong>
   </div>
-
-  <p class="small" style="text-align:center">
-    Dados esportivos: Powered by
-    <a href="https://sportscore.com" target="_blank"
-       rel="noopener noreferrer" style="color:#111;font-weight:900">
-      SportScore
-    </a>
-  </p>
-
-  <button type="button" class="tab"
-    onclick="carregarJogosHojeProfissional()"
-    style="background:#111;color:#e4bd43;font-weight:900">
-    🔄 ATUALIZAR JOGOS
-  </button>
-</div>
-
-  <h3 style="color:#e4bd43">PRINCIPAIS COMPETIÇÕES 2026</h3>
-
-  <div class="prof-grid">
 
     
 <div class="prof-card" onclick="abrirCompeticaoProfissional('BRASILEIRÃO SÉRIE A')">
@@ -3803,7 +3790,36 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
   <div class="icon">FRA</div>
   <strong>CAMPEONATO FRANCÊS</strong>
 </div>
+</div>
 
+<div class="prof-section" id="profissionalJogosHoje" hidden>
+  <h3>⚽ JOGOS DE HOJE</h3>
+
+  <div id="listaJogosHoje">
+    <p>Selecione uma data para consultar os jogos.</p>
+  </div>
+
+  <p class="small" style="text-align:center">
+    Dados esportivos: Powered by
+    <a href="https://sportscore.com" target="_blank"
+       rel="noopener noreferrer" style="color:#111;font-weight:900">
+      SportScore
+    </a>
+  </p>
+
+  <button type="button" class="tab"
+    onclick="carregarJogosHojeProfissional()"
+    style="background:#111;color:#e4bd43;font-weight:900">
+    🔄 ATUALIZAR JOGOS
+  </button>
+
+  <button type="button" class="tab"
+    onclick="document.getElementById('profissionalJogosHoje').hidden=true"
+    style="background:#c99b32;color:#111;font-weight:900">
+    ← VOLTAR ÀS COMPETIÇÕES
+  </button>
+</div>
+  
 <div id="profissionalDetalhes" class="prof-section" hidden>
   <h3 id="profissionalTitulo"></h3>
 
