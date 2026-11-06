@@ -3,90 +3,62 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
   try {
-    const url = 'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-c/2026/2098?documento=IMT';
+    const rodada = Number(req.query.rodada || 6);
+
+    if (!Number.isInteger(rodada) || rodada < 1 || rodada > 6) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Rodada inválida.'
+      });
+    }
+
+    const url = `https://www.cbf.com.br/api/cbf/jogos/campeonato/1260613/rodada/${rodada}/fase`;
 
     const resposta = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0',
-        'Accept': 'text/html'
+        'Accept': 'application/json'
       }
     });
 
     if (!resposta.ok) {
       return res.status(502).json({
         sucesso: false,
-        erro: 'Não foi possível consultar a classificação da Série C na CBF.',
+        erro: 'Não foi possível consultar os jogos na CBF.',
         status: resposta.status
       });
     }
 
-    const html = await resposta.text();
+    const dados = await resposta.json();
 
-    function limpar(texto) {
-      return texto
-        .replace(/<[^>]*>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&#x27;|&#39;/g, "'")
-        .replace(/&quot;/g, '"')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
+    const grupos = {};
 
-    function extrairGrupo(nome) {
-      const inicio = html.indexOf(`<h2>${nome}</h2>`);
+    for (const grupo of dados.jogos || []) {
+      if (!['GRUPO B', 'GRUPO C'].includes(grupo.grupo)) continue;
 
-      if (inicio === -1) return [];
+      grupos[grupo.grupo] = (grupo.jogo || []).map(jogo => ({
+        id: jogo.id_jogo,
+        numero: jogo.num_jogo,
+        rodada: jogo.rodada,
+        grupo: jogo.grupo,
 
-      const inicioTabela = html.indexOf('<table', inicio);
-      if (inicioTabela === -1) return [];
+        mandante: {
+          nome: jogo.mandante?.nome || '',
+          escudo: jogo.mandante?.url_escudo || '',
+          gols: jogo.mandante?.gols ?? null
+        },
 
-      const fimTabela = html.indexOf('</table>', inicioTabela);
-      if (fimTabela === -1) return [];
+        visitante: {
+          nome: jogo.visitante?.nome || '',
+          escudo: jogo.visitante?.url_escudo || '',
+          gols: jogo.visitante?.gols ?? null
+        },
 
-      const tabela = html.slice(inicioTabela, fimTabela + 8);
-      const linhas = tabela.match(/<tr\b[\s\S]*?<\/tr>/gi) || [];
-
-      return linhas.map(linha => {
-        const nomeEquipe = linha.match(
-          /class="[^"]*styles_teamName[^"]*"[^>]*>([\s\S]*?)<\/strong>/i
-        );
-
-        const celulas = [...linha.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
-          .map(celula => limpar(celula[1]));
-
-        if (!nomeEquipe || celulas.length < 12) return null;
-
-        return {
-          posicao: celulas[0].match(/^\s*(\d)/)?.[1] || '',
-          equipe: limpar(nomeEquipe[1]),
-          pontos: celulas[1],
-          jogos: celulas[2],
-          vitorias: celulas[3],
-          empates: celulas[4],
-          derrotas: celulas[5],
-          gols_pro: celulas[6],
-          gols_contra: celulas[7],
-          saldo_gols: celulas[8],
-          cartoes_amarelos: celulas[9],
-          cartoes_vermelhos: celulas[10],
-          aproveitamento: celulas[11]
-        };
-      }).filter(Boolean);
-    }
-
-    const grupoB = extrairGrupo('GRUPO B');
-    const grupoC = extrairGrupo('GRUPO C');
-
-    if (grupoB.length === 0 || grupoC.length === 0) {
-      return res.status(502).json({
-        sucesso: false,
-        erro: 'A CBF não retornou a classificação completa dos grupos B e C.',
-        total_grupo_b: grupoB.length,
-        total_grupo_c: grupoC.length
-      });
+        data: (jogo.data || '').trim(),
+        hora: jogo.hora || '',
+        local: jogo.local || '',
+        penalidades: jogo.penalidades || []
+      }));
     }
 
     return res.status(200).json({
@@ -94,22 +66,20 @@ export default async function handler(req, res) {
       fonte: 'CBF',
       competicao: 'Brasileirão Série C 2026',
       fase: 'Segunda fase',
-      grupos: {
-        B: grupoB,
-        C: grupoC
-      },
-      total_equipes: grupoB.length + grupoC.length,
+      rodada,
+      grupos,
+      total_jogos: Object.values(grupos)
+        .reduce((total, jogos) => total + jogos.length, 0),
       atualizado_em: new Date().toISOString()
     });
 
   } catch (erro) {
-    console.error('Erro na API da Série C:', erro);
+    console.error('Erro nos jogos da Série C:', erro);
 
     return res.status(500).json({
       sucesso: false,
-      erro: 'Erro ao consultar a classificação da Série C.',
+      erro: 'Erro ao consultar os jogos da Série C.',
       detalhe: erro.message
     });
   }
 }
-
