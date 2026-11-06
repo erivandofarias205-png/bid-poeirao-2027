@@ -105,10 +105,10 @@ const linksJogos = [
 const diagnosticoJogos = [...new Set(linksJogos)];
 
 const termosBusca = [
-  'Jogo',
-  'RODADA',
-  'styles_teamPositionContent',
-  'BOT'
+  'DOCUMENTOS DO JOGO',
+  'Jogo 211',
+  'RODADA 6',
+  'styles_match'
 ];
 
 const diagnosticoEstrutura = {};
