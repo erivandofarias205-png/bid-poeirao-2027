@@ -3897,13 +3897,94 @@ margin-bottom:15px;
 </div>
 
 <script>
-function abrirCompeticaoProfissional(nome) {
+async function abrirCompeticaoProfissional(nome) {
   document.getElementById('profissionalTitulo').textContent = nome;
 
-  document.getElementById('profissionalDetalhes').hidden = false;
+  const detalhes = document.getElementById('profissionalDetalhes');
+  detalhes.hidden = false;
+  detalhes.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  document.getElementById('profissionalDetalhes')
-    .scrollIntoView({behavior:'smooth',block:'start'});
+  const area = document.getElementById('profissionalClassificacao');
+  if (!area) return;
+
+  const normalizar = texto => String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+
+  if (normalizar(nome) !== 'BRASILEIRAO SERIE A') {
+    area.innerHTML = 'Classificação desta competição será disponibilizada em breve.';
+    return;
+  }
+
+  area.innerHTML = '<p>Carregando classificação do Brasileirão Série A...</p>';
+
+  try {
+    const resposta = await fetch('/api/serie-a');
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao consultar a classificação.');
+    }
+
+    const dados = await resposta.json();
+    const tabela = dados.tables?.find(item => item.id === 'overall');
+    const equipes = tabela?.entries || [];
+
+    if (!equipes.length) {
+      throw new Error('A classificação não foi encontrada.');
+    }
+
+    area.innerHTML = `
+      <p><strong>${dados.competition.name}</strong> — ${tabela.round.label}</p>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;min-width:650px">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th style="text-align:left">CLUBE</th>
+              <th>PTS</th>
+              <th>J</th>
+              <th>V</th>
+              <th>E</th>
+              <th>D</th>
+              <th>GP</th>
+              <th>GC</th>
+              <th>SG</th>
+              <th>AP%</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${equipes.map(item => `
+              <tr style="border-bottom:1px solid #444;text-align:center">
+                <td>${item.position}</td>
+                <td style="text-align:left;white-space:nowrap">
+                  <img src="${item.team.badge}"
+                       alt=""
+                       style="width:23px;height:23px;object-fit:contain;vertical-align:middle;margin-right:7px">
+                  ${item.team.name}
+                </td>
+                <td><strong>${item.points}</strong></td>
+                <td>${item.matches}</td>
+                <td>${item.wins}</td>
+                <td>${item.draws}</td>
+                <td>${item.losses}</td>
+                <td>${item.goalsFor}</td>
+                <td>${item.goalsAgainst}</td>
+                <td>${item.goalDifference}</td>
+                <td>${item.efficiency}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (erro) {
+    area.innerHTML = `
+      <p>Não foi possível carregar a classificação.</p>
+      <p>${erro.message}</p>
+    `;
+  }
 }
 
 function fecharCompeticaoProfissional() {
