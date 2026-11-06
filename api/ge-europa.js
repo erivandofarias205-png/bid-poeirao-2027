@@ -44,9 +44,11 @@ function extrairJSON(script, variavel) {
       nivel++;
     }
 
-    if (caractere === fechamento ||
-        (abertura === '[' && caractere === '}') ||
-        (abertura === '{' && caractere === ']')) {
+    if (
+      caractere === fechamento ||
+      (abertura === '[' && caractere === '}') ||
+      (abertura === '{' && caractere === ']')
+    ) {
       nivel--;
     }
 
@@ -58,67 +60,8 @@ function extrairJSON(script, variavel) {
   throw new Error(`JSON incompleto em "${variavel}".`);
 }
 
-async function consultarGE(config) {
-  const resposta = await fetch(config.url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-      'Accept': 'text/html,application/xhtml+xml'
-    }
-  });
-
-  if (!resposta.ok) {
-    throw new Error(`GE respondeu com HTTP ${resposta.status}.`);
-  }
-
-  const html = await resposta.text();
-
-  const scriptReact = [
-    ...html.matchAll(
-      /<script\b([^>]*)>([\s\S]*?)<\/script>/gi
-    )
-  ].find(item =>
-    /\bid=["']scriptReact["']/.test(item[1])
-  );
-
-  if (!scriptReact) {
-    throw new Error('Script de dados do GE não encontrado.');
-  }
-
-  const script = scriptReact[2];
-
-  const listaJogos = extrairJSON(script, 'listaJogos');
-  const classificacao = extrairJSON(script, 'classificacao');
-console.log('DIAGNOSTICO GE:', JSON.stringify({
-  rodada: classificacao.rodada,
-  fases: classificacao.fases_navegacao,
-  listaJogosUnica: classificacao.lista_jogos_unica,
-  listaTipoUnica: classificacao.lista_tipo_unica
-}));
-  const faseEncontrada = script.match(
-    /const\s+fase\s*=\s*(\{[\s\S]*?\});/
-  );
-
-  let fase = null;
-
-  if (faseEncontrada) {
-    try {
-      fase = JSON.parse(faseEncontrada[1]);
-    } catch {}
-  }
-
-  const edicaoEncontrada = script.match(
-    /"edicao"\s*:\s*(\{[\s\S]*?\})\s*,\s*"faixas_classificacao"/
-  );
-
-  let edicao = null;
-
-  if (edicaoEncontrada) {
-    try {
-      edicao = JSON.parse(edicaoEncontrada[1]);
-    } catch {}
-  }
-
-  const jogos = listaJogos.map(jogo => {
+function mapearJogos(listaJogos) {
+  return listaJogos.map(jogo => {
     const mandante = jogo.equipes?.mandante || {};
     const visitante = jogo.equipes?.visitante || {};
 
@@ -172,7 +115,103 @@ console.log('DIAGNOSTICO GE:', JSON.stringify({
       transmissao: jogo.transmissao || null
     };
   });
+}
 
+async function consultarGE(config, rodadaSolicitada) {
+  // Busca a página do GE para obter classificação e informações da competição.
+  const resposta = await fetch(config.url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'text/html,application/xhtml+xml'
+    }
+  });
+
+  if (!resposta.ok) {
+    throw new Error(`GE respondeu com HTTP ${resposta.status}.`);
+  }
+
+  const html = await resposta.text();
+
+  const scriptReact = [
+    ...html.matchAll(
+      /<script\b([^>]*)>([\s\S]*?)<\/script>/gi
+    )
+  ].find(item =>
+    /\bid=["']scriptReact["']/.test(item[1])
+  );
+
+  if (!scriptReact) {
+    throw new Error('Script de dados do GE não encontrado.');
+  }
+
+  const script = scriptReact[2];
+
+  const classificacao = extrairJSON(script, 'classificacao');
+
+  const faseEncontrada = script.match(
+    /const\s+fase\s*=\s*(\{[\s\S]*?\});/
+  );
+
+  let fase = null;
+
+  if (faseEncontrada) {
+    try {
+      fase = JSON.parse(faseEncontrada[1]);
+    } catch {}
+  }
+
+  const edicaoEncontrada = script.match(
+    /"edicao"\s*:\s*(\{[\s\S]*?\})\s*,\s*"faixas_classificacao"/
+  );
+
+  let edicao = null;
+
+  if (edicaoEncontrada) {
+    try {
+      edicao = JSON.parse(edicaoEncontrada[1]);
+    } catch {}
+  }
+
+  // Identifica a rodada atual e a quantidade de rodadas da primeira fase.
+  const rodadaAtual = Number(classificacao.rodada?.atual || 1);
+  const ultimaRodada = Number(classificacao.rodada?.ultima || 8);
+
+  const rodada = rodadaSolicitada || rodadaAtual;
+
+  if (rodada < 1 || rodada > ultimaRodada) {
+    throw new Error(
+      `Rodada inválida para ${config.nome}. Disponíveis: 1 a ${ultimaRodada}.`
+    );
+  }
+
+  // Busca os jogos diretamente na API oficial do GE.
+  const urlJogos =
+    `https://api.globoesporte.globo.com/tabela/` +
+    `${config.tabelaId}/fase/${config.faseSlug}/rodada/${rodada}/jogos/`;
+
+  const respostaJogos = await fetch(urlJogos, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json',
+      'Referer': config.url
+    }
+  });
+
+  if (!respostaJogos.ok) {
+    throw new Error(
+      `API de jogos do GE respondeu com HTTP ${respostaJogos.status}.`
+    );
+  }
+
+  const listaJogos = await respostaJogos.json();
+
+  if (!Array.isArray(listaJogos)) {
+    throw new Error('O GE não retornou uma lista válida de jogos.');
+  }
+
+  const jogos = mapearJogos(listaJogos);
+
+  // Mantém a classificação original do GE.
   const tabela = (classificacao.classificacao || []).map(item => ({
     posicao: item.ordem,
     equipe: item.nome_popular,
@@ -194,8 +233,15 @@ console.log('DIAGNOSTICO GE:', JSON.stringify({
   return {
     competicao: config.nome,
     temporada: edicao?.nome || '',
-    fase: fase?.slug || '',
+    fase: fase?.slug || config.faseSlug,
     regulamento: edicao?.regulamento || '',
+
+    rodada: {
+      atual: rodadaAtual,
+      selecionada: rodada,
+      ultima: ultimaRodada
+    },
+
     jogos,
     total_jogos: jogos.length,
     classificacao: tabela,
@@ -213,12 +259,22 @@ export default async function handler(req, res) {
   const competicoes = {
     champions: {
       nome: 'UEFA Champions League',
-      url: 'https://ge.globo.com/futebol/futebol-internacional/liga-dos-campeoes/'
+
+      url: 'https://ge.globo.com/futebol/futebol-internacional/liga-dos-campeoes/',
+
+      tabelaId: '18a2ea40-9c94-4098-a183-ca69f79c5548',
+
+      faseSlug: 'primeira-fase-liga-dos-campeoes-2026-2027'
     },
 
     europa: {
       nome: 'UEFA Europa League',
-      url: 'https://ge.globo.com/futebol/futebol-internacional/liga-europa/'
+
+      url: 'https://ge.globo.com/futebol/futebol-internacional/liga-europa/',
+
+      tabelaId: '39ef948e-c896-45bf-b844-06cc70872b52',
+
+      faseSlug: 'primeira-fase-liga-europa-2026-27'
     }
   };
 
@@ -240,10 +296,30 @@ export default async function handler(req, res) {
       });
     }
 
+    let rodadaSolicitada = null;
+
+    if (req.query.rodada !== undefined) {
+      rodadaSolicitada = Number(req.query.rodada);
+
+      if (
+        !Number.isInteger(rodadaSolicitada) ||
+        rodadaSolicitada < 1 ||
+        rodadaSolicitada > 8
+      ) {
+        return res.status(400).json({
+          sucesso: false,
+          erro: 'Rodada inválida. Informe um número de 1 a 8.'
+        });
+      }
+    }
+
     const resultados = {};
 
     for (const [chave, config] of selecionadas) {
-      resultados[chave] = await consultarGE(config);
+      resultados[chave] = await consultarGE(
+        config,
+        rodadaSolicitada
+      );
     }
 
     return res.status(200).json({
