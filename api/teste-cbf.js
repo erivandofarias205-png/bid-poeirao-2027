@@ -1,6 +1,7 @@
+
 export default async function handler(req, res) {
   try {
-    const url = 'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-c/2026?documento=IMT';
+    const url = 'https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-c/2026/2098?documento=IMT';
 
     const resposta = await fetch(url, {
       headers: {
@@ -11,12 +12,23 @@ export default async function handler(req, res) {
 
     const html = await resposta.text();
 
+    const grupos = ['GRUPO B', 'GRUPO C'];
+
+    const trechos = {};
+
+    for (const grupo of grupos) {
+      const posicao = html.indexOf(grupo);
+
+      trechos[grupo] = posicao >= 0
+        ? html.slice(posicao, posicao + 12000)
+        : 'Grupo não encontrado';
+    }
+
     return res.status(200).json({
       sucesso: resposta.ok,
       status: resposta.status,
-      tamanho: html.length,
       fonte: 'CBF',
-      html
+      trechos
     });
 
   } catch (erro) {
