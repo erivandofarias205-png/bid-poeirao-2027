@@ -88,7 +88,12 @@ async function consultarGE(config) {
 
   const listaJogos = extrairJSON(script, 'listaJogos');
   const classificacao = extrairJSON(script, 'classificacao');
-
+console.log('DIAGNOSTICO GE:', JSON.stringify({
+  rodada: classificacao.rodada,
+  fases: classificacao.fases_navegacao,
+  listaJogosUnica: classificacao.lista_jogos_unica,
+  listaTipoUnica: classificacao.lista_tipo_unica
+}));
   const faseEncontrada = script.match(
     /const\s+fase\s*=\s*(\{[\s\S]*?\});/
   );
