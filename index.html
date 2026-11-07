@@ -4421,7 +4421,7 @@ if (
     }
 
     try {
-      const respostaGE = await fetch('/api/competicoes?competicao=champions');
+      const respostaGE = await fetch(`/api/competicoes?competicao=${chaveGE}`);
 
       if (!respostaGE.ok) {
         throw new Error('Erro ao consultar os dados do GE.');
@@ -4429,57 +4429,76 @@ if (
 
       const retornoGE = await respostaGE.json();
 
-      const dadosGE = retornoGE.dados;
+      const tabelaOriginal = retornoGE.classificacao || [];
 
-      if (!retornoGE.sucesso || !dadosGE) {
-        throw new Error('Dados da competição não encontrados.');
-      }
+const entradas = tabelaOriginal.flatMap(tabela =>
+  tabela.entries || []
+);
 
-      // CLASSIFICAÇÃO
-      const tabelaGE = dadosGE.classificacao || [];
+const dadosGE = {
+  temporada: tabelaOriginal[0]?.round || 'Temporada atual',
+  total_equipes: entradas.length,
 
-      area.innerHTML = `
-        <p style="color:#d4af37;font-weight:900">
-          ${dadosGE.temporada || 'Temporada atual'} · ${dadosGE.total_equipes || tabelaGE.length} equipes
-        </p>
+  classificacao: entradas.map(item => ({
+    posicao: item.position,
+    equipe: item.team?.name || '',
+    escudo: item.team?.badge || '',
+    pontos: item.points,
+    jogos: item.matches,
+    vitorias: item.wins,
+    empates: item.draws,
+    derrotas: item.losses,
+    saldo_gols: item.goalDifference
+  }))
+};
+   if (!retornoGE.sucesso || !dadosGE.classificacao.length) {
+  throw new Error('Dados da classificação não encontrados.');
+}
 
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
-            <thead>
-              <tr style="background:#171717;color:#e4bd43">
-                <th>POS</th>
-                <th style="text-align:left">CLUBE</th>
-                <th>PTS</th>
-                <th>J</th>
-                <th>V</th>
-                <th>E</th>
-                <th>D</th>
-                <th>SG</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tabelaGE.map(item => `
-                <tr style="border-bottom:1px solid #ddd;text-align:center">
-                  <td><strong>${item.posicao ?? '-'}</strong></td>
-                  <td style="text-align:left;padding:7px;white-space:nowrap">
-                    <div style="display:flex;align-items:center;gap:6px">
-                      ${item.escudo ? `<img src="${item.escudo}" style="width:23px;height:23px;object-fit:contain">` : ''}
-                      <strong>${item.equipe || ''}</strong>
-                    </div>
-                  </td>
-                  <td><strong>${item.pontos ?? 0}</strong></td>
-                  <td>${item.jogos ?? 0}</td>
-                  <td>${item.vitorias ?? 0}</td>
-                  <td>${item.empates ?? 0}</td>
-                  <td>${item.derrotas ?? 0}</td>
-                  <td>${item.saldo_gols ?? 0}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
+const tabelaGE = dadosGE.classificacao;
 
+area.innerHTML = `
+  <p style="color:#d4af37;font-weight:900">
+    ${dadosGE.temporada} · ${dadosGE.total_equipes} equipes
+  </p>
+
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
+      <thead>
+        <tr style="background:#171717;color:#e4bd43">
+          <th>POS</th>
+          <th style="text-align:left">CLUBE</th>
+          <th>PTS</th>
+          <th>J</th>
+          <th>V</th>
+          <th>E</th>
+          <th>D</th>
+          <th>SG</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tabelaGE.map(item => `
+          <tr style="border-bottom:1px solid #ddd;text-align:center">
+            <td><strong>${item.posicao ?? '-'}</strong></td>
+            <td style="text-align:left;padding:7px;white-space:nowrap">
+              <div style="display:flex;align-items:center;gap:6px">
+                ${item.escudo ? `<img src="${item.escudo}" style="width:23px;height:23px;object-fit:contain">` : ''}
+                <strong>${item.equipe}</strong>
+              </div>
+            </td>
+            <td><strong>${item.pontos ?? 0}</strong></td>
+            <td>${item.jogos ?? 0}</td>
+            <td>${item.vitorias ?? 0}</td>
+            <td>${item.empates ?? 0}</td>
+            <td>${item.derrotas ?? 0}</td>
+            <td>${item.saldo_gols ?? 0}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+`;
+      
      // JOGOS E RESULTADOS — CHAMPIONS LEAGUE
 if (areaJogos) {
   const rodadaInicial = 1;
@@ -4520,54 +4539,67 @@ if (areaJogos) {
       }
 
       const retornoRodada = await resposta.json();
-      const jogosRodada = retornoRodada.dados?.jogos || [];
+     const jogosRodada = (retornoRodada.jogos || []).map(jogo => ({
+  data: jogo.date,
+  hora: jogo.time,
+  status: jogo.status,
+  mandante: {
+    nome: jogo.homeTeam?.name || 'A definir',
+    escudo: jogo.homeTeam?.badge || ''
+  },
+  visitante: {
+    nome: jogo.awayTeam?.name || 'A definir',
+    escudo: jogo.awayTeam?.badge || ''
+  },
+  placar: jogo.score ? {
+    mandante: jogo.score.home,
+    visitante: jogo.score.away
+  } : null,
+  estadio: jogo.venue || ''
+}));
 
-      if (!jogosRodada.length) {
-        lista.innerHTML = '<p>Nenhum jogo encontrado nesta rodada.</p>';
-        return;
-      }
+if (!jogosRodada.length) {
+  lista.innerHTML = '<p>Nenhum jogo encontrado nesta rodada.</p>';
+  return;
+}
 
-      lista.innerHTML = jogosRodada.map(jogo => {
-        const data = jogo.data
-          ? jogo.data.split('T')[0].split('-').reverse().join('/')
-          : '';
+lista.innerHTML = jogosRodada.map(jogo => {
+  const data = jogo.data
+    ? jogo.data.split('T')[0].split('-').reverse().join('/')
+    : '';
 
-        const placar = jogo.placar
-          ? `${jogo.placar.mandante ?? jogo.placar.home ?? 0} × ${jogo.placar.visitante ?? jogo.placar.away ?? 0}`
-          : 'VS';
+  const placar = jogo.placar
+    ? `${jogo.placar.mandante ?? 0} × ${jogo.placar.visitante ?? 0}`
+    : 'VS';
 
-        return `
-          <div style="background:#fff;color:#222;border:1px solid #ddd;border-radius:8px;padding:9px;margin-bottom:7px">
+  return `
+    <div style="background:#fff;color:#222;border:1px solid #ddd;border-radius:8px;padding:9px;margin-bottom:7px">
+      <div style="display:grid;grid-template-columns:1fr 65px 1fr;align-items:center;gap:5px">
+        <div style="display:flex;align-items:center;gap:5px">
+          ${jogo.mandante.escudo ? `<img src="${jogo.mandante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
+          <strong style="font-size:11px">${jogo.mandante.nome}</strong>
+        </div>
 
-            <div style="display:grid;grid-template-columns:1fr 65px 1fr;align-items:center;gap:5px">
+        <strong style="text-align:center;color:#b58920;font-size:16px">${placar}</strong>
 
-              <div style="display:flex;align-items:center;gap:5px">
-                ${jogo.mandante?.escudo ? `<img src="${jogo.mandante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
-                <strong style="font-size:11px">${jogo.mandante?.nome || 'A definir'}</strong>
-              </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+          <strong style="font-size:11px;text-align:right">${jogo.visitante.nome}</strong>
+          ${jogo.visitante.escudo ? `<img src="${jogo.visitante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
+        </div>
+      </div>
 
-              <strong style="text-align:center;color:#b58920;font-size:16px">${placar}</strong>
+      <div style="border-top:1px solid #ddd;margin-top:7px;padding-top:5px;display:flex;justify-content:space-between;font-size:10px">
+        <span>${data} · ${jogo.hora || ''}</span>
+        <strong>${jogo.status || 'AGENDADA'}</strong>
+      </div>
 
-              <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
-                <strong style="font-size:11px;text-align:right">${jogo.visitante?.nome || 'A definir'}</strong>
-                ${jogo.visitante?.escudo ? `<img src="${jogo.visitante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
-              </div>
-
-            </div>
-
-            <div style="border-top:1px solid #ddd;margin-top:7px;padding-top:5px;display:flex;justify-content:space-between;font-size:10px">
-              <span>${data} · ${jogo.hora || ''}</span>
-              <strong>${jogo.status || 'AGENDADA'}</strong>
-            </div>
-
-            <div style="font-size:10px;color:#666;margin-top:3px">
-              ${jogo.estadio || ''}
-            </div>
-
-          </div>
-        `;
-      }).join('');
-
+      <div style="font-size:10px;color:#666;margin-top:3px">
+        ${jogo.estadio}
+      </div>
+    </div>
+  `;
+}).join('');
+      
     } catch (erro) {
       lista.innerHTML = `<p>Erro ao carregar jogos: ${erro.message}</p>`;
     }
