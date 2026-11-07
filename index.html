@@ -4429,29 +4429,22 @@ if (
 
       const retornoGE = await respostaGE.json();
 
-      const tabelaOriginal = retornoGE.classificacao || [];
-
-const entradas = tabelaOriginal.flatMap(tabela =>
-  tabela.entries || []
-);
-
 const dadosGE = {
-  temporada: tabelaOriginal[0]?.round || 'Temporada atual',
-  total_equipes: entradas.length,
-
-  classificacao: entradas.map(item => ({
-    posicao: item.position,
-    equipe: item.team?.name || '',
-    escudo: item.team?.badge || '',
-    pontos: item.points,
-    jogos: item.matches,
-    vitorias: item.wins,
-    empates: item.draws,
-    derrotas: item.losses,
-    saldo_gols: item.goalDifference
+  temporada: retornoGE.dados_originais?.temporada || 'Temporada atual',
+  total_equipes: (retornoGE.classificacao || []).length,
+  classificacao: (retornoGE.classificacao || []).map(item => ({
+    posicao: item.posicao,
+    equipe: item.equipe || '',
+    escudo: item.escudo || '',
+    pontos: item.pontos,
+    jogos: item.jogos,
+    vitorias: item.vitorias,
+    empates: item.empates,
+    derrotas: item.derrotas,
+    saldo_gols: item.saldo_gols
   }))
 };
-   if (!retornoGE.sucesso || !dadosGE.classificacao.length) {
+      if (!retornoGE.sucesso || !dadosGE.classificacao.length) {
   throw new Error('Dados da classificação não encontrados.');
 }
 
