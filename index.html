@@ -4533,22 +4533,22 @@ if (areaJogos) {
 
       const retornoRodada = await resposta.json();
      const jogosRodada = (retornoRodada.jogos || []).map(jogo => ({
-  data: jogo.date,
-  hora: jogo.time,
-  status: jogo.status,
-  mandante: {
-    nome: jogo.homeTeam?.name || 'A definir',
-    escudo: jogo.homeTeam?.badge || ''
-  },
-  visitante: {
-    nome: jogo.awayTeam?.name || 'A definir',
-    escudo: jogo.awayTeam?.badge || ''
-  },
-  placar: jogo.score ? {
-    mandante: jogo.score.home,
-    visitante: jogo.score.away
-  } : null,
-  estadio: jogo.venue || ''
+  data: jogo.data,
+hora: jogo.hora,
+status: jogo.status,
+mandante: {
+  nome: jogo.mandante?.nome || 'A definir',
+  escudo: jogo.mandante?.escudo || ''
+},
+visitante: {
+  nome: jogo.visitante?.nome || 'A definir',
+  escudo: jogo.visitante?.escudo || ''
+},
+  placar: jogo.placar ? {
+  mandante: jogo.placar.mandante,
+  visitante: jogo.placar.visitante
+} : null,
+estadio: jogo.estadio || ''
 }));
 
 if (!jogosRodada.length) {
