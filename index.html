@@ -4704,7 +4704,6 @@ if (serie === 'a' && areaJogos) {
   areaJogos.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <strong style="color:#d4af37">RODADA:</strong>
-
       <select id="seletorRodadaSerieA"
         style="padding:9px;border-radius:7px;border:1px solid #ccc;font-weight:800">
         ${Array.from({length:38},(_,i)=>`
@@ -4714,166 +4713,80 @@ if (serie === 'a' && areaJogos) {
         `).join('')}
       </select>
     </div>
-
     <div id="listaJogosSerieA">
-      <p>Carregando jogos da rodada 34...</p>
+      <p>Carregando jogos...</p>
     </div>
   `;
-}
-    // JOGOS E RESULTADOS
-    const partidas = [
-      ...(dados.matches || []),
-      ...(dados.rounds || []).flatMap(rodada => rodada.matches || [])
-    ];
 
-    const partidasUnicas = Array.from(
-      new Map(partidas.map(jogo => [jogo.id || [
-        jogo.date,
-        jogo.homeTeam?.name,
-        jogo.awayTeam?.name
-      ].join('-'), jogo])).values()
-    );
+  const seletor = document.getElementById('seletorRodadaSerieA');
+  const lista = document.getElementById('listaJogosSerieA');
 
-   if (areaJogos) {
-  if (!partidasUnicas.length) {
-    areaJogos.innerHTML = `
-      <p>Não há jogos disponíveis nesta fase ou rodada.</p>
-    `;
-  } else {
-    areaJogos.innerHTML = `
-      <p style="
-        color:#d4af37;
-        font-size:12px;
-        font-weight:900;
-        margin:5px 0 8px;
-      ">
-        ${dados.competition.name}
-      </p>
+  async function buscarRodada(numero) {
+    lista.innerHTML = '<p>Buscando jogos da rodada...</p>';
 
-      <div style="
-        display:flex;
-        flex-direction:column;
-        gap:5px;
-      ">
-        ${partidasUnicas.map(jogo => {
-          const data = jogo.date
-            ? jogo.date.split('-').reverse().join('/')
-            : '';
+    try {
+      const resposta = await fetch(
+        `/api/competicoes?competicao=brasileirao-a&rodada=${numero}`
+      );
 
-          const placar = jogo.score?.home != null
-            ? `${jogo.score.home} × ${jogo.score.away}`
-            : 'VS';
+      if (!resposta.ok) throw new Error('Erro ao buscar rodada.');
 
-          const situacao = jogo.status === 'finished'
-            ? 'ENCERRADO'
-            : jogo.status === 'scheduled'
-              ? 'AGENDADO'
-              : 'EM ANDAMENTO';
+      const retornoRodada = await resposta.json();
+      const jogosRodada = retornoRodada.jogos || [];
 
-          const corStatus = jogo.status === 'finished'
-            ? '#239b56'
-            : jogo.status === 'scheduled'
-              ? '#b58920'
-              : '#2685d8';
+      if (!jogosRodada.length) {
+        lista.innerHTML = '<p>Nenhum jogo encontrado nesta rodada.</p>';
+        return;
+      }
 
-          return `
-            <div style="
-             background:#ffffff;
-              border:1px solid #dddddd;
-              border-radius:7px;
-              padding:7px 9px;
-              color:#222222;
-            ">
+      lista.innerHTML = jogosRodada.map(jogo => {
+        const data = jogo.date
+          ? jogo.date.split('-').reverse().join('/')
+          : '';
 
-              <div style="
-                display:grid;
-                grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);
-                align-items:center;
-                gap:3px;
-              ">
+        const placar = jogo.score
+          ? `${jogo.score.home} × ${jogo.score.away}`
+          : 'VS';
 
-                <div style="
-                  display:flex;
-                  align-items:center;
-                  justify-content:flex-start;
-                  gap:5px;
-                  min-width:0;
-                ">
-                  ${jogo.homeTeam?.badge ? `
-                    <img src="${jogo.homeTeam.badge}"
-                      alt=""
-                      style="width:23px;height:23px;object-fit:contain;flex-shrink:0">
-                  ` : ''}
+        const status = jogo.status === 'finished'
+          ? 'ENCERRADO'
+          : jogo.status === 'scheduled'
+            ? 'AGENDADO'
+            : 'EM ANDAMENTO';
 
-                  <strong style="
-                    font-size:11px;
-                    line-height:1.15;
-                    overflow-wrap:anywhere;
-                  ">
-                    ${jogo.homeTeam?.name || 'A definir'}
-                  </strong>
-                </div>
-
-                <div style="
-                  text-align:center;
-                  font-size:17px;
-                  font-weight:900;
-                  color:#e5bd45;
-                  white-space:nowrap;
-                ">
-                  ${placar}
-                </div>
-
-                <div style="
-                  display:flex;
-                  align-items:center;
-                  justify-content:flex-end;
-                  gap:5px;
-                  min-width:0;
-                  text-align:right;
-                ">
-                  <strong style="
-                    font-size:11px;
-                    line-height:1.15;
-                    overflow-wrap:anywhere;
-                  ">
-                    ${jogo.awayTeam?.name || 'A definir'}
-                  </strong>
-
-                  ${jogo.awayTeam?.badge ? `
-                    <img src="${jogo.awayTeam.badge}"
-                      alt=""
-                      style="width:23px;height:23px;object-fit:contain;flex-shrink:0">
-                  ` : ''}
-                </div>
-
+        return `
+          <div style="background:#fff;color:#222;border:1px solid #ddd;border-radius:7px;padding:7px 9px;margin-bottom:5px">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);align-items:center;gap:3px">
+              <div style="display:flex;align-items:center;gap:5px">
+                ${jogo.homeTeam?.badge ? `<img src="${jogo.homeTeam.badge}" style="width:23px;height:23px;object-fit:contain">` : ''}
+                <strong style="font-size:11px">${jogo.homeTeam?.name || 'A definir'}</strong>
               </div>
-
-              <div style="
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-                border-top:1px solid #e5e5e5;
-                margin-top:5px;
-                padding-top:4px;
-                font-size:10px;
-               color:#555555;
-              ">
-                <span>${data} ${jogo.time ? '· ' + jogo.time : ''}</span>
-
-                <strong style="color:${corStatus};font-size:9px;">
-                  ${situacao}
-                </strong>
+              <strong style="text-align:center;color:#b58920">${placar}</strong>
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+                <strong style="font-size:11px;text-align:right">${jogo.awayTeam?.name || 'A definir'}</strong>
+                ${jogo.awayTeam?.badge ? `<img src="${jogo.awayTeam.badge}" style="width:23px;height:23px;object-fit:contain">` : ''}
               </div>
-
             </div>
-          `;
-        }).join('')}
-      </div>
-    `;
+            <div style="border-top:1px solid #ddd;margin-top:5px;padding-top:4px;display:flex;justify-content:space-between;font-size:10px">
+              <span>${data} · ${jogo.time || ''}</span>
+              <strong>${status}</strong>
+            </div>
+            <div style="font-size:10px;color:#666;margin-top:3px">${jogo.venue || ''}</div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (erro) {
+      lista.innerHTML = `<p>Erro ao carregar jogos: ${erro.message}</p>`;
+    }
   }
-}
-    // CLASSIFICAÇÃO
+
+  seletor.addEventListener('change', () => {
+    buscarRodada(seletor.value);
+  });
+
+  buscarRodada(seletor.value);
+}    // CLASSIFICAÇÃO
     const tabelas = dados.tables || [];
 
     const tabelasValidas = tabelas.filter(
