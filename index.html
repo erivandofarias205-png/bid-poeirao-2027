@@ -4480,62 +4480,105 @@ if (
         </div>
       `;
 
-      // JOGOS E RESULTADOS
-      const jogosGE = dadosGE.jogos || [];
+     // JOGOS E RESULTADOS — CHAMPIONS LEAGUE
+if (areaJogos) {
+  const rodadaInicial = 1;
+  const totalRodadas = 8;
 
-      if (areaJogos) {
-        areaJogos.innerHTML = jogosGE.length ? `
-          <p style="color:#d4af37;font-weight:900">
-            ${jogosGE.length} jogos encontrados · GE Globo
-          </p>
+  areaJogos.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <strong style="color:#d4af37">RODADA:</strong>
 
-          <div style="display:flex;flex-direction:column;gap:7px">
-            ${jogosGE.map(jogo => {
-              const data = jogo.data
-                ? jogo.data.split('T')[0].split('-').reverse().join('/')
-                : '';
+      <select id="seletorRodadaChampions"
+        style="padding:9px;border-radius:7px;border:1px solid #d4af37;font-weight:800;color:#fff;background:#06142e">
+        ${Array.from({length:totalRodadas},(_,i)=>`
+          <option value="${i+1}" ${i+1===rodadaInicial?'selected':''} style="color:#fff;background:#06142e">
+            ${i+1}ª RODADA
+          </option>
+        `).join('')}
+      </select>
+    </div>
 
-              const placar = jogo.placar
-                ? `${jogo.placar.mandante ?? jogo.placar.home ?? 0} × ${jogo.placar.visitante ?? jogo.placar.away ?? 0}`
-                : 'VS';
+    <div id="listaJogosChampions">
+      <p>Carregando jogos...</p>
+    </div>
+  `;
 
-              const status = jogo.status || 'AGENDADA';
+  const seletor = document.getElementById('seletorRodadaChampions');
+  const lista = document.getElementById('listaJogosChampions');
 
-              return `
-                <div style="background:#fff;color:#222;border:1px solid #ddd;border-radius:8px;padding:9px">
+  async function buscarRodadaChampions(numero) {
+    lista.innerHTML = '<p>Buscando jogos da rodada...</p>';
 
-                  <div style="display:grid;grid-template-columns:1fr 65px 1fr;align-items:center;gap:5px">
+    try {
+      const resposta = await fetch(
+        `/api/competicoes?competicao=champions&rodada=${numero}`
+      );
 
-                    <div style="display:flex;align-items:center;gap:5px">
-                      ${jogo.mandante?.escudo ? `<img src="${jogo.mandante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
-                      <strong style="font-size:11px">${jogo.mandante?.nome || 'A definir'}</strong>
-                    </div>
-
-                    <strong style="text-align:center;color:#b58920;font-size:16px">${placar}</strong>
-
-                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
-                      <strong style="font-size:11px;text-align:right">${jogo.visitante?.nome || 'A definir'}</strong>
-                      ${jogo.visitante?.escudo ? `<img src="${jogo.visitante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
-                    </div>
-
-                  </div>
-
-                  <div style="border-top:1px solid #ddd;margin-top:7px;padding-top:5px;display:flex;justify-content:space-between;font-size:10px">
-                    <span>${data} · ${jogo.hora || ''}</span>
-                    <strong>${status}</strong>
-                  </div>
-
-                  <div style="font-size:10px;color:#666;margin-top:3px">
-                    ${jogo.estadio || ''}
-                  </div>
-
-                </div>
-              `;
-            }).join('')}
-          </div>
-        ` : '<p>Nenhum jogo encontrado.</p>';
+      if (!resposta.ok) {
+        throw new Error('Erro ao buscar rodada.');
       }
 
+      const retornoRodada = await resposta.json();
+      const jogosRodada = retornoRodada.dados?.jogos || [];
+
+      if (!jogosRodada.length) {
+        lista.innerHTML = '<p>Nenhum jogo encontrado nesta rodada.</p>';
+        return;
+      }
+
+      lista.innerHTML = jogosRodada.map(jogo => {
+        const data = jogo.data
+          ? jogo.data.split('T')[0].split('-').reverse().join('/')
+          : '';
+
+        const placar = jogo.placar
+          ? `${jogo.placar.mandante ?? jogo.placar.home ?? 0} × ${jogo.placar.visitante ?? jogo.placar.away ?? 0}`
+          : 'VS';
+
+        return `
+          <div style="background:#fff;color:#222;border:1px solid #ddd;border-radius:8px;padding:9px;margin-bottom:7px">
+
+            <div style="display:grid;grid-template-columns:1fr 65px 1fr;align-items:center;gap:5px">
+
+              <div style="display:flex;align-items:center;gap:5px">
+                ${jogo.mandante?.escudo ? `<img src="${jogo.mandante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
+                <strong style="font-size:11px">${jogo.mandante?.nome || 'A definir'}</strong>
+              </div>
+
+              <strong style="text-align:center;color:#b58920;font-size:16px">${placar}</strong>
+
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+                <strong style="font-size:11px;text-align:right">${jogo.visitante?.nome || 'A definir'}</strong>
+                ${jogo.visitante?.escudo ? `<img src="${jogo.visitante.escudo}" style="width:25px;height:25px;object-fit:contain">` : ''}
+              </div>
+
+            </div>
+
+            <div style="border-top:1px solid #ddd;margin-top:7px;padding-top:5px;display:flex;justify-content:space-between;font-size:10px">
+              <span>${data} · ${jogo.hora || ''}</span>
+              <strong>${jogo.status || 'AGENDADA'}</strong>
+            </div>
+
+            <div style="font-size:10px;color:#666;margin-top:3px">
+              ${jogo.estadio || ''}
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+    } catch (erro) {
+      lista.innerHTML = `<p>Erro ao carregar jogos: ${erro.message}</p>`;
+    }
+  }
+
+  seletor.addEventListener('change', () => {
+    buscarRodadaChampions(seletor.value);
+  });
+
+  buscarRodadaChampions(seletor.value);
+}
     } catch (erroGE) {
       area.innerHTML = `<p style="color:red">Erro: ${erroGE.message}</p>`;
 
