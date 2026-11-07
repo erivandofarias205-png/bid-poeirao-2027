@@ -4391,7 +4391,7 @@ if (
   if (painelArtilharia) painelArtilharia.style.display = 'none';
 } else {
   if (painelArtilharia) painelArtilharia.style.display = '';
-  carregarArtilhariaProfissional(nome);
+  (nome);
 }
   // IDENTIFICAR AS SÉRIES DO BRASILEIRÃO
   const series = {
@@ -5277,6 +5277,17 @@ jogosPermitidos.forEach(jogo => {
     if (!nome) return;
 
     const chave = normalizar(nome);
+      // Ocultar artilharia da Champions League e Europa League
+  if (
+    chave.includes('CHAMPIONS') ||
+    chave.includes('EUROPA LEAGUE')
+  ) {
+    area.innerHTML = '';
+    area.style.display = 'none';
+    return;
+  }
+
+  area.style.display = '';
     if (
   chave === 'BRASILEIRAO SERIE C' ||
   chave === 'BRASILEIRAO SERIE D'
