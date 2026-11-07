@@ -1500,7 +1500,28 @@ main{max-width:none!important;width:100%!important;margin:16px auto!important;pa
 .knockout-match small{grid-column:1/-1;color:#aaa;text-align:center}
 @media(max-width:700px){#cardControlPanel .front-grid{grid-template-columns:1fr}.knockout-matches{grid-template-columns:1fr}.classification-crest,.classification-crest-placeholder{width:28px;height:28px;flex-basis:28px}}
 </style>
-<style id="phase-manager-style">#competitionPhaseManager h4{color:#f1d36a}#phaseTeamGroups table,#phaseStandings table,#phaseQualifiers table,#phaseTies table{min-width:680px}#phaseTeamGroups select,#phaseTies select{min-width:160px}.phase-group-select{max-width:230px}.phase-qualifier{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px;border-bottom:1px solid #333}.phase-qualifier label{display:flex;gap:8px;align-items:center;color:#fff}.phase-qualifier input{width:auto}#phaseTies .formgrid{padding:10px}@media(max-width:700px){#competitionPhaseManager .formgrid{grid-template-columns:1fr 1fr}}
+<style id="phase-manager-style">#competitionPhaseManager h4{color:#f1d36a}#phaseTeamGroups table,#phaseStandings table,#phaseQualifiers table,#phaseTies table{min-width:680px}#phaseTeamGroups select,#phaseTies select{min-width:160px}.phase-group-select{max-width:230px}.
+  phase-qualifier{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
+  min-height:28px;
+  border-bottom:1px solid #333;
+  font-size:12px;
+  line-height:1.2;
+}
+
+.phase-qualifier button.danger{
+  margin-left:6px;
+  padding:4px 9px!important;
+  min-height:26px!important;
+  height:26px;
+  font-size:12px!important;
+  line-height:1!important;
+  border-radius:5px;
+}
+  .phase-qualifier label{display:flex;gap:8px;align-items:center;color:#fff}.phase-qualifier input{width:auto}#phaseTies .formgrid{padding:10px}@media(max-width:700px){#competitionPhaseManager .formgrid{grid-template-columns:1fr 1fr}}
 </style>
  <style id="phase-group-cards-style">
 #competitionPhaseManager .phase-group-summary{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 12px;padding:10px;border:1px solid #6b5720;border-radius:10px;background:#15130d;color:#f6df8a;font-size:12px}
