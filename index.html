@@ -4950,12 +4950,13 @@ async function carregarArtilhariaProfissional(nome) {
 
   const chave = normalizar(nome);
 
-  const fontes = {
+    const fontes = {
     'BRASILEIRAO SERIE A': '/api/artilharia-serie-a',
     'BRASILEIRAO SERIE B': '/api/artilharia?competicao=serie-b',
     'COPA DO BRASIL': '/api/artilharia?competicao=copa-do-brasil',
     'LIBERTADORES': '/api/artilharia?competicao=libertadores',
-    'SUL-AMERICANA': '/api/artilharia?competicao=sul-americana'
+    'SUL-AMERICANA': '/api/artilharia?competicao=sul-americana',
+    'CHAMPIONS LEAGUE': '/api/artilharia-champions'
   };
 
   const endereco = fontes[chave];
@@ -5278,16 +5279,6 @@ jogosPermitidos.forEach(jogo => {
 
     const chave = normalizar(nome);
       // Ocultar artilharia da Champions League e Europa League
-  if (
-    chave.includes('CHAMPIONS') ||
-    chave.includes('EUROPA LEAGUE')
-  ) {
-    area.innerHTML = '';
-    area.style.display = 'none';
-    return;
-  }
-
-  area.style.display = '';
     if (
   chave === 'BRASILEIRAO SERIE C' ||
   chave === 'BRASILEIRAO SERIE D'
