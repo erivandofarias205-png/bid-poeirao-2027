@@ -3059,6 +3059,7 @@ function copiarResultadoTVFP() {
 }
 
 
+
 function imprimirResultadoTVFP() {
   const documento = document.getElementById('documentoSorteioTVFP');
   if (!documento) return;
@@ -3070,81 +3071,75 @@ function imprimirResultadoTVFP() {
     return;
   }
 
-  // Cabeçalho da competição
   const cabecalho = Array.from(documento.children)
     .filter(el => ['H2', 'H3', 'P'].includes(el.tagName))
     .map(el => el.outerHTML)
     .join('');
 
-// Separar os confrontos individuais de cada fase
-const elementos = Array.from(documento.children);
+  const rodape = documento.querySelector(
+    'div[style*="border-top:1px solid #c99b32"]'
+  );
 
-// O último bloco DIV é o rodapé institucional
-const rodape = documento.querySelector(
-  'div[style*="border-top:1px solid #c99b32"]'
-);
+  const secoesFases = Array.from(documento.querySelectorAll('section'));
+  const jogos = [];
 
-const secoesFases = Array.from(
-  documento.querySelectorAll('section')
-);
+  secoesFases.forEach(secao => {
+    const tituloFase = secao.querySelector('h3');
+    const nomeFase = tituloFase ? tituloFase.outerHTML : '';
 
-const jogos = [];
+    const confrontos = Array.from(
+      secao.querySelectorAll(':scope > div')
+    ).filter(el =>
+      el.querySelector('h3') &&
+      el.querySelector('h3').textContent.includes('JOGO')
+    );
 
-secoesFases.forEach(secao => {
-  const tituloFase = secao.querySelector('h3');
-
-  const nomeFase = tituloFase
-    ? tituloFase.outerHTML
-    : '';
-
- const confrontos = Array.from(
-  secao.querySelectorAll(':scope > div')
-).filter(el =>
-  el.querySelector('h3') &&
-  el.querySelector('h3').textContent.includes('JOGO')
-);
-
-  confrontos.forEach((jogo, indice) => {
-    jogos.push({
-      fase: nomeFase,
-      html: jogo.outerHTML
+    confrontos.forEach(jogo => {
+      jogos.push({
+        fase: nomeFase,
+        html: jogo.outerHTML
+      });
     });
   });
-});
 
-const paginas = [];
+  const paginas = [];
 
-// Separar em até 10 confrontos por folha
-for (let i = 0; i < jogos.length; i += 10) {
-  paginas.push(jogos.slice(i, i + 10));
-}
+  for (let i = 0; i < jogos.length; i += 10) {
+    paginas.push(jogos.slice(i, i + 10));
+  }
 
-if (!paginas.length) {
-  paginas.push([]);
-}
+  if (!paginas.length) paginas.push([]);
 
-const conteudoPaginas = paginas.map((pagina, indice) => `
-    <section class="pagina">
-      <div class="cabecalho">
-        ${cabecalho}
-        <p class="numero-pagina">
-          FOLHA ${indice + 1} DE ${paginas.length}
-        </p>
-      </div>
+  const conteudoPaginas = paginas.map(pagina => {
+    let faseAnterior = '';
 
-      <div class="lista-jogos">
-       ${pagina.map((jogo, indice) =>
-  (indice === 0 || jogo.fase !== pagina[indice - 1].fase
-    ? jogo.fase
-    : '') + jogo.html
-).join('')}
-      </div>
+    const lista = pagina.map(jogo => {
+      let titulo = '';
 
-      <footer>
-     ${rodape ? rodape.outerHTML : ''}
-      </footer>
-    </section>
-  `).join('');
+      if (jogo.fase && jogo.fase !== faseAnterior) {
+        titulo = jogo.fase;
+        faseAnterior = jogo.fase;
+      }
+
+      return titulo + jogo.html;
+    }).join('');
+
+    return `
+      <section class="pagina">
+        <header class="cabecalho">
+          ${cabecalho}
+        </header>
+
+        <main class="lista-jogos">
+          ${lista}
+        </main>
+
+        <footer>
+          ${rodape ? rodape.outerHTML : ''}
+        </footer>
+      </section>
+    `;
+  }).join('');
 
   janela.document.write(`
     <!DOCTYPE html>
@@ -3156,27 +3151,30 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
       <style>
         @page {
           size: A4;
-          margin: 10mm;
+          margin: 8mm;
         }
 
         * {
           box-sizing: border-box;
         }
 
-        body {
-          font-family: Arial, sans-serif;
+        html, body {
+          margin: 0;
+          padding: 0;
+          font-family: Cambria, Georgia, serif;
+          font-size: 12pt;
           color: #111;
           background: #fff;
-          margin: 0;
         }
 
         .pagina {
           width: 100%;
-          min-height: 277mm;
-          padding: 5mm;
+          height: 281mm;
+          padding: 4mm;
           border: 2px solid #c99b32;
           display: flex;
           flex-direction: column;
+          overflow: hidden;
           page-break-after: always;
           break-after: page;
         }
@@ -3187,68 +3185,77 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
         }
 
         .cabecalho {
+          flex-shrink: 0;
           text-align: center;
           border-bottom: 2px solid #c99b32;
-          padding-bottom: 8px;
-          margin-bottom: 12px;
+          padding-bottom: 6px;
+          margin-bottom: 8px;
+          font-family: Cambria, Georgia, serif;
+          font-size: 12pt;
+        }
+
+        .cabecalho h2,
+        .cabecalho h3,
+        .cabecalho p {
+          font-family: Cambria, Georgia, serif;
+          font-size: 12pt !important;
+          font-weight: bold;
+          margin: 3px 0;
+          color: #111 !important;
         }
 
         .cabecalho h2 {
           color: #8b6810 !important;
-          font-size: 19px;
-          margin: 5px 0;
-        }
-
-        .cabecalho h3 {
-          color: #8b6810 !important;
-          font-size: 15px;
-          margin: 8px 0;
-        }
-
-        .cabecalho p {
-          color: #111 !important;
-          font-size: 11px;
-          margin: 4px 0;
-        }
-
-        .numero-pagina {
-          font-weight: bold;
-          margin-top: 8px !important;
         }
 
         .lista-jogos {
           flex: 1;
+          min-height: 0;
         }
 
-       .lista-jogos > div {
-  background: #fff !important;
-  color: #111 !important;
-  border: 1px solid #c99b32 !important;
-  border-radius: 3px !important;
-  padding: 3px 8px !important;
-  margin: 2px 0 !important;
-  min-height: 0 !important;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
+        .lista-jogos > h3 {
+          font-family: Cambria, Georgia, serif;
+          font-size: 12pt !important;
+          font-weight: bold;
+          text-align: right;
+          margin: 4px 0;
+          color: #111 !important;
+        }
 
-.lista-jogos > div h3 {
-  font-size: 10px !important;
-  margin: 2px 0 !important;
-}
+        .lista-jogos > div {
+          background: #fff !important;
+          color: #111 !important;
+          border: 1px solid #c99b32 !important;
+          border-radius: 3px !important;
+          padding: 4px 8px !important;
+          margin: 3px 0 !important;
+          min-height: 0 !important;
+          break-inside: avoid;
+          page-break-inside: avoid;
+          font-family: Cambria, Georgia, serif !important;
+          font-size: 12pt !important;
+        }
 
-.lista-jogos > div p {
-  font-size: 12px !important;
-  line-height: 1.2 !important;
-  margin: 2px 0 !important;
-}
+        .lista-jogos > div h3 {
+          font-family: Cambria, Georgia, serif !important;
+          font-size: 12pt !important;
+          font-weight: bold !important;
+          margin: 2px 0 5px !important;
+        }
 
-               footer {
-          margin-top: auto;
-          padding-top: 8px;
+        .lista-jogos > div div {
+          font-family: Cambria, Georgia, serif !important;
+          font-size: 12pt !important;
+        }
+
+        footer {
+          flex-shrink: 0;
+          margin-top: 6px;
+          padding-top: 5px;
           border-top: 1px solid #c99b32;
           text-align: center;
-          font-size: 9px;
+          font-family: Cambria, Georgia, serif;
+          font-size: 10pt;
         }
 
         footer p,
@@ -3257,7 +3264,7 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
         }
 
         @media print {
-          body {
+          html, body {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
           }
@@ -3267,18 +3274,13 @@ const conteudoPaginas = paginas.map((pagina, indice) => `
 
     <body>
       ${conteudoPaginas}
-
-      <script>
-        window.onload = function() {
-          window.print();
-        };
-      <\/script>
     </body>
     </html>
   `);
 
   janela.document.close();
 }
+
   function abrirCentralSorteios() {
   const central = document.getElementById('centralSorteios');
   const modalidade = document.getElementById('areaModalidadeSorteio');
