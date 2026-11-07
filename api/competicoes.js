@@ -56,13 +56,64 @@ module.exports = async function handler(req, res) {
     let dadosOriginais = {};
     let grupos = {};
 
-    if (competicao === 'brasileirao-a') {
-      const [tabela, retornoJogos] = await Promise.all([
-        consultarAPI('/api/serie-a'),
-        consultarAPI(
-          `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
-        )
-      ]);
+    
+if (competicao === 'brasileirao-a') {
+  const [tabela, retornoJogos] = await Promise.all([
+    consultarAPI('/api/serie-a'),
+    consultarAPI(
+      `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
+    )
+  ]);
+
+  fonte = 'GE Globo';
+  nome = 'Brasileirão Série A';
+
+  // CLASSIFICAÇÃO NO FORMATO PADRÃO DO SITE
+  classificacao = tabela.tables || [];
+
+  // JOGOS NO FORMATO PADRÃO DO SITE
+  jogos = (retornoJogos.jogos || []).map(jogo => {
+    const placarDisponivel =
+      jogo.mandante?.gols !== null &&
+      jogo.mandante?.gols !== undefined &&
+      jogo.visitante?.gols !== null &&
+      jogo.visitante?.gols !== undefined;
+
+    return {
+      id: jogo.id,
+      date: jogo.data ? jogo.data.split('T')[0] : '',
+      time: jogo.hora || '',
+      status: jogo.encerrado
+        ? 'finished'
+        : placarDisponivel
+          ? 'live'
+          : 'scheduled',
+
+      homeTeam: {
+        name: jogo.mandante?.nome || '',
+        badge: jogo.mandante?.escudo || ''
+      },
+
+      awayTeam: {
+        name: jogo.visitante?.nome || '',
+        badge: jogo.visitante?.escudo || ''
+      },
+
+      score: placarDisponivel ? {
+        home: Number(jogo.mandante.gols),
+        away: Number(jogo.visitante.gols)
+      } : null,
+
+      venue: jogo.estadio || ''
+    };
+  });
+
+  dadosOriginais = {
+    classificacao: tabela,
+    jogos: retornoJogos
+  };
+}
+
 
       fonte = 'GE Globo';
       nome = 'Brasileirão Série A';
