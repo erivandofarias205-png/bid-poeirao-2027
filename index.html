@@ -16105,6 +16105,12 @@ document.querySelectorAll('.panel').forEach(panel => {
 #adminView.hidden,
 #adminProtected.hidden {
   display: none !important;
+}/* BLOQUEIA PAINEIS ADMINISTRATIVOS SEM LOGIN */
+body:not(.admin-verified) #adminView .panel:not(#adminLoginPanel) {
+  display: none !important;
+}
+    body:not(.admin-verified) #adminProtected {
+  display: none !important;
 }
 </style>
 </body>
