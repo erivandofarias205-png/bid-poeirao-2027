@@ -2437,7 +2437,37 @@ function abrirModalidadeSorteio(tipo) {
 
 if (tipo === 'nomes') {
   titulo.textContent = 'SORTEIO DE NOMES';
-  conteudo.innerHTML = '<p style="color:white">Esta ferramenta será desenvolvida na próxima etapa.</p>';
+
+  conteudo.innerHTML = `
+    <div style="display:grid;gap:15px;">
+
+      <div>
+        <label>NOME DO SORTEIO (OBRIGATÓRIO)</label>
+        <input id="nomeSorteioTitulo"
+          type="text"
+          placeholder="Ex.: Sorteio de brindes"
+          style="width:100%;padding:13px;border-radius:8px;">
+      </div>
+
+      <div>
+        <label>LISTA DE NOMES</label>
+        <textarea id="listaNomesSorteio"
+          placeholder="Digite um nome por linha&#10;João&#10;Maria&#10;Pedro&#10;Ana"
+          style="width:100%;min-height:220px;padding:13px;border-radius:8px;"></textarea>
+      </div>
+
+      <button type="button"
+        onclick="executarSorteioNomesTVFP()"
+        style="background:linear-gradient(90deg,#f0ca4e,#c99b32);
+        color:#111;font-weight:900;padding:16px;border:0;
+        border-radius:9px;width:100%;font-size:17px;">
+        🎯 SORTEAR NOMES
+      </button>
+
+      <div id="resultadoNomesTVFP"></div>
+    </div>
+  `;
+
   return;
 }
 
@@ -2555,6 +2585,58 @@ if (tipo === 'nomes') {
   `;
 
   atualizarCamposSorteio();
+}
+ function executarSorteioNomesTVFP() {
+  const titulo = document.getElementById('nomeSorteioTitulo').value.trim();
+  const texto = document.getElementById('listaNomesSorteio').value;
+
+  const resultado = document.getElementById('resultadoNomesTVFP');
+
+  if (!titulo) {
+    alert('Informe o nome do sorteio!');
+    document.getElementById('nomeSorteioTitulo').focus();
+    return;
+  }
+
+  const nomes = texto
+    .split('\n')
+    .map(nome => nome.trim())
+    .filter(nome => nome.length > 0);
+
+  if (nomes.length < 2) {
+    alert('Digite pelo menos dois nomes para realizar o sorteio!');
+    return;
+  }
+
+  // Embaralhar os nomes
+  for (let i = nomes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [nomes[i], nomes[j]] = [nomes[j], nomes[i]];
+  }
+
+  resultado.innerHTML = '';
+
+  const painel = document.createElement('div');
+  painel.style.cssText =
+    'background:#10213d;border:2px solid #c99b32;border-radius:12px;padding:20px;color:white;text-align:center;';
+
+  const cabecalho = document.createElement('h2');
+  cabecalho.textContent = titulo;
+  cabecalho.style.cssText =
+    'color:#e5bd45;font-family:Cambria,Georgia,serif;';
+
+  painel.appendChild(cabecalho);
+
+  nomes.forEach((nome, indice) => {
+    const linha = document.createElement('div');
+    linha.style.cssText =
+      'padding:12px;border-bottom:1px solid #c99b32;font-size:17px;font-weight:bold;';
+
+    linha.textContent = `${indice + 1}º — ${nome}`;
+    painel.appendChild(linha);
+  });
+
+  resultado.appendChild(painel);
 }
   function executarSorteioNumerosTVFP() {
   const nome = document.getElementById('numNome').value.trim();
