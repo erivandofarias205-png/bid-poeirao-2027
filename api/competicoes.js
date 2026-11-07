@@ -88,9 +88,43 @@ module.exports = async function handler(req, res) {
     ) {
       const serie = competicao.slice(-1);
 
-      const dados = await consultarAPI(
-        `/api/brasileirao?serie=${serie}`
-      );
+      // BRASILEIRÃO SÉRIE B, C E D
+else if (
+  ['brasileirao-b', 'brasileirao-c', 'brasileirao-d'].includes(competicao)
+) {
+  const serie = competicao.slice(-1);
+
+  if (serie === 'c') {
+    const dados = await consultarAPI(
+      `/api/serie-c-jogos?rodada=${encodeURIComponent(rodada)}`
+    );
+
+    resultado = {
+      sucesso: true,
+      fonte: 'CBF',
+      competicao: 'Brasileirão Série C',
+      serie: 'c',
+      fase: dados.fase,
+      rodada: dados.rodada,
+      grupos: dados.grupos,
+      total_jogos: dados.total_jogos
+    };
+
+  } else {
+    const dados = await consultarAPI(
+      `/api/brasileirao?serie=${serie}`
+    );
+
+    resultado = {
+      sucesso: true,
+      fonte: 'Campeonato Brasileiro API',
+      competicao: `Brasileirão Série ${serie.toUpperCase()}`,
+      serie: serie,
+      rodada: Number(rodada),
+      dados: dados.dados
+    };
+  }
+}
 
       resultado = {
         sucesso: true,
