@@ -2370,11 +2370,75 @@ function abrirModalidadeSorteio(tipo) {
   area.hidden = false;
   document.getElementById('centralSorteios').hidden = true;
 
-  if (tipo === 'numeros' || tipo === 'nomes') {
-    titulo.textContent = 'MODALIDADE EM PREPARAÇÃO';
-    conteudo.innerHTML = '<p style="color:white">Esta ferramenta será desenvolvida na próxima etapa.</p>';
-    return;
-  }
+  if (tipo === 'numeros') {
+  titulo.textContent = 'GERADOR DE NÚMEROS ALEATÓRIOS';
+
+  conteudo.innerHTML = `
+    <div class="sorteio-form"
+      style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;">
+
+      <div style="grid-column:1/-1;">
+        <label>Nome do sorteio (OBRIGATÓRIO)</label>
+        <input id="numNome" type="text"
+          placeholder="Ex.: Sorteio de brindes TVFP"
+          required maxlength="100"
+          style="width:100%;padding:13px;border-radius:8px;">
+      </div>
+
+      <div>
+        <label>Número mínimo</label>
+        <input id="numMinimo" type="number" value="1" min="0"
+          style="width:100%;padding:13px;border-radius:8px;">
+      </div>
+
+      <div>
+        <label>Número máximo</label>
+        <input id="numMaximo" type="number" value="100" min="1"
+          style="width:100%;padding:13px;border-radius:8px;">
+      </div>
+
+      <div style="grid-column:1/-1;">
+        <label>Quantos números serão sorteados por vez?</label>
+        <input id="numQuantidade" type="number" value="1" min="1"
+          style="width:100%;padding:13px;border-radius:8px;">
+      </div>
+
+      <div style="grid-column:1/-1;padding:14px;border:1px solid #c99b32;border-radius:8px;">
+        <label style="display:flex;align-items:center;gap:10px;color:white;">
+          <input id="numSemRepetir" type="checkbox" checked>
+          Números únicos (sem repetir)
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:15px;">
+      ${[10,20,30,45,50,90,100].map(n => `
+        <button type="button"
+          onclick="document.getElementById('numMinimo').value=1;document.getElementById('numMaximo').value=${n}"
+          style="background:#172943;color:#e5bd45;border:1px solid #c99b32;padding:8px 13px;border-radius:7px;">
+          1–${n}
+        </button>
+      `).join('')}
+    </div>
+
+    <button type="button" onclick="executarSorteioNumerosTVFP()"
+      style="background:linear-gradient(90deg,#f0ca4e,#c99b32);
+      color:#111;font-weight:900;padding:16px;border:0;
+      border-radius:9px;width:100%;margin-top:20px;font-size:17px;">
+      🔢 GERAR NÚMEROS
+    </button>
+
+    <div id="resultadoNumerosTVFP" style="margin-top:22px;"></div>
+  `;
+
+  return;
+}
+
+if (tipo === 'nomes') {
+  titulo.textContent = 'SORTEIO DE NOMES';
+  conteudo.innerHTML = '<p style="color:white">Esta ferramenta será desenvolvida na próxima etapa.</p>';
+  return;
+}
 
   if (tipo !== 'penaltis' && tipo !== 'futebol' && tipo !== 'equipes') {
     titulo.textContent = 'MODALIDADE NÃO ENCONTRADA';
@@ -2490,6 +2554,91 @@ function abrirModalidadeSorteio(tipo) {
   `;
 
   atualizarCamposSorteio();
+}
+  function executarSorteioNumerosTVFP() {
+  const nome = document.getElementById('numNome').value.trim();
+  const minimo = Number(document.getElementById('numMinimo').value);
+  const maximo = Number(document.getElementById('numMaximo').value);
+  const quantidade = Number(document.getElementById('numQuantidade').value);
+  const semRepetir = document.getElementById('numSemRepetir').checked;
+  const resultado = document.getElementById('resultadoNumerosTVFP');
+
+  if (!nome) {
+    alert('Informe o NOME DO SORTEIO antes de continuar!');
+    document.getElementById('numNome').focus();
+    return;
+  }
+
+  if (
+    !Number.isSafeInteger(minimo) ||
+    !Number.isSafeInteger(maximo) ||
+    !Number.isSafeInteger(quantidade) ||
+    minimo > maximo ||
+    quantidade < 1
+  ) {
+    alert('Confira os números mínimo, máximo e a quantidade.');
+    return;
+  }
+
+  const totalDisponivel = maximo - minimo + 1;
+
+  if (semRepetir && quantidade > totalDisponivel) {
+    alert('A quantidade solicitada é maior que os números disponíveis.');
+    return;
+  }
+
+  const sorteados = [];
+
+  if (semRepetir) {
+    const numeros = Array.from(
+      {length: totalDisponivel},
+      (_, i) => minimo + i
+    );
+
+    for (let i = numeros.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [numeros[i], numeros[j]] = [numeros[j], numeros[i]];
+    }
+
+    sorteados.push(...numeros.slice(0, quantidade));
+
+  } else {
+    for (let i = 0; i < quantidade; i++) {
+      sorteados.push(
+        Math.floor(Math.random() * totalDisponivel) + minimo
+      );
+    }
+  }
+
+  resultado.innerHTML = '';
+
+  const painel = document.createElement('div');
+  painel.style.cssText =
+    'background:#10213d;border:2px solid #c99b32;border-radius:12px;padding:20px;text-align:center;color:white;';
+
+  const tituloResultado = document.createElement('h2');
+  tituloResultado.textContent = nome;
+  tituloResultado.style.cssText =
+    'color:#e5bd45;font-family:Cambria,Georgia,serif;';
+
+  const descricao = document.createElement('p');
+  descricao.textContent =
+    `Intervalo: ${minimo} até ${maximo} | Quantidade: ${quantidade}`;
+
+  const numerosBox = document.createElement('div');
+  numerosBox.style.cssText =
+    'display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:22px 0;';
+
+  sorteados.forEach(numero => {
+    const bola = document.createElement('div');
+    bola.textContent = numero;
+    bola.style.cssText =
+      'width:65px;height:65px;border-radius:50%;background:linear-gradient(135deg,#f0ca4e,#c99b32);color:#111;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;';
+    numerosBox.appendChild(bola);
+  });
+
+  painel.append(tituloResultado, descricao, numerosBox);
+  resultado.appendChild(painel);
 }
   window.abrirModalidadeSorteio = abrirModalidadeSorteio;
 
