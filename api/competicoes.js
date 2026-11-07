@@ -1,3 +1,4 @@
+
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -31,11 +32,10 @@ module.exports = async function handler(req, res) {
 
   const host = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}`;
+    : `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
 
   async function consultarAPI(caminho) {
     const resposta = await fetch(`${host}${caminho}`);
-
     const texto = await resposta.text();
 
     let dados;
@@ -43,17 +43,13 @@ module.exports = async function handler(req, res) {
     try {
       dados = JSON.parse(texto);
     } catch (erro) {
-      throw new Error(`A API ${caminho} retornou uma resposta inválida.`);
+      throw new Error(`Resposta inválida da API ${caminho}.`);
     }
 
-    if (!resposta.ok) {
+    if (!resposta.ok || dados.sucesso === false) {
       throw new Error(
         dados.erro || `Falha ao consultar ${caminho}.`
       );
-    }
-
-    if (dados.sucesso === false) {
-      throw new Error(dados.erro || `Falha ao consultar ${caminho}.`);
     }
 
     return dados;
@@ -77,67 +73,56 @@ module.exports = async function handler(req, res) {
         competicao: 'Brasileirão Série A',
         serie: 'a',
         rodada: Number(rodada),
-        classificacao: classificacao,
-        jogos: jogos
+        classificacao,
+        jogos
       };
     }
 
-    // BRASILEIRÃO SÉRIE B, C E D
+    // BRASILEIRÃO SÉRIE C — CBF
+    else if (competicao === 'brasileirao-c') {
+      const dados = await consultarAPI(
+        `/api/serie-c-jogos?rodada=${encodeURIComponent(rodada)}`
+      );
+
+      resultado = {
+        sucesso: true,
+        fonte: 'CBF',
+        competicao: 'Brasileirão Série C',
+        serie: 'c',
+        fase: dados.fase,
+        rodada: dados.rodada,
+        grupos: dados.grupos,
+        total_jogos: dados.total_jogos,
+        atualizado_em: dados.atualizado_em
+      };
+    }
+
+    // BRASILEIRÃO SÉRIE B E D
     else if (
-      ['brasileirao-b', 'brasileirao-c', 'brasileirao-d'].includes(competicao)
+      competicao === 'brasileirao-b' ||
+      competicao === 'brasileirao-d'
     ) {
       const serie = competicao.slice(-1);
 
-      // BRASILEIRÃO SÉRIE B, C E D
-else if (
-  ['brasileirao-b', 'brasileirao-c', 'brasileirao-d'].includes(competicao)
-) {
-  const serie = competicao.slice(-1);
-
-  if (serie === 'c') {
-    const dados = await consultarAPI(
-      `/api/serie-c-jogos?rodada=${encodeURIComponent(rodada)}`
-    );
-
-    resultado = {
-      sucesso: true,
-      fonte: 'CBF',
-      competicao: 'Brasileirão Série C',
-      serie: 'c',
-      fase: dados.fase,
-      rodada: dados.rodada,
-      grupos: dados.grupos,
-      total_jogos: dados.total_jogos
-    };
-
-  } else {
-    const dados = await consultarAPI(
-      `/api/brasileirao?serie=${serie}`
-    );
-
-    resultado = {
-      sucesso: true,
-      fonte: 'Campeonato Brasileiro API',
-      competicao: `Brasileirão Série ${serie.toUpperCase()}`,
-      serie: serie,
-      rodada: Number(rodada),
-      dados: dados.dados
-    };
-  }
-}
+      const dados = await consultarAPI(
+        `/api/brasileirao?serie=${serie}`
+      );
 
       resultado = {
         sucesso: true,
         fonte: 'Campeonato Brasileiro API',
         competicao: `Brasileirão Série ${serie.toUpperCase()}`,
-        serie: serie,
+        serie,
         rodada: Number(rodada),
         dados: dados.dados
       };
     }
 
     // CHAMPIONS LEAGUE E EUROPA LEAGUE
-    else if (competicao === 'champions' || competicao === 'europa') {
+    else if (
+      competicao === 'champions' ||
+      competicao === 'europa'
+    ) {
       const dados = await consultarAPI(
         `/api/ge-europa?competicao=${competicao}&rodada=${encodeURIComponent(rodada)}`
       );
@@ -164,13 +149,13 @@ else if (
     return res.status(200).json(resultado);
 
   } catch (erro) {
-    console.error('Erro na API central de competições:', erro);
+    console.error('Erro na API central:', erro);
 
     return res.status(502).json({
       sucesso: false,
       erro: 'Não foi possível consultar a competição.',
       detalhe: erro.message,
-      competicao: competicao
+      competicao
     });
   }
 };
