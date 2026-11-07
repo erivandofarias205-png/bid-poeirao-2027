@@ -2994,25 +2994,17 @@ html += `
 ">
 
  
-<!-- LINHA PARA NOME DA DUPLA ESQUERDA -->
-<div style="
-  width:100%;
-  height:22px;
-  border-bottom:1px solid #111;
-  margin-bottom:3px;
-">
-</div>
+${indice === 0
+  ? `<div style="text-align:center;font-family:Cambria,Georgia,serif;font-size:18px;font-weight:bold;">${equipe1}</div>`
+  : `<div style="width:100%;height:22px;border-bottom:1px solid #111;margin-bottom:3px;"></div>`
+}
 
 <strong style="text-align:center;font-size:18px;">×</strong>
 
-<!-- LINHA PARA NOME DA DUPLA DIREITA -->
-<div style="
-  width:100%;
-  height:22px;
-  border-bottom:1px solid #111;
-  margin-bottom:3px;
-">
-</div>
+${indice === 0
+  ? `<div style="text-align:center;font-family:Cambria,Georgia,serif;font-size:18px;font-weight:bold;">${equipe2}</div>`
+  : `<div style="width:100%;height:22px;border-bottom:1px solid #111;margin-bottom:3px;"></div>`
+}
 
 <!-- BOLINHAS AO LADO DO X -->
 <div style="
