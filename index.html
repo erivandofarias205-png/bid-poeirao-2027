@@ -5488,8 +5488,15 @@ if (listaEquipes) {
 <label id="teamsPerGroupWrap">Equipes por grupo<input id="newCompetitionTeamsPerGroup" max="32" min="2" placeholder="Ex.: 4" type="number" value="4"/></label>
 <label>Símbolo da competição<input accept="image/*" id="newCompetitionLogo" type="file"/></label>
 <label class="wide">Regulamento da competição (PDF)<input accept=".pdf,application/pdf" id="newCompetitionRegulation" type="file"/><small class="muted">Opcional. O regulamento poderá ser consultado na competição.</small></label></div><div class="actions"><button class="gold" id="addCompetition" type="button">Adicionar competição</button></div><div aria-live="polite" class="small" id="competitionList"></div><p class="small">As competições devem ser gravadas no Supabase. Se o cadastro falhar, confira a mensagem exibida e as permissões da tabela.</p></div></div>
-<div class="panel" id="competitionPhaseManager"><div class="ph"><h3>FORMATAR GRUPOS E CONFRONTOS</h3><span class="pill">Gestão editável</span></div><div class="pad">
-<p class="small muted">Selecione a competição ativa. Distribua as equipes nos grupos, confira a classificação calculada pelos jogos finalizados e monte manualmente os confrontos do mata-mata. As configurações ficam salvas neste navegador.</p>
+<div class="panel" id="competitionPhaseManager">
+  <div class="ph">
+    <h3>GERENCIADOR OFICIAL DE FASES</h3>
+    <span class="pill">Gestão editável</span>
+  </div>
+<p class="small muted">
+  Controle completo da classificação, confrontos, resultados e avanço automático das fases.
+  Gerencie grupos, 16 avos, oitavas, quartas, semifinais, disputa de terceiro lugar e grande final.
+</p>
 <div class="formgrid"><label>Competição ativa<select id="phaseCompetitionSelect"></select></label><label>Classificam por grupo<input id="phaseTopPerGroup" type="number" min="0" max="32" value="2"></label><label>Melhores terceiros classificados<input id="phaseBestThirds" type="number" min="0" max="32" value="3"></label><label>Vagas extras / convite (para completar a chave)<input id="phaseExtraSlots" type="number" min="0" max="32" value="1"></label><label>Nome da fase eliminatória<input id="phaseKnockoutName" value="Oitavas de final"></label></div>
 <div class="actions"><button class="gold" id="phaseSaveRules" type="button">Salvar regras de classificação</button><button class="secondary" id="phaseAssignEvenly" type="button">Distribuir equipes automaticamente</button></div>
 <h4 style="margin-top:22px">1. Distribuição das equipes nos grupos</h4><div id="phaseTeamGroups" class="tablewrap"></div><div class="actions"><button class="gold" id="phaseSaveGroups" type="button">Salvar grupos</button></div>
@@ -5607,79 +5614,15 @@ if (listaEquipes) {
   </button>
 </div>
 
-<div id="phaseTies" class="tablewrap"></div>
- <!-- CLASSIFICADOS DAS OITAVAS -->
-<div class="panel" id="roundOf16QualifiersPanel">
-  <div class="ph">
-    <h3>Classificados das oitavas de final</h3>
-    <span class="pill">16 equipes</span>
-  </div>
-  <div class="pad">
-    <p class="small muted">
-      Confira as equipes classificadas para as oitavas de final.
-    </p>
-    <div class="actions">
-      <button class="gold" id="generateRoundOf16Qualifiers" type="button">
-        GERAR CLASSIFICADOS
-      </button>
-      <button class="secondary" id="saveRoundOf16Qualifiers" type="button">
-        SALVAR CLASSIFICADOS
-      </button>
-    </div>
-    <div id="roundOf16QualifiersList" class="tablewrap"></div>
-  </div>
+<div class="actions" id="phaseAdvanceActions">
+  <button class="danger" id="phaseAdvanceWinners" type="button">
+    GERAR CLASSIFICADOS PARA A PRÓXIMA FASE
+  </button>
 </div>
-<div class="note">A classificação é calculada com os jogos marcados como Finalizado. Os grupos e a chave eliminatória desta ferramenta são gravados no armazenamento local do navegador; para compartilhar automaticamente entre aparelhos, será necessária a sincronização dessas configurações com o Supabase.</div>
+
+<div id="phaseTies" class="tablewrap"></div>
 </div></div>
 
-<div class="panel" id="quarterFinalsPanel">
-  <div class="ph">
-    <h3>Quartas de final</h3>
-    <span class="pill">Fase eliminatória</span>
-  </div>
-  <div class="pad">
-    <p class="small muted">
-      Os oito classificados das oitavas serão encaminhados para quatro confrontos.
-    </p>
-
-    <div class="actions">
-      <button class="gold" id="generateQuarterFinalists" type="button">
-        GERAR CLASSIFICADOS
-      </button>
-      <button class="secondary" id="saveQuarterFinals" type="button">
-        SALVAR QUARTAS DE FINAL
-      </button>
-    </div>
-
-    <div id="quarterFinalsTies" class="quarter-finals-grid"></div>
-
-    <div class="note">
-      Confira os classificados e os confrontos antes de salvar. Os resultados das quartas serão usados para preparar as semifinais.
-    </div>
-  </div>
-</div>
-
-<!-- CLASSIFICADOS DAS QUARTAS DE FINAL -->
-<div class="panel" id="quarterFinalQualifiersPanel">
-  <div class="ph">
-    <h3>Classificados das quartas de final</h3>
-    <span class="pill">4 equipes</span>
-  </div>
-  <div class="pad">
-    <p class="small muted">
-      Os quatro vencedores das quartas avançam para as semifinais.
-    </p>
-    <div class="actions">
-      <button class="gold" id="generateQuarterQualifiers" type="button">
-        GERAR CLASSIFICADOS
-      </button>
-      <button class="secondary" id="saveQuarterQualifiers" type="button">
-        SALVAR CLASSIFICADOS
-      </button>
-    </div>
-    <div id="quarterQualifiersList" class="tablewrap"></div>
-  </div>
-</div>
 <!-- SÚMULA OFICIAL -->
 <div class="panel" id="officialMatchSheetPanel">
   <div class="ph">
@@ -11508,8 +11451,9 @@ async function loadSupabaseCompetitions() {
           teamGroups: cfg.teamGroups || {},
           teamQualifications: cfg.teamQualifications || {},
           qualifiers: cfg.qualifiers || [],
-          knockoutTies: cfg.knockoutTies || [],
-          phaseWinners: cfg.phaseWinners || [],
+roundOf32Ties: cfg.roundOf32Ties || [],
+knockoutTies: cfg.knockoutTies || [],
+phaseWinners: cfg.phaseWinners || [],
          quarterFinalTies: cfg.quarterFinalTies || [],
 semiFinalTies: cfg.semiFinalTies || [],
 finalMatchTie: cfg.finalMatchTie || null,
@@ -13011,10 +12955,17 @@ function matches(c=comp()){
  }
  function save(){saveDb()}
   // ===== GERENCIADOR ÚNICO DE FASES =====
+
 function getPhaseStorageKey(round) {
   const fase = String(round || '').toLowerCase();
 
-  if (fase.includes('oitava') || fase.includes('16 avos')) {
+  // 16 avos de final — 32 classificados
+  if (fase.includes('16 avos') || fase.includes('dezesseis')) {
+    return 'roundOf32Ties';
+  }
+
+  // Oitavas de final — 16 classificados
+  if (fase.includes('oitava')) {
     return 'knockoutTies';
   }
 
@@ -13036,7 +12987,6 @@ function getPhaseStorageKey(round) {
 
   return 'knockoutTies';
 }
-
 function getPhaseMatches(c, round) {
   if (!c) return [];
 
@@ -13233,7 +13183,289 @@ $p('phaseTies').querySelectorAll('.phase-tie-card').forEach(card => {
 });
 
 }
+// ===== ATUALIZAÇÃO AUTOMÁTICA DO GERENCIADOR DE FASES =====
+$p('phaseRoundName')?.addEventListener('change', () => {
+  const c = comp();
+  if (!c) return;
 
+  const fase = $p('phaseRoundName').value;
+  const confrontos = getPhaseMatches(c, fase);
+  const chave = getPhaseStorageKey(fase);
+
+ const quantidades = {
+  roundOf32Ties: 16,
+  knockoutTies: 8,
+  quarterFinalTies: 4,
+  semiFinalTies: 2,
+  finalMatchTie: 1,
+  thirdPlaceTie: 1
+};
+
+  $p('phaseTieCount').value =
+    confrontos.length || quantidades[chave] || 1;
+
+  renderPhase();
+});
+// ===== FIM DA ATUALIZAÇÃO =====
+// ===== AVANÇAR CLASSIFICADOS NO GERENCIADOR ÚNICO =====
+$p('phaseAdvanceWinners')?.addEventListener('click', async () => {
+  const c = comp();
+  if (!c) return;
+
+  const fase = $p('phaseRoundName')?.value || '';
+  const nome = fase.toLowerCase();
+
+  let proximaFase = '';
+  let confrontosOrigem = getPhaseMatches(c, fase);
+
+  
+if (nome.includes('16 avos') || nome.includes('dezesseis')) {
+  proximaFase = 'Oitavas de final';
+
+} else if (nome.includes('oitava')) {
+  proximaFase = 'Quartas de final';
+
+} else if (nome.includes('quarta')) {
+  proximaFase = 'Semifinal';
+
+} else if (nome.includes('semifinal')) {
+  proximaFase = 'Final';
+
+} else {
+  alert('Esta fase não possui uma próxima etapa.');
+  return;
+}
+
+
+  if (!confrontosOrigem.length) {
+    alert('Não existem confrontos cadastrados nesta fase.');
+    return;
+  }
+
+  const vencedores = [];
+  const perdedores = [];
+
+  for (let i = 0; i < confrontosOrigem.length; i++) {
+    const m = confrontosOrigem[i];
+
+    if (!m?.a || !m?.b || m.status !== 'finalizado') {
+      alert(`Finalize o confronto ${i + 1} antes de avançar.`);
+      return;
+    }
+
+    if (m.score1A == null || m.score1A === '' ||
+        m.score1B == null || m.score1B === '') {
+      alert(`Informe o placar do confronto ${i + 1}.`);
+      return;
+    }
+
+    
+let golsA = Number(m.score1A);
+let golsB = Number(m.score1B);
+
+if (m.format === 'ida_volta') {
+  if (
+    m.score2A == null || m.score2A === '' ||
+    m.score2B == null || m.score2B === ''
+  ) {
+    alert(`Informe os placares dos dois jogos do confronto ${i + 1}.`);
+    return;
+  }
+
+  golsA += Number(m.score2A);
+  golsB += Number(m.score2B);
+}
+
+let vencedor;
+
+if (golsA > golsB) {
+  vencedor = m.a;
+
+} else if (golsB > golsA) {
+  vencedor = m.b;
+
+} else {
+  const penA = m.format === 'ida_volta'
+    ? m.penalties2A
+    : m.penalties1A;
+
+  const penB = m.format === 'ida_volta'
+    ? m.penalties2B
+    : m.penalties1B;
+
+  if (
+    penA == null || penA === '' ||
+    penB == null || penB === '' ||
+    Number(penA) === Number(penB)
+  ) {
+    alert(
+      `O confronto ${i + 1} terminou empatado. Informe os pênaltis com um vencedor.`
+    );
+    return;
+  }
+
+  vencedor = Number(penA) > Number(penB)
+    ? m.a
+    : m.b;
+}
+
+vencedores.push(vencedor);
+
+perdedores.push(
+  String(vencedor) === String(m.a) ? m.b : m.a
+);
+  }
+
+ 
+try {
+  const quantidade =
+    proximaFase === 'Oitavas de final' ? 8 :
+    proximaFase === 'Quartas de final' ? 4 :
+    proximaFase === 'Semifinal' ? 2 : 1;
+
+  if (vencedores.length < quantidade * 2) {
+    throw new Error(
+      `São necessários ${quantidade * 2} classificados para montar ${proximaFase}.`
+    );
+  }
+
+  const anteriores = getPhaseMatches(c, proximaFase);
+
+  const novosConfrontos = Array.from(
+    { length: quantidade },
+    (_, i) => {
+      const antigo = anteriores[i] || {};
+
+      const a = vencedores[i * 2];
+      const b = vencedores[i * 2 + 1];
+
+      const possuiResultado =
+        antigo.status === 'finalizado' ||
+        (antigo.score1A != null && antigo.score1A !== '') ||
+        (antigo.score1B != null && antigo.score1B !== '') ||
+        (antigo.score2A != null && antigo.score2A !== '') ||
+        (antigo.score2B != null && antigo.score2B !== '');
+
+      if (
+        possuiResultado &&
+        (
+          String(antigo.a) !== String(a) ||
+          String(antigo.b) !== String(b)
+        )
+      ) {
+        throw new Error(
+          `O confronto ${i + 1} de ${proximaFase} já possui resultado. Os dados foram preservados.`
+        );
+      }
+
+      return {
+        ...antigo,
+        round: proximaFase,
+        a,
+        b
+      };
+    }
+  );
+
+  // Guarda os perdedores das semifinais para o terceiro lugar.
+  let novosTerceiro = null;
+
+  if (nome.includes('semifinal')) {
+    const antigosTerceiro =
+      getPhaseMatches(c, 'Disputa de terceiro lugar')[0] || {};
+
+    const possuiResultadoTerceiro =
+      antigosTerceiro.status === 'finalizado' ||
+      (antigosTerceiro.score1A != null &&
+       antigosTerceiro.score1A !== '') ||
+      (antigosTerceiro.score1B != null &&
+       antigosTerceiro.score1B !== '');
+
+    if (
+      possuiResultadoTerceiro &&
+      (
+        String(antigosTerceiro.a) !== String(perdedores[0]) ||
+        String(antigosTerceiro.b) !== String(perdedores[1])
+      )
+    ) {
+      throw new Error(
+        'A disputa de terceiro lugar já possui resultado. Os dados foram preservados.'
+      );
+    }
+
+    novosTerceiro = [{
+      ...antigosTerceiro,
+      round: 'Disputa de terceiro lugar',
+      a: perdedores[0],
+      b: perdedores[1]
+    }];
+  }
+
+  // Atualiza a configuração local.
+  setPhaseMatches(c, proximaFase, novosConfrontos);
+
+  if (novosTerceiro) {
+    setPhaseMatches(
+      c,
+      'Disputa de terceiro lugar',
+      novosTerceiro
+    );
+  }
+
+  save();
+
+  // Salva a configuração no Supabase.
+  await saveCompetitionPhaseConfig(c);
+
+  // Sincroniza os confrontos da próxima fase.
+  if (proximaFase === 'Oitavas de final') {
+    await sincronizarOitavasSupabase(c);
+
+  } else if (proximaFase === 'Quartas de final') {
+    await sincronizarQuartasSupabase(c);
+
+  } else if (proximaFase === 'Semifinal') {
+    await sincronizarSemifinaisSupabase(c);
+
+  } else if (proximaFase === 'Final') {
+    await sincronizarColocacaoSupabase(
+      c,
+      'finalMatchTie',
+      'Final',
+      'final-jogo-1'
+    );
+  }
+
+  // Sincroniza também a disputa de terceiro lugar.
+  if (novosTerceiro) {
+    await sincronizarColocacaoSupabase(
+      c,
+      'thirdPlaceTie',
+      'Disputa de 3º lugar',
+      'terceiro-lugar-jogo-1'
+    );
+  }
+
+  await loadSupabaseMatches();
+
+  $p('phaseRoundName').value = proximaFase;
+  $p('phaseTieCount').value = quantidade;
+
+  renderPhase();
+
+  alert(
+    `Classificados encaminhados para ${proximaFase}! Os confrontos continuam editáveis.`
+  );
+
+} catch (error) {
+  console.error('Erro ao avançar fase:', error);
+  alert(
+    error.message ||
+    'Não foi possível avançar os classificados.'
+  );
+}
+});
+// ===== FIM DO AVANÇO AUTOMÁTICO =====  
 function refreshCompetitionSelect(){
   const sel=$p('phaseCompetitionSelect');if(!sel)return;const comps=db.competitions||[];sel.innerHTML=comps.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(db.activeCompetitionId)?'selected':''}>${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');if(!comps.some(c=>String(c.id)===String(sel.value))&&comps.length)sel.value=String(comp()?.id||comps[0].id)}
  async function saveGroupsToSupabase(c,ts){
@@ -13247,6 +13479,7 @@ function refreshCompetitionSelect(){
  }
  
 
+
 async function saveCompetitionPhaseConfig(c) {
   if (!c || !c.dbId || typeof supabaseClient === 'undefined' || !supabaseClient) {
     throw new Error('Competição sem vínculo com o Supabase.');
@@ -13258,12 +13491,16 @@ async function saveCompetitionPhaseConfig(c) {
     teamGroups: c.teamGroups || {},
     teamQualifications: c.teamQualifications || {},
     qualifiers: c.qualifiers || [],
-   knockoutTies: c.knockoutTies || [],
-quarterFinalTies: c.quarterFinalTies || [],
-   semiFinalTies: c.semiFinalTies || [],
-   finalMatchTie: c.finalMatchTie || null,
-thirdPlaceTie: c.thirdPlaceTie || null,
-phaseWinners: c.phaseWinners || []
+
+    roundOf32Ties: c.roundOf32Ties || [],
+    knockoutTies: c.knockoutTies || [],
+    quarterFinalTies: c.quarterFinalTies || [],
+    semiFinalTies: c.semiFinalTies || [],
+
+    finalMatchTie: c.finalMatchTie || null,
+    thirdPlaceTie: c.thirdPlaceTie || null,
+
+    phaseWinners: c.phaseWinners || []
   };
 
   const { data, error } = await supabaseClient
@@ -13284,43 +13521,6 @@ phaseWinners: c.phaseWinners || []
   Object.assign(c, configuracao);
   return true;
 }
- const add=$p('addCompetition');const saveEdit=document.createElement('button');saveEdit.id='saveCompetitionEdits';saveEdit.className='gold';saveEdit.type='button';saveEdit.textContent='Salvar alterações da competição';saveEdit.style.display='none';add?.parentNode?.appendChild(saveEdit);
-  document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-edit-comp]');if(!b)return;const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.editComp));if(!c)return;editCompId=c.id;$p('newCompetitionName').value=c.name||'';$p('newCompetitionSeason').value=c.season||'';$p('newCompetitionFormat').value=c.format||'grupos';$p('newCompetitionGroupCount').value=c.groupCount||6;$p('newCompetitionTeamsPerGroup').value=c.teamsPerGroup||3;$p('newCompetitionTotalTeams').value =
-  c.phaseOptions?.totalTeams ?? 18;
-
-$p('newCompetitionMatchLegs').value =
-  c.phaseOptions?.matchLegs ?? 'unico';updateCompetitionFormatFields();add.style.display='none';saveEdit.style.display='inline-block';$p('newCompetitionName').scrollIntoView({behavior:'smooth',block:'center'});});
- saveEdit.addEventListener('click', async () => {
-  const c = (db.competitions || []).find(
-    x => String(x.id) === String(editCompId)
-  );
-
-  if (!c) return;
-
-  const name = $p('newCompetitionName').value.trim();
-
-  if (!name) {
-    alert('Informe o nome da competição.');
-    return;
-  }
-
-  const season =
-    $p('newCompetitionSeason').value.trim() || c.season;
-
-  const format = $p('newCompetitionFormat').value;
-
-  const groupCount = ['grupos', 'mista'].includes(format)
-    ? Number($p('newCompetitionGroupCount').value) || 1
-    : null;
-
-  const teamsPerGroup = ['grupos', 'mista'].includes(format)
-    ? Number($p('newCompetitionTeamsPerGroup').value) || 2
-    : null;
-
-const totalTeams = Math.max(
-  2,
-  Number($p('newCompetitionTotalTeams').value) || 18
-);
 
 const matchLegs =
   $p('newCompetitionMatchLegs').value || 'unico';
@@ -13407,12 +13607,8 @@ try {
   save();
   refreshCompetitionSelect();
   renderPhase();
-  renderRoundOf16Qualifiers();
-  renderQuarterFinals();
-  renderQuarterQualifiers();
-  renderSemiFinals();
-  renderFinalMatch();
-});
+  
+ });
  
 $p('phaseSaveRules')?.addEventListener('click',async()=>{
   const c=comp();
@@ -13524,23 +13720,41 @@ $p('phaseBuildQualifiers')?.addEventListener('click', async () => {
     chosen.map(x => [String(x.team.id), x])
   ).values()];
 
-  // A vaga extra é um espaço reservado na quantidade desejada.
-  // Ela não escolhe automaticamente uma equipe.
-  const target = labs.length * top + thirds + extra;
+  
+// A vaga extra é um espaço reservado na quantidade desejada.
+// Ela não escolhe automaticamente uma equipe.
+const target = labs.length * top + thirds + extra;
 
-  c.qualifiers = unique.map(x => String(x.team.id));
+c.qualifiers = unique.map(x => String(x.team.id));
 
-  // Cria espaços para confrontos suficientes para a fase seguinte.
-  const tieCount = Math.ceil(target / 2);
-  const round = c.phaseRules?.knockoutName || 'Oitavas de final';
+// Identifica a próxima fase eliminatória.
+const round = c.phaseRules?.knockoutName || 'Oitavas de final';
 
-  c.knockoutTies = Array.from(
-    { length: tieCount },
-    (_, i) => c.knockoutTies?.[i] || { round, a: '', b: '' }
-  ).map(t => ({ ...t, round }));
+// Seleciona o armazenamento correto para cada fase.
+const chaveFase = getPhaseStorageKey(round);
 
-  save();
-  renderPhase();
+// Calcula a quantidade de confrontos.
+const tieCount = Math.ceil(target / 2);
+
+// Preserva os confrontos que já existem.
+const confrontosAnteriores = getPhaseMatches(c, round);
+
+// Cria ou mantém os espaços para os confrontos.
+const novosConfrontos = Array.from(
+  { length: tieCount },
+  (_, i) => ({
+    ...(confrontosAnteriores[i] || {}),
+    round,
+    a: confrontosAnteriores[i]?.a || '',
+    b: confrontosAnteriores[i]?.b || ''
+  })
+);
+
+// Grava na chave correspondente à fase.
+setPhaseMatches(c, round, novosConfrontos);
+
+save();
+renderPhase();
 
   try {
     await saveCompetitionPhaseConfig(c);
@@ -13756,10 +13970,20 @@ for (const tie of confrontos) {
   try {
    await saveCompetitionPhaseConfig(c);
 
+
 const faseAtual = ($p('phaseRoundName')?.value || '').trim();
 const faseNormalizada = faseAtual.toLowerCase();
 
-if (faseNormalizada.includes('quarta')) {
+if (
+  faseNormalizada.includes('16 avos') ||
+  faseNormalizada.includes('dezesseis')
+) {
+  await sincronizar16AvosSupabase(c);
+
+} else if (faseNormalizada.includes('oitava')) {
+  await sincronizarOitavasSupabase(c);
+
+} else if (faseNormalizada.includes('quarta')) {
   await sincronizarQuartasSupabase(c);
 
 } else if (faseNormalizada.includes('semifinal')) {
@@ -13782,14 +14006,16 @@ if (faseNormalizada.includes('quarta')) {
   );
 
 } else {
-  await sincronizarOitavasSupabase(c);
+  throw new Error('Fase não reconhecida para sincronização.');
 }
+
 await loadSupabaseMatches();
+
 
     renderPhase();
 
     alert(
-      'Confrontos das oitavas salvos na configuração e na tabela geral de jogos do Supabase!'
+      `Confrontos de ${faseAtual} salvos na configuração e na tabela geral de jogos do Supabase!`
     );
   } catch (error) {
     console.error('Erro ao salvar ou sincronizar as oitavas:', error);
@@ -13801,6 +14027,192 @@ await loadSupabaseMatches();
   }
 });
  
+
+async function protegerSegundoJogo(c, chave) {
+  const { data: existentes, error: buscaErro } =
+    await supabaseClient
+      .from('jogos')
+      .select('id,status,gols_mandante,gols_visitante')
+      .eq('competicao_id', c.dbId)
+      .eq('chave_fase', chave);
+
+  if (buscaErro) throw buscaErro;
+
+  if (!existentes?.length) return;
+
+  if (existentes.length > 1) {
+    throw new Error(`Existem partidas duplicadas na chave ${chave}.`);
+  }
+
+  const jogo = existentes[0];
+
+  const possuiPlacar =
+    jogo.gols_mandante != null ||
+    jogo.gols_visitante != null;
+
+  const finalizado =
+    String(jogo.status || '').toLowerCase() === 'finalizado';
+
+  if (possuiPlacar || finalizado) {
+    throw new Error(
+      `O segundo jogo ${chave} possui resultado ou está finalizado. Os dados foram preservados.`
+    );
+  }
+
+  const { error: excluirErro } = await supabaseClient
+    .from('jogos')
+    .delete()
+    .eq('id', jogo.id);
+
+  if (excluirErro) throw excluirErro;
+}
+
+async function sincronizar16AvosSupabase(c) {
+  if (!c?.dbId) {
+    throw new Error('A competição precisa estar cadastrada no Supabase.');
+  }
+
+  const confrontos = c.roundOf32Ties || [];
+  const equipes = teams(c);
+
+  const obterEquipe = id => {
+    const original = String(id || '');
+    const limpo = original.replace(/^dbteam-/, '');
+
+    return equipes.find(t =>
+      String(t.id) === original ||
+      String(t.dbId) === original ||
+      String(t.id) === limpo ||
+      String(t.dbId) === limpo
+    );
+  };
+
+  const dataHora = (data, hora) => {
+    if (!data) return null;
+
+    const dt = new Date(`${data}T${hora || '12:00'}:00`);
+
+    if (Number.isNaN(dt.getTime())) {
+      throw new Error('Confira a data e o horário de uma partida dos 16 avos.');
+    }
+
+    return dt.toISOString();
+  };
+
+  const salvarPartida = async (payload, chave) => {
+    const { data: existentes, error: buscaErro } =
+      await supabaseClient
+        .from('jogos')
+        .select('id')
+        .eq('competicao_id', c.dbId)
+        .eq('chave_fase', chave);
+
+    if (buscaErro) throw buscaErro;
+
+    if (existentes?.length > 1) {
+      throw new Error(`Existem partidas duplicadas na chave ${chave}.`);
+    }
+
+    if (existentes?.length === 1) {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .update(payload)
+        .eq('id', existentes[0].id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .insert(payload);
+
+      if (error) throw error;
+    }
+  };
+
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
+
+    if (!m?.a || !m?.b) continue;
+
+    const equipeA = obterEquipe(m.a);
+    const equipeB = obterEquipe(m.b);
+
+    const idA = equipeA?.dbId ||
+      String(equipeA?.id || '').replace(/^dbteam-/, '');
+
+    const idB = equipeB?.dbId ||
+      String(equipeB?.id || '').replace(/^dbteam-/, '');
+
+    if (
+      !idA || !idB ||
+      !/^\d+$/.test(String(idA)) ||
+      !/^\d+$/.test(String(idB))
+    ) {
+      throw new Error(
+        `Não foi possível identificar as equipes do confronto ${i + 1} dos 16 avos.`
+      );
+    }
+
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+    const formato = m.format === 'ida_volta'
+      ? 'ida_volta'
+      : 'unico';
+
+    const chave1 = `16-avos-${i + 1}-jogo-1`;
+
+    await salvarPartida({
+      competicao_id: c.dbId,
+      chave_fase: chave1,
+      equipe_mandante_id: Number(idA),
+      equipe_visitante_id: Number(idB),
+      fase: '16 avos de final',
+      rodada: null,
+      formato,
+      data_hora: dataHora(m.date1, m.time1),
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null
+          ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null
+          ? null : Number(m.score1B),
+      status
+    }, chave1);
+
+    const chave2 = `16-avos-${i + 1}-jogo-2`;
+
+if (formato === 'ida_volta') {
+
+      await salvarPartida({
+        competicao_id: c.dbId,
+        chave_fase: chave2,
+        equipe_mandante_id: Number(idB),
+        equipe_visitante_id: Number(idA),
+        fase: '16 avos de final',
+        rodada: null,
+        formato: 'ida_volta',
+        data_hora: dataHora(m.date2, m.time2),
+        local_jogo: m.venue2 || null,
+        gols_mandante:
+          m.score2B === '' || m.score2B == null
+            ? null : Number(m.score2B),
+        gols_visitante:
+          m.score2A === '' || m.score2A == null
+            ? null : Number(m.score2A),
+        status
+      }, chave2);
+
+    } else {
+      await protegerSegundoJogo(c, chave2);
+    }
+  }
+}
+
 async function sincronizarOitavasSupabase(c) {
   if (!c?.dbId) {
     throw new Error('A competição precisa estar cadastrada no Supabase.');
@@ -13809,11 +14221,17 @@ async function sincronizarOitavasSupabase(c) {
   const confrontos = c.knockoutTies || [];
   const equipes = teams(c);
 
-  const obterEquipe = id =>
-    equipes.find(t =>
-      String(t.id) === String(id) ||
-      String(t.dbId) === String(id)
+  const obterEquipe = id => {
+    const original = String(id || '');
+    const limpo = original.replace(/^dbteam-/, '');
+
+    return equipes.find(t =>
+      String(t.id) === original ||
+      String(t.dbId) === original ||
+      String(t.id) === limpo ||
+      String(t.dbId) === limpo
     );
+  };
 
   const dataHora = (data, hora) => {
     if (!data) return null;
@@ -13827,47 +14245,7 @@ async function sincronizarOitavasSupabase(c) {
     return dt.toISOString();
   };
 
-  for (let i = 0; i < confrontos.length; i++) {
-    const m = confrontos[i];
-
-    if (!m?.a || !m?.b) continue;
-
-    const mandante = obterEquipe(m.a);
-    const visitante = obterEquipe(m.b);
-
-    if (!mandante?.dbId || !visitante?.dbId) {
-      throw new Error(
-        `As equipes do confronto ${i + 1} precisam estar cadastradas no Supabase.`
-      );
-    }
-
-    const status = {
-      agendado: 'Agendado',
-      em_andamento: 'Em andamento',
-      finalizado: 'Finalizado'
-    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
-
-    const chave = `oitavas-${i + 1}-jogo-1`;
-
-    const payload = {
-      competicao_id: c.dbId,
-      chave_fase: chave,
-      equipe_mandante_id: mandante.dbId,
-      equipe_visitante_id: visitante.dbId,
-      fase: 'Oitavas de final',
-      rodada: null,
-      formato: 'unico',
-      data_hora: dataHora(m.date1, m.time1),
-      local_jogo: m.venue1 || null,
-      gols_mandante:
-        m.score1A === '' || m.score1A == null
-          ? null : Number(m.score1A),
-      gols_visitante:
-        m.score1B === '' || m.score1B == null
-          ? null : Number(m.score1B),
-      status
-    };
-
+  const salvarPartida = async (payload, chave) => {
     const { data: existentes, error: buscaErro } =
       await supabaseClient
         .from('jogos')
@@ -13878,9 +14256,7 @@ async function sincronizarOitavasSupabase(c) {
     if (buscaErro) throw buscaErro;
 
     if (existentes?.length > 1) {
-      throw new Error(
-        `Já existem partidas duplicadas para o confronto ${i + 1}.`
-      );
+      throw new Error(`Existem partidas duplicadas na chave ${chave}.`);
     }
 
     if (existentes?.length === 1) {
@@ -13897,9 +14273,112 @@ async function sincronizarOitavasSupabase(c) {
 
       if (error) throw error;
     }
-  }
+  };
+
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
+
+    if (!m?.a || !m?.b) continue;
+
+    const equipeA = obterEquipe(m.a);
+    const equipeB = obterEquipe(m.b);
+
+    const idA = equipeA?.dbId ||
+      String(equipeA?.id || '').replace(/^dbteam-/, '');
+
+    const idB = equipeB?.dbId ||
+      String(equipeB?.id || '').replace(/^dbteam-/, '');
+
+    if (
+      !idA || !idB ||
+      !/^\d+$/.test(String(idA)) ||
+      !/^\d+$/.test(String(idB))
+    ) {
+      throw new Error(
+        `Não foi possível identificar os IDs reais das equipes do confronto ${i + 1}.`
+      );
+    }
+
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+    const formato = m.format === 'ida_volta'
+      ? 'ida_volta'
+      : 'unico';
+
+    // JOGO 1 — EQUIPE A COMO MANDANTE
+    const payloadJogo1 = {
+      competicao_id: c.dbId,
+      chave_fase: `oitavas-${i + 1}-jogo-1`,
+      equipe_mandante_id: Number(idA),
+      equipe_visitante_id: Number(idB),
+      fase: 'Oitavas de final',
+      rodada: null,
+      formato,
+      data_hora: dataHora(m.date1, m.time1),
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null
+          ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null
+          ? null : Number(m.score1B),
+      status
+    };
+
+    await salvarPartida(
+  payloadJogo2,
+  `oitavas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `oitavas-${i + 1}-jogo-2`
+  );
+}
+
+    // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
+    if (formato === 'ida_volta') {
+      const payloadJogo2 = {
+        competicao_id: c.dbId,
+        chave_fase: `oitavas-${i + 1}-jogo-2`,
+        equipe_mandante_id: Number(idB),
+        equipe_visitante_id: Number(idA),
+        fase: 'Oitavas de final',
+        rodada: null,
+        formato: 'ida_volta',
+        data_hora: dataHora(m.date2, m.time2),
+        local_jogo: m.venue2 || null,
+
+        // No segundo jogo, a equipe B é mandante.
+        gols_mandante:
+          m.score2B === '' || m.score2B == null
+            ? null : Number(m.score2B),
+
+        gols_visitante:
+          m.score2A === '' || m.score2A == null
+            ? null : Number(m.score2A),
+
+        status
+      };
+
+     await salvarPartida(
+  payloadJogo2,
+  `oitavas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `oitavas-${i + 1}-jogo-2`
+  );
 }
 // ===== SINCRONIZAR QUARTAS COM A TABELA GERAL DE JOGOS =====
+
 async function sincronizarQuartasSupabase(c) {
   if (!c?.dbId) {
     throw new Error('A competição precisa estar cadastrada no Supabase.');
@@ -13908,13 +14387,18 @@ async function sincronizarQuartasSupabase(c) {
   const confrontos = c.quarterFinalTies || [];
   const equipes = teams(c);
 
-  const obterEquipe = id =>
-  equipes.find(t =>
-    String(t.id) === String(id) ||
-    String(t.dbId) === String(id) ||
-    String(t.id) === String(id).replace(/^dbteam-/, '') ||
-    String(t.dbId) === String(id).replace(/^dbteam-/, '')
-  );
+  const obterEquipe = id => {
+    const original = String(id || '');
+    const limpo = original.replace(/^dbteam-/, '');
+
+    return equipes.find(t =>
+      String(t.id) === original ||
+      String(t.dbId) === original ||
+      String(t.id) === limpo ||
+      String(t.dbId) === limpo
+    );
+  };
+
   const dataHora = (data, hora) => {
     if (!data) return null;
 
@@ -13927,54 +14411,7 @@ async function sincronizarQuartasSupabase(c) {
     return dt.toISOString();
   };
 
-  for (let i = 0; i < confrontos.length; i++) {
-    const m = confrontos[i];
-
-    if (!m?.a || !m?.b) continue;
-
-    const mandante = obterEquipe(m.a);
-    const visitante = obterEquipe(m.b);
-
-    const mandanteId = mandante?.dbId || String(mandante?.id || '').replace(/^dbteam-/, '');
-const visitanteId = visitante?.dbId || String(visitante?.id || '').replace(/^dbteam-/, '');
-
-if (
-  !mandanteId ||
-  !visitanteId ||
-  !/^\d+$/.test(String(mandanteId)) ||
-  !/^\d+$/.test(String(visitanteId))
-) {
-  throw new Error(
-    `Não foi possível identificar os IDs reais das equipes do confronto ${i + 1}.`
-  );
-}
-    const status = {
-      agendado: 'Agendado',
-      em_andamento: 'Em andamento',
-      finalizado: 'Finalizado'
-    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
-
-    const chave = `quartas-${i + 1}-jogo-1`;
-
-    const payload = {
-      competicao_id: c.dbId,
-      chave_fase: chave,
-      equipe_mandante_id: Number(mandanteId),
-equipe_visitante_id: Number(visitanteId),
-      fase: 'Quartas de final',
-      rodada: null,
-      formato: 'unico',
-      data_hora: dataHora(m.date1, m.time1),
-      local_jogo: m.venue1 || null,
-      gols_mandante:
-        m.score1A === '' || m.score1A == null
-          ? null : Number(m.score1A),
-      gols_visitante:
-        m.score1B === '' || m.score1B == null
-          ? null : Number(m.score1B),
-      status
-    };
-
+  const salvarPartida = async (payload, chave) => {
     const { data: existentes, error: buscaErro } =
       await supabaseClient
         .from('jogos')
@@ -13985,9 +14422,7 @@ equipe_visitante_id: Number(visitanteId),
     if (buscaErro) throw buscaErro;
 
     if (existentes?.length > 1) {
-      throw new Error(
-        `Existem partidas duplicadas para a quarta de final ${i + 1}.`
-      );
+      throw new Error(`Existem partidas duplicadas na chave ${chave}.`);
     }
 
     if (existentes?.length === 1) {
@@ -14004,8 +14439,112 @@ equipe_visitante_id: Number(visitanteId),
 
       if (error) throw error;
     }
-  }
+  };
+
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
+
+    if (!m?.a || !m?.b) continue;
+
+    const equipeA = obterEquipe(m.a);
+    const equipeB = obterEquipe(m.b);
+
+    const idA = equipeA?.dbId ||
+      String(equipeA?.id || '').replace(/^dbteam-/, '');
+
+    const idB = equipeB?.dbId ||
+      String(equipeB?.id || '').replace(/^dbteam-/, '');
+
+    if (
+      !idA || !idB ||
+      !/^\d+$/.test(String(idA)) ||
+      !/^\d+$/.test(String(idB))
+    ) {
+      throw new Error(
+        `Não foi possível identificar os IDs reais das equipes do confronto ${i + 1}.`
+      );
+    }
+
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+    const formato = m.format === 'ida_volta'
+      ? 'ida_volta'
+      : 'unico';
+
+    // JOGO 1 — EQUIPE A COMO MANDANTE
+    const payloadJogo1 = {
+      competicao_id: c.dbId,
+      chave_fase: `quartas-${i + 1}-jogo-1`,
+      equipe_mandante_id: Number(idA),
+      equipe_visitante_id: Number(idB),
+      fase: 'Quartas de final',
+      rodada: null,
+      formato,
+      data_hora: dataHora(m.date1, m.time1),
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null
+          ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null
+          ? null : Number(m.score1B),
+      status
+    };
+
+    await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
 }
+
+    // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
+    if (formato === 'ida_volta') {
+      const payloadJogo2 = {
+        competicao_id: c.dbId,
+        chave_fase: `quartas-${i + 1}-jogo-2`,
+        equipe_mandante_id: Number(idB),
+        equipe_visitante_id: Number(idA),
+        fase: 'Quartas de final',
+        rodada: null,
+        formato: 'ida_volta',
+        data_hora: dataHora(m.date2, m.time2),
+        local_jogo: m.venue2 || null,
+
+        // No segundo jogo, a equipe B é mandante.
+        gols_mandante:
+          m.score2B === '' || m.score2B == null
+            ? null : Number(m.score2B),
+
+        gols_visitante:
+          m.score2A === '' || m.score2A == null
+            ? null : Number(m.score2A),
+
+        status
+      };
+
+     await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
+}
+
+
 async function sincronizarSemifinaisSupabase(c) {
   if (!c?.dbId) {
     throw new Error('Competição sem vínculo com o Supabase.');
@@ -14026,60 +14565,19 @@ async function sincronizarSemifinaisSupabase(c) {
     );
   };
 
-  for (let i = 0; i < confrontos.length; i++) {
-    const m = confrontos[i];
+  const dataHora = (data, hora) => {
+    if (!data) return null;
 
-    if (!m?.a || !m?.b) continue;
+    const dt = new Date(`${data}T${hora || '12:00'}:00`);
 
-    const mandante = obterEquipe(m.a);
-    const visitante = obterEquipe(m.b);
-
-    const mandanteId = mandante?.dbId ||
-      String(mandante?.id || '').replace(/^dbteam-/, '');
-
-    const visitanteId = visitante?.dbId ||
-      String(visitante?.id || '').replace(/^dbteam-/, '');
-
-    if (
-      !mandanteId ||
-      !visitanteId ||
-      !/^\d+$/.test(String(mandanteId)) ||
-      !/^\d+$/.test(String(visitanteId))
-    ) {
-      throw new Error(
-        `Não foi possível identificar os IDs reais das equipes da semifinal ${i + 1}.`
-      );
+    if (Number.isNaN(dt.getTime())) {
+      throw new Error('Confira a data e o horário de uma partida da semifinal.');
     }
 
-    const status = {
-      agendado: 'Agendado',
-      em_andamento: 'Em andamento',
-      finalizado: 'Finalizado'
-    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+    return dt.toISOString();
+  };
 
-    const dataHora = m.date1
-      ? new Date(`${m.date1}T${m.time1 || '12:00'}:00`).toISOString()
-      : null;
-
-    const chave = `semifinal-${i + 1}-jogo-1`;
-
-    const payload = {
-      competicao_id: c.dbId,
-      chave_fase: chave,
-      equipe_mandante_id: Number(mandanteId),
-      equipe_visitante_id: Number(visitanteId),
-      fase: 'Semifinais',
-      rodada: null,
-      formato: 'unico',
-      data_hora: dataHora,
-      local_jogo: m.venue1 || null,
-      gols_mandante:
-        m.score1A === '' || m.score1A == null ? null : Number(m.score1A),
-      gols_visitante:
-        m.score1B === '' || m.score1B == null ? null : Number(m.score1B),
-      status
-    };
-
+  const salvarPartida = async (payload, chave) => {
     const { data: existentes, error: buscaErro } =
       await supabaseClient
         .from('jogos')
@@ -14090,7 +14588,7 @@ async function sincronizarSemifinaisSupabase(c) {
     if (buscaErro) throw buscaErro;
 
     if (existentes?.length > 1) {
-      throw new Error(`Semifinal ${i + 1} possui partidas duplicadas.`);
+      throw new Error(`Existem partidas duplicadas na chave ${chave}.`);
     }
 
     if (existentes?.length === 1) {
@@ -14107,135 +14605,110 @@ async function sincronizarSemifinaisSupabase(c) {
 
       if (error) throw error;
     }
-  }
-}
-  // ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
- function renderQuarterFinals() {
-  const c = comp();
-  const panel = $p('quarterFinalsTies');
-  if (!panel) return;
-
-  if (!c) {
-    panel.innerHTML = '<div class="empty">Selecione uma competição.</div>';
-    return;
-  }
-  
-c.quarterFinalTies = c.quarterFinalTies || [];
-
-const allTeams = teams(c);
-const knockoutTies = c.knockoutTies || [];
-const qualifiedIds = [];
-
-for (const m of knockoutTies) {
-  if (!m || !m.a || !m.b || m.status !== 'finalizado' ||
-      m.score1A == null || m.score1A === '' ||
-      m.score1B == null || m.score1B === '') continue;
-
-  const a = Number(m.score1A);
-  const b = Number(m.score1B);
-  let winner = null;
-
-  if (a > b) winner = m.a;
-  else if (b > a) winner = m.b;
-  else if (
-    m.penalties1A != null && m.penalties1A !== '' &&
-    m.penalties1B != null && m.penalties1B !== '' &&
-    Number(m.penalties1A) !== Number(m.penalties1B)
-  ) {
-    winner = Number(m.penalties1A) > Number(m.penalties1B)
-      ? m.a : m.b;
-  }
-
-  if (winner != null) qualifiedIds.push(String(winner));
-}
-
-const uniqueQualifiedIds = [...new Set(qualifiedIds)];
-
-const ts = uniqueQualifiedIds.length === 8
-  ? allTeams.filter(t =>
-      uniqueQualifiedIds.includes(String(t.id)) ||
-      uniqueQualifiedIds.includes(String(t.dbId || ''))
-    )
-  : allTeams;
-  const teamName = id => {
-    const t = ts.find(x =>
-      String(x.id) === String(id) ||
-      String(x.dbId || '') === String(id)
-    );
-    return t ? t.name : 'Equipe não encontrada';
   };
 
-  panel.innerHTML = Array.from({ length: 4 }, (_, i) => {
-    const m = c.quarterFinalTies[i] || {};
-    return `
-      <div class="quarter-tie-card">
-        <h4>QUARTAS DE FINAL — JOGO ${i + 1}</h4>
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
 
-        <label>Equipe 1</label>
-        <select data-quarter-side="a" data-quarter-index="${i}">
-          <option value="">— Escolher equipe —</option>
-          ${ts.map(t => `
-            <option value="${esc(t.id)}"
-              ${String(m.a || '') === String(t.id) ? 'selected' : ''}>
-              ${esc(t.name)}
-            </option>
-          `).join('')}
-        </select>
+    if (!m?.a || !m?.b) continue;
 
-        <label>Equipe 2</label>
-        <select data-quarter-side="b" data-quarter-index="${i}">
-          <option value="">— Escolher equipe —</option>
-          ${ts.map(t => `
-            <option value="${esc(t.id)}"
-              ${String(m.b || '') === String(t.id) ? 'selected' : ''}>
-              ${esc(t.name)}
-            </option>
-          `).join('')}
-        </select>
+    const equipeA = obterEquipe(m.a);
+    const equipeB = obterEquipe(m.b);
 
-        <label>Situação do jogo</label>
-        <select data-quarter-field="status" data-quarter-index="${i}">
-          <option value="agendado" ${(m.status || 'agendado') === 'agendado' ? 'selected' : ''}>Agendado</option>
-          <option value="em_andamento" ${m.status === 'em_andamento' ? 'selected' : ''}>Em andamento</option>
-          <option value="finalizado" ${m.status === 'finalizado' ? 'selected' : ''}>Finalizado</option>
-        </select>
+    const idA = equipeA?.dbId ||
+      String(equipeA?.id || '').replace(/^dbteam-/, '');
 
-        <label>Data</label>
-        <input type="date" data-quarter-field="date1" data-quarter-index="${i}" value="${esc(m.date1 || '')}">
+    const idB = equipeB?.dbId ||
+      String(equipeB?.id || '').replace(/^dbteam-/, '');
 
-        <label>Horário</label>
-        <input type="time" data-quarter-field="time1" data-quarter-index="${i}" value="${esc(m.time1 || '')}">
+    if (
+      !idA || !idB ||
+      !/^\d+$/.test(String(idA)) ||
+      !/^\d+$/.test(String(idB))
+    ) {
+      throw new Error(
+        `Não foi possível identificar os IDs reais das equipes da semifinal ${i + 1}.`
+      );
+    }
 
-        <label>Local</label>
-        <input type="text" data-quarter-field="venue1" data-quarter-index="${i}" value="${esc(m.venue1 || '')}" placeholder="Local da partida">
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
 
-        <label>Placar</label>
-        <div class="score-fixed">
-          <input type="number" min="0" max="99" step="1"
-            data-quarter-field="score1A" data-quarter-index="${i}"
-            value="${esc(m.score1A ?? '')}" placeholder="00">
-          <strong>×</strong>
-          <input type="number" min="0" max="99" step="1"
-            data-quarter-field="score1B" data-quarter-index="${i}"
-            value="${esc(m.score1B ?? '')}" placeholder="00">
-        </div>
+    const formato = m.format === 'ida_volta'
+      ? 'ida_volta'
+      : 'unico';
 
-        <div class="tie-penalties" data-quarter-penalties="${i}"
-          style="${m.score1A !== '' && m.score1A != null && m.score1B !== '' && m.score1B != null && Number(m.score1A) === Number(m.score1B) ? '' : 'display:none'}">
-          <label>Disputa por pênaltis</label>
-          <div class="score-fixed">
-            <input type="number" min="0" max="99" step="1"
-              data-quarter-field="penalties1A" data-quarter-index="${i}"
-              value="${esc(m.penalties1A ?? '')}" placeholder="00">
-            <strong>×</strong>
-            <input type="number" min="0" max="99" step="1"
-              data-quarter-field="penalties1B" data-quarter-index="${i}"
-              value="${esc(m.penalties1B ?? '')}" placeholder="00">
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
+    // JOGO 1 — EQUIPE A COMO MANDANTE
+    const payloadJogo1 = {
+      competicao_id: c.dbId,
+      chave_fase: `semifinal-${i + 1}-jogo-1`,
+      equipe_mandante_id: Number(idA),
+      equipe_visitante_id: Number(idB),
+      fase: 'Semifinais',
+      rodada: null,
+      formato,
+      data_hora: dataHora(m.date1, m.time1),
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null
+          ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null
+          ? null : Number(m.score1B),
+      status
+    };
+
+   await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
+}
+    // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
+    if (formato === 'ida_volta') {
+      const payloadJogo2 = {
+        competicao_id: c.dbId,
+        chave_fase: `semifinal-${i + 1}-jogo-2`,
+        equipe_mandante_id: Number(idB),
+        equipe_visitante_id: Number(idA),
+        fase: 'Semifinais',
+        rodada: null,
+        formato: 'ida_volta',
+        data_hora: dataHora(m.date2, m.time2),
+        local_jogo: m.venue2 || null,
+
+        // No segundo jogo, a equipe B é mandante.
+        gols_mandante:
+          m.score2B === '' || m.score2B == null
+            ? null : Number(m.score2B),
+
+        gols_visitante:
+          m.score2A === '' || m.score2A == null
+            ? null : Number(m.score2A),
+
+        status
+      };
+
+      await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
+}
+  // ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
 
    panel.querySelectorAll('.quarter-tie-card').forEach(card => {
      const a = card.querySelector('[data-quarter-field="score1A"]');
@@ -14312,64 +14785,7 @@ const ts = uniqueQualifiedIds.length === 8
      }));
  
      save();
-     renderQuarterFinals();
- 
-     alert('Oito classificados encaminhados para os quatro confrontos das quartas. Confira e salve.');
-   });
- 
- 
-   // ===== BOTÃO: SALVAR QUARTAS NO SUPABASE =====
-   $p('saveQuarterFinals')?.addEventListener('click', async () => {
-     const c = comp();
-     if (!c) return;
- 
-     c.quarterFinalTies = c.quarterFinalTies || [];
-
-    document.querySelectorAll('#quarterFinalsTies [data-quarter-index]').forEach(el => {
-      const i = Number(el.dataset.quarterIndex);
-      const tie = c.quarterFinalTies[i];
-      if (!tie) return;
-
-      if (el.dataset.quarterSide) {
-        tie[el.dataset.quarterSide] = el.value;
-      }
-
-      if (el.dataset.quarterField) {
-        tie[el.dataset.quarterField] = el.value;
-      }
     });
-
-    for (const tie of c.quarterFinalTies) {
-      if (tie.a && tie.b && String(tie.a) === String(tie.b)) {
-        alert('Um confronto das quartas não pode ter a mesma equipe dos dois lados.');
-        return;
-      }
-    }
-
-    save();
-
-    try {
-  await saveCompetitionPhaseConfig(c);
-
-  await sincronizarQuartasSupabase(c);
-
-  await loadSupabaseMatches();
-
-  renderQuarterFinals();
-
-  alert(
-    'Quartas de final salvas na configuração e na tabela geral de jogos do Supabase!'
-  );
-} catch (error) {
-  console.error('Erro ao salvar ou sincronizar as quartas:', error);
-
-  alert(
-    'Não foi possível sincronizar as quartas de final: ' +
-    (error.message || error)
-  );
-}
-  });
- 
 function renderSemiFinals() {
   const c = comp();
   const panel = $p('semiFinalsTies');
@@ -14508,187 +14924,8 @@ const ts = qualifiedTeams.length === 4
 }
 
 
-// GERAR CLASSIFICADOS DAS QUARTAS PARA AS SEMIFINAIS
-$p('generateSemiFinalists')?.addEventListener('click', () => {
-  const c = comp();
-  if (!c) return;
-
-  const ties = c.quarterFinalTies || [];
-
-  if (ties.length !== 4) {
-    alert('As quartas precisam ter os quatro confrontos cadastrados.');
-    return;
-  }
-
-  const winners = [];
-
-  for (let i = 0; i < 4; i++) {
-    const m = ties[i];
-
-    if (!m.a || !m.b || m.status !== 'finalizado') {
-      alert(`Finalize a partida ${i + 1} das quartas e confira as equipes.`);
-      return;
-    }
-
-    if (m.score1A == null || m.score1A === '' ||
-        m.score1B == null || m.score1B === '') {
-      alert(`Informe o placar da partida ${i + 1} das quartas.`);
-      return;
-    }
-
-    const a = Number(m.score1A);
-    const b = Number(m.score1B);
-    let winner;
-
-    if (a > b) winner = m.a;
-    else if (b > a) winner = m.b;
-    else {
-      if (m.penalties1A == null || m.penalties1A === '' ||
-          m.penalties1B == null || m.penalties1B === '' ||
-          Number(m.penalties1A) === Number(m.penalties1B)) {
-        alert(`A partida ${i + 1} terminou empatada. Informe os pênaltis com um vencedor.`);
-        return;
-      }
-
-      winner = Number(m.penalties1A) > Number(m.penalties1B)
-        ? m.a : m.b;
-    }
-
-    winners.push(winner);
-  }
-
-  c.semiFinalTies = [0, 1].map(i => ({
-    ...(c.semiFinalTies?.[i] || {}),
-    round: 'Semifinais',
-    a: winners[i * 2],
-    b: winners[i * 2 + 1]
-  }));
-
-  save();
-  renderSemiFinals();
-  alert('Classificados encaminhados para as duas semifinais. Confira os confrontos e salve.');
-});
-
-
 // SALVAR SEMIFINAIS
-$p('saveSemiFinals')?.addEventListener('click', async () => {
-  const c = comp();
-  if (!c) return;
-
-  c.semiFinalTies = c.semiFinalTies || [];
-
-  document.querySelectorAll('#semiFinalsTies [data-semi-index]').forEach(el => {
-    const i = Number(el.dataset.semiIndex);
-    const tie = c.semiFinalTies[i];
-    if (!tie) return;
-
-    if (el.dataset.semiSide) tie[el.dataset.semiSide] = el.value;
-    if (el.dataset.semiField) tie[el.dataset.semiField] = el.value;
-  });
-
-  for (const tie of c.semiFinalTies) {
-    if (tie.a && tie.b && String(tie.a) === String(tie.b)) {
-      alert('Um confronto das semifinais não pode ter a mesma equipe dos dois lados.');
-      return;
-    }
-  }
-
-  save();
-
-  try {
-  await saveCompetitionPhaseConfig(c);
-await sincronizarSemifinaisSupabase(c);
-await loadSupabaseMatches();
-
-renderSemiFinals();
-    alert('Semifinais salvas no Supabase!');
-  } catch (error) {
-    console.error('Erro ao salvar semifinais:', error);
-    alert('O Supabase não confirmou o salvamento das semifinais: ' +
-      (error.message || error));
-  }
-});
  
-function renderQuarterQualifiers() {
-  const c = comp();
-  const panel = $p('quarterQualifiersList');
-  if (!panel) return;
-
-  if (!c) {
-    panel.innerHTML = '<div class="empty">Selecione uma competição.</div>';
-    return;
-  }
-
-  const ties = c.quarterFinalTies || [];
-  const ts = teams(c);
-  const winners = [];
-
-  for (const m of ties) {
-    if (!m.a || !m.b || m.status !== 'finalizado' ||
-        m.score1A == null || m.score1A === '' ||
-        m.score1B == null || m.score1B === '') continue;
-
-    const a = Number(m.score1A);
-    const b = Number(m.score1B);
-    let winner = null;
-
-    if (a > b) winner = m.a;
-    else if (b > a) winner = m.b;
-    else if (
-      m.penalties1A != null && m.penalties1A !== '' &&
-      m.penalties1B != null && m.penalties1B !== '' &&
-      Number(m.penalties1A) !== Number(m.penalties1B)
-    ) {
-      winner = Number(m.penalties1A) > Number(m.penalties1B)
-        ? m.a : m.b;
-    }
-
-    if (winner) winners.push(winner);
-  }
-
-  const nameOf = id => {
-    const t = ts.find(t =>
-      String(t.id) === String(id) ||
-      String(t.dbId || '') === String(id)
-    );
-    return t ? t.name : 'Equipe não encontrada';
-  };
-
-  panel.innerHTML = winners.length
-    ? '<ol>' + winners.map(id =>
-        '<li>' + esc(nameOf(id)) + '</li>'
-      ).join('') + '</ol>'
-    : '<div class="empty">Finalize as quatro partidas das quartas para mostrar os vencedores.</div>';
-}
-
-$p('generateQuarterQualifiers')?.addEventListener('click', () => {
-  const c = comp();
-  if (!c) return;
-
-  renderQuarterQualifiers();
-
-  const winnersPanel = $p('quarterQualifiersList');
-  if (winnersPanel && (c.quarterFinalTies || []).length !== 4) {
-    alert('Cadastre os quatro confrontos das quartas de final.');
-    return;
-  }
-
-  alert('Classificados das quartas atualizados. Confira a lista.');
-});
-
-$p('saveQuarterQualifiers')?.addEventListener('click', async () => {
-  const c = comp();
-  if (!c) return;
-
-  try {
-    await saveCompetitionPhaseConfig(c);
-    renderQuarterQualifiers();
-    alert('Classificados das quartas salvos no Supabase!');
-  } catch (error) {
-    console.error('Erro ao salvar classificados das quartas:', error);
-    alert('O Supabase não confirmou o salvamento: ' + (error.message || error));
-  }
-});
  function renderSemiFinals() {
   const c = comp();
   const panel = $p('semiFinalsTies');
@@ -14917,30 +15154,47 @@ function renderPlacementMatch(panelId, cardClass, title, data, prefix) {
 }
 
 // ===== SINCRONIZAR FINAL E DISPUTA DE 3º LUGAR =====
+
 async function sincronizarColocacaoSupabase(c, property, fase, chave) {
   if (!c?.dbId) {
     throw new Error('A competição precisa estar cadastrada no Supabase.');
   }
 
   const m = c[property];
+
   if (!m?.a || !m?.b) {
     throw new Error(`Defina as duas equipes da fase: ${fase}.`);
   }
 
   const equipes = teams(c);
 
-  const obterEquipe = id => equipes.find(t =>
-    String(t.id) === String(id) ||
-    String(t.dbId) === String(id)
-  );
+  const obterEquipe = id => {
+    const original = String(id || '');
+    const limpo = original.replace(/^dbteam-/, '');
+
+    return equipes.find(t =>
+      String(t.id) === original ||
+      String(t.dbId) === original ||
+      String(t.id) === limpo ||
+      String(t.dbId) === limpo
+    );
+  };
 
   const mandante = obterEquipe(m.a);
   const visitante = obterEquipe(m.b);
 
-  const mandanteId = mandante?.dbId;
-  const visitanteId = visitante?.dbId;
+  const mandanteId = mandante?.dbId ||
+    String(mandante?.id || '').replace(/^dbteam-/, '');
 
-  if (!mandanteId || !visitanteId) {
+  const visitanteId = visitante?.dbId ||
+    String(visitante?.id || '').replace(/^dbteam-/, '');
+
+  if (
+    !mandanteId ||
+    !visitanteId ||
+    !/^\d+$/.test(String(mandanteId)) ||
+    !/^\d+$/.test(String(visitanteId))
+  ) {
     throw new Error(`Não foi possível identificar as equipes de ${fase}.`);
   }
 
@@ -14981,11 +15235,12 @@ async function sincronizarColocacaoSupabase(c, property, fase, chave) {
     status
   };
 
-  const { data: existentes, error: buscaErro } = await supabaseClient
-    .from('jogos')
-    .select('id')
-    .eq('competicao_id', c.dbId)
-    .eq('chave_fase', chave);
+  const { data: existentes, error: buscaErro } =
+    await supabaseClient
+      .from('jogos')
+      .select('id')
+      .eq('competicao_id', c.dbId)
+      .eq('chave_fase', chave);
 
   if (buscaErro) throw buscaErro;
 
@@ -15009,185 +15264,19 @@ async function sincronizarColocacaoSupabase(c, property, fase, chave) {
   }
 }
 
-function renderFinalMatch() {
-  const c = comp();
-  renderPlacementMatch(
-    'finalMatchTie',
-    'final-tie-card',
-    'GRANDE FINAL',
-    c?.finalMatchTie,
-    'final'
-  );
-
-  renderPlacementMatch(
-    'thirdPlaceTie',
-    'final-tie-card',
-    'DISPUTA DE 3º E 4º LUGAR',
-    c?.thirdPlaceTie,
-    'third'
-  );
-}
 const originalRenderAll=window.renderAll;
  
-function getSemiWinnerOrLoser(match, wantWinner) {
-  if (!match || match.status !== 'finalizado' ||
-      !match.a || !match.b ||
-      match.score1A == null || match.score1A === '' ||
-      match.score1B == null || match.score1B === '') {
-    return null;
-  }
 
-  const a = Number(match.score1A);
-  const b = Number(match.score1B);
-  let winner;
-
-  if (a > b) winner = match.a;
-  else if (b > a) winner = match.b;
-  else {
-    if (match.penalties1A == null || match.penalties1A === '' ||
-        match.penalties1B == null || match.penalties1B === '' ||
-        Number(match.penalties1A) === Number(match.penalties1B)) {
-      return null;
-    }
-    winner = Number(match.penalties1A) > Number(match.penalties1B)
-      ? match.a : match.b;
-  }
-
-  const loser = String(winner) === String(match.a) ? match.b : match.a;
-  return wantWinner ? winner : loser;
-}
-
-function savePlacementFields(c, prefix, property) {
-  const panelId = prefix === 'final' ? 'finalMatchTie' : 'thirdPlaceTie';
-  const match = c[property] || (c[property] = {});
-
-  const panel = $p(panelId);
-  if (!panel) throw new Error('Painel não encontrado.');
-
-  panel.querySelectorAll(`[data-${prefix}-side]`).forEach(el => {
-    match[el.dataset[`${prefix}Side`]] = el.value;
-  });
-
-  panel.querySelectorAll(`[data-${prefix}-field]`).forEach(el => {
-    match[el.dataset[`${prefix}Field`]] = el.value;
-  });
-
-  if (match.a && match.b && String(match.a) === String(match.b)) {
-    throw new Error('Um confronto não pode ter a mesma equipe dos dois lados.');
-  }
-}
-
-$p('generateFinalists')?.addEventListener('click', () => {
-  const c = comp();
-  if (!c) return;
-
-  const semis = c.semiFinalTies || [];
-  if (semis.length !== 2) {
-    alert('Prepare primeiro os dois confrontos das semifinais.');
-    return;
-  }
-
-  const a = getSemiWinnerOrLoser(semis[0], true);
-  const b = getSemiWinnerOrLoser(semis[1], true);
-
-  if (!a || !b) {
-    alert('Finalize as duas semifinais e confira os placares e os pênaltis, se necessários.');
-    return;
-  }
-
-  c.finalMatchTie = {
-    ...(c.finalMatchTie || {}),
-    round: 'Final',
-    a,
-    b
-  };
-
-  save();
-  renderFinalMatch();
-  alert('Finalistas definidos! Confira os dados e clique em SALVAR FINAL.');
-});
-
-$p('generateThirdPlace')?.addEventListener('click', () => {
-  const c = comp();
-  if (!c) return;
-
-  const semis = c.semiFinalTies || [];
-  if (semis.length !== 2) {
-    alert('Prepare primeiro os dois confrontos das semifinais.');
-    return;
-  }
-
-  const a = getSemiWinnerOrLoser(semis[0], false);
-  const b = getSemiWinnerOrLoser(semis[1], false);
-
-  if (!a || !b) {
-    alert('Finalize as duas semifinais e confira os placares e os pênaltis, se necessários.');
-    return;
-  }
-
-  c.thirdPlaceTie = {
-    ...(c.thirdPlaceTie || {}),
-    round: 'Disputa de 3º e 4º lugar',
-    a,
-    b
-  };
-
-  save();
-  renderFinalMatch();
-  alert('Equipes da disputa de 3º e 4º lugar definidas! Confira e salve.');
-});
-
-$p('saveFinalMatch')?.addEventListener('click', async () => {
-  const c = comp();
-  if (!c) return;
-
-  try {
-    savePlacementFields(c, 'final', 'finalMatchTie');
-    save();
-  await saveCompetitionPhaseConfig(c);
-
-await sincronizarColocacaoSupabase(
-  c,
-  'finalMatchTie',
-  'Final',
-  'final-jogo-1'
-);
-
-await loadSupabaseMatches();
-renderFinalMatch();
-    alert('Final salva no Supabase!');
-  } catch (error) {
-    console.error('Erro ao salvar final:', error);
-    alert('Não foi possível confirmar o salvamento da final: ' + (error.message || error));
-  }
-});
-
-$p('saveThirdPlace')?.addEventListener('click', async () => {
-  const c = comp();
-  if (!c) return;
-
-  try {
-    savePlacementFields(c, 'third', 'thirdPlaceTie');
-    save();
-    await saveCompetitionPhaseConfig(c);
-
-await sincronizarColocacaoSupabase(
-  c,
-  'thirdPlaceTie',
-  'Disputa de 3º lugar',
-  'terceiro-lugar-jogo-1'
-);
-
-await loadSupabaseMatches();
-renderFinalMatch();
-    alert('Disputa de 3º e 4º lugar salva no Supabase!');
-  } catch (error) {
-    console.error('Erro ao salvar disputa de colocação:', error);
-    alert('Não foi possível confirmar o salvamento da disputa: ' + (error.message || error));
-  }
-});
-const wrapped=()=>{originalRenderAll?.();refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderQuarterQualifiers();renderSemiFinals();renderFinalMatch()};
-setTimeout(()=>{refreshCompetitionSelect();renderPhase();renderRoundOf16Qualifiers();renderQuarterFinals();renderQuarterQualifiers();renderSemiFinals();renderFinalMatch()},300);
+const wrapped = () => {
+  originalRenderAll?.();
+  refreshCompetitionSelect();
+  renderPhase();
+};
+  window.renderAll = wrapped;
+setTimeout(() => {
+  refreshCompetitionSelect();
+  renderPhase();
+}, 300);
 })();
 </script>
 
