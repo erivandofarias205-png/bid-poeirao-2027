@@ -4491,7 +4491,71 @@ area.innerHTML = `
     </table>
   </div>
 `;
-      
+   // ARTILHARIA OFICIAL — CHAMPIONS LEAGUE
+if (competicao === 'CHAMPIONS LEAGUE') {
+  const painel = document.getElementById('profissionalArtilharia');
+
+  if (painel) {
+    painel.innerHTML = '<p>Carregando artilharia da UEFA...</p>';
+
+    try {
+      const respostaArtilharia = await fetch('/api/artilharia-champions');
+
+      if (!respostaArtilharia.ok) {
+        throw new Error('Não foi possível consultar a artilharia.');
+      }
+
+      const dadosArtilharia = await respostaArtilharia.json();
+
+      if (!dadosArtilharia.sucesso || !dadosArtilharia.artilheiros?.length) {
+        throw new Error('Nenhum artilheiro encontrado.');
+      }
+
+      painel.innerHTML = `
+        <p style="color:#d4af37;font-weight:900">
+          UEFA · TEMPORADA ${dadosArtilharia.temporada}
+        </p>
+
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
+            <thead>
+              <tr style="background:#171717;color:#e4bd43">
+                <th>POS.</th>
+                <th style="text-align:left">JOGADOR</th>
+                <th>CLUBE</th>
+                <th>J</th>
+                <th>GOLS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dadosArtilharia.artilheiros.map((jogador, indice) => `
+                <tr style="border-bottom:1px solid #ddd;text-align:center">
+                  <td><strong>${indice + 1}</strong></td>
+                  <td style="text-align:left;padding:7px;white-space:nowrap">
+                    <div style="display:flex;align-items:center;gap:7px">
+                      ${jogador.foto ? `<img src="${jogador.foto}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">` : ''}
+                      <strong>${jogador.jogador}</strong>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+                      ${jogador.escudo ? `<img src="${jogador.escudo}" style="width:22px;height:22px;object-fit:contain">` : ''}
+                      ${jogador.equipe}
+                    </div>
+                  </td>
+                  <td>${jogador.participacoes}</td>
+                  <td><strong style="color:#b58920;font-size:15px">${jogador.gols}</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } catch (erro) {
+      painel.innerHTML = `<p style="color:red">Erro na artilharia: ${erro.message}</p>`;
+    }
+  }
+}   
      // JOGOS E RESULTADOS — CHAMPIONS LEAGUE
 if (areaJogos) {
   const rodadaInicial = 1;
