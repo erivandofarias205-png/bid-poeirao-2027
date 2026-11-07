@@ -4707,9 +4707,9 @@ const totalRodadas = serie === 'a' ? 38 : 20;
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <strong style="color:#d4af37">RODADA:</strong>
       <select id="seletorRodadaSerieA"
-        style="padding:9px;border-radius:7px;border:1px solid #ccc;font-weight:800">
+  style="padding:9px;border-radius:7px;border:1px solid #d4af37;font-weight:800;color:#ffffff;background:#06142e">
         ${Array.from({length:totalRodadas},(_,i)=>`
-          <option value="${i+1}" ${i+1===rodadaInicial?'selected':''}
+          <option value="${i+1}" ${i+1===rodadaInicial?'selected':''} style="color:#ffffff;background:#06142e">
             ${i+1}ª RODADA
           </option>
         `).join('')}
