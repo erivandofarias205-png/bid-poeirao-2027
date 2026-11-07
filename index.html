@@ -4700,14 +4700,16 @@ const endereco = (serie === 'a' || serie === 'b')
   // A PARTIR DAQUI, MANTER O CÓDIGO ORIGINAL.
 
 // SELETOR DE RODADAS — BRASILEIRÃO SÉRIE A
-if (serie === 'a' && areaJogos) {
+if ((serie === 'a' || serie === 'b') && areaJogos) {
+  const rodadaInicial = serie === 'a' ? 34 : 1;
+const totalRodadas = serie === 'a' ? 38 : 20;
   areaJogos.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <strong style="color:#d4af37">RODADA:</strong>
       <select id="seletorRodadaSerieA"
         style="padding:9px;border-radius:7px;border:1px solid #ccc;font-weight:800">
-        ${Array.from({length:38},(_,i)=>`
-          <option value="${i+1}" ${i+1===34?'selected':''}>
+        ${Array.from({length:totalRodadas},(_,i)=>`
+          <option value="${i+1}" ${i+1===rodadaInicial?'selected':''}
             ${i+1}ª RODADA
           </option>
         `).join('')}
@@ -4726,7 +4728,7 @@ if (serie === 'a' && areaJogos) {
 
     try {
       const resposta = await fetch(
-        `/api/competicoes?competicao=brasileirao-a&rodada=${numero}`
+        `/api/competicoes?competicao=brasileirao-${serie}&rodada=${numero}`
       );
 
       if (!resposta.ok) throw new Error('Erro ao buscar rodada.');
