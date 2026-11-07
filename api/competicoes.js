@@ -115,13 +115,6 @@ if (competicao === 'brasileirao-a') {
 }
 
 
-      fonte = 'GE Globo';
-      nome = 'Brasileirão Série A';
-      classificacao = tabela.classificacao || tabela.tabelas || [];
-      jogos = retornoJogos.jogos || retornoJogos.partidas || [];
-      dadosOriginais = { classificacao: tabela, jogos: retornoJogos };
-    }
-
     else if (competicao === 'brasileirao-c') {
       const dados = await consultarAPI(
         `/api/serie-c-jogos?rodada=${encodeURIComponent(rodada)}`
