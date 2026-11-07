@@ -13,20 +13,16 @@ module.exports = async function handler(req, res) {
   const competicao = String(req.query.competicao || '').toLowerCase();
   const rodada = String(req.query.rodada || '1');
 
-  const competicoesPermitidas = [
-    'brasileirao-a',
-    'brasileirao-b',
-    'brasileirao-c',
-    'brasileirao-d',
-    'champions',
-    'europa'
+  const permitidas = [
+    'brasileirao-a', 'brasileirao-b', 'brasileirao-c',
+    'brasileirao-d', 'champions', 'europa'
   ];
 
-  if (!competicoesPermitidas.includes(competicao)) {
+  if (!permitidas.includes(competicao)) {
     return res.status(400).json({
       sucesso: false,
       erro: 'Competição não reconhecida.',
-      competicoes_disponiveis: competicoesPermitidas
+      competicoes_disponiveis: permitidas
     });
   }
 
@@ -39,114 +35,103 @@ module.exports = async function handler(req, res) {
     const texto = await resposta.text();
 
     let dados;
-
     try {
       dados = JSON.parse(texto);
-    } catch (erro) {
+    } catch {
       throw new Error(`Resposta inválida da API ${caminho}.`);
     }
 
     if (!resposta.ok || dados.sucesso === false) {
-      throw new Error(
-        dados.erro || `Falha ao consultar ${caminho}.`
-      );
+      throw new Error(dados.erro || `Falha ao consultar ${caminho}.`);
     }
 
     return dados;
   }
 
   try {
-    let resultado;
+    let fonte = '';
+    let nome = '';
+    let classificacao = [];
+    let jogos = [];
+    let dadosOriginais = {};
+    let grupos = {};
 
-    // BRASILEIRÃO SÉRIE A
     if (competicao === 'brasileirao-a') {
-      const [classificacao, jogos] = await Promise.all([
+      const [tabela, retornoJogos] = await Promise.all([
         consultarAPI('/api/serie-a'),
         consultarAPI(
           `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
         )
       ]);
 
-      resultado = {
-        sucesso: true,
-        fonte: 'GE Globo',
-        competicao: 'Brasileirão Série A',
-        serie: 'a',
-        rodada: Number(rodada),
-        classificacao,
-        jogos
-      };
+      fonte = 'GE Globo';
+      nome = 'Brasileirão Série A';
+      classificacao = tabela.classificacao || tabela.tabelas || [];
+      jogos = retornoJogos.jogos || retornoJogos.partidas || [];
+      dadosOriginais = { classificacao: tabela, jogos: retornoJogos };
     }
 
-    // BRASILEIRÃO SÉRIE C — CBF
     else if (competicao === 'brasileirao-c') {
       const dados = await consultarAPI(
         `/api/serie-c-jogos?rodada=${encodeURIComponent(rodada)}`
       );
 
-      resultado = {
-        sucesso: true,
-        fonte: 'CBF',
-        competicao: 'Brasileirão Série C',
-        serie: 'c',
-        fase: dados.fase,
-        rodada: dados.rodada,
-        grupos: dados.grupos,
-        total_jogos: dados.total_jogos,
-        atualizado_em: dados.atualizado_em
-      };
+      fonte = 'CBF';
+      nome = 'Brasileirão Série C';
+      grupos = dados.grupos || {};
+      jogos = Object.values(grupos).flat();
+      dadosOriginais = dados;
     }
 
-    // BRASILEIRÃO SÉRIE B E D
     else if (
       competicao === 'brasileirao-b' ||
       competicao === 'brasileirao-d'
     ) {
       const serie = competicao.slice(-1);
+      const retorno = await consultarAPI(`/api/brasileirao?serie=${serie}`);
+      const dados = retorno.dados || {};
 
-      const dados = await consultarAPI(
-        `/api/brasileirao?serie=${serie}`
-      );
-
-      resultado = {
-        sucesso: true,
-        fonte: 'Campeonato Brasileiro API',
-        competicao: `Brasileirão Série ${serie.toUpperCase()}`,
-        serie,
-        rodada: Number(rodada),
-        dados: dados.dados
-      };
+      fonte = 'Campeonato Brasileiro API';
+      nome = `Brasileirão Série ${serie.toUpperCase()}`;
+      classificacao = dados.tables || [];
+      jogos = dados.matches || [];
+      dadosOriginais = dados;
+      grupos = dados.grupos || {};
     }
 
-    // CHAMPIONS LEAGUE E EUROPA LEAGUE
-    else if (
-      competicao === 'champions' ||
-      competicao === 'europa'
-    ) {
-      const dados = await consultarAPI(
+    else {
+      const retorno = await consultarAPI(
         `/api/ge-europa?competicao=${competicao}&rodada=${encodeURIComponent(rodada)}`
       );
 
-      const informacao = dados.competicoes?.[competicao];
+      const dados = retorno.competicoes?.[competicao];
 
-      if (!informacao) {
-        throw new Error(
-          `Não foram encontrados dados para ${competicao}.`
-        );
+      if (!dados) {
+        throw new Error(`Dados de ${competicao} não encontrados.`);
       }
 
-      resultado = {
-        sucesso: true,
-        fonte: 'GE Globo',
-        competicao: competicao === 'champions'
-          ? 'Champions League'
-          : 'Europa League',
-        rodada: Number(rodada),
-        dados: informacao
-      };
+      fonte = 'GE Globo';
+      nome = competicao === 'champions'
+        ? 'Champions League'
+        : 'Europa League';
+
+      classificacao = dados.classificacao || [];
+      jogos = dados.jogos || [];
+      dadosOriginais = dados;
     }
 
-    return res.status(200).json(resultado);
+    return res.status(200).json({
+      sucesso: true,
+      fonte,
+      chave: competicao,
+      competicao: nome,
+      rodada: Number(rodada),
+      classificacao,
+      jogos,
+      grupos,
+      dados_originais: dadosOriginais,
+      atualizado_em: new Date().toISOString()
+    });
 
   } catch (erro) {
     console.error('Erro na API central:', erro);
