@@ -4692,7 +4692,27 @@ try {
 
   // A PARTIR DAQUI, MANTER O CÓDIGO ORIGINAL.
 
+// SELETOR DE RODADAS — BRASILEIRÃO SÉRIE A
+if (serie === 'a' && areaJogos) {
+  areaJogos.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <strong style="color:#d4af37">RODADA:</strong>
 
+      <select id="seletorRodadaSerieA"
+        style="padding:9px;border-radius:7px;border:1px solid #ccc;font-weight:800">
+        ${Array.from({length:38},(_,i)=>`
+          <option value="${i+1}" ${i+1===34?'selected':''}>
+            ${i+1}ª RODADA
+          </option>
+        `).join('')}
+      </select>
+    </div>
+
+    <div id="listaJogosSerieA">
+      <p>Carregando jogos da rodada 34...</p>
+    </div>
+  `;
+}
     // JOGOS E RESULTADOS
     const partidas = [
       ...(dados.matches || []),
@@ -5691,7 +5711,7 @@ if (listaEquipes) {
   </div>
 </div>
 <!-- FIM DA SÚMULA OFICIAL -->
-<style id="quarter-finals-style">
+    <style id="quarter-finals-style">
   #quarterFinalsPanel .quarter-finals-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
