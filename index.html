@@ -2403,25 +2403,26 @@ function abrirModalidadeSorteio(tipo) {
           style="width:100%;padding:13px;border-radius:8px;">
       </div>
 
-      <div style="grid-column:1/-1;padding:14px;border:1px solid #c99b32;border-radius:8px;">
-        <label style="display:flex;align-items:center;gap:10px;color:white;">
-          <input id="numSemRepetir" type="checkbox" checked>
-          Números únicos (sem repetir)
-        </label>
-      </div>
-    </div>
+      <div style="grid-column:1/-1;display:flex;justify-content:flex-start;">
+  <label style="
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:white;
+    font-size:13px;
+    font-weight:bold;
+    padding:8px 12px;
+    border:1px solid #c99b32;
+    border-radius:7px;
+    width:auto;
+  ">
+    <input id="numSemRepetir" type="checkbox" checked
+      style="width:15px;height:15px;margin:0;flex-shrink:0;">
+    NÚMEROS ÚNICOS (SEM REPETIR)
+  </label>
+</div>
 
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:15px;">
-      ${[10,20,30,45,50,90,100].map(n => `
-        <button type="button"
-          onclick="document.getElementById('numMinimo').value=1;document.getElementById('numMaximo').value=${n}"
-          style="background:#172943;color:#e5bd45;border:1px solid #c99b32;padding:8px 13px;border-radius:7px;">
-          1–${n}
-        </button>
-      `).join('')}
-    </div>
-
-    <button type="button" onclick="executarSorteioNumerosTVFP()"
+        <button type="button" onclick="executarSorteioNumerosTVFP()"
       style="background:linear-gradient(90deg,#f0ca4e,#c99b32);
       color:#111;font-weight:900;padding:16px;border:0;
       border-radius:9px;width:100%;margin-top:20px;font-size:17px;">
