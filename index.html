@@ -2660,10 +2660,19 @@ function executarSorteioNomesTVFP() {
       equipes.push([]);
     }
 
-    nomes.forEach((nome, i) => {
-      equipes[i % totalEquipes].push(nome);
-    });
+    let indiceNome = 0;
+
+for (let i = 0; i < totalEquipes; i++) {
+  const restante = nomes.length - indiceNome;
+  const equipesRestantes = totalEquipes - i;
+
+  const receber = Math.ceil(restante / equipesRestantes);
+
+  for (let j = 0; j < receber; j++) {
+    equipes[i].push(nomes[indiceNome]);
+    indiceNome++;
   }
+}
 
   resultado.innerHTML = '';
 
