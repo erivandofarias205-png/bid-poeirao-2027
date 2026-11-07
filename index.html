@@ -2880,12 +2880,12 @@ function renderizarResultadoTVFP() {
     while (atuais.length >= 2) {
       const jogos = [];
 
-      for (let i = 0; i + 1 < atuais.length; i += 2) {
-        jogos.push({
-          equipe1: atuais[i],
-          equipe2: atuais[i + 1]
-        });
-      }
+    for (let i = 0; i < atuais.length; i += 2) {
+  jogos.push({
+    equipe1: atuais[i],
+    equipe2: atuais[i + 1] || ''
+  });
+}
 
       fases.push(jogos);
 
@@ -3059,7 +3059,6 @@ function copiarResultadoTVFP() {
 }
 
 
-
 function imprimirResultadoTVFP() {
   const documento = document.getElementById('documentoSorteioTVFP');
   if (!documento) return;
@@ -3080,12 +3079,12 @@ function imprimirResultadoTVFP() {
     'div[style*="border-top:1px solid #c99b32"]'
   );
 
-  const secoesFases = Array.from(documento.querySelectorAll('section'));
-  const jogos = [];
+  const secoes = Array.from(documento.querySelectorAll('section'));
+  const paginas = [];
 
-  secoesFases.forEach(secao => {
-    const tituloFase = secao.querySelector('h3');
-    const nomeFase = tituloFase ? tituloFase.outerHTML : '';
+  secoes.forEach(secao => {
+    const titulo = secao.querySelector(':scope > h3');
+    const fase = titulo ? titulo.outerHTML : '';
 
     const confrontos = Array.from(
       secao.querySelectorAll(':scope > div')
@@ -3094,52 +3093,66 @@ function imprimirResultadoTVFP() {
       el.querySelector('h3').textContent.includes('JOGO')
     );
 
-    confrontos.forEach(jogo => {
-      jogos.push({
-        fase: nomeFase,
-        html: jogo.outerHTML
+    const jogosDaFase = confrontos.map(el => el.outerHTML);
+
+    const criarJogoVazio = numero => `
+      <div class="jogo">
+        <h3>JOGO ${String(numero).padStart(2, '0')}</h3>
+        <div class="duelo">
+          <div class="lado">
+            <div class="nome">________________</div>
+            <div class="bolinhas">
+              ${Array.from({length:10}, () => '<span></span>').join('')}
+            </div>
+            <div class="linha"></div>
+          </div>
+          <strong class="xis">×</strong>
+          <div class="lado">
+            <div class="nome">________________</div>
+            <div class="bolinhas">
+              ${Array.from({length:10}, () => '<span></span>').join('')}
+            </div>
+            <div class="linha"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+   const proximoNumero = jogosDaFase.length + 1;
+
+jogosDaFase.push(
+  criarJogoVazio(proximoNumero),
+  criarJogoVazio(proximoNumero + 1)
+);
+
+    for (let i = 0; i < jogosDaFase.length; i += 10) {
+      paginas.push({
+        fase,
+        jogos: jogosDaFase.slice(i, i + 10)
       });
-    });
+    }
   });
 
-  const paginas = [];
-
-  for (let i = 0; i < jogos.length; i += 10) {
-    paginas.push(jogos.slice(i, i + 10));
+  if (!paginas.length) {
+    paginas.push({ fase: '', jogos: [] });
   }
 
-  if (!paginas.length) paginas.push([]);
+  const conteudo = paginas.map(pagina => `
+    <section class="pagina">
+      <header class="cabecalho">
+        ${cabecalho}
+      </header>
 
-  const conteudoPaginas = paginas.map(pagina => {
-    let faseAnterior = '';
+      <main class="lista-jogos">
+        ${pagina.fase}
+        ${pagina.jogos.join('')}
+      </main>
 
-    const lista = pagina.map(jogo => {
-      let titulo = '';
-
-      if (jogo.fase && jogo.fase !== faseAnterior) {
-        titulo = jogo.fase;
-        faseAnterior = jogo.fase;
-      }
-
-      return titulo + jogo.html;
-    }).join('');
-
-    return `
-      <section class="pagina">
-        <header class="cabecalho">
-          ${cabecalho}
-        </header>
-
-        <main class="lista-jogos">
-          ${lista}
-        </main>
-
-        <footer>
-          ${rodape ? rodape.outerHTML : ''}
-        </footer>
-      </section>
-    `;
-  }).join('');
+      <footer>
+        ${rodape ? rodape.outerHTML : ''}
+      </footer>
+    </section>
+  `).join('');
 
   janela.document.write(`
     <!DOCTYPE html>
@@ -3175,13 +3188,13 @@ function imprimirResultadoTVFP() {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          page-break-after: always;
           break-after: page;
+          page-break-after: always;
         }
 
         .pagina:last-child {
-          page-break-after: auto;
           break-after: auto;
+          page-break-after: auto;
         }
 
         .cabecalho {
@@ -3189,23 +3202,21 @@ function imprimirResultadoTVFP() {
           text-align: center;
           border-bottom: 2px solid #c99b32;
           padding-bottom: 6px;
-          margin-bottom: 8px;
-          font-family: Cambria, Georgia, serif;
-          font-size: 12pt;
+          margin-bottom: 7px;
         }
 
         .cabecalho h2,
         .cabecalho h3,
         .cabecalho p {
           font-family: Cambria, Georgia, serif;
-          font-size: 12pt !important;
+          font-size: 12pt;
           font-weight: bold;
           margin: 3px 0;
-          color: #111 !important;
+          color: #111;
         }
 
         .cabecalho h2 {
-          color: #8b6810 !important;
+          color: #8b6810;
         }
 
         .lista-jogos {
@@ -3215,19 +3226,20 @@ function imprimirResultadoTVFP() {
 
         .lista-jogos > h3 {
           font-family: Cambria, Georgia, serif;
-          font-size: 12pt !important;
+          font-size: 12pt;
           font-weight: bold;
           text-align: right;
-          margin: 4px 0;
-          color: #111 !important;
+          margin: 3px 0 5px;
+          color: #111;
         }
 
-        .lista-jogos > div {
+        .lista-jogos > div,
+        .jogo {
           background: #fff !important;
           color: #111 !important;
           border: 1px solid #c99b32 !important;
-          border-radius: 3px !important;
-          padding: 4px 8px !important;
+          border-radius: 3px;
+          padding: 4px 7px !important;
           margin: 3px 0 !important;
           min-height: 0 !important;
           break-inside: avoid;
@@ -3236,16 +3248,67 @@ function imprimirResultadoTVFP() {
           font-size: 12pt !important;
         }
 
-        .lista-jogos > div h3 {
+        .lista-jogos > div h3,
+        .jogo h3 {
           font-family: Cambria, Georgia, serif !important;
           font-size: 12pt !important;
           font-weight: bold !important;
-          margin: 2px 0 5px !important;
+          text-align: center;
+          margin: 1px 0 4px !important;
+          color: #111 !important;
         }
 
         .lista-jogos > div div {
           font-family: Cambria, Georgia, serif !important;
-          font-size: 12pt !important;
+        }
+
+        .duelo {
+          display: grid;
+          grid-template-columns: minmax(0,1fr) 25px minmax(0,1fr);
+          align-items: center;
+          gap: 2px;
+          width: 100%;
+        }
+
+        .lado {
+          min-width: 0;
+          text-align: center;
+        }
+
+        .nome {
+          font-size: 12pt;
+          font-weight: bold;
+          white-space: normal;
+          overflow-wrap: anywhere;
+          text-align: center;
+        }
+
+        .xis {
+          text-align: center;
+          font-size: 14pt;
+        }
+
+        .bolinhas {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 3px;
+          margin: 3px 0;
+          flex-wrap: nowrap;
+        }
+
+        .bolinhas span {
+          width: 9px;
+          height: 9px;
+          border: 1px solid #111;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+
+        .linha {
+          border-bottom: 1px solid #111;
+          height: 8px;
+          width: 100%;
         }
 
         footer {
@@ -3273,7 +3336,7 @@ function imprimirResultadoTVFP() {
     </head>
 
     <body>
-      ${conteudoPaginas}
+      ${conteudo}
     </body>
     </html>
   `);
