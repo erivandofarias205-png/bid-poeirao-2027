@@ -2606,10 +2606,11 @@ if (tipo === 'nomes') {
 
   atualizarCamposSorteio();
 }
- function executarSorteioNomesTVFP() {
+function executarSorteioNomesTVFP() {
   const titulo = document.getElementById('nomeSorteioTitulo').value.trim();
   const texto = document.getElementById('listaNomesSorteio').value;
-
+  const modo = document.querySelector('input[name="modoDivisao"]:checked').value;
+  const quantidade = Number(document.getElementById('quantidadeDivisao').value);
   const resultado = document.getElementById('resultadoNomesTVFP');
 
   if (!titulo) {
@@ -2618,42 +2619,86 @@ if (tipo === 'nomes') {
     return;
   }
 
-  const nomes = texto
-    .split('\n')
-    .map(nome => nome.trim())
-    .filter(nome => nome.length > 0);
+  const nomes = texto.split('\n')
+    .map(n => n.trim())
+    .filter(n => n.length > 0);
 
   if (nomes.length < 2) {
-    alert('Digite pelo menos dois nomes para realizar o sorteio!');
+    alert('Digite pelo menos dois participantes!');
     return;
   }
 
-  // Embaralhar os nomes
+  if (!Number.isInteger(quantidade) || quantidade < 1) {
+    alert('Informe uma quantidade válida!');
+    return;
+  }
+
+  // EMBARALHAR OS PARTICIPANTES
   for (let i = nomes.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [nomes[i], nomes[j]] = [nomes[j], nomes[i]];
+  }
+
+  const equipes = [];
+
+  if (modo === 'participantes') {
+    // CADA EQUIPE RECEBE A QUANTIDADE INFORMADA
+    for (let i = 0; i < nomes.length; i += quantidade) {
+      equipes.push(nomes.slice(i, i + quantidade));
+    }
+
+  } else {
+    // DIVIDIR EM UMA QUANTIDADE FIXA DE EQUIPES
+    const totalEquipes = quantidade;
+
+    if (totalEquipes > nomes.length) {
+      alert('A quantidade de equipes não pode superar o número de participantes!');
+      return;
+    }
+
+    for (let i = 0; i < totalEquipes; i++) {
+      equipes.push([]);
+    }
+
+    nomes.forEach((nome, i) => {
+      equipes[i % totalEquipes].push(nome);
+    });
   }
 
   resultado.innerHTML = '';
 
   const painel = document.createElement('div');
   painel.style.cssText =
-    'background:#10213d;border:2px solid #c99b32;border-radius:12px;padding:20px;color:white;text-align:center;';
+    'background:#10213d;border:2px solid #c99b32;border-radius:12px;padding:18px;color:white;';
 
   const cabecalho = document.createElement('h2');
   cabecalho.textContent = titulo;
   cabecalho.style.cssText =
-    'color:#e5bd45;font-family:Cambria,Georgia,serif;';
+    'color:#e5bd45;text-align:center;font-family:Cambria,Georgia,serif;';
 
   painel.appendChild(cabecalho);
 
-  nomes.forEach((nome, indice) => {
-    const linha = document.createElement('div');
-    linha.style.cssText =
-      'padding:12px;border-bottom:1px solid #c99b32;font-size:17px;font-weight:bold;';
+  equipes.forEach((equipe, indice) => {
+    const bloco = document.createElement('div');
+    bloco.style.cssText =
+      'background:#132744;border:1px solid #c99b32;border-radius:9px;margin-top:14px;padding:14px;text-align:center;';
 
-    linha.textContent = `${indice + 1}º — ${nome}`;
-    painel.appendChild(linha);
+    const nomeEquipe = document.createElement('h3');
+    nomeEquipe.textContent = `EQUIPE ${String(indice + 1).padStart(2, '0')}`;
+    nomeEquipe.style.cssText =
+      'color:#e5bd45;margin:5px 0 12px;font-family:Cambria,Georgia,serif;';
+
+    bloco.appendChild(nomeEquipe);
+
+    equipe.forEach((nome, posicao) => {
+      const linha = document.createElement('div');
+      linha.textContent = `${posicao + 1}º — ${nome}`;
+      linha.style.cssText =
+        'padding:10px;border-bottom:1px solid #c99b32;font-size:16px;font-weight:bold;';
+      bloco.appendChild(linha);
+    });
+
+    painel.appendChild(bloco);
   });
 
   resultado.appendChild(painel);
