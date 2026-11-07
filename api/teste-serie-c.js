@@ -7,7 +7,7 @@ module.exports = async function handler(req, res) {
   );
 
   try {
-    const dados = await brasileirao.getCompetition('c');
+   const dados = await brasileirao.getStandings('c');
 
     return res.status(200).json({
       sucesso: true,
