@@ -6072,7 +6072,7 @@ if (listaEquipes) {
     <option value="">Selecione uma partida cadastrada</option>
   </select>
 </label><label>Equipe<select id="gameTeam"></select></label><label>Atleta<select id="gameAthlete"></select></label><label>Evento<select id="gameEvent"><option value="played">Participou da partida</option><option value="goal">Gol</option><option value="yellow">Cartão amarelo</option><option value="red">Cartão vermelho</option></select></label><label>Minuto (opcional)<input id="minute" max="130" min="0" placeholder="Ex.: 37" type="number"/></label><label>Observação (opcional)<input id="eventNote" placeholder="Ex.: gol de falta"/></label></div><div class="actions"><button class="gold" id="addEvent">Registrar evento</button><button class="secondary" id="exportEvents">Baixar súmula (CSV)</button></div></div></div>
-<div class="panel"><div class="ph"><h3>Eventos registrados</h3><span class="pill" id="eventTotal">0 eventos</span></div><div class="pad"><div class="events" id="eventList"></div><div class="empty" id="emptyEvents">Nenhum evento registrado.</div></div></div>
+<div class="panel admin-only"><div class="ph"><h3>Eventos registrados</h3><span class="pill" id="eventTotal">0 eventos</span></div><div class="pad"><div class="events" id="eventList"></div><div class="empty" id="emptyEvents">Nenhum evento registrado.</div></div></div>
 </section>
 <section class="hidden" id="profileView">
 <div class="panel" id="athleteSearchPanel"><div class="ph"><h3>PESQUISA DE ATLETA</h3><span class="pill">CPF · BID · Nome</span></div><div class="pad"><label>Buscar atleta por CPF, número BID ou nome<input id="athleteSearchInput" placeholder="Digite o CPF, BID ou nome do atleta" type="search"/></label><div class="teams" id="athleteSearchResults" style="padding:12px 0"><div class="empty">Digite acima para localizar um atleta e abrir sua carteirinha.</div></div></div></div>
@@ -16110,6 +16110,9 @@ body:not(.admin-verified) #adminView .panel:not(#adminLoginPanel) {
   display: none !important;
 }
     body:not(.admin-verified) #adminProtected {
+  display: none !important;
+}
+    body:not(.admin-verified) .admin-only {
   display: none !important;
 }
 </style>
