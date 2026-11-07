@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     const url =
-      'https://ge.globo.com/futebol/futebol-internacional/liga-dos-campeoes/';
+      'https://placar.com.br/tabelas/uefa-champions-league-2026-27/artilharia/';
 
     const resposta = await fetch(url, {
       headers: {
@@ -22,131 +22,89 @@ export default async function handler(req, res) {
     });
 
     if (!resposta.ok) {
-      throw new Error(`GE respondeu com status ${resposta.status}`);
+      throw new Error(`Fonte respondeu com status ${resposta.status}`);
     }
 
     const html = await resposta.text();
 
-    const scripts = [
-      ...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)
-    ].map(match => match[1]);
-
-    const objetos = [];
-
-    function percorrer(valor, profundidade = 0) {
-      if (!valor || profundidade > 12) return;
-
-      if (Array.isArray(valor)) {
-        if (valor.length) objetos.push(valor);
-        valor.forEach(item => percorrer(item, profundidade + 1));
-        return;
-      }
-
-      if (typeof valor === 'object') {
-        Object.values(valor).forEach(item =>
-          percorrer(item, profundidade + 1)
-        );
-      }
+    function limparTexto(valor) {
+      return valor
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;|&apos;/gi, "'")
+        .replace(/&aacute;/gi, 'á')
+        .replace(/&eacute;/gi, 'é')
+        .replace(/&iacute;/gi, 'í')
+        .replace(/&oacute;/gi, 'ó')
+        .replace(/&uacute;/gi, 'ú')
+        .replace(/&atilde;/gi, 'ã')
+        .replace(/&otilde;/gi, 'õ')
+        .replace(/&ccedil;/gi, 'ç')
+        .replace(/&#(\d+);/g, (_, n) =>
+          String.fromCodePoint(Number(n))
+        )
+        .replace(/&#x([0-9a-f]+);/gi, (_, n) =>
+          String.fromCodePoint(parseInt(n, 16))
+        )
+        .replace(/\s+/g, ' ')
+        .trim();
     }
 
-    for (const script of scripts) {
-      const conteudo = script.trim();
+    const tabela = html.match(/<table[\s\S]*?<\/table>/i);
 
-      if (!conteudo.startsWith('{') && !conteudo.startsWith('[')) {
+    if (!tabela) {
+      throw new Error('Tabela de artilharia não encontrada na fonte.');
+    }
+
+    const linhas = [
+      ...tabela[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)
+    ];
+
+    const artilheiros = [];
+
+    for (const linha of linhas) {
+      const colunas = [
+        ...linha[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)
+      ].map(coluna => limparTexto(coluna[1]));
+
+      if (colunas.length < 4) continue;
+
+      const nome = colunas[1];
+      const clube = colunas[2];
+      const gols = Number(colunas[3]);
+
+      if (
+        !nome ||
+        !clube ||
+        !Number.isFinite(gols) ||
+        gols <= 0
+      ) {
         continue;
       }
 
-      try {
-        percorrer(JSON.parse(conteudo));
-      } catch (_) {
-        // Ignora scripts que não são JSON puro.
-      }
-    }
-
-    function encontrarCampo(obj, nomes) {
-      if (!obj || typeof obj !== 'object') return undefined;
-
-      for (const nome of nomes) {
-        if (obj[nome] !== undefined && obj[nome] !== null) {
-          return obj[nome];
-        }
-      }
-
-      return undefined;
-    }
-
-    function normalizar(lista) {
-      return lista.map(item => {
-        const jogador = encontrarCampo(item, [
-          'jogador', 'atleta', 'player'
-        ]);
-
-        const clube = encontrarCampo(item, [
-          'clube', 'time', 'equipe', 'team'
-        ]);
-
-        const nome = typeof jogador === 'object'
-          ? encontrarCampo(jogador, ['nome', 'name', 'nomeCompleto'])
-          : jogador || encontrarCampo(item, [
-              'nome', 'name', 'nomeJogador'
-            ]);
-
-        const nomeClube = typeof clube === 'object'
-          ? encontrarCampo(clube, ['nome', 'name', 'nomePopular'])
-          : clube;
-
-        const gols = encontrarCampo(item, [
-          'gols', 'totalGols', 'goals', 'gol'
-        ]);
-
-        const foto = encontrarCampo(item, [
-          'foto', 'imagem', 'image', 'urlFoto'
-        ]) || (typeof jogador === 'object'
-          ? encontrarCampo(jogador, ['foto', 'imagem', 'urlFoto'])
-          : '');
-
-        const escudo = encontrarCampo(item, [
-          'escudo', 'logo', 'urlEscudo'
-        ]) || (typeof clube === 'object'
-          ? encontrarCampo(clube, ['escudo', 'logo', 'urlEscudo'])
-          : '');
-
-        return {
-          nome: nome || '',
-          clube: nomeClube || '',
-          foto: foto || '',
-          escudo: escudo || '',
-          gols: Number(gols || 0)
-        };
-      }).filter(item =>
-        item.nome &&
-        Number.isFinite(item.gols) &&
-        item.gols > 0
-      ).sort((a, b) => b.gols - a.gols);
-    }
-
-    const candidatas = objetos
-      .map(lista => normalizar(lista))
-      .filter(lista => lista.length >= 2);
-
-    if (!candidatas.length) {
-      return res.status(200).json({
-        sucesso: false,
-        competicao: 'Champions League',
-        artilheiros: [],
-        erro: 'A página do GE não disponibilizou uma lista de artilheiros reconhecível.',
-        atualizado_em: new Date().toISOString()
+      artilheiros.push({
+        nome,
+        clube,
+        foto: '',
+        escudo: '',
+        gols
       });
     }
 
-    candidatas.sort((a, b) => b.length - a.length);
+    if (!artilheiros.length) {
+      throw new Error('A fonte não retornou jogadores reconhecíveis.');
+    }
+
+    artilheiros.sort((a, b) => b.gols - a.gols);
 
     return res.status(200).json({
       sucesso: true,
       competicao: 'Champions League',
-      fonte: 'GE Globo',
-      total: candidatas[0].length,
-      artilheiros: candidatas[0],
+      fonte: 'PLACAR',
+      total: artilheiros.length,
+      artilheiros,
       atualizado_em: new Date().toISOString()
     });
 
@@ -156,9 +114,9 @@ export default async function handler(req, res) {
     return res.status(502).json({
       sucesso: false,
       competicao: 'Champions League',
+      fonte: 'PLACAR',
       artilheiros: [],
       erro: erro.message
     });
   }
 }
-
