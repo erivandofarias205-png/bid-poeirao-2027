@@ -4379,8 +4379,20 @@ async function abrirCompeticaoProfissional(nome) {
   const competicao = normalizar(nome);
 
   // CARREGAR ARTILHARIA DA COMPETIÇÃO
-  carregarArtilhariaProfissional(nome);
+// OCULTAR ARTILHARIA NAS SÉRIES C E D
+const painelArtilharia = document
+  .getElementById('profissionalArtilharia')
+  ?.closest('.prof-section');
 
+if (
+  competicao === 'BRASILEIRAO SERIE C' ||
+  competicao === 'BRASILEIRAO SERIE D'
+) {
+  if (painelArtilharia) painelArtilharia.style.display = 'none';
+} else {
+  if (painelArtilharia) painelArtilharia.style.display = '';
+  carregarArtilhariaProfissional(nome);
+}
   // IDENTIFICAR AS SÉRIES DO BRASILEIRÃO
   const series = {
     'BRASILEIRAO SERIE A': 'a',
