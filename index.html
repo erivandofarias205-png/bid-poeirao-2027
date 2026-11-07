@@ -4615,10 +4615,12 @@ try {
         }
 
         const placarDisponivel =
-          jogo.mandante?.gols !== null &&
-          jogo.mandante?.gols !== '' &&
-          jogo.visitante?.gols !== null &&
-          jogo.visitante?.gols !== '';
+  jogo.mandante?.gols !== null &&
+  jogo.mandante?.gols !== undefined &&
+  jogo.mandante?.gols !== '' &&
+  jogo.visitante?.gols !== null &&
+  jogo.visitante?.gols !== undefined &&
+  jogo.visitante?.gols !== '';
 
         return {
           id: jogo.id,
@@ -4651,8 +4653,9 @@ try {
         entries: equipes.map(item => ({
           position: item.posicao,
           team: {
-            name: item.equipe
-          },
+  name: item.equipe,
+  badge: item.escudo || ''
+},
           points: item.pontos,
           matches: item.jogos,
           wins: item.vitorias,
@@ -5252,6 +5255,16 @@ jogosPermitidos.forEach(jogo => {
     if (!nome) return;
 
     const chave = normalizar(nome);
+    if (
+  chave === 'BRASILEIRAO SERIE C' ||
+  chave === 'BRASILEIRAO SERIE D'
+) {
+  area.innerHTML = '';
+  area.style.display = 'none';
+  return;
+}
+
+area.style.display = '';
     if (!equipesUnicas.has(chave)) {
       equipesUnicas.set(chave, nome);
     }
