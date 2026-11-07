@@ -4421,7 +4421,7 @@ if (
     }
 
     try {
-      const respostaGE = await fetch('/api/ge-europa');
+      const respostaGE = await fetch('/api/competicoes?competicao=champions');
 
       if (!respostaGE.ok) {
         throw new Error('Erro ao consultar os dados do GE.');
@@ -4429,7 +4429,7 @@ if (
 
       const retornoGE = await respostaGE.json();
 
-      const dadosGE = retornoGE.competicoes?.[chaveGE];
+      const dadosGE = retornoGE.dados;
 
       if (!retornoGE.sucesso || !dadosGE) {
         throw new Error('Dados da competição não encontrados.');
