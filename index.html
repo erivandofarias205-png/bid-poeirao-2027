@@ -2996,14 +2996,18 @@ html += `
 
   <!-- NOMES OU ESPAÇOS PARA PREENCHER -->
   <div style="grid-column:1;grid-row:1;text-align:center;font-family:Cambria,Georgia,serif;font-size:14px;font-weight:bold;">
-    ${indice === 0 ? equipe1 : ''}
-  </div>
+  ${indice === 0
+    ? equipe1
+    : '<div style="width:100%;height:22px;border-bottom:1px solid #111;"></div>'}
+</div>
 
   <strong style="grid-column:2;grid-row:1;text-align:center;">×</strong>
 
   <div style="grid-column:3;grid-row:1;text-align:center;font-family:Cambria,Georgia,serif;font-size:14px;font-weight:bold;">
-    ${indice === 0 ? equipe2 : ''}
-  </div>
+  ${indice === 0
+    ? equipe2
+    : '<div style="width:100%;height:22px;border-bottom:1px solid #111;"></div>'}
+</div>
 
   <!-- BOLINHAS -->
   <div style="grid-column:1;grid-row:2;display:flex;justify-content:center;gap:2px;">
@@ -3012,7 +3016,7 @@ html += `
     ).join('')}
   </div>
 
-  <strong style="grid-column:2;grid-row:2;text-align:center;">×</strong>
+ <div style="grid-column:2;grid-row:2;"></div>
 
   <div style="grid-column:3;grid-row:2;display:flex;justify-content:center;gap:2px;">
     ${Array.from({length:10}, () =>
