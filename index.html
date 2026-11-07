@@ -2436,35 +2436,55 @@ function abrirModalidadeSorteio(tipo) {
 }
 
 if (tipo === 'nomes') {
-  titulo.textContent = 'SORTEIO DE NOMES';
+  titulo.textContent = 'SORTEIO E DIVISÃO DE EQUIPES';
 
   conteudo.innerHTML = `
-    <div style="display:grid;gap:15px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;">
 
       <div>
-        <label>NOME DO SORTEIO (OBRIGATÓRIO)</label>
-        <input id="nomeSorteioTitulo"
-          type="text"
-          placeholder="Ex.: Sorteio de brindes"
+        <label>1. NOME DO SORTEIO</label>
+        <input id="nomeSorteioTitulo" type="text"
+          placeholder="Ex.: Campeonato TVFP"
           style="width:100%;padding:13px;border-radius:8px;">
       </div>
 
-      <div>
-        <label>LISTA DE NOMES</label>
+      <div style="grid-column:1/-1;">
+        <label>2. INSIRA OS PARTICIPANTES</label>
         <textarea id="listaNomesSorteio"
-          placeholder="Digite um nome por linha&#10;João&#10;Maria&#10;Pedro&#10;Ana"
+          placeholder="Cada participante deve estar em uma linha"
           style="width:100%;min-height:220px;padding:13px;border-radius:8px;"></textarea>
       </div>
 
-      <button type="button"
-        onclick="executarSorteioNomesTVFP()"
-        style="background:linear-gradient(90deg,#f0ca4e,#c99b32);
-        color:#111;font-weight:900;padding:16px;border:0;
-        border-radius:9px;width:100%;font-size:17px;">
-        🎯 SORTEAR NOMES
-      </button>
+      <div style="grid-column:1/-1;">
+        <label>3. COMO DIVIDIR?</label>
 
-      <div id="resultadoNomesTVFP"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:20px;margin:12px 0;">
+          <label>
+            <input type="radio" name="modoDivisao" value="equipes" checked>
+            Quantidade de equipes
+          </label>
+
+          <label>
+            <input type="radio" name="modoDivisao" value="participantes">
+            Participantes por equipe
+          </label>
+        </div>
+
+        <input id="quantidadeDivisao" type="number"
+          min="1" value="2"
+          style="width:100%;padding:13px;border-radius:8px;">
+      </div>
+
+      <div style="grid-column:1/-1;">
+        <button type="button" onclick="executarSorteioNomesTVFP()"
+          style="background:linear-gradient(90deg,#f0ca4e,#c99b32);
+          color:#111;font-weight:900;padding:16px;border:0;
+          border-radius:9px;width:100%;font-size:17px;">
+          ⚽ GERAR EQUIPES
+        </button>
+      </div>
+
+      <div id="resultadoNomesTVFP" style="grid-column:1/-1;"></div>
     </div>
   `;
 
