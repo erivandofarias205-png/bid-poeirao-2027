@@ -11824,6 +11824,7 @@ remoteTeams.push({
 
   function showSignedOut(text) {
     window.__BID_ADMIN_VERIFIED = false;
+      document.body.classList.remove('admin-verified');
    protectedArea.classList.add('hidden');
     panel.classList.remove('hidden');
     loginBtn.classList.remove('hidden');
@@ -11842,6 +11843,7 @@ remoteTeams.push({
       return false;
     }
    window.__BID_ADMIN_VERIFIED = true;
+    document.body.classList.add('admin-verified');
   
     const resultsPanel = $('highlightsResultsPanel');
 if(resultsPanel) resultsPanel.style.display = 'block';
@@ -16099,5 +16101,11 @@ document.querySelectorAll('.panel').forEach(panel => {
   });
 });
 </script>
+  <style>
+#adminView.hidden,
+#adminProtected.hidden {
+  display: none !important;
+}
+</style>
 </body>
 </html>
