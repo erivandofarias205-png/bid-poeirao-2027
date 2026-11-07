@@ -4570,13 +4570,13 @@ if (
 
  
 try {
-  // CADA SÉRIE USA SUA ROTA.
-  const endereco = serie === 'a'
-    ? '/api/serie-a'
-    : serie === 'c'
-      ? '/api/serie-c'
-      : `/api/brasileirao?serie=${serie}`;
-
+ // SÉRIES A E B USAM A API CENTRAL.
+const endereco = (serie === 'a' || serie === 'b')
+  ? `/api/competicoes?competicao=brasileirao-${serie}&rodada=${serie === 'a' ? 34 : 1}`
+  : serie === 'c'
+    ? '/api/serie-c'
+    : `/api/brasileirao?serie=${serie}`;
+  
   const resposta = await fetch(endereco);
 
   if (!resposta.ok) {
@@ -4591,11 +4591,18 @@ try {
 
   let dados;
 
-  if (serie === 'a') {
-    dados = retorno;
+ if (serie === 'a' || serie === 'b') {
+  dados = {
+    competition: {
+      name: retorno.competicao || `Brasileirão Série ${serie.toUpperCase()}`
+    },
+    matches: retorno.jogos || [],
+    rounds: [],
+    tables: retorno.classificacao || []
+  };
 
-    } else if (serie === 'c') {
-
+} else if (serie === 'c') {
+   
     // BUSCAR OS JOGOS DA SÉRIE C NA API DA CBF.
     const respostaJogos = await fetch('/api/serie-c-jogos?rodada=6');
 
