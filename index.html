@@ -12989,6 +12989,55 @@ function matches(c=comp()){
   return Object.values(st).sort((a,b)=>b.pts-a.pts||(b.gp-b.gc)-(a.gp-a.gc)||b.gp-a.gp||a.team.name.localeCompare(b.team.name));
  }
  function save(){saveDb()}
+  // ===== GERENCIADOR ÚNICO DE FASES =====
+function getPhaseStorageKey(round) {
+  const fase = String(round || '').toLowerCase();
+
+  if (fase.includes('oitava') || fase.includes('16 avos')) {
+    return 'knockoutTies';
+  }
+
+  if (fase.includes('quarta')) {
+    return 'quarterFinalTies';
+  }
+
+  if (fase.includes('semifinal')) {
+    return 'semiFinalTies';
+  }
+
+  if (fase.includes('terceiro')) {
+    return 'thirdPlaceTie';
+  }
+
+  if (fase.includes('final')) {
+    return 'finalMatchTie';
+  }
+
+  return 'knockoutTies';
+}
+
+function getPhaseMatches(c, round) {
+  if (!c) return [];
+
+  const key = getPhaseStorageKey(round);
+  const value = c[key];
+
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
+function setPhaseMatches(c, round, matches) {
+  if (!c) return;
+
+  const key = getPhaseStorageKey(round);
+
+  if (key === 'finalMatchTie' || key === 'thirdPlaceTie') {
+    c[key] = matches?.[0] || null;
+  } else {
+    c[key] = Array.isArray(matches) ? matches : [];
+  }
+}
+// ===== FIM DO GERENCIADOR ÚNICO =====
  function renderPhase(){
   const c=comp();if(!c)return;
   const labs=groupLabels(c),ts=teams(c),groupMap=c.teamGroups||(c.teamGroups={});
@@ -13003,10 +13052,13 @@ function matches(c=comp()){
 ].map(t=>[String(t.id),t])).values()];
   $p('phaseQualifiers').innerHTML=q.length?q.map((t,i)=>`<div class="phase-qualifier"><b>${i+1}.</b> ${esc(t.name)} <span class="muted">Grupo ${esc(groupOf(t,c)||'—')}</span><button class="danger" type="button" data-remove-qualifier="${esc(t.id)}">Retirar</button></div>`).join(''):'<div class="empty">Ainda não foram gerados os classificados.</div>';
  
-const ties = c.knockoutTies || [];
+const ties = getPhaseMatches(
+  c,
+  $p('phaseRoundName')?.value
+);
 const teamOptions = (selected) =>
   `<option value="">— Escolher equipe —</option>` +
-  q.map(t => `<option value="${esc(t.id)}" ${String(selected) === String(t.id) ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+  ts.map(t => `<option value="${esc(t.id)}" ${String(selected) === String(t.id) ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
 
 $p('phaseTies').innerHTML = ties.length ? ties.map((m, i) => `
   <div class="phase-tie-card">
@@ -13607,10 +13659,27 @@ $p('saveRoundOf16Qualifiers')?.addEventListener('click', async () => {
   const n=Math.max(1,Math.min(32,+$p('phaseTieCount').value||8));
   const round=$p('phaseRoundName').value.trim()||c.phaseRules?.knockoutName||'Mata-mata';
 
-  c.knockoutTies=Array.from(
-    {length:n},
-    (_,i)=>c.knockoutTies?.[i]||{round,a:'',b:''}
-  ).map(t=>({...t,round}));
+  const chaveFase = getPhaseStorageKey(round);
+const confrontosAnteriores = getPhaseMatches(c, round);
+
+const quantidade = (
+  chaveFase === 'finalMatchTie' ||
+  chaveFase === 'thirdPlaceTie'
+) ? 1 : n;
+
+setPhaseMatches(
+  c,
+  round,
+  Array.from(
+    {length: quantidade},
+    (_, i) => ({
+      ...(confrontosAnteriores[i] || {}),
+      round,
+      a: confrontosAnteriores[i]?.a || '',
+      b: confrontosAnteriores[i]?.b || ''
+    })
+  )
+);
 
   save();
   renderPhase();
@@ -13627,23 +13696,27 @@ $p('phaseSaveTies')?.addEventListener('click', async () => {
   const c = comp();
   if (!c) return;
 
-  c.knockoutTies = c.knockoutTies || [];
+ const round = $p('phaseRoundName')?.value || 'Oitavas de final';
+const chaveFase = getPhaseStorageKey(round);
+const confrontos = getPhaseMatches(c, round);
 
-  document.querySelectorAll('[data-tie-index]').forEach(el => {
-    const i = Number(el.dataset.tieIndex);
-    const tie = c.knockoutTies[i];
-    if (!tie) return;
+document.querySelectorAll('#phaseTies [data-tie-index]').forEach(el => {
+  const i = Number(el.dataset.tieIndex);
+  const tie = confrontos[i];
+  if (!tie) return;
 
-    if (el.dataset.tieSide) {
-      tie[el.dataset.tieSide] = el.value;
-    }
+  if (el.dataset.tieSide) {
+    tie[el.dataset.tieSide] = el.value;
+  }
 
-    if (el.dataset.tieField) {
-      tie[el.dataset.tieField] = el.value;
-    }
-  });
+  if (el.dataset.tieField) {
+    tie[el.dataset.tieField] = el.value;
+  }
+});
 
-    for (const tie of c.knockoutTies) {
+setPhaseMatches(c, round, confrontos);
+
+for (const tie of confrontos) {
     if (
       tie.a &&
       tie.b &&
@@ -13660,11 +13733,37 @@ $p('phaseSaveTies')?.addEventListener('click', async () => {
 
   
   try {
-    await saveCompetitionPhaseConfig(c);
+   await saveCompetitionPhaseConfig(c);
 
-    await sincronizarOitavasSupabase(c);
+const faseAtual = ($p('phaseRoundName')?.value || '').trim();
+const faseNormalizada = faseAtual.toLowerCase();
 
-    await loadSupabaseMatches();
+if (faseNormalizada.includes('quarta')) {
+  await sincronizarQuartasSupabase(c);
+
+} else if (faseNormalizada.includes('semifinal')) {
+  await sincronizarSemifinaisSupabase(c);
+
+} else if (faseNormalizada.includes('terceiro')) {
+  await sincronizarColocacaoSupabase(
+    c,
+    'thirdPlaceTie',
+    'Disputa de 3º lugar',
+    'terceiro-lugar-jogo-1'
+  );
+
+} else if (faseNormalizada === 'final') {
+  await sincronizarColocacaoSupabase(
+    c,
+    'finalMatchTie',
+    'Final',
+    'final-jogo-1'
+  );
+
+} else {
+  await sincronizarOitavasSupabase(c);
+}
+await loadSupabaseMatches();
 
     renderPhase();
 
