@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
     return dados;
   }
 
-  async function consultarCompeticao(chave) {
+ async function consultarArtilharia(chave) {
     
      const competicoes = {
       'serie-b': {
