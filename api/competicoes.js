@@ -10,21 +10,17 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const competicao = String(req.query.competicao || '').toLowerCase();
+  const competicao = String(req.query.competicao || 'todas').toLowerCase();
   const rodada = String(req.query.rodada || '1');
 
   const permitidas = [
-    'brasileirao-a', 'brasileirao-b', 'brasileirao-c',
-    'brasileirao-d', 'champions', 'europa'
+    'brasileirao-a',
+    'brasileirao-b',
+    'brasileirao-c',
+    'brasileirao-d',
+    'champions',
+    'europa'
   ];
-
-  if (!permitidas.includes(competicao)) {
-    return res.status(400).json({
-      sucesso: false,
-      erro: 'Competição não reconhecida.',
-      competicoes_disponiveis: permitidas
-    });
-  }
 
   const host = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
@@ -35,87 +31,76 @@ module.exports = async function handler(req, res) {
     const texto = await resposta.text();
 
     let dados;
+
     try {
       dados = JSON.parse(texto);
     } catch {
-      throw new Error(`Resposta inválida da API ${caminho}.`);
+      throw new Error(`Resposta inválida: ${caminho}`);
     }
 
     if (!resposta.ok || dados.sucesso === false) {
-      throw new Error(dados.erro || `Falha ao consultar ${caminho}.`);
+      throw new Error(dados.erro || `Falha em ${caminho}`);
     }
 
     return dados;
   }
 
-  try {
+  async function consultarCompeticao(chave) {
     let fonte = '';
     let nome = '';
     let classificacao = [];
     let jogos = [];
-    let dadosOriginais = {};
     let grupos = {};
+    let dadosOriginais = {};
 
-    
-if (competicao === 'brasileirao-a') {
-  const [tabela, retornoJogos] = await Promise.all([
-    consultarAPI('/api/serie-a'),
-    consultarAPI(
-      `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
-    )
-  ]);
+    if (chave === 'brasileirao-a') {
+      const [tabela, retornoJogos] = await Promise.all([
+        consultarAPI('/api/serie-a'),
+        consultarAPI(
+          `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
+        )
+      ]);
 
-  fonte = 'GE Globo';
-  nome = 'Brasileirão Série A';
+      fonte = 'GE Globo';
+      nome = 'Brasileirão Série A';
+      classificacao = tabela.tables || [];
 
-  // CLASSIFICAÇÃO NO FORMATO PADRÃO DO SITE
-  classificacao = tabela.tables || [];
+      jogos = (retornoJogos.jogos || []).map(jogo => {
+        const temPlacar =
+          jogo.mandante?.gols != null &&
+          jogo.visitante?.gols != null;
 
-  // JOGOS NO FORMATO PADRÃO DO SITE
-  jogos = (retornoJogos.jogos || []).map(jogo => {
-    const placarDisponivel =
-      jogo.mandante?.gols !== null &&
-      jogo.mandante?.gols !== undefined &&
-      jogo.visitante?.gols !== null &&
-      jogo.visitante?.gols !== undefined;
+        return {
+          id: jogo.id,
+          date: jogo.data ? jogo.data.split('T')[0] : '',
+          time: jogo.hora || '',
+          status: jogo.encerrado
+            ? 'finished'
+            : temPlacar
+              ? 'live'
+              : 'scheduled',
+          homeTeam: {
+            name: jogo.mandante?.nome || '',
+            badge: jogo.mandante?.escudo || ''
+          },
+          awayTeam: {
+            name: jogo.visitante?.nome || '',
+            badge: jogo.visitante?.escudo || ''
+          },
+          score: temPlacar
+            ? {
+                home: Number(jogo.mandante.gols),
+                away: Number(jogo.visitante.gols)
+              }
+            : null,
+          venue: jogo.estadio || ''
+        };
+      });
 
-    return {
-      id: jogo.id,
-      date: jogo.data ? jogo.data.split('T')[0] : '',
-      time: jogo.hora || '',
-      status: jogo.encerrado
-        ? 'finished'
-        : placarDisponivel
-          ? 'live'
-          : 'scheduled',
+      dadosOriginais = { classificacao: tabela, jogos: retornoJogos };
+    }
 
-      homeTeam: {
-        name: jogo.mandante?.nome || '',
-        badge: jogo.mandante?.escudo || ''
-      },
-
-      awayTeam: {
-        name: jogo.visitante?.nome || '',
-        badge: jogo.visitante?.escudo || ''
-      },
-
-      score: placarDisponivel ? {
-        home: Number(jogo.mandante.gols),
-        away: Number(jogo.visitante.gols)
-      } : null,
-
-      venue: jogo.estadio || ''
-    };
-  });
-
-  dadosOriginais = {
-    classificacao: tabela,
-    jogos: retornoJogos
-  };
-}
-
-
-    else if (competicao === 'brasileirao-c') {
+    else if (chave === 'brasileirao-c') {
       const dados = await consultarAPI(
         `/api/serie-c-jogos?rodada=${encodeURIComponent(rodada)}`
       );
@@ -127,11 +112,8 @@ if (competicao === 'brasileirao-a') {
       dadosOriginais = dados;
     }
 
-    else if (
-      competicao === 'brasileirao-b' ||
-      competicao === 'brasileirao-d'
-    ) {
-      const serie = competicao.slice(-1);
+    else if (chave === 'brasileirao-b' || chave === 'brasileirao-d') {
+      const serie = chave.slice(-1);
       const retorno = await consultarAPI(`/api/brasileirao?serie=${serie}`);
       const dados = retorno.dados || {};
 
@@ -139,23 +121,23 @@ if (competicao === 'brasileirao-a') {
       nome = `Brasileirão Série ${serie.toUpperCase()}`;
       classificacao = dados.tables || [];
       jogos = dados.matches || [];
-      dadosOriginais = dados;
       grupos = dados.grupos || {};
+      dadosOriginais = dados;
     }
 
-    else {
+    else if (chave === 'champions' || chave === 'europa') {
       const retorno = await consultarAPI(
-        `/api/ge-europa?competicao=${competicao}&rodada=${encodeURIComponent(rodada)}`
+        `/api/ge-europa?competicao=${chave}&rodada=${encodeURIComponent(rodada)}`
       );
 
-      const dados = retorno.competicoes?.[competicao];
+      const dados = retorno.competicoes?.[chave];
 
       if (!dados) {
-        throw new Error(`Dados de ${competicao} não encontrados.`);
+        throw new Error(`Dados de ${chave} não encontrados.`);
       }
 
       fonte = 'GE Globo';
-      nome = competicao === 'champions'
+      nome = chave === 'champions'
         ? 'Champions League'
         : 'Europa League';
 
@@ -164,27 +146,78 @@ if (competicao === 'brasileirao-a') {
       dadosOriginais = dados;
     }
 
-    return res.status(200).json({
-      sucesso: true,
+    return {
+      chave,
       fonte,
-      chave: competicao,
       competicao: nome,
       rodada: Number(rodada),
       classificacao,
       jogos,
       grupos,
       dados_originais: dadosOriginais,
+      total_jogos: jogos.length,
+      atualizado_em: new Date().toISOString()
+    };
+  }
+
+  try {
+    if (competicao !== 'todas' && !permitidas.includes(competicao)) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Competição não reconhecida.',
+        competicoes_disponiveis: ['todas', ...permitidas]
+      });
+    }
+
+    const selecionadas = competicao === 'todas'
+      ? permitidas
+      : [competicao];
+
+    const resultados = await Promise.all(
+      selecionadas.map(async chave => {
+        try {
+          return {
+            sucesso: true,
+            ...await consultarCompeticao(chave)
+          };
+        } catch (erro) {
+          return {
+            sucesso: false,
+            chave,
+            erro: erro.message,
+            jogos: [],
+            classificacao: []
+          };
+        }
+      })
+    );
+
+    const jogos = resultados.flatMap(item =>
+      item.sucesso ? item.jogos : []
+    );
+
+    return res.status(200).json({
+      sucesso: true,
+      central: 'TVFP ESPORTES',
+      competicoes: resultados,
+      jogos,
+      total_competicoes: resultados.length,
+      total_jogos: jogos.length,
+      falhas: resultados
+        .filter(item => !item.sucesso)
+        .map(item => ({
+          competicao: item.chave,
+          erro: item.erro
+        })),
       atualizado_em: new Date().toISOString()
     });
 
   } catch (erro) {
-    console.error('Erro na API central:', erro);
+    console.error('Erro na Central Geral:', erro);
 
     return res.status(502).json({
       sucesso: false,
-      erro: 'Não foi possível consultar a competição.',
-      detalhe: erro.message,
-      competicao
+      erro: erro.message
     });
   }
 };
