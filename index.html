@@ -4543,6 +4543,9 @@ function voltarAoBIDPublico() {
 <script>
 
 async function abrirCompeticaoProfissional(nome) {
+    // ESCONDER A CENTRAL DE JOGOS AO ABRIR UMA COMPETIÇÃO
+  const painelJogos = document.getElementById('profissionalJogosHoje');
+  if (painelJogos) painelJogos.hidden = true;
   document.getElementById('profissionalTitulo').textContent = nome;
 
   const detalhes = document.getElementById('profissionalDetalhes');
@@ -5418,7 +5421,13 @@ async function carregarJogosHojeProfissional() {
   if (!area) return;
 
   area.innerHTML = '<p>Buscando partidas...</p>';
-
+area.style.background = '#ffffff';
+area.style.color = '#111111';
+area.style.padding = '14px';
+area.style.borderRadius = '10px';
+area.style.border = '1px solid #d6ad35';
+area.style.boxSizing = 'border-box';
+  
   const competicoesPermitidas = [
     { nome: 'BRASILEIRÃO SÉRIE A', aliases: ['BRAZILIAN SERIE A', 'BRAZIL SERIE A', 'BRASILEIRÃO SÉRIE A'] },
     { nome: 'BRASILEIRÃO SÉRIE B', aliases: ['BRAZILIAN SERIE B', 'BRAZIL SERIE B', 'BRASILEIRÃO SÉRIE B'] },
@@ -5533,17 +5542,7 @@ jogosPermitidos.forEach(jogo => {
     if (!nome) return;
 
     const chave = normalizar(nome);
-      // Ocultar artilharia da Champions League e Europa League
-    if (
-  chave === 'BRASILEIRAO SERIE C' ||
-  chave === 'BRASILEIRAO SERIE D'
-) {
-  area.innerHTML = '';
-  area.style.display = 'none';
-  return;
-}
 
-area.style.display = '';
     if (!equipesUnicas.has(chave)) {
       equipesUnicas.set(chave, nome);
     }
@@ -5561,15 +5560,15 @@ if (listaEquipes) {
     .join('');
 }
 
-   const grupos = competicoesPermitidas.map(competicao => ({
+  const grupos = competicoesPermitidas.map(competicao => ({
   nome: competicao.nome,
-  jogos: jogos.filter(jogo => {
+  jogos: jogosPermitidos.filter(jogo => {
     const nomeAPI = normalizar(jogo.competition);
     return competicao.aliases.some(alias =>
       nomeAPI === normalizar(alias)
     );
   })
-}));
+})).filter(grupo => grupo.jogos.length > 0);
 
     if (!grupos.length) {
       area.innerHTML = '<p>Nenhum jogo encontrado hoje nas 14 competições selecionadas.</p>';
