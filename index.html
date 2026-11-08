@@ -4532,7 +4532,7 @@ carregarJogosHojeProfissional();
 </div>
 
 <div class="prof-section">
-  <h3>⚽ ARTILHARIA</h3>
+  <h3>🥇 ARTILHARIA</h3>
   <div id="profissionalArtilharia">
     Dados dos artilheiros serão carregados aqui.
   </div>
@@ -4569,32 +4569,26 @@ async function abrirCompeticaoProfissional(nome) {
 
   const competicao = normalizar(nome);
 
-  // CARREGAR ARTILHARIA DA COMPETIÇÃO
-// OCULTAR ARTILHARIA NAS SÉRIES C E D
-const painelArtilharia = document
-  .getElementById('profissionalArtilharia')
-  ?.closest('.prof-section');
+ 
+  // CONTROLE DO PAINEL DE ARTILHARIA
+  const painelArtilharia = document
+    .getElementById('profissionalArtilharia')
+    ?.closest('.prof-section');
 
-// OCULTAR ARTILHARIA SOMENTE NAS SÉRIES C E D
-const ocultarArtilharia =
-  competicao === 'BRASILEIRAO SERIE C' ||
-  competicao === 'BRASILEIRAO SERIE D';
+  const ocultarArtilharia =
+    competicao === 'BRASILEIRAO SERIE C' ||
+    competicao === 'BRASILEIRAO SERIE D';
 
-if (painelArtilharia) {
-  painelArtilharia.style.display =
-    ocultarArtilharia ? 'none' : '';
-}
+  if (painelArtilharia) {
+    painelArtilharia.style.display =
+      ocultarArtilharia ? 'none' : '';
+  }
 
-// CARREGAR ARTILHARIA DAS OUTRAS COMPETIÇÕES
-if (
-  !ocultarArtilharia &&
-  (
-    competicao === 'LIBERTADORES' ||
-    competicao === 'SUL-AMERICANA'
-  )
-) {
-  await carregarArtilhariaProfissional(nome);
-}
+  // CARREGAR ARTILHARIA DAS COMPETIÇÕES
+  if (!ocultarArtilharia) {
+    await carregarArtilhariaProfissional(nome);
+  }
+
   // IDENTIFICAR AS SÉRIES DO BRASILEIRÃO
   const series = {
     'BRASILEIRAO SERIE A': 'a',
