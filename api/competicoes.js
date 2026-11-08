@@ -46,13 +46,136 @@ module.exports = async function handler(req, res) {
   }
 
   async function consultarCompeticao(chave) {
+    
+     const competicoes = {
+      'serie-b': {
+        nome: 'Brasileirão Série B',
+        url: 'https://ge.globo.com/futebol/brasileirao-serie-b/'
+      },
+      'serie-c': {
+        nome: 'Brasileirão Série C',
+        url: 'https://ge.globo.com/futebol/brasileirao-serie-c/'
+      },
+      'serie-d': {
+        nome: 'Brasileirão Série D',
+        url: 'https://ge.globo.com/futebol/brasileirao-serie-d/'
+      },
+      'copa-do-brasil': {
+        nome: 'Copa do Brasil',
+        url: 'https://ge.globo.com/futebol/copa-do-brasil/'
+      },
+      'libertadores': {
+        nome: 'Libertadores',
+        url: 'https://ge.globo.com/futebol/libertadores/'
+      },
+      'sul-americana': {
+        nome: 'Sul-Americana',
+        url: 'https://ge.globo.com/futebol/copa-sul-americana/'
+      },
+      'champions': {
+        nome: 'Champions League',
+        url: 'https://ge.globo.com/futebol/futebol-internacional/liga-dos-campeoes/'
+      },
+      'europa': {
+        nome: 'Europa League',
+        url: 'https://ge.globo.com/futebol/futebol-internacional/liga-europa/'
+      }
+    };
+
+    const config = competicoes[chave];
+
+    if (!config) {
+      throw new Error(`Artilharia não cadastrada: ${chave}`);
+    }
+
+    const resposta = await fetch(config.url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`GE respondeu com HTTP ${resposta.status}.`);
+    }
+
+    const html = await resposta.text();
+
+    const bloco = html.match(
+      /<section class="artilharia-wrapper">([\s\S]*?)<\/section>/
+    );
+
+    if (!bloco) {
+      throw new Error(`Artilharia não encontrada: ${config.nome}`);
+    }
+
+    const limpar = texto => texto
+      .replace(/<[^>]*>/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&#39;|&apos;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+
+    const itens = bloco[1]
+      .split('class="ranking-item-wrapper"')
+      .slice(1);
+
+    const artilheiros = [];
+
+    for (const item of itens) {
+      const nome = item.match(
+        /class="jogador-nome">([\s\S]*?)<\/div>/
+      )?.[1];
+
+      const clube = item.match(
+        /class="jogador-escudo">\s*<img[^>]*alt="([^"]+)"/
+      )?.[1];
+
+      const gols = item.match(
+        /class="jogador-gols">\s*(\d+)/
+      )?.[1];
+
+      const foto = item.match(
+        /class="jogador-foto">\s*<img[^>]*src="([^"]+)"/
+      )?.[1];
+
+      const posicao = item.match(
+        /class="jogador-posicao">([\s\S]*?)<\/div>/
+      )?.[1];
+
+      const escudo = item.match(
+        /class="jogador-escudo">\s*<img[^>]*src="([^"]+)"/
+      )?.[1];
+
+      if (nome && clube && gols) {
+        artilheiros.push({
+          nome: limpar(nome),
+          clube: limpar(clube),
+          gols: Number(gols),
+          foto: foto || '',
+          escudo: escudo || '',
+          posicao: limpar(posicao || '')
+        });
+      }
+    }
+
+    return {
+      chave,
+      competicao: config.nome,
+      fonte: 'GE Globo',
+      total: artilheiros.length,
+      artilheiros,
+      atualizado_em: new Date().toISOString()
+    };
+  }
+  async function consultarCompeticao(chave) {
     let fonte = '';
     let nome = '';
     let classificacao = [];
     let jogos = [];
     let grupos = {};
     let dadosOriginais = {};
-
+   
     if (chave === 'brasileirao-a') {
       const [tabela, retornoJogos] = await Promise.all([
         consultarAPI('/api/serie-a'),
@@ -161,6 +284,63 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    
+    const tipo = String(req.query.tipo || 'jogos').toLowerCase();
+
+    if (tipo === 'artilharia') {
+      const permitidasArtilharia = [
+        'serie-b',
+        'serie-c',
+        'serie-d',
+        'copa-do-brasil',
+        'libertadores',
+        'sul-americana',
+        'champions',
+        'europa'
+      ];
+
+      const selecionadasArtilharia = competicao === 'todas'
+        ? permitidasArtilharia
+        : [competicao];
+
+      const resultadosArtilharia = await Promise.all(
+        selecionadasArtilharia.map(async chave => {
+          try {
+            return {
+              sucesso: true,
+              ...await consultarArtilharia(chave)
+            };
+          } catch (erro) {
+            return {
+              sucesso: false,
+              chave,
+              erro: erro.message,
+              artilheiros: []
+            };
+          }
+        })
+      );
+
+      return res.status(200).json({
+        sucesso: true,
+        central: 'TVFP ESPORTES',
+        tipo: 'artilharia',
+        competicoes: resultadosArtilharia,
+        total_competicoes: resultadosArtilharia.length,
+        total_artilheiros: resultadosArtilharia.reduce(
+          (total, item) => total + item.artilheiros.length,
+          0
+        ),
+        falhas: resultadosArtilharia
+          .filter(item => !item.sucesso)
+          .map(item => ({
+            competicao: item.chave,
+            erro: item.erro
+          })),
+        atualizado_em: new Date().toISOString()
+      });
+    }
+
     if (competicao !== 'todas' && !permitidas.includes(competicao)) {
       return res.status(400).json({
         sucesso: false,
