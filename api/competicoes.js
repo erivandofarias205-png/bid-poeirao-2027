@@ -208,40 +208,96 @@ module.exports = async function handler(req, res) {
       };
     }
 
-    if (chave === 'serie-c') {
-      const artilheiros = [
-        { nome: 'Italo Carvalho', gols: 9, clube: 'Paysandu-PA' },
-        { nome: 'SCHIAPPACASSE', gols: 7, clube: 'Paysandu-PA' },
-        { nome: 'Ronald Camarão - 21', gols: 7, clube: 'Maringá FC SAF-PR' },
-        { nome: 'Galego', gols: 6, clube: 'Figueirense-SC' },
-        { nome: 'Getulio', gols: 6, clube: 'Inter de Limeira-SP' },
-        { nome: 'Vitor Barreto', gols: 6, clube: 'Ferroviária-SP' },
-        { nome: 'Salatiel', gols: 5, clube: 'Caxias-RS' },
-        { nome: 'Adrianinho', gols: 5, clube: 'Brusque-SC' },
-        { nome: 'Maranhão', gols: 5, clube: 'Ferroviária-SP' },
-        { nome: 'Andre', gols: 4, clube: 'Maranhão-MA' },
-        { nome: 'Negueba - 7', gols: 4, clube: 'Maringá FC SAF-PR' },
-        { nome: 'Gabriel - 3', gols: 4, clube: 'Maringá FC SAF-PR' },
-        { nome: 'Marlyson', gols: 4, clube: 'Brusque-SC' },
-        { nome: 'Igor Bolt', gols: 4, clube: 'Figueirense-SC' },
-        { nome: 'Matheus Vinicius', gols: 4, clube: 'Santa Cruz-PE' },
-        { nome: 'Pedro Favela', gols: 3, clube: 'Santa Cruz-PE' },
-        { nome: 'Renato', gols: 3, clube: 'Santa Cruz-PE' },
-        { nome: 'FAU', gols: 3, clube: 'Ferroviária-SP' },
-        { nome: 'Ariel', gols: 3, clube: 'Brusque-SC' },
-        { nome: 'Cipriano', gols: 3, clube: 'Brusque-SC' }
-      ].map((jogador, indice) => ({
-        ...jogador,
-        posicao: String(indice + 1),
-        foto: '',
-        escudo: ''
-      }));
+
+    if (chave === 'serie-c' || chave === 'serie-d') {
+      const apiKey = process.env.API_FOOTBALL_KEY;
+
+      if (!apiKey) {
+        throw new Error('Variável API_FOOTBALL_KEY não encontrada na Vercel.');
+      }
+
+      const temporada = new Date().getFullYear();
+      const serie = chave === 'serie-c' ? 'C' : 'D';
+
+      const consultarFootball = async (endpoint) => {
+        const resposta = await fetch(
+          `https://v3.football.api-sports.io/${endpoint}`,
+          {
+            headers: {
+              'x-apisports-key': apiKey
+            }
+          }
+        );
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok || (dados.errors &&
+            Object.keys(dados.errors).length > 0)) {
+          throw new Error(
+            JSON.stringify(dados.errors || `HTTP ${resposta.status}`)
+          );
+        }
+
+        return dados.response || [];
+      };
+
+      const ligas = await consultarFootball(
+        `leagues?country=Brazil&season=${temporada}`
+      );
+
+      const ligaEncontrada = ligas.find(item =>
+        new RegExp(`serie\\s*${serie}\\b`, 'i').test(
+          item.league?.name || ''
+        )
+      );
+
+      if (!ligaEncontrada) {
+        throw new Error(
+          `Série ${serie} não encontrada na API-Football para ${temporada}.`
+        );
+      }
+
+      const cobertura = ligaEncontrada.seasons?.find(
+        item => Number(item.year) === temporada
+      )?.coverage || ligaEncontrada.coverage;
+
+      if (!cobertura?.top_scorers) {
+        throw new Error(
+          `A API-Football não confirmou cobertura de artilharia para Série ${serie} em ${temporada}.`
+        );
+      }
+
+      const ligaId = ligaEncontrada.league.id;
+
+      const dadosArtilharia = await consultarFootball(
+        `players/topscorers?league=${ligaId}&season=${temporada}`
+      );
+
+      const artilheiros = dadosArtilharia.map((item, indice) => {
+        const estatistica = item.statistics?.[0] || {};
+        const jogador = item.player || {};
+        const clube = estatistica.team || {};
+
+        return {
+          nome: jogador.name || '',
+          gols: Number(estatistica.goals?.total || 0),
+          clube: clube.name || '',
+          posicao: String(indice + 1),
+          foto: jogador.photo ||
+            (jogador.id
+              ? `https://media.api-sports.io/football/players/${jogador.id}.png`
+              : ''),
+          escudo: clube.logo || '',
+          participacoes: Number(estatistica.games?.appearences || 0),
+          gols_penalti: Number(estatistica.penalty?.scored || 0)
+        };
+      }).filter(jogador => jogador.nome);
 
       return {
         chave,
-        competicao: 'Brasileirão Série C',
-        temporada: '2026',
-        fonte: 'CBF',
+        competicao: `Brasileirão Série ${serie}`,
+        temporada: String(temporada),
+        fonte: 'API-Football',
         total: artilheiros.length,
         artilheiros,
         atualizado_em: new Date().toISOString()
