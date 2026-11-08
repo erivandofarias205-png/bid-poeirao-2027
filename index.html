@@ -9298,12 +9298,6 @@ $('addEvent').addEventListener('click', async () => {
     button.disabled = false;
   }
 });
-  const labels={played:'Participou da partida',goal:'Gol',yellow:'Cartão amarelo',red:'Cartão vermelho'},icons={played:'🏃',goal:'⚽',yellow:'🟨',red:'🟥'};
-  p.played=true;if(type==='goal')p.goals=(p.goals||0)+1;if(type==='yellow')p.yellow=(p.yellow||0)+1;if(type==='red')p.red=(p.red||0)+1;
-
-   db.events.unshift({id:Date.now(),matchId:selectedMatch.id,match,team:t.name,teamId:t.id,player:p.name,playerId:p.id,type,label:labels[type],icon:icons[type],minute:$('minute').value,note:$('eventNote').value.trim(),at:new Date().toLocaleString('pt-BR')});
-  $('minute').value='';$('eventNote').value='';saveDb();showTab('game');alert('Evento registrado nesta prévia offline.');
- });
  function renderEvents(){
   const visibleEvents=(db.events||[]).filter(e=>{
     const t=findTeam(e.teamId)||db.teams.find(x=>x.name===e.team);
