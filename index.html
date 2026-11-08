@@ -4155,9 +4155,24 @@ function voltarAoBIDPublico() {
   cursor: pointer;
 }
 
-#profissionalView .prof-card .icon {
-  font-size: 27px;
+    #profissionalView .prof-card .icon {
+  width: 48px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 25px;
   line-height: 1;
+}
+
+#profissionalView .prof-card .icon img {
+  width: 42px !important;
+  height: 36px !important;
+  max-width: 42px !important;
+  max-height: 36px !important;
+  object-fit: contain !important;
+  display: block;
 }
 
 #profissionalView .prof-categoria {
