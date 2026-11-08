@@ -5213,7 +5213,7 @@ async function carregarArtilhariaProfissional(nome) {
     const fontes = {
     'BRASILEIRAO SERIE A': '/api/artilharia-serie-a',
     'BRASILEIRAO SERIE B': '/api/artilharia?competicao=serie-b',
-      'BRASILEIRAO SERIE C': '/api/artilharia?competicao=serie-c',
+      'BRASILEIRAO SERIE C': '/api/competicoes?tipo=artilharia&competicao=serie-c',
 'BRASILEIRAO SERIE D': '/api/artilharia?competicao=serie-d',
     'COPA DO BRASIL': '/api/artilharia?competicao=copa-do-brasil',
     'LIBERTADORES': '/api/artilharia?competicao=libertadores',
@@ -5247,19 +5247,23 @@ async function carregarArtilhariaProfissional(nome) {
 
     const dados = await resposta.json();
 
-    if (!dados.sucesso || !dados.artilheiros?.length) {
-      throw new Error('Artilharia não encontrada.');
-    }
+   const resultado = chave === 'BRASILEIRAO SERIE C'
+  ? dados.competicoes?.find(item => item.chave === 'serie-c')
+  : dados;
 
-   const jogadores = dados.artilheiros;
+if (!resultado?.sucesso || !resultado.artilheiros?.length) {
+  throw new Error('Artilharia não encontrada.');
+}
+
+const jogadores = resultado.artilheiros;
 
 area.innerHTML = `
   <div style="margin-bottom:10px">
     <strong style="color:#222">
-      ${escapar(dados.competicao || nome)}
+      ${escapar(resultado.competicao || nome)}
     </strong>
     <span style="color:#777;font-size:12px">
-      — ${dados.total} jogadores
+      — ${resultado.total} jogadores
     </span>
   </div>
 
