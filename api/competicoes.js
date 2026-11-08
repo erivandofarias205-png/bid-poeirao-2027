@@ -208,6 +208,46 @@ module.exports = async function handler(req, res) {
       };
     }
 
+    if (chave === 'serie-c') {
+      const artilheiros = [
+        { nome: 'Italo Carvalho', gols: 9, clube: 'Paysandu-PA' },
+        { nome: 'SCHIAPPACASSE', gols: 7, clube: 'Paysandu-PA' },
+        { nome: 'Ronald Camarão - 21', gols: 7, clube: 'Maringá FC SAF-PR' },
+        { nome: 'Galego', gols: 6, clube: 'Figueirense-SC' },
+        { nome: 'Getulio', gols: 6, clube: 'Inter de Limeira-SP' },
+        { nome: 'Vitor Barreto', gols: 6, clube: 'Ferroviária-SP' },
+        { nome: 'Salatiel', gols: 5, clube: 'Caxias-RS' },
+        { nome: 'Adrianinho', gols: 5, clube: 'Brusque-SC' },
+        { nome: 'Maranhão', gols: 5, clube: 'Ferroviária-SP' },
+        { nome: 'Andre', gols: 4, clube: 'Maranhão-MA' },
+        { nome: 'Negueba - 7', gols: 4, clube: 'Maringá FC SAF-PR' },
+        { nome: 'Gabriel - 3', gols: 4, clube: 'Maringá FC SAF-PR' },
+        { nome: 'Marlyson', gols: 4, clube: 'Brusque-SC' },
+        { nome: 'Igor Bolt', gols: 4, clube: 'Figueirense-SC' },
+        { nome: 'Matheus Vinicius', gols: 4, clube: 'Santa Cruz-PE' },
+        { nome: 'Pedro Favela', gols: 3, clube: 'Santa Cruz-PE' },
+        { nome: 'Renato', gols: 3, clube: 'Santa Cruz-PE' },
+        { nome: 'FAU', gols: 3, clube: 'Ferroviária-SP' },
+        { nome: 'Ariel', gols: 3, clube: 'Brusque-SC' },
+        { nome: 'Cipriano', gols: 3, clube: 'Brusque-SC' }
+      ].map((jogador, indice) => ({
+        ...jogador,
+        posicao: String(indice + 1),
+        foto: '',
+        escudo: ''
+      }));
+
+      return {
+        chave,
+        competicao: 'Brasileirão Série C',
+        temporada: '2026',
+        fonte: 'CBF',
+        total: artilheiros.length,
+        artilheiros,
+        atualizado_em: new Date().toISOString()
+      };
+    }
+
     const config = competicoes[chave];
 
     if (!config) {
