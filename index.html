@@ -9284,10 +9284,28 @@ $('addEvent').addEventListener('click', async () => {
     $('minute').value = '';
     $('eventNote').value = '';
 
-    await loadSupabaseTeams();
-    await loadSupabaseEvents();
+   // Preserva as seleções atuais do administrador.
+const partidaSelecionada = $('gameName').value;
+const equipeSelecionada = $('gameTeam').value;
+const atletaSelecionado = $('gameAthlete').value;
 
-    renderAll();
+// Atualiza os dados vindos do Supabase.
+await loadSupabaseTeams();
+await loadSupabaseEvents();
+
+// Reconstrói a tela.
+renderAll();
+
+// Restaura a partida e a equipe selecionadas.
+$('gameName').value = partidaSelecionada;
+$('gameTeam').value = equipeSelecionada;
+
+// Recarrega os atletas da equipe mantendo o atleta selecionado.
+updateAthleteSelect(atletaSelecionado);
+
+// Mantém o formulário pronto para o próximo evento.
+$('minute').value = '';
+$('eventNote').value = '';
 
     alert('Evento gravado no Supabase com sucesso!');
 
