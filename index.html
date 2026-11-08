@@ -2342,11 +2342,7 @@ margin: 0;
   </div>
   <div style="text-align:center;margin-top:18px;">
   <button class="tab" type="button"
-    onclick="
-      document.getElementById('centralSorteios').hidden = true;
-      document.getElementById('areaModalidadeSorteio').hidden = true;
-      document.getElementById('publicView').hidden = false;
-    "
+onclick="voltarAoBIDPublico()"
     style="background:#c99b32;color:#111;font-weight:900;">
     ← VOLTAR AO BID
   </button>
@@ -3739,15 +3735,31 @@ footer strong {
   janela.document.close();
 }
 
-  function abrirCentralSorteios() {
+ 
+
+function abrirCentralSorteios() {
   const central = document.getElementById('centralSorteios');
   const modalidade = document.getElementById('areaModalidadeSorteio');
+  const publicView = document.getElementById('publicView');
 
-  if (!central) {
+  if (!central || !publicView) {
     alert('Central de Sorteios não encontrada.');
     return;
   }
 
+  // Guardar o estado original dos painéis públicos
+  window.__bidPainelsPublicosEstado =
+    Array.from(publicView.children).map(elemento => ({
+      elemento,
+      hidden: elemento.hidden
+    }));
+
+  // Ocultar os painéis públicos
+  Array.from(publicView.children).forEach(painel => {
+    painel.hidden = true;
+  });
+
+  // Abrir a Central de Sorteios
   central.hidden = false;
 
   if (modalidade) {
@@ -3758,6 +3770,23 @@ footer strong {
     behavior: 'smooth',
     block: 'start'
   });
+}
+function voltarAoBIDPublico() {
+  const central = document.getElementById('centralSorteios');
+  const modalidade = document.getElementById('areaModalidadeSorteio');
+
+  if (central) central.hidden = true;
+  if (modalidade) modalidade.hidden = true;
+
+  const estado = window.__bidPainelsPublicosEstado || [];
+
+  estado.forEach(item => {
+    item.elemento.hidden = item.hidden;
+  });
+
+  window.__bidPainelsPublicosEstado = null;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 </div>
