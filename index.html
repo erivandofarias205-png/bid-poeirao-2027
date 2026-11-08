@@ -9177,12 +9177,127 @@ if(role!=='jogador'){
   }
 });
 
- $('addEvent').addEventListener('click',()=>{
-  const f=findAth($('gameAthlete').value);if(!f){alert('Cadastre ou selecione um atleta primeiro.');return}
-  const {p,t}=f,type=$('gameEvent').value;
-const selectedMatch=(db.matches||[]).find(m=>
-  String(m.id)===String($('gameName').value)
-);
+$('addEvent').addEventListener('click', async () => {
+  const button = $('addEvent');
+  button.disabled = true;
+
+  try {
+    const f = findAth($('gameAthlete').value);
+
+    if (!f) {
+      throw new Error('Selecione um atleta.');
+    }
+
+    const { p, t } = f;
+    const type = $('gameEvent').value;
+
+    const selectedMatch = (db.matches || []).find(
+      m => String(m.id) === String($('gameName').value)
+    );
+
+    if (!selectedMatch) {
+      throw new Error('Selecione uma partida.');
+    }
+
+    const eventTypes = {
+      played: 'observacao',
+      goal: 'gol',
+      yellow: 'cartao_amarelo',
+      red: 'cartao_vermelho'
+    };
+
+    if (!eventTypes[type]) {
+      throw new Error('Tipo de evento inválido.');
+    }
+
+    if (!selectedMatch.dbId || !p.dbId || !t.dbId) {
+      throw new Error('Identificadores do jogo, atleta ou equipe ausentes.');
+    }
+
+    const minuteValue = $('minute').value.trim();
+    const minute = minuteValue === '' ? null : Number(minuteValue);
+
+    if (
+      minute !== null &&
+      (!Number.isInteger(minute) || minute < 0 || minute > 150)
+    ) {
+      throw new Error('Minuto inválido. Use entre 0 e 150.');
+    }
+
+    const note = $('eventNote').value.trim();
+
+    const eventData = {
+      jogo_id: selectedMatch.dbId,
+      atleta_id: p.dbId,
+      equipe_id: t.dbId,
+      tipo: eventTypes[type],
+      minuto: minute,
+      descricao: note || ({
+        played: 'Participou da partida',
+        goal: 'Gol',
+        yellow: 'Cartão amarelo',
+        red: 'Cartão vermelho'
+      })[type]
+    };
+
+    const { error } = await supabaseClient
+      .from('jogo_eventos')
+      .insert(eventData);
+
+    if (error) throw error;
+
+    const columns = {
+      played: null,
+      goal: 'gols',
+      yellow: 'cartoes_amarelos',
+      red: 'cartoes_vermelhos'
+    };
+
+    const column = columns[type];
+    const update = {};
+
+    if (type === 'played') {
+      update.status = 'Atuou';
+    } else if (column) {
+      const current = Number(
+        type === 'goal' ? p.goals :
+        type === 'yellow' ? p.yellow : p.red
+      ) || 0;
+
+      update[column] = current + 1;
+    }
+
+    if (Object.keys(update).length) {
+      const { error: updateError } = await supabaseClient
+        .from('ATLETAS')
+        .update(update)
+        .eq('id', p.dbId);
+
+      if (updateError) {
+        throw new Error(
+          'Evento gravado, mas o contador não foi atualizado: ' +
+          updateError.message
+        );
+      }
+    }
+
+    $('minute').value = '';
+    $('eventNote').value = '';
+
+    await loadSupabaseTeams();
+    await loadSupabaseEvents();
+
+    renderAll();
+
+    alert('Evento gravado no Supabase com sucesso!');
+
+  } catch (error) {
+    console.error('Erro ao registrar evento:', error);
+    alert('Erro ao registrar evento: ' + error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
 if(!selectedMatch){
   alert('Selecione uma partida cadastrada.');
   return;
