@@ -16419,9 +16419,10 @@ document.addEventListener('DOMContentLoaded', function () {
 </style>
 <script>
 document.querySelectorAll('.panel').forEach(panel => {
-  if (panel.tagName === 'DETAILS') return;
+ if (panel.tagName === 'DETAILS') return;
 
-  if (panel.closest('#highlightsCompetitionContent')) return;
+if (!panel.classList.contains('admin-only') &&
+    !panel.closest('.admin-only')) return;
   
   const cabecalho = panel.querySelector(':scope > .ph');
   const conteudo = panel.querySelector(':scope > .pad');
