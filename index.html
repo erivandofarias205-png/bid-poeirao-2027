@@ -16421,6 +16421,8 @@ document.addEventListener('DOMContentLoaded', function () {
 document.querySelectorAll('.panel').forEach(panel => {
   if (panel.tagName === 'DETAILS') return;
 
+  if (panel.closest('#highlightsCompetitionContent')) return;
+  
   const cabecalho = panel.querySelector(':scope > .ph');
   const conteudo = panel.querySelector(':scope > .pad');
 
