@@ -4230,9 +4230,13 @@ function voltarAoBIDPublico() {
 <h3 class="prof-categoria">⚽ ACOMPANHE OS JOGOS</h3>
 <div class="prof-grid">
   <div class="prof-card" onclick="
+    document.querySelectorAll(
+  '#profissionalView > h3, #profissionalView > .prof-grid'
+).forEach(el => el.hidden = true);
+
     document.getElementById('profissionalJogosHoje').hidden = false;
-    document.getElementById('profissionalJogosHoje').scrollIntoView({behavior:'smooth'});
-    carregarJogosHojeProfissional();
+document.getElementById('profissionalJogosHoje').scrollIntoView({behavior:'smooth'});
+carregarJogosHojeProfissional();
   ">
     <div class="icon">⚽</div>
     <strong>JOGOS DE HOJE</strong>
