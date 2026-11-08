@@ -4925,14 +4925,27 @@ const endereco = (serie === 'a' || serie === 'b')
 
   let dados;
 
- if (serie === 'a' || serie === 'b') {
+
+if (serie === 'a' || serie === 'b') {
+  const competenciaRetorno =
+    retorno.competicoes?.find(
+      item => item.chave === `brasileirao-${serie}`
+    ) || retorno;
+
+  if (competenciaRetorno.sucesso === false) {
+    throw new Error(
+      competenciaRetorno.erro || 'Erro ao carregar a competição.'
+    );
+  }
+
   dados = {
     competition: {
-      name: retorno.competicao || `Brasileirão Série ${serie.toUpperCase()}`
+      name: competenciaRetorno.competicao ||
+        `Brasileirão Série ${serie.toUpperCase()}`
     },
-    matches: retorno.jogos || [],
+    matches: competenciaRetorno.jogos || [],
     rounds: [],
-    tables: retorno.classificacao || []
+    tables: competenciaRetorno.classificacao || []
   };
 
 } else if (serie === 'c') {
