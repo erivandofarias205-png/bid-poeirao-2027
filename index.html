@@ -4575,17 +4575,23 @@ const painelArtilharia = document
   .getElementById('profissionalArtilharia')
   ?.closest('.prof-section');
 
-// MANTER A ARTILHARIA VISÍVEL
+// OCULTAR ARTILHARIA SOMENTE NAS SÉRIES C E D
+const ocultarArtilharia =
+  competicao === 'BRASILEIRAO SERIE C' ||
+  competicao === 'BRASILEIRAO SERIE D';
+
 if (painelArtilharia) {
-  painelArtilharia.style.display = '';
+  painelArtilharia.style.display =
+    ocultarArtilharia ? 'none' : '';
 }
 
-// CARREGAR ARTILHARIA DAS COMPETIÇÕES
+// CARREGAR ARTILHARIA DAS OUTRAS COMPETIÇÕES
 if (
-  competicao === 'BRASILEIRAO SERIE C' ||
-  competicao === 'BRASILEIRAO SERIE D' ||
-  competicao === 'LIBERTADORES' ||
-  competicao === 'SUL-AMERICANA'
+  !ocultarArtilharia &&
+  (
+    competicao === 'LIBERTADORES' ||
+    competicao === 'SUL-AMERICANA'
+  )
 ) {
   await carregarArtilhariaProfissional(nome);
 }
