@@ -11103,32 +11103,101 @@ BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app 
  function download(name,data,type){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
  $('reset').addEventListener('click',()=>{if(confirm('Isso apaga as equipes, atletas e eventos guardados neste navegador. Deseja continuar?')){localStorage.removeItem(KEY);db=structuredClone(starter);selectedTeam=db.teams[0]?.id||'';saveDb();alert('Prévia restaurada com os dados demonstrativos.')}});
  // Editor de eventos diretamente na tabela de jogos: gols, cartões e participação.
- function refreshMatchEventChoices(preferredMatchId='', preferredTeamId=''){
- const allMatches=(db.matches||[]).filter(m=>m && m.id!=null);
- const ms=allMatches
-  .filter(matchBelongsToActiveCompetition)
-  .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+ function refreshMatchEventChoices(
+  preferredMatchId = '',
+  preferredTeamId = '',
+  preferredAthleteId = ''
+) {
+  const allMatches = (db.matches || []).filter(m => m && m.id != null);
 
- const selectedMatch=preferredMatchId
-  ? allMatches.find(m=>String(m.id)===String(preferredMatchId))
-  : null;
+  const ms = allMatches
+    .filter(matchBelongsToActiveCompetition)
+    .sort((a, b) =>
+      (a.date || '9999').localeCompare(b.date || '9999')
+    );
 
- if(selectedMatch && !ms.some(m=>String(m.id)===String(selectedMatch.id))){
-  ms.push(selectedMatch);
- }
-  const matchSel=$('matchEventMatch');if(!matchSel)return;const oldMatch=preferredMatchId||matchSel.value;
-  matchSel.innerHTML='<option value="">Selecione um jogo</option>'+ms.map(m=>`<option value="${esc(m.id)}">${esc(dateBR(m.date))} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round?' · '+esc(m.round):''}</option>`).join('');
-  if(ms.some(m=>String(m.id)===String(oldMatch)))matchSel.value=String(oldMatch);
-  const m=ms.find(x=>String(x.id)===String(matchSel.value));const teamSel=$('matchEventTeam');const athleteSel=$('matchEventAthlete');
-  const prevTeam=preferredTeamId||teamSel.value;
-  const sides=m?[findTeam(m.homeId),findTeam(m.awayId)].filter(Boolean):[];
-  teamSel.innerHTML='<option value="">Selecione a equipe</option>'+sides.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
-  if(sides.some(t=>String(t.id)===String(prevTeam)))teamSel.value=String(prevTeam);
-  const team=findTeam(teamSel.value);const players=team?(team.players||[]):[];const oldPlayer=athleteSel.value;
-  athleteSel.innerHTML='<option value="">Selecione o atleta</option>'+players.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}${p.id?' · BID '+esc(p.id):''}</option>`).join('');
-  if(players.some(p=>String(p.id)===String(oldPlayer)))athleteSel.value=oldPlayer;
+  const matchSel = $('matchEventMatch');
+  const teamSel = $('matchEventTeam');
+  const athleteSel = $('matchEventAthlete');
+
+  if (!matchSel || !teamSel || !athleteSel) return;
+
+  const oldMatch = preferredMatchId || matchSel.value;
+  const oldTeam = preferredTeamId || teamSel.value;
+  const oldAthlete = preferredAthleteId || athleteSel.value;
+
+  let selectedMatch = allMatches.find(
+    m => String(m.id) === String(oldMatch)
+  );
+
+  if (selectedMatch && !ms.some(
+    m => String(m.id) === String(selectedMatch.id)
+  )) {
+    ms.push(selectedMatch);
+  }
+
+  matchSel.innerHTML =
+    '<option value="">Selecione um jogo</option>' +
+    ms.map(m =>
+      `<option value="${esc(m.id)}">${esc(dateBR(m.date))} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round ? ' · ' + esc(m.round) : ''}</option>`
+    ).join('');
+
+  if (selectedMatch) {
+    matchSel.value = String(selectedMatch.id);
+  }
+
+  selectedMatch = ms.find(
+    m => String(m.id) === String(matchSel.value)
+  );
+
+  // Localiza as equipes pelo ID interno ou pelo ID do Supabase.
+  const resolveTeam = id =>
+    (db.teams || []).find(t =>
+      String(t.id) === String(id) ||
+      String(t.dbId) === String(id)
+    );
+
+  // Somente as duas equipes da partida selecionada.
+  const sides = selectedMatch
+    ? [
+        resolveTeam(selectedMatch.homeId),
+        resolveTeam(selectedMatch.awayId)
+      ].filter((t, i, arr) =>
+        t && arr.findIndex(x => String(x.id) === String(t.id)) === i
+      )
+    : [];
+
+  teamSel.innerHTML =
+    '<option value="">Selecione a equipe</option>' +
+    sides.map(t =>
+      `<option value="${esc(t.id)}">${esc(t.name)}</option>`
+    ).join('');
+
+  if (sides.some(t => String(t.id) === String(oldTeam))) {
+    teamSel.value = String(oldTeam);
+  }
+
+  const selectedTeam = sides.find(
+    t => String(t.id) === String(teamSel.value)
+  );
+
+  // Somente atletas da equipe escolhida.
+  const players = selectedTeam
+    ? (selectedTeam.players || [])
+    : [];
+
+  athleteSel.innerHTML =
+    '<option value="">Selecione um atleta</option>' +
+    players.map(p =>
+      `<option value="${esc(p.id)}">${esc(p.name)}${p.id ? ' · BID ' + esc(p.id) : ''}</option>`
+    ).join('');
+
+  if (players.some(p => String(p.id) === String(oldAthlete))) {
+    athleteSel.value = String(oldAthlete);
+  }
+
   renderMatchEventList();
- }
+}
  function renderMatchEventList(){
   const list=$('matchEventList'),sel=$('matchEventMatch');if(!list||!sel)return;const id=sel.value;
   const items=(db.events||[]).filter(e=>String(e.matchId||'')===String(id));
@@ -11292,9 +11361,17 @@ $('addMatchEvent')?.addEventListener('click', async () => {
     $('matchEventStatus').textContent =
       'Evento salvo no Supabase com sucesso!';
 
-    refreshMatchEventChoices(match.id, team.id);
     renderEvents();
-    renderFrontPage();
+renderFrontPage();
+
+// Restaura a seleção depois de atualizar a página.
+refreshMatchEventChoices(
+  match.id,
+  team.id,
+  player.id
+);
+
+renderMatchEventList();
 
     alert('Evento registrado e enviado ao banco de dados!');
 
