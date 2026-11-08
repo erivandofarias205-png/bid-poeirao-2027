@@ -9298,11 +9298,6 @@ $('addEvent').addEventListener('click', async () => {
     button.disabled = false;
   }
 });
-if(!selectedMatch){
-  alert('Selecione uma partida cadastrada.');
-  return;
-}
-const match=`${selectedMatch.homeName} × ${selectedMatch.awayName}`;
   const labels={played:'Participou da partida',goal:'Gol',yellow:'Cartão amarelo',red:'Cartão vermelho'},icons={played:'🏃',goal:'⚽',yellow:'🟨',red:'🟥'};
   p.played=true;if(type==='goal')p.goals=(p.goals||0)+1;if(type==='yellow')p.yellow=(p.yellow||0)+1;if(type==='red')p.red=(p.red||0)+1;
 
