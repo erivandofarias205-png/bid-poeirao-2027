@@ -82,6 +82,69 @@ module.exports = async function handler(req, res) {
       }
     };
 
+    if (chave === 'champions') {
+      const url = new URL(
+        'https://compstats.uefa.com/v2/player-ranking'
+      );
+
+      url.searchParams.set('competitionId', '1');
+      url.searchParams.set('limit', '100');
+      url.searchParams.set('offset', '0');
+      url.searchParams.set('optionalFields', 'PLAYER,TEAM');
+      url.searchParams.set('order', 'DESC');
+      url.searchParams.set('phase', 'TOURNAMENT');
+      url.searchParams.set('seasonYear', '2027');
+      url.searchParams.set(
+        'stats',
+        'goals,goals_scored_with_right,goals_scored_with_left,goals_scored_head,goals_scored_other,goals_scored_inside_penalty_area,goals_scored_outside_penalty_area,penalty_scored,matches_appearance'
+      );
+
+      const resposta = await fetch(url.toString(), {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!resposta.ok) {
+        throw new Error(`UEFA respondeu com status ${resposta.status}`);
+      }
+
+      const dados = await resposta.json();
+
+      const artilheiros = (Array.isArray(dados) ? dados : [])
+        .map(item => {
+          const estatistica = nome =>
+            Number(
+              item.statistics?.find(s => s.name === nome)?.value || 0
+            );
+
+          return {
+            nome: item.player?.internationalName || '',
+            clube: item.team?.translations?.displayName?.PT ||
+              item.team?.internationalName || '',
+            gols: estatistica('goals'),
+            foto: item.player?.imageUrl || '',
+            escudo: item.team?.logoUrl || '',
+            posicao: '',
+            participacoes: estatistica('matches_appearance'),
+            gols_penalti: estatistica('penalty_scored')
+          };
+        })
+        .filter(jogador => jogador.nome)
+        .sort((a, b) => b.gols - a.gols);
+
+      return {
+        chave,
+        competicao: 'Champions League',
+        temporada: '2026/2027',
+        fonte: 'UEFA',
+        total: artilheiros.length,
+        artilheiros,
+        atualizado_em: new Date().toISOString()
+      };
+    }
+
     const config = competicoes[chave];
 
     if (!config) {
