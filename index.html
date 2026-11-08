@@ -4335,33 +4335,148 @@ gap:18px;
 margin-bottom:15px;
   ">
 
-    <h3 style="margin:0">⚽ JOGOS DE HOJE</h3>
+   
+<div id="centralJogosCabecalho" style="
+  background:linear-gradient(135deg,#080808,#242424);
+  border:1px solid #c99b32;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 5px 18px rgba(0,0,0,.12);
+">
 
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap">
+  <div style="text-align:center;margin-bottom:18px">
+    <div style="font-size:12px;color:#c99b32;font-weight:900;letter-spacing:2px">
+      TVFP SPORTS
+    </div>
+    <h2 style="color:#e4bd43;margin:5px 0;font-size:24px;font-weight:900">
+      ⚽ CENTRAL DE JOGOS
+    </h2>
+    <p style="color:#ddd;font-size:12px;margin:0">
+      FUTEBOL PROFISSIONAL E AMADOR
+    </p>
+  </div>
 
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:12px;
+  ">
+
+    <label style="color:#e4bd43;font-size:12px;font-weight:900">
+      📅 ESCOLHER DATA
       <input
         type="date"
         id="dataConsultaJogos"
         onchange="carregarJogosHojeProfissional()"
-        style="background:#111;color:#e4bd43;border:1px solid #e4bd43;
-        border-radius:8px;padding:9px;font-weight:900"
+        style="
+          display:block;
+          box-sizing:border-box;
+          width:100%;
+          margin-top:7px;
+          background:#111;
+          color:#e4bd43;
+          border:1px solid #c99b32;
+          border-radius:8px;
+          padding:12px;
+          font-weight:900;
+        "
       >
+    </label>
 
+    <label style="color:#e4bd43;font-size:12px;font-weight:900">
+      🔎 PESQUISAR EQUIPE
       <input
         type="text"
         id="buscaEquipeProfissional"
         list="listaEquipesProfissional"
-        placeholder="SELECIONE SUA EQUIPE"
+        placeholder="Digite o nome da equipe"
         autocomplete="off"
         oninput="filtrarEquipesProfissional()"
-        style="background:#111;color:#e4bd43;border:1px solid #e4bd43;
-        border-radius:8px;padding:9px;font-weight:900;width:250px;max-width:250px
+        style="
+          display:block;
+          box-sizing:border-box;
+          width:100%;
+          margin-top:7px;
+          background:#111;
+          color:#e4bd43;
+          border:1px solid #c99b32;
+          border-radius:8px;
+          padding:12px;
+          font-weight:900;
+        "
       >
-
       <datalist id="listaEquipesProfissional"></datalist>
+    </label>
 
-    </div>
   </div>
+
+  <div style="
+    margin-top:14px;
+    text-align:center;
+    color:#bbb;
+    font-size:11px;
+  ">
+    Acompanhe partidas, horários e resultados das competições da nossa grade.
+  </div>
+
+</div>
+
+    
+<div style="
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:12px 0 18px;
+">
+
+  <button type="button" class="tab"
+    onclick="
+      const campo=document.getElementById('dataConsultaJogos');
+      const d=new Date(campo.value+'T12:00:00');
+      d.setDate(d.getDate()-1);
+      campo.value=[
+        d.getFullYear(),
+        String(d.getMonth()+1).padStart(2,'0'),
+        String(d.getDate()).padStart(2,'0')
+      ].join('-');
+      carregarJogosHojeProfissional();
+    ">
+    ‹ DIA ANTERIOR
+  </button>
+
+  <button type="button" class="tab"
+    onclick="
+      const d=new Date();
+      document.getElementById('dataConsultaJogos').value=[
+        d.getFullYear(),
+        String(d.getMonth()+1).padStart(2,'0'),
+        String(d.getDate()).padStart(2,'0')
+      ].join('-');
+      carregarJogosHojeProfissional();
+    "
+    style="background:#c99b32;color:#111;font-weight:900">
+    HOJE
+  </button>
+
+  <button type="button" class="tab"
+    onclick="
+      const campo=document.getElementById('dataConsultaJogos');
+      const d=new Date(campo.value+'T12:00:00');
+      d.setDate(d.getDate()+1);
+      campo.value=[
+        d.getFullYear(),
+        String(d.getMonth()+1).padStart(2,'0'),
+        String(d.getDate()).padStart(2,'0')
+      ].join('-');
+      carregarJogosHojeProfissional();
+    ">
+    PRÓXIMO DIA ›
+  </button>
+
+</div>
 
   <div id="listaJogosHoje">
     <p>Carregando jogos...</p>
@@ -5492,6 +5607,7 @@ if (listaEquipes) {
             : '';
 
           const estadio = jogo.venue || jogo.stadium || '';
+          console.log('DADOS COMPLETOS DO JOGO:', jogo);
 
  return `
   <div style="
