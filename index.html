@@ -4327,8 +4327,11 @@ carregarJogosHojeProfissional();
 
   <div class="prof-card" onclick="abrirCompeticaoProfissional('EUROPA LEAGUE')">
    <div class="icon">
-  <img src="https://commons.wikimedia.org/wiki/Special:FilePath/UEFA_Europa_League_logo.svg" alt="Europa League">
-</div>
+ <img
+  src="https://commons.wikimedia.org/wiki/Special:FilePath/UEFA%20Europa%20league%20logo.svg"
+  alt="Europa League"
+  style="width:42px;height:36px;object-fit:contain;"
+>
     <strong>EUROPA LEAGUE</strong>
   </div>
 
@@ -5073,8 +5076,8 @@ if (serie === 'a' || serie === 'b') {
 
 // SELETOR DE RODADAS — BRASILEIRÃO SÉRIE A
 if ((serie === 'a' || serie === 'b') && areaJogos) {
-  const rodadaInicial = serie === 'a' ? 34 : 1;
-const totalRodadas = serie === 'a' ? 38 : 20;
+ const rodadaInicial = serie === 'a' ? 34 : 35;
+const totalRodadas = 38;
   areaJogos.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <strong style="color:#d4af37">RODADA:</strong>
