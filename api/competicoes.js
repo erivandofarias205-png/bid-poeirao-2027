@@ -399,37 +399,18 @@ module.exports = async function handler(req, res) {
     let dadosOriginais = {};
    
    
-const brasileirao = require('campeonato-brasileiro-api');
 
-module.exports = async function handler(req, res) {
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
-  try {
-    const [competencia, classificacao] = await Promise.all([
-      brasileirao.getCompetition('a'),
-      brasileirao.getStandings('a')
-    ]);
-
-    return res.status(200).json({
-      sucesso: true,
-      competition: competencia.competition,
-      tables: classificacao.tables || []
-    });
-
-  } catch (erro) {
-    console.error('Erro ao consultar Série A:', erro);
-
-    return res.status(502).json({
-      sucesso: false,
-      erro: 'Não foi possível consultar os dados da Série A.',
-      detalhe: erro.message
-    });
-  }
-};
+    if (chave === 'brasileirao-a') {
+      const [tabela, retornoJogos] = await Promise.all([
+        consultarAPI('/api/serie-a'),
+        consultarAPI(
+          `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
+        )
+      ]);
 
       fonte = 'GE Globo';
       nome = 'Brasileirão Série A';
+
       classificacao = tabela.tables || [];
 
       jogos = (retornoJogos.jogos || []).map(jogo => {
@@ -464,7 +445,10 @@ module.exports = async function handler(req, res) {
         };
       });
 
-      dadosOriginais = { classificacao: tabela, jogos: retornoJogos };
+      dadosOriginais = {
+        classificacao: tabela,
+        jogos: retornoJogos
+      };
     }
 
     else if (chave === 'brasileirao-c') {
