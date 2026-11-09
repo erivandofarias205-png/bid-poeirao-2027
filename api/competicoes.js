@@ -11,7 +11,9 @@ module.exports = async function handler(req, res) {
   }
 
   const competicao = String(req.query.competicao || 'todas').toLowerCase();
-  const rodada = String(req.query.rodada || '1');
+  const rodadaSelecionada = req.query.rodada
+  ? String(req.query.rodada)
+  : '';
 
   const permitidas = [
     'brasileirao-a',
