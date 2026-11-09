@@ -760,11 +760,7 @@ try {
       .map(item => item[1].replace(/&amp;/g, '&'))
       .find(link => link.includes(slug));
 
-     link: linkFase || null,
-  status: null,
-  url: null
-};
-
+    
 if (linkFase) {
   const urlFase = new URL(linkFase, urlBase).href;
   const respostaFase = await fetch(urlFase);
