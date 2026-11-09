@@ -1,9 +1,9 @@
 
 export default async function handler(req, res) {
   res.setHeader(
-    'Cache-Control',
-    's-maxage=300, stale-while-revalidate=600'
-  );
+  'Cache-Control',
+  'no-store, no-cache, must-revalidate, proxy-revalidate'
+);
 
   try {
     const urlRodada = numero =>
@@ -103,24 +103,24 @@ export default async function handler(req, res) {
       jogosGE = await consultarRodada(rodada);
 
     } else {
-      // SELEÇÃO AUTOMÁTICA
-      // Temporada 2026: começamos pela rodada vigente 35.
-      rodada = 35;
+      // SELEÇÃO AUTOMÁTICA DAS 38 RODADAS
+      const todasRodadas = await Promise.all(
+        Array.from({ length: 38 }, (_, i) =>
+          consultarRodada(i + 1)
+        )
+      );
 
-      // No máximo quatro consultas: rodadas 35 a 38.
-      for (let numero = 35; numero <= 38; numero++) {
-        const partidas = await consultarRodada(numero);
+      // Localiza a primeira rodada ainda não liberada.
+      const indiceAtual = todasRodadas.findIndex(
+        partidas => !rodadaLiberada(partidas)
+      );
 
-        rodada = numero;
-        jogosGE = partidas;
+      // Se todas estiverem encerradas, mantém a última.
+      rodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
 
-        // Para na primeira rodada ainda não liberada.
-        if (!rodadaLiberada(partidas)) {
-          break;
-        }
-      }
+      jogosGE = todasRodadas[rodada - 1];
     }
-
+    
     const jogos = jogosGE.map(jogo => ({
       id: jogo.id,
       data: jogo.data_realizacao,
