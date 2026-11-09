@@ -16132,9 +16132,91 @@ tbody tr.row-staff td.bid{
   }
 }
 </style>
-  
+  <!-- CONTROLE DE COMPETIÇÕES -->
+<div class="admin-only" style="margin:20px 0;padding:15px;background:#101827;border:1px solid #d4af37;border-radius:10px">
+
+  <button
+    onclick="abrirControleCompeticoes()"
+    style="width:100%;padding:14px;background:#d4af37;color:#111;font-weight:900;border:0;border-radius:8px;cursor:pointer">
+    ⚙️ CONTROLE DE COMPETIÇÕES
+  </button>
+
+  <div id="painelControleCompeticoes" style="display:none;margin-top:15px">
+
+    <h3 style="color:#d4af37">COMPETIÇÕES PROFISSIONAIS</h3>
+    <div id="listaProfissionais"></div>
+
+    <hr style="border-color:#444;margin:18px 0">
+
+    <h3 style="color:#d4af37">COMPETIÇÕES AMADORAS</h3>
+    <div id="listaAmadoras"></div>
+
+  </div>
+</div>
   <script>
-  async function updateAdminVisibility(){
+  async function abrirControleCompeticoes() {
+  const painel = document.getElementById('painelControleCompeticoes');
+
+  painel.style.display =
+    painel.style.display === 'none' ? 'block' : 'none';
+
+  if (painel.style.display === 'block') {
+  await carregarCompeticoesProfissionais();
+  await carregarCompeticoesAmadoras();
+}
+}
+
+async function carregarCompeticoesAmadoras() {
+  const lista = document.getElementById('listaAmadoras');
+
+  lista.innerHTML = '<p style="color:white">Carregando competições...</p>';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('COMPETICOES')
+      .select('id,nome,temporada,publicada')
+           .order('temporada', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      lista.innerHTML = '<p style="color:white">Nenhuma competição cadastrada.</p>';
+      return;
+    }
+
+    lista.innerHTML = data.map(comp => `
+      <div style="background:#172337;padding:12px;margin-bottom:8px;border-radius:8px;color:white">
+        <strong>${comp.nome} ${comp.temporada}</strong>
+
+        <button
+          onclick="alterarVisibilidadeCompeticao('${comp.id}', ${!comp.publicada})"
+          style="display:block;margin-top:9px;padding:9px 14px;border:0;border-radius:6px;font-weight:900;cursor:pointer;background:${comp.publicada ? '#a83232' : '#168344'};color:white">
+          ${comp.publicada ? 'OCULTAR COMPETIÇÃO' : 'PUBLICAR COMPETIÇÃO'}
+        </button>
+      </div>
+    `).join('');
+
+  } catch (erro) {
+    lista.innerHTML = `<p style="color:red">Erro: ${erro.message}</p>`;
+  }
+}
+
+async function alterarVisibilidadeCompeticao(id, publicar) {
+  try {
+    const { error } = await supabaseClient
+      .from('COMPETICOES')
+      .update({ publicada: publicar })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    await carregarCompeticoesAmadoras();
+
+  } catch (erro) {
+    alert('Não foi possível alterar a competição: ' + erro.message);
+  }
+}
+    async function updateAdminVisibility(){
   const adminPanels=document.querySelectorAll('.admin-only');
 
   // Começa escondendo os painéis administrativos
