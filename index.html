@@ -5787,7 +5787,29 @@ if (listaEquipes) {
 </div>
 <div class="hidden" id="adminProtected">
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
+
+<!-- CONTROLE DE COMPETIÇÕES -->
+<div class="admin-only" style="margin:20px 0;padding:15px;background:#101827;border:1px solid #d4af37;border-radius:10px">
+
+  <button
+    onclick="abrirControleCompeticoes()"
+    style="width:100%;padding:14px;background:#d4af37;color:#111;font-weight:900;border:0;border-radius:8px;cursor:pointer">
+    ⚙️ CONTROLE DE COMPETIÇÕES
+  </button>
+
+  <div id="painelControleCompeticoes" style="display:none;margin-top:15px">
+    <h3 style="color:#d4af37">COMPETIÇÕES PROFISSIONAIS</h3>
+    <div id="listaProfissionais"></div>
+
+    <hr style="border-color:#444;margin:18px 0">
+
+    <h3 style="color:#d4af37">COMPETIÇÕES AMADORAS</h3>
+    <div id="listaAmadoras"></div>
+  </div>
+</div>
+
 <!-- PAINEL GERAL ADMINISTRATIVO -->
+    <!-- PAINEL GERAL ADMINISTRATIVO -->
 <div class="panel" id="adminDashboard">
   <div class="ph">
     <h3>📊 PAINEL GERAL DO BID</h3>
@@ -16132,27 +16154,6 @@ tbody tr.row-staff td.bid{
   }
 }
 </style>
-  <!-- CONTROLE DE COMPETIÇÕES -->
-<div class="admin-only" style="margin:20px 0;padding:15px;background:#101827;border:1px solid #d4af37;border-radius:10px">
-
-  <button
-    onclick="abrirControleCompeticoes()"
-    style="width:100%;padding:14px;background:#d4af37;color:#111;font-weight:900;border:0;border-radius:8px;cursor:pointer">
-    ⚙️ CONTROLE DE COMPETIÇÕES
-  </button>
-
-  <div id="painelControleCompeticoes" style="display:none;margin-top:15px">
-
-    <h3 style="color:#d4af37">COMPETIÇÕES PROFISSIONAIS</h3>
-    <div id="listaProfissionais"></div>
-
-    <hr style="border-color:#444;margin:18px 0">
-
-    <h3 style="color:#d4af37">COMPETIÇÕES AMADORAS</h3>
-    <div id="listaAmadoras"></div>
-
-  </div>
-</div>
   <script>
     async function carregarCompeticoesProfissionais() {
   const lista = document.getElementById('listaProfissionais');
