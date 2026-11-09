@@ -102,6 +102,31 @@ export default async function handler(req, res) {
 
       jogosGE = await consultarRodada(rodada);
 
+        } else if (req.query.data) {
+      // CONSULTA DOS JOGOS DE UMA DATA ESPECÍFICA
+      const dataConsulta = String(req.query.data);
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dataConsulta)) {
+        return res.status(400).json({
+          sucesso: false,
+          erro: 'Data inválida. Use AAAA-MM-DD.'
+        });
+      }
+
+      const todasRodadas = await Promise.all(
+        Array.from({ length: 38 }, (_, i) =>
+          consultarRodada(i + 1)
+        )
+      );
+
+      jogosGE = todasRodadas
+        .flat()
+        .filter(jogo =>
+          String(jogo.data_realizacao || '').slice(0, 10) === dataConsulta
+        );
+
+      rodada = 'consulta por data';
+
     } else {
       // SELEÇÃO AUTOMÁTICA DAS 38 RODADAS
       const todasRodadas = await Promise.all(
@@ -110,12 +135,10 @@ export default async function handler(req, res) {
         )
       );
 
-      // Localiza a primeira rodada ainda não liberada.
       const indiceAtual = todasRodadas.findIndex(
         partidas => !rodadaLiberada(partidas)
       );
 
-      // Se todas estiverem encerradas, mantém a última.
       rodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
 
       jogosGE = todasRodadas[rodada - 1];
