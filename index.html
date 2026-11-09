@@ -16154,6 +16154,56 @@ tbody tr.row-staff td.bid{
   </div>
 </div>
   <script>
+    async function carregarCompeticoesProfissionais() {
+  const lista = document.getElementById('listaProfissionais');
+
+  lista.innerHTML = '<p style="color:white">Carregando competições...</p>';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('VISIBILIDADE_PROFISSIONAIS')
+      .select('chave,nome,publicada')
+      .order('nome');
+
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      lista.innerHTML = '<p style="color:white">Nenhuma competição encontrada.</p>';
+      return;
+    }
+
+    lista.innerHTML = data.map(comp => `
+      <div style="background:#172337;padding:12px;margin-bottom:8px;border-radius:8px;color:white">
+        <strong>${comp.nome}</strong>
+
+        <button
+          onclick="alterarVisibilidadeProfissional('${comp.chave}', ${!comp.publicada})"
+          style="display:block;margin-top:9px;padding:9px 14px;border:0;border-radius:6px;font-weight:900;cursor:pointer;background:${comp.publicada ? '#a83232' : '#168344'};color:white">
+          ${comp.publicada ? 'OCULTAR COMPETIÇÃO' : 'PUBLICAR COMPETIÇÃO'}
+        </button>
+      </div>
+    `).join('');
+
+  } catch (erro) {
+    lista.innerHTML = `<p style="color:red">Erro: ${erro.message}</p>`;
+  }
+}
+
+async function alterarVisibilidadeProfissional(chave, publicar) {
+  try {
+    const { error } = await supabaseClient
+      .from('VISIBILIDADE_PROFISSIONAIS')
+      .update({ publicada: publicar })
+      .eq('chave', chave);
+
+    if (error) throw error;
+
+    await carregarCompeticoesProfissionais();
+
+  } catch (erro) {
+    alert('Não foi possível alterar a competição: ' + erro.message);
+  }
+}
   async function abrirControleCompeticoes() {
   const painel = document.getElementById('painelControleCompeticoes');
 
