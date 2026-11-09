@@ -16,13 +16,14 @@ module.exports = async function handler(req, res) {
   : '';
 
   const permitidas = [
-    'brasileirao-a',
-    'brasileirao-b',
-    'brasileirao-c',
-    'brasileirao-d',
-    'champions',
-    'europa'
-  ];
+  'brasileirao-a',
+  'brasileirao-b',
+  'brasileirao-c',
+  'brasileirao-d',
+  'champions',
+  'europa',
+  'copa-do-brasil'
+];
 
   const host = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
