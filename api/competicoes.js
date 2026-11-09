@@ -534,11 +534,21 @@ if (rodada !== '') {
   listaGE = await consultarRodadaB(numeroRodada);
 
 } else {
-  const todasRodadasB = await Promise.all(
-    Array.from({ length: 38 }, (_, i) =>
-      consultarRodadaB(i + 1)
-    )
-  );
+  const todasRodadasB = [];
+
+for (let i = 1; i <= 38; i++) {
+  if (i > 1) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  const partidas = await consultarRodadaB(i);
+  todasRodadasB.push(partidas);
+
+  // Para quando encontrar a primeira rodada ainda não liberada
+  if (!rodadaLiberadaB(partidas)) {
+    break;
+  }
+}
 
   const indiceAtual = todasRodadasB.findIndex(
     partidas => !rodadaLiberadaB(partidas)
