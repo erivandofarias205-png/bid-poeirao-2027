@@ -394,7 +394,7 @@ const fase = String(req.query.fase || 'final').toLowerCase();
       atualizado_em: new Date().toISOString()
     };
   }
-  async function consultarCompeticao(chave) {
+  async function consultarCompeticao(chave, faseCopa = 8) {
     let fonte = '';
     let nome = '';
     let classificacao = [];
@@ -693,7 +693,90 @@ try {
       jogos = dados.jogos || [];
       dadosOriginais = dados;
     }
+       else if (chave === 'copa-do-brasil') {
+      const fases = [
+        'Primeira fase',
+        'Segunda fase',
+        'Terceira fase',
+        'Quarta fase',
+        'Quinta fase',
+        'Oitavas de final',
+        'Quartas de final',
+        'Semifinal',
+        'Final'
+      ];
 
+      const jogosPorFase = {
+        7: [
+          {
+            data: '01/11/2026',
+            hora: '16:00',
+            estadio: 'Nubank Parque',
+            mandante: { nome: 'Palmeiras' },
+            visitante: { nome: 'Vasco' },
+            placar: { mandante: 1, visitante: 0 },
+            status: 'FINALIZADO'
+          },
+          {
+            data: '01/11/2026',
+            hora: '18:30',
+            estadio: 'Arena do Grêmio',
+            mandante: { nome: 'Grêmio' },
+            visitante: { nome: 'Atlético-MG' },
+            placar: { mandante: 2, visitante: 0 },
+            status: 'FINALIZADO'
+          },
+          {
+            data: '07/11/2026',
+            hora: '18:00',
+            estadio: 'Arena MRV',
+            mandante: { nome: 'Atlético-MG' },
+            visitante: { nome: 'Grêmio' },
+            placar: { mandante: 1, visitante: 1 },
+            status: 'FINALIZADO'
+          },
+          {
+            data: '08/11/2026',
+            hora: '17:00',
+            estadio: 'São Januário',
+            mandante: { nome: 'Vasco' },
+            visitante: { nome: 'Palmeiras' },
+            placar: { mandante: 2, visitante: 1 },
+            status: 'FINALIZADO',
+            penaltis: '4 x 5'
+          }
+        ],
+        8: [
+          {
+            data: '06/12/2026',
+            hora: 'A definir',
+            estadio: 'A definir',
+            mandante: { nome: 'Grêmio' },
+            visitante: { nome: 'Palmeiras' },
+            placar: null,
+            status: 'FINAL'
+          }
+        ]
+      };
+
+      if (faseCopa < 0 || faseCopa > 8) {
+        throw new Error('Fase inválida.');
+      }
+
+      fonte = 'CBF';
+      nome = 'Copa do Brasil 2026';
+      classificacao = [];
+      jogos = jogosPorFase[faseCopa] || [];
+
+      dadosOriginais = {
+        temporada: '2026',
+        fases,
+        fase_atual: faseCopa,
+        nome_fase: fases[faseCopa],
+        total_fases: 9
+      };
+    }
+    
     return {
       chave,
       fonte,
@@ -783,7 +866,10 @@ try {
         try {
           return {
             sucesso: true,
-            ...await consultarCompeticao(chave)
+           ...await consultarCompeticao(
+  chave,
+  Number(req.query.fase ?? 8)
+)
           };
         } catch (erro) {
           return {
