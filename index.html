@@ -5709,7 +5709,13 @@ area.style.boxSizing = 'border-box';
   
   const competicoesPermitidas = [
     { nome: 'BRASILEIRÃO SÉRIE A', aliases: ['BRAZILIAN SERIE A', 'BRAZIL SERIE A', 'BRASILEIRÃO SÉRIE A'] },
-    { nome: 'BRASILEIRÃO SÉRIE B', aliases: ['BRAZILIAN SERIE B', 'BRAZIL SERIE B', 'BRASILEIRÃO SÉRIE B'] },
+    { nome: 'BRASILEIRÃO SÉRIE B', aliases: [
+  'BRAZILIAN SERIE B',
+  'BRAZIL SERIE B',
+  'BRASILEIRÃO SÉRIE B',
+  'CAMPEONATO BRASILEIRO SERIE B',
+  'BRASILEIRO SERIE B'
+] },
     { nome: 'BRASILEIRÃO SÉRIE C', aliases: ['BRAZILIAN SERIE C', 'BRAZIL SERIE C', 'BRASILEIRÃO SÉRIE C'] },
     { nome: 'BRASILEIRÃO SÉRIE D', aliases: ['BRAZILIAN SERIE D', 'BRAZIL SERIE D', 'BRASILEIRÃO SÉRIE D'] },
     { nome: 'COPA DO BRASIL', aliases: ['COPA DO BRASIL', 'BRAZILIAN CUP'] },
@@ -5839,7 +5845,7 @@ if (listaEquipes) {
     .join('');
 }
 
-  const grupos = competicoesPermitidas.map(competicao => ({
+ const grupos = competicoesPermitidas.map(competicao => ({
   nome: competicao.nome,
   jogos: jogosPermitidos.filter(jogo => {
     const nomeAPI = normalizar(jogo.competition);
@@ -5847,7 +5853,7 @@ if (listaEquipes) {
       nomeAPI === normalizar(alias)
     );
   })
-})).filter(grupo => grupo.jogos.length > 0);
+}));
 
     if (!grupos.length) {
       area.innerHTML = '<p>Nenhum jogo encontrado hoje nas 14 competições selecionadas.</p>';
