@@ -467,9 +467,7 @@ module.exports = async function handler(req, res) {
 
       const urlGE = `https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/brasileiro-serie-b-2026-fase-unica/rodada/${String(numeroRodada).padStart(2, '0')}/jogos/`;
 
-      const [respostaGE, retornoTabela] = await Promise.all([
-        fetch(urlGE),
-        consultarAPI('/api/brasileirao?serie=b')
+      const respostaGE = await fetch(urlGE);
       ]);
 
       if (!respostaGE.ok) {
@@ -477,7 +475,7 @@ module.exports = async function handler(req, res) {
       }
 
       const listaGE = await respostaGE.json();
-      const dadosTabela = retornoTabela.dados || {};
+     const dadosTabela = {};
 
       fonte = 'GE Globo';
       nome = 'Brasileirão Série B';
