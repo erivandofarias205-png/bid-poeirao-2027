@@ -769,7 +769,8 @@ if (linkFase) {
     htmlFase = await respostaFase.text();
   }
 }
-
+}
+        
   const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
 
