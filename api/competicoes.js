@@ -760,18 +760,14 @@ try {
       .map(item => item[1].replace(/&amp;/g, '&'))
       .find(link => link.includes(slug));
 
-   let diagnosticoFase = {
-  link: linkFase || null,
+     link: linkFase || null,
   status: null,
   url: null
 };
 
 if (linkFase) {
   const urlFase = new URL(linkFase, urlBase).href;
-  diagnosticoFase.url = urlFase;
-
   const respostaFase = await fetch(urlFase);
-  diagnosticoFase.status = respostaFase.status;
 
   if (respostaFase.ok) {
     htmlFase = await respostaFase.text();
