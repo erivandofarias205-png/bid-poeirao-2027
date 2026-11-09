@@ -760,15 +760,23 @@ try {
       .map(item => item[1].replace(/&amp;/g, '&'))
       .find(link => link.includes(slug));
 
-    if (linkFase) {
-      const urlFase = new URL(linkFase, urlBase).href;
-      const respostaFase = await fetch(urlFase);
+   let diagnosticoFase = {
+  link: linkFase || null,
+  status: null,
+  url: null
+};
 
-      if (respostaFase.ok) {
-        htmlFase = await respostaFase.text();
-      }
-    }
+if (linkFase) {
+  const urlFase = new URL(linkFase, urlBase).href;
+  diagnosticoFase.url = urlFase;
+
+  const respostaFase = await fetch(urlFase);
+  diagnosticoFase.status = respostaFase.status;
+
+  if (respostaFase.ok) {
+    htmlFase = await respostaFase.text();
   }
+}
 
   const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
