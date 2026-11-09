@@ -63,7 +63,14 @@ export default async function handler(req, res) {
       estadio: jogo.sede?.nome_popular || '',
       link: jogo.transmissao?.url || '',
       encerrado:
-        jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+        jogo.transmissao?.broadcast?.id === 'ENCERRADA',
+            debugStatusGE: {
+        broadcast: jogo.transmissao?.broadcast || null,
+        transmissao: jogo.transmissao || null,
+        status: jogo.status || null,
+        situacao: jogo.situacao || null,
+        status_jogo: jogo.status_jogo || null
+      }
     }));
 
     return res.status(200).json({
