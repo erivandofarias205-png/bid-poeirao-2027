@@ -14,7 +14,8 @@ module.exports = async function handler(req, res) {
   const rodada = req.query.rodada
   ? String(req.query.rodada)
   : '';
-
+const fase = String(req.query.fase || 'final').toLowerCase();
+  
   const permitidas = [
   'brasileirao-a',
   'brasileirao-b',
