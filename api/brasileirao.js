@@ -40,10 +40,16 @@ module.exports = async function handler(req, res) {
     } else {
      const numeroRodada = Number(req.query.rodada || 1);
 
-const resultado = serie === 'b'
-  ? await brasileirao.getRounds('b', { number: numeroRodada })
-  : await brasileirao.getRounds(serie);
-      rodadas = resultado.rounds || [];
+if (serie === 'b') {
+  const jogos = await brasileirao.rodadaAtual('b', numeroRodada);
+
+  rodadas = [{
+    number: numeroRodada,
+    matches: jogos
+  }];
+} else {
+  const resultado = await brasileirao.getRounds(serie);
+  rodadas = resultado.rounds || [];
     }
 
     const partidas = rodadas.flatMap(item =>
