@@ -6629,9 +6629,20 @@ if(!comp)return !(db.competitions||[]).length;
   function transfer(p){if(p.transferAllowed===true)return 'Pode transferir';if(p.transferAllowed===false)return 'Não pode transferir';return p.played?'Bloqueado após atuar':'Pode transferir'}
   function showTab(name){
    const views=['public','admin','games','game','profile','classification','teams','photos','highlights','profissional'];
-   views.forEach(x=>{const el=$(x+'View');if(el)el.classList.toggle('hidden',x!==name)});
-   document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  }
+
+   views.forEach(x=>{
+     const el=$(x+'View');
+     if(el)el.classList.toggle('hidden',x!==name);
+   });
+
+   document.querySelectorAll('.tab[data-tab]').forEach(b=>
+     b.classList.toggle('active',b.dataset.tab===name)
+   );
+
+   if(name === 'profissional'){
+     aplicarVisibilidadeProfissionais();
+   }
+}
   document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
  
 async function renderHighlightsAdminResults(){
@@ -11689,7 +11700,58 @@ const supabaseClient = window.supabase.createClient(
 
 
 
+// CONTROLE MANUAL DE VISIBILIDADE DAS COMPETIÇÕES PROFISSIONAIS
+async function aplicarVisibilidadeProfissionais() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('VISIBILIDADE_PROFISSIONAIS')
+      .select('chave, publicada');
 
+    if (error) throw error;
+
+    const visibilidade = {};
+    (data || []).forEach(comp => {
+      visibilidade[comp.chave] = comp.publicada;
+    });
+
+    const mapaCartoes = {
+      'BRASILEIRÃO SÉRIE A': 'brasileirao-a',
+      'BRASILEIRÃO SÉRIE B': 'brasileirao-b',
+      'BRASILEIRÃO SÉRIE C': 'brasileirao-c',
+      'BRASILEIRÃO SÉRIE D': 'brasileirao-d',
+      'COPA DO BRASIL': 'copa-brasil',
+      'LIBERTADORES': 'libertadores',
+      'SUL-AMERICANA': 'sul-americana',
+      'CHAMPIONS LEAGUE': 'champions',
+      'EUROPA LEAGUE': 'europa',
+      'PRINCIPAIS LIGAS DO MUNDO': 'internacional',
+      'PRÓXIMOS JOGOS DAS SELEÇÕES': 'selecoes'
+    };
+
+    document.querySelectorAll('#profissionalView .prof-grid').forEach(grid => {
+      grid.querySelectorAll('.prof-card').forEach(card => {
+        const nome = card.querySelector('strong')?.textContent.trim();
+        const chave = mapaCartoes[nome];
+
+        if (chave && Object.prototype.hasOwnProperty.call(visibilidade, chave)) {
+          card.hidden = visibilidade[chave] !== true;
+        }
+      });
+
+      const categoria = grid.previousElementSibling;
+
+      if (categoria?.classList.contains('prof-categoria')) {
+        const cartoesVisiveis = grid.querySelectorAll('.prof-card:not([hidden])').length;
+        categoria.hidden = cartoesVisiveis === 0;
+        grid.hidden = cartoesVisiveis === 0;
+      }
+    });
+
+  } catch (erro) {
+    console.error('Erro ao aplicar visibilidade das competições:', erro);
+  }
+}
+   
 // Carrega partidas da tabela public.jogos para celular e computador.
 async function loadSupabaseMatches() {
   try {
@@ -16207,6 +16269,8 @@ async function alterarVisibilidadeProfissional(chave, publicar) {
 
     await carregarCompeticoesProfissionais();
 
+    await aplicarVisibilidadeProfissionais();
+    
     alert(
       publicar
         ? 'COMPETIÇÃO PUBLICADA COM SUCESSO!'
