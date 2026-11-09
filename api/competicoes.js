@@ -399,17 +399,21 @@ module.exports = async function handler(req, res) {
     let jogos = [];
     let grupos = {};
     let dadosOriginais = {};
-   
+   let rodadaFinal = Number(rodada) || null;
    
 
     if (chave === 'brasileirao-a') {
       const [tabela, retornoJogos] = await Promise.all([
-        consultarAPI('/api/serie-a'),
+               consultarAPI('/api/serie-a'),
         consultarAPI(
-          `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
-        )
+  rodada
+    ? `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
+    : '/api/ge-serie-a-jogos'
+)
       ]);
-
+      
+ rodadaFinal = Number(retornoJogos.rodada || rodada) || null;
+      
       fonte = 'GE Globo';
       nome = 'Brasileirão Série A';
 
@@ -466,6 +470,7 @@ module.exports = async function handler(req, res) {
     }
     else if (chave === 'brasileirao-b') {
       const numeroRodada = Math.min(38, Math.max(1, Number(rodada) || 35));
+      rodadaFinal = numeroRodada;
 
       const urlGE = `https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/brasileiro-serie-b-2026-fase-unica/rodada/${String(numeroRodada).padStart(2, '0')}/jogos/`;
 
@@ -613,7 +618,7 @@ try {
       chave,
       fonte,
       competicao: nome,
-      rodada: Number(rodada),
+      rodada: rodadaFinal,
       classificacao,
       jogos,
       grupos,
