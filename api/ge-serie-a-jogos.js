@@ -22,7 +22,7 @@ if (
     const urlRodada = numero =>
   `https://api.globoesporte.globo.com/tabela/d1a37fa4-e948-43a6-ba53-ab24ab3a45b1/fase/fase-unica-campeonato-brasileiro-2026/rodada/${String(numero).padStart(2, '0')}/jogos/`;
 
-let rodada = rodadaInformada;
+const url = urlRodada(rodada);
 
 if (rodada === null) {
   const agora = new Date();
