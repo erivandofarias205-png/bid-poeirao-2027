@@ -38,7 +38,11 @@ module.exports = async function handler(req, res) {
         })
       );
     } else {
-      const resultado = await brasileirao.getRounds(serie);
+     const numeroRodada = Number(req.query.rodada || 1);
+
+const resultado = serie === 'b'
+  ? await brasileirao.getRounds('b', { number: numeroRodada })
+  : await brasileirao.getRounds(serie);
       rodadas = resultado.rounds || [];
     }
 
