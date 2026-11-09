@@ -47,9 +47,9 @@ if (serie === 'b') {
     number: numeroRodada,
     matches: jogos
   }];
-} else {
-  const resultado = await brasileirao.getRounds(serie);
-  rodadas = resultado.rounds || [];
+    } else {
+      const resultado = await brasileirao.getRounds(serie);
+      rodadas = resultado.rounds || [];
     }
 
     const partidas = rodadas.flatMap(item =>
@@ -69,7 +69,6 @@ if (serie === 'b') {
         grupos
       }
     });
-
   } catch (erro) {
     console.error('Erro ao consultar Brasileirão:', erro);
 
