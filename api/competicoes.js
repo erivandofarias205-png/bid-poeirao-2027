@@ -469,18 +469,86 @@ module.exports = async function handler(req, res) {
       dadosOriginais = dados;
     }
     else if (chave === 'brasileirao-b') {
-      const numeroRodada = Math.min(38, Math.max(1, Number(rodada) || 35));
-      rodadaFinal = numeroRodada;
+     const urlRodadaB = numero =>
+  `https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/brasileiro-serie-b-2026-fase-unica/rodada/${String(numero).padStart(2, '0')}/jogos/`;
 
-      const urlGE = `https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/brasileiro-serie-b-2026-fase-unica/rodada/${String(numeroRodada).padStart(2, '0')}/jogos/`;
+const consultarRodadaB = async numero => {
+  const resposta = await fetch(urlRodadaB(numero));
 
-      const respostaGE = await fetch(urlGE);
-     
-      if (!respostaGE.ok) {
-        throw new Error(`GE retornou erro ${respostaGE.status} na rodada ${numeroRodada}.`);
-      }
+  if (!resposta.ok) {
+    throw new Error(`GE retornou erro ${resposta.status} na rodada ${numero}.`);
+  }
 
-      const listaGE = await respostaGE.json();
+  const jogos = await resposta.json();
+
+  if (!Array.isArray(jogos) || !jogos.length) {
+    throw new Error(`Jogos não encontrados na rodada ${numero}.`);
+  }
+
+  return jogos;
+};
+
+const rodadaLiberadaB = partidas => {
+  const encerrados = partidas.filter(
+    jogo => jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+  );
+
+  const pendentes = partidas.filter(
+    jogo => jogo.transmissao?.broadcast?.id !== 'ENCERRADA'
+  );
+
+  if (!pendentes.length) return true;
+  if (encerrados.length < 2) return false;
+
+  const datas = encerrados
+    .map(jogo => Date.parse(jogo.data_realizacao))
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+
+  if (datas.length < 2) return false;
+
+  const meio = Math.floor(datas.length / 2);
+
+  const mediana = datas.length % 2
+    ? datas[meio]
+    : (datas[meio - 1] + datas[meio]) / 2;
+
+  return pendentes.every(jogo => {
+    const data = Date.parse(jogo.data_realizacao);
+
+    return Number.isFinite(data) &&
+      data > mediana + (14 * 24 * 60 * 60 * 1000);
+  });
+};
+
+let numeroRodada;
+let listaGE;
+
+if (rodada !== '') {
+  numeroRodada = Number(rodada);
+
+  if (!Number.isInteger(numeroRodada) || numeroRodada < 1 || numeroRodada > 38) {
+    throw new Error('Rodada inválida. Escolha de 1 a 38.');
+  }
+
+  listaGE = await consultarRodadaB(numeroRodada);
+
+} else {
+  const todasRodadasB = await Promise.all(
+    Array.from({ length: 38 }, (_, i) =>
+      consultarRodadaB(i + 1)
+    )
+  );
+
+  const indiceAtual = todasRodadasB.findIndex(
+    partidas => !rodadaLiberadaB(partidas)
+  );
+
+  numeroRodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
+  listaGE = todasRodadasB[numeroRodada - 1];
+}
+
+rodadaFinal = numeroRodada;
      let dadosTabela = { tables: [] };
 
 try {
