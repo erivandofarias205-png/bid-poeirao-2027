@@ -16192,19 +16192,31 @@ tbody tr.row-staff td.bid{
 
 async function alterarVisibilidadeProfissional(chave, publicar) {
   try {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('VISIBILIDADE_PROFISSIONAIS')
       .update({ publicada: publicar })
-      .eq('chave', chave);
+      .eq('chave', chave)
+      .select('chave')
+      .maybeSingle();
 
     if (error) throw error;
 
+    if (!data) {
+      throw new Error('Nenhuma competição foi atualizada. Confira a tabela e as permissões do Supabase.');
+    }
+
     await carregarCompeticoesProfissionais();
 
+    alert(
+      publicar
+        ? 'COMPETIÇÃO PUBLICADA COM SUCESSO!'
+        : 'COMPETIÇÃO OCULTADA COM SUCESSO!'
+    );
+
   } catch (erro) {
-    alert('Não foi possível alterar a competição: ' + erro.message);
+    alert('ERRO AO ALTERAR A COMPETIÇÃO: ' + erro.message);
   }
-}
+}}
   async function abrirControleCompeticoes() {
   const painel = document.getElementById('painelControleCompeticoes');
 
