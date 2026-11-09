@@ -407,7 +407,7 @@ const fase = String(req.query.fase || 'final').toLowerCase();
     if (chave === 'brasileirao-a') {
       const [tabela, retornoJogos] = await Promise.all([
                consultarAPI('/api/serie-a'),
-        consultarAPI(
+        (
   rodada
     ? `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
     : '/api/ge-serie-a-jogos'
@@ -693,90 +693,154 @@ try {
       jogos = dados.jogos || [];
       dadosOriginais = dados;
     }
-       else if (chave === 'copa-do-brasil') {
-      const fases = [
-        'Primeira fase',
-        'Segunda fase',
-        'Terceira fase',
-        'Quarta fase',
-        'Quinta fase',
-        'Oitavas de final',
-        'Quartas de final',
-        'Semifinal',
-        'Final'
-      ];
+      else if (chave === 'copa-do-brasil') {
+  const urlBase = 'https://ge.globo.com/futebol/copa-do-brasil/';
 
-      const jogosPorFase = {
-        7: [
-          {
-            data: '01/11/2026',
-            hora: '16:00',
-            estadio: 'Nubank Parque',
-            mandante: { nome: 'Palmeiras' },
-            visitante: { nome: 'Vasco' },
-            placar: { mandante: 1, visitante: 0 },
-            status: 'FINALIZADO'
-          },
-          {
-            data: '01/11/2026',
-            hora: '18:30',
-            estadio: 'Arena do Grêmio',
-            mandante: { nome: 'Grêmio' },
-            visitante: { nome: 'Atlético-MG' },
-            placar: { mandante: 2, visitante: 0 },
-            status: 'FINALIZADO'
-          },
-          {
-            data: '07/11/2026',
-            hora: '18:00',
-            estadio: 'Arena MRV',
-            mandante: { nome: 'Atlético-MG' },
-            visitante: { nome: 'Grêmio' },
-            placar: { mandante: 1, visitante: 1 },
-            status: 'FINALIZADO'
-          },
-          {
-            data: '08/11/2026',
-            hora: '17:00',
-            estadio: 'São Januário',
-            mandante: { nome: 'Vasco' },
-            visitante: { nome: 'Palmeiras' },
-            placar: { mandante: 2, visitante: 1 },
-            status: 'FINALIZADO',
-            penaltis: '4 x 5'
-          }
-        ],
-        8: [
-          {
-            data: '06/12/2026',
-            hora: 'A definir',
-            estadio: 'A definir',
-            mandante: { nome: 'Grêmio' },
-            visitante: { nome: 'Palmeiras' },
-            placar: null,
-            status: 'FINAL'
-          }
-        ]
-      };
+  if (faseCopa < 0 || faseCopa > 8) {
+    throw new Error('Fase inválida.');
+  }
 
-      if (faseCopa < 0 || faseCopa > 8) {
-        throw new Error('Fase inválida.');
-      }
+  const nomesFases = [
+    'Primeira fase',
+    'Segunda fase',
+    'Terceira fase',
+    'Quarta fase',
+    'Quinta fase',
+    'Oitavas de final',
+    'Quartas de final',
+    'Semifinal',
+    'Final'
+  ];
 
-      fonte = 'CBF';
-      nome = 'Copa do Brasil 2026';
-      classificacao = [];
-      jogos = jogosPorFase[faseCopa] || [];
+  // Consulta a página principal do GE
+  const respostaGE = await fetch(urlBase);
 
-      dadosOriginais = {
-        temporada: '2026',
-        fases,
-        fase_atual: faseCopa,
-        nome_fase: fases[faseCopa],
-        total_fases: 9
-      };
+  if (!respostaGE.ok) {
+    throw new Error(`GE retornou ${respostaGE.status}`);
+  }
+
+  const htmlGE = await respostaGE.text();
+
+  function extrairClassificacao(html) {
+    const bloco = html.match(
+      /const classificacao = (\{[\s\S]*?\});/
+    );
+
+    if (!bloco) {
+      throw new Error('Estrutura da Copa não encontrada no GE.');
     }
-    
+
+    return JSON.parse(bloco[1]);
+  }
+
+  const dadosGE = extrairClassificacao(htmlGE);
+
+  const edicao = dadosGE.edicao || {};
+  const temporada = String(
+    edicao.nome?.match(/\d{4}/)?.[0] ||
+    new Date().getFullYear()
+  );
+
+  // Localiza automaticamente o endereço da fase escolhida
+  const navegacao = dadosGE.fases_navegacao || [];
+  const faseSelecionada = navegacao[faseCopa];
+
+  const slug = typeof faseSelecionada === 'string'
+    ? faseSelecionada
+    : faseSelecionada?.slug || '';
+
+  let htmlFase = htmlGE;
+
+  if (slug) {
+    const links = [
+      ...htmlGE.matchAll(/href=["']([^"']+)["']/g)
+    ];
+
+    const linkFase = links
+      .map(item => item[1].replace(/&amp;/g, '&'))
+      .find(link => link.includes(slug));
+
+    if (linkFase) {
+      const urlFase = new URL(linkFase, urlBase).href;
+      const respostaFase = await fetch(urlFase);
+
+      if (respostaFase.ok) {
+        htmlFase = await respostaFase.text();
+      }
+    }
+  }
+
+  const dadosFase = extrairClassificacao(htmlFase);
+  const secoes = dadosFase.secao || [];
+
+  // Extrai os jogos das chaves da fase
+  const jogosGE = [];
+
+  secoes.forEach(secao => {
+    (secao.chave || []).forEach(chaveGE => {
+      (chaveGE.jogos || []).forEach(jogo => {
+        const mandante = jogo.equipes?.mandante || {};
+        const visitante = jogo.equipes?.visitante || {};
+
+        jogosGE.push({
+          id: jogo.id,
+          grupo: chaveGE.id || chaveGE.nome || '',
+          nome_grupo: chaveGE.nome || '',
+          data: jogo.data_realizacao
+            ? new Date(jogo.data_realizacao).toLocaleDateString('pt-BR', {
+                timeZone: 'UTC'
+              })
+            : '',
+          hora: jogo.hora_realizacao || '',
+          estadio: jogo.sede?.nome_popular || '',
+          mandante: {
+            id: mandante.id || '',
+            nome: mandante.nome_popular || '',
+            escudo: mandante.escudo || ''
+          },
+          visitante: {
+            id: visitante.id || '',
+            nome: visitante.nome_popular || '',
+            escudo: visitante.escudo || ''
+          },
+          placar:
+            jogo.placar_oficial_mandante != null &&
+            jogo.placar_oficial_visitante != null
+              ? {
+                  mandante: Number(jogo.placar_oficial_mandante),
+                  visitante: Number(jogo.placar_oficial_visitante)
+                }
+              : null,
+          penaltis:
+            jogo.placar_penaltis_mandante != null &&
+            jogo.placar_penaltis_visitante != null
+              ? `${jogo.placar_penaltis_mandante} x ${jogo.placar_penaltis_visitante}`
+              : null,
+          status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+            ? 'FINALIZADO'
+            : jogo.jogo_ja_comecou
+              ? 'EM ANDAMENTO'
+              : 'AGENDADO'
+        });
+      });
+    });
+  });
+
+  fonte = 'GE Globo';
+  nome = `Copa do Brasil ${temporada}`;
+  classificacao = [];
+  jogos = jogosGE;
+
+  dadosOriginais = {
+    temporada,
+    fases: nomesFases,
+    fase_atual: faseCopa,
+    nome_fase: nomesFases[faseCopa],
+    total_fases: nomesFases.length,
+    edicao,
+    atualizado_em: new Date().toISOString()
+  };
+}
     return {
       chave,
       fonte,
