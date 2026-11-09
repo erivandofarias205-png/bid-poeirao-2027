@@ -838,7 +838,9 @@ try {
     nome_fase: nomesFases[faseCopa],
     total_fases: nomesFases.length,
     edicao,
-    atualizado_em: new Date().toISOString()
+fases_navegacao: dadosGE.fases_navegacao,
+fase_url_encontrada: slug,
+atualizado_em: new Date().toISOString()
   };
 }
     return {
