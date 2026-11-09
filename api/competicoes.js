@@ -465,7 +465,11 @@ module.exports = async function handler(req, res) {
 
     else if (chave === 'brasileirao-b' || chave === 'brasileirao-d') {
       const serie = chave.slice(-1);
-      const retorno = await consultarAPI(`/api/brasileirao?serie=${serie}`);
+      const retorno = await consultarAPI(
+  serie === 'b'
+    ? `/api/brasileirao?serie=${serie}&rodada=${encodeURIComponent(rodada)}`
+    : `/api/brasileirao?serie=${serie}`
+);
       const dados = retorno.dados || {};
 
       fonte = 'Campeonato Brasileiro API';
