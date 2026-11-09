@@ -5765,23 +5765,76 @@ const [ano, mes, dia] = dataConsulta.split('-').map(Number);
 const dataSeguinte = new Date(
   Date.UTC(ano, mes - 1, dia + 1)
 ).toISOString().slice(0, 10);
+  // GE GLOBO: FONTE PRINCIPAL DO BRASILEIRÃO SÉRIE A
+let jogosGE = [];
 
-const urls = [
-  `https://sportscore.com/api/v1/fixtures/?sport=football&date=${dataConsulta}&limit=200`,
-  `https://sportscore.com/api/v1/fixtures/?sport=football&date=${dataSeguinte}&limit=200`
-];
+try {
+  const respostaGE = await fetch(
+    `/api/ge-serie-a-jogos?data=${dataConsulta}`
+  );
 
-const respostas = await Promise.all(urls.map(url => fetch(url)));
+  if (respostaGE.ok) {
+    const dadosGE = await respostaGE.json();
 
-if (respostas.some(resposta => !resposta.ok)) {
-  throw new Error('Falha ao consultar a SportScore.');
+    if (dadosGE.sucesso && Array.isArray(dadosGE.jogos)) {
+      jogosGE = dadosGE.jogos.map(jogo => ({
+        id: jogo.id,
+        competition: 'BRAZILIAN SERIE A',
+        time: jogo.data,
+        home: jogo.mandante.nome,
+        away: jogo.visitante.nome,
+        home_logo: jogo.mandante.escudo,
+        away_logo: jogo.visitante.escudo,
+        home_score: jogo.mandante.gols,
+        away_score: jogo.visitante.gols,
+        venue: jogo.estadio
+      }));
+    }
+  }
+} catch (erroGE) {
+  console.warn('GE Série A indisponível:', erroGE);
 }
 
-const resultados = await Promise.all(
-  respostas.map(resposta => resposta.json())
-);
+// SPORTScore: ALTERNATIVA E OUTRAS COMPETIÇÕES
+let jogosSportScore = [];
 
-const todosJogos = resultados.flatMap(dados => dados.matches || []);
+try {
+  const urls = [
+    `https://sportscore.com/api/v1/fixtures/?sport=football&date=${dataConsulta}&limit=200`,
+    `https://sportscore.com/api/v1/fixtures/?sport=football&date=${dataSeguinte}&limit=200`
+  ];
+
+  const respostas = await Promise.all(
+    urls.map(url => fetch(url))
+  );
+
+  const resultados = await Promise.all(
+    respostas
+      .filter(resposta => resposta.ok)
+      .map(resposta => resposta.json())
+  );
+
+  jogosSportScore = resultados.flatMap(
+    dados => dados.matches || []
+  );
+} catch (erroSportScore) {
+  console.warn('SportScore indisponível:', erroSportScore);
+}
+
+// Evita duplicar a Série A quando o GE já forneceu os jogos
+if (jogosGE.length > 0) {
+  jogosSportScore = jogosSportScore.filter(jogo => {
+    const nome = normalizar(jogo.competition);
+
+    return ![
+      'BRAZILIAN SERIE A',
+      'BRAZIL SERIE A',
+      'BRASILEIRAO SERIE A'
+    ].includes(nome);
+  });
+}
+
+const todosJogos = [...jogosGE, ...jogosSportScore];
 
 const jogosUnicos = [...new Map(
   todosJogos.map(jogo => [
