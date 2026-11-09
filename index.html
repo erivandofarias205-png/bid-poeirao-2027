@@ -11733,17 +11733,19 @@ async function aplicarVisibilidadeProfissionais() {
         const nome = card.querySelector('strong')?.textContent.trim();
         const chave = mapaCartoes[nome];
 
-        if (chave && Object.prototype.hasOwnProperty.call(visibilidade, chave)) {
-          card.hidden = visibilidade[chave] !== true;
-        }
+       if (chave && Object.prototype.hasOwnProperty.call(visibilidade, chave)) {
+  card.style.display = visibilidade[chave] === true ? '' : 'none';
+}
       });
 
       const categoria = grid.previousElementSibling;
 
       if (categoria?.classList.contains('prof-categoria')) {
-        const cartoesVisiveis = grid.querySelectorAll('.prof-card:not([hidden])').length;
-        categoria.hidden = cartoesVisiveis === 0;
-        grid.hidden = cartoesVisiveis === 0;
+        const cartoesVisiveis = [...grid.querySelectorAll('.prof-card')]
+  .filter(card => card.style.display !== 'none').length;
+
+categoria.style.display = cartoesVisiveis === 0 ? 'none' : '';
+grid.style.display = cartoesVisiveis === 0 ? 'none' : '';
       }
     });
 
