@@ -848,8 +848,7 @@ if (linkFase) {
     edicao,
 fases_navegacao: dadosGE.fases_navegacao,
 fase_url_encontrada: slug,
-    diagnostico_fase: diagnosticoFase,
-  atualizado_em: new Date().toISOString()
+    atualizado_em: new Date().toISOString()
   };
 }
     return {
