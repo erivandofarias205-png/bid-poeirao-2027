@@ -47,10 +47,11 @@ if (serie === 'b') {
     number: numeroRodada,
     matches: jogos
   }];
-    } else {
+       } else {
       const resultado = await brasileirao.getRounds(serie);
       rodadas = resultado.rounds || [];
     }
+    } // fecha o bloco externo das séries A, B e C
 
     const partidas = rodadas.flatMap(item =>
       item.matches
