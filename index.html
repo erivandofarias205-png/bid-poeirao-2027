@@ -4633,7 +4633,132 @@ async function abrirCompeticaoProfissional(nome) {
   const serie = series[competicao];
 
   if (!serie) {
+  // COPA DO BRASIL 2026
+  if (competicao === 'COPA DO BRASIL') {
 
+    area.innerHTML = `
+      <p style="color:#d4af37;font-weight:900">
+        COPA DO BRASIL 2026 · MATA-MATA
+      </p>
+    `;
+
+    if (areaJogos) {
+      areaJogos.innerHTML = '<p>Carregando Copa do Brasil...</p>';
+    }
+
+    window.carregarFaseCopaBrasil = async function(fase = 8) {
+      const nomesFases = [
+        'PRIMEIRA FASE',
+        'SEGUNDA FASE',
+        'TERCEIRA FASE',
+        'QUARTA FASE',
+        'QUINTA FASE',
+        'OITAVAS DE FINAL',
+        'QUARTAS DE FINAL',
+        'SEMIFINAL',
+        'FINAL'
+      ];
+
+      const resposta = await fetch(
+        `/api/competicoes?competicao=copa-do-brasil&fase=${fase}`
+      );
+
+      const retorno = await resposta.json();
+
+      if (!resposta.ok || !retorno.sucesso) {
+        throw new Error(retorno.erro || 'Erro ao carregar Copa do Brasil.');
+      }
+
+      const jogos = retorno.jogos || [];
+
+      areaJogos.innerHTML = `
+        <div style="
+          background:#111;
+          color:#d4af37;
+          padding:14px;
+          border-radius:10px;
+          text-align:center;
+          border:1px solid #c99b32;
+        ">
+          <h3 style="margin:0 0 12px">
+            ${nomesFases[fase]}
+          </h3>
+
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <button class="tab"
+              ${fase === 0 ? 'disabled' : ''}
+              onclick="carregarFaseCopaBrasil(${fase - 1})">
+              ‹ ANTERIOR
+            </button>
+
+            <span style="font-weight:900">
+              ${fase + 1}/9
+            </span>
+
+            <button class="tab"
+              ${fase === 8 ? 'disabled' : ''}
+              onclick="carregarFaseCopaBrasil(${fase + 1})">
+              PRÓXIMA ›
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          ${
+            jogos.length
+              ? jogos.map(jogo => `
+                <div style="
+                  background:#fff;
+                  color:#222;
+                  border:1px solid #c99b32;
+                  border-radius:9px;
+                  padding:12px;
+                  margin-bottom:10px;
+                ">
+                  <div style="display:flex;justify-content:space-between;gap:8px">
+                    <strong>${jogo.mandante?.nome || 'A definir'}</strong>
+                    <strong>
+                      ${
+                        jogo.placar
+                          ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
+                          : ' x '
+                      }
+                    </strong>
+                    <strong>${jogo.visitante?.nome || 'A definir'}</strong>
+                  </div>
+
+                  <p style="font-size:11px;margin:9px 0 0">
+                    ${jogo.data || ''} · ${jogo.hora || ''}
+                  </p>
+
+                  <p style="font-size:11px;margin:3px 0">
+                    ${jogo.estadio || ''}
+                  </p>
+
+                  <strong style="font-size:10px">
+                    ${jogo.status || 'AGENDADA'}
+                    ${jogo.penaltis ? ' · PÊNALTIS: ' + jogo.penaltis : ''}
+                  </strong>
+                </div>
+              `).join('')
+              : '<p style="text-align:center;padding:20px">Jogos desta fase ainda não foram cadastrados.</p>'
+          }
+        </div>
+      `;
+
+    };
+
+    try {
+      await window.carregarFaseCopaBrasil(8);
+    } catch (erro) {
+      areaJogos.innerHTML = `
+        <p style="color:red">Erro ao carregar Copa do Brasil: ${erro.message}</p>
+      `;
+    }
+
+    return;
+  }
+    
   // CHAMPIONS LEAGUE E EUROPA LEAGUE - DADOS DO GE
   const competicoesGE = {
     'CHAMPIONS LEAGUE': 'champions',
