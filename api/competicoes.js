@@ -462,8 +462,70 @@ module.exports = async function handler(req, res) {
       jogos = Object.values(grupos).flat();
       dadosOriginais = dados;
     }
+    else if (chave === 'brasileirao-b') {
+      const numeroRodada = Math.min(38, Math.max(1, Number(rodada) || 35));
 
-    else if (chave === 'brasileirao-b' || chave === 'brasileirao-d') {
+      const urlGE = `https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/brasileiro-serie-b-2026-fase-unica/rodada/${String(numeroRodada).padStart(2, '0')}/jogos/`;
+
+      const [respostaGE, retornoTabela] = await Promise.all([
+        fetch(urlGE),
+        consultarAPI('/api/brasileirao?serie=b')
+      ]);
+
+      if (!respostaGE.ok) {
+        throw new Error(`GE retornou erro ${respostaGE.status} na rodada ${numeroRodada}.`);
+      }
+
+      const listaGE = await respostaGE.json();
+      const dadosTabela = retornoTabela.dados || {};
+
+      fonte = 'GE Globo';
+      nome = 'Brasileirão Série B';
+      classificacao = dadosTabela.tables || [];
+
+      jogos = listaGE.map(jogo => {
+        const mandante = jogo.equipes?.mandante || {};
+        const visitante = jogo.equipes?.visitante || {};
+
+        const temPlacar =
+          jogo.placar_oficial_mandante != null &&
+          jogo.placar_oficial_visitante != null;
+
+        return {
+          id: jogo.id,
+          date: jogo.data_realizacao
+            ? jogo.data_realizacao.split('T')[0]
+            : '',
+          time: jogo.hora_realizacao || '',
+          status: jogo.broadcast?.id === 'ENCERRADA'
+            ? 'finished'
+            : jogo.jogo_ja_começou
+              ? 'live'
+              : 'scheduled',
+          homeTeam: {
+            name: mandante.nome_popular || '',
+            badge: mandante.escudo || ''
+          },
+          awayTeam: {
+            name: visitante.nome_popular || '',
+            badge: visitante.escudo || ''
+          },
+          score: temPlacar
+            ? {
+                home: Number(jogo.placar_oficial_mandante),
+                away: Number(jogo.placar_oficial_visitante)
+              }
+            : null,
+          venue: jogo.sede?.nome_popular || ''
+        };
+      });
+
+      dadosOriginais = {
+        classificacao: dadosTabela,
+        jogos: listaGE
+      };
+    }
+   else if (chave === 'brasileirao-d') {
       const serie = chave.slice(-1);
       const retorno = await consultarAPI(
   serie === 'b'
