@@ -474,7 +474,54 @@ module.exports = async function handler(req, res) {
       }
 
       const listaGE = await respostaGE.json();
-     const dadosTabela = {};
+     let dadosTabela = { tables: [] };
+
+try {
+  const respostaPagina = await fetch(
+    'https://ge.globo.com/futebol/brasileirao-serie-b/'
+  );
+
+  if (!respostaPagina.ok) {
+    throw new Error(`GE retornou ${respostaPagina.status}`);
+  }
+
+  const htmlPagina = await respostaPagina.text();
+
+  const blocoTabela = htmlPagina.match(
+    /const classificacao = (\{[\s\S]*?\});/
+  );
+
+  if (!blocoTabela) {
+    throw new Error('Classificação não encontrada no HTML do GE.');
+  }
+
+  const tabelaGE = JSON.parse(blocoTabela[1]);
+
+  dadosTabela = {
+    tables: [{
+      name: 'CLASSIFICAÇÃO',
+      entries: (tabelaGE.classificacao || []).map(item => ({
+        position: item.ordem,
+        team: {
+          name: item.nome_popular || '',
+          badge: item.escudo || ''
+        },
+        points: item.pontos,
+        matches: item.jogos,
+        wins: item.vitorias,
+        draws: item.empates,
+        losses: item.derrotas,
+        goalsFor: item.gols_pro,
+        goalsAgainst: item.gols_contra,
+        goalDifference: item.saldo_gols,
+        efficiency: item.aproveitamento
+      }))
+    }]
+  };
+
+} catch (erroTabela) {
+  console.error('Erro classificação GE Série B:', erroTabela.message);
+}
 
       fonte = 'GE Globo';
       nome = 'Brasileirão Série B';
@@ -494,11 +541,11 @@ module.exports = async function handler(req, res) {
             ? jogo.data_realizacao.split('T')[0]
             : '',
           time: jogo.hora_realizacao || '',
-          status: jogo.broadcast?.id === 'ENCERRADA'
-            ? 'finished'
-            : jogo.jogo_ja_começou
-              ? 'live'
-              : 'scheduled',
+         status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+  ? 'finished'
+  : jogo.jogo_ja_comecou
+    ? 'live'
+    : 'scheduled',
           homeTeam: {
             name: mandante.nome_popular || '',
             badge: mandante.escudo || ''
