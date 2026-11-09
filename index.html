@@ -4457,62 +4457,36 @@ carregarJogosHojeProfissional();
 </div>
 
     
+
+
 <div style="
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-  margin:12px 0 18px;
+  gap:35px;
+  margin:14px 0 20px;
 ">
-
-  <button type="button" class="tab"
-    onclick="
-      const campo=document.getElementById('dataConsultaJogos');
-      const d=new Date(campo.value+'T12:00:00');
-      d.setDate(d.getDate()-1);
-      campo.value=[
-        d.getFullYear(),
-        String(d.getMonth()+1).padStart(2,'0'),
-        String(d.getDate()).padStart(2,'0')
-      ].join('-');
-      carregarJogosHojeProfissional();
-    ">
-    ‹ DIA ANTERIOR
+  <button type="button"
+    onclick="alterarDataJogos(-1)"
+    title="Dia anterior"
+    style="background:#111;color:#d4af37;border:1px solid #d4af37;border-radius:50%;width:44px;height:44px;font-size:26px;cursor:pointer">
+    ‹
   </button>
 
-  <button type="button" class="tab"
-    onclick="
-      const d=new Date();
-      document.getElementById('dataConsultaJogos').value=[
-        d.getFullYear(),
-        String(d.getMonth()+1).padStart(2,'0'),
-        String(d.getDate()).padStart(2,'0')
-      ].join('-');
-      carregarJogosHojeProfissional();
-    "
-    style="background:#c99b32;color:#111;font-weight:900">
-    HOJE
-  </button>
+  <strong id="dataJogosTitulo"
+    style="color:#d4af37;font-size:16px">
+    JOGOS DO DIA
+  </strong>
 
-  <button type="button" class="tab"
-    onclick="
-      const campo=document.getElementById('dataConsultaJogos');
-      const d=new Date(campo.value+'T12:00:00');
-      d.setDate(d.getDate()+1);
-      campo.value=[
-        d.getFullYear(),
-        String(d.getMonth()+1).padStart(2,'0'),
-        String(d.getDate()).padStart(2,'0')
-      ].join('-');
-      carregarJogosHojeProfissional();
-    ">
-    PRÓXIMO DIA ›
+  <button type="button"
+    onclick="alterarDataJogos(1)"
+    title="Próximo dia"
+    style="background:#111;color:#d4af37;border:1px solid #d4af37;border-radius:50%;width:44px;height:44px;font-size:26px;cursor:pointer">
+    ›
   </button>
-
 </div>
 
-  <div id="listaJogosHoje">
+    <div id="listaJogosHoje">
     <p>Carregando jogos...</p>
   </div>
 
@@ -4578,7 +4552,22 @@ carregarJogosHojeProfissional();
   </button>
 </div>
 <script>
+function alterarDataJogos(dias) {
+  const campo = document.getElementById('dataConsultaJogos');
+  if (!campo) return;
 
+  const data = new Date(campo.value + 'T12:00:00');
+  data.setDate(data.getDate() + dias);
+
+  campo.value = [
+    data.getFullYear(),
+    String(data.getMonth() + 1).padStart(2, '0'),
+    String(data.getDate()).padStart(2, '0')
+  ].join('-');
+
+  carregarJogosHojeProfissional();
+}
+  
 async function abrirCompeticaoProfissional(nome) {
     // ESCONDER A CENTRAL DE JOGOS AO ABRIR UMA COMPETIÇÃO
   const painelJogos = document.getElementById('profissionalJogosHoje');
