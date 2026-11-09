@@ -468,8 +468,7 @@ module.exports = async function handler(req, res) {
       const urlGE = `https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/brasileiro-serie-b-2026-fase-unica/rodada/${String(numeroRodada).padStart(2, '0')}/jogos/`;
 
       const respostaGE = await fetch(urlGE);
-      ]);
-
+     
       if (!respostaGE.ok) {
         throw new Error(`GE retornou erro ${respostaGE.status} na rodada ${numeroRodada}.`);
       }
