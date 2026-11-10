@@ -777,6 +777,10 @@ try {
       }
 
       const dados = extrairJSONGE('classificacao');
+           console.log(
+  'ESTRUTURA COMPLETA LIGA:',
+  JSON.stringify(dados, null, 2)
+);
       const gruposGE = dados.grupos || [];
 
       grupos = gruposGE.map(grupo => ({
