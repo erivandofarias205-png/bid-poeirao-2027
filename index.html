@@ -4889,7 +4889,7 @@ console.log('DIAGNÓSTICO GE:', {
       }
 
       const retornoGE = await respostaGE.json();
-const dadosCompeticaoGE = (retornoGE.competicoes || [])
+    const dadosCompeticaoGE = (retornoGE.competicoes || [])
   .find(item => item.chave === chaveGE);
 
 if (
