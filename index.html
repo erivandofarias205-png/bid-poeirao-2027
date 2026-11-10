@@ -4872,7 +4872,18 @@ const competicoesGE = {
       }
 
       const retornoGE = await respostaGE.json();
+const dadosCompeticaoGE = (retornoGE.competicoes || [])
+  .find(item => item.chave === chaveGE);
 
+if (
+  !retornoGE.sucesso ||
+  !dadosCompeticaoGE ||
+  dadosCompeticaoGE.sucesso === false
+) {
+  throw new Error(
+    dadosCompeticaoGE?.erro || 'Dados da competição não encontrados.'
+  );
+}
 
 const ehLigaDasNacoes = [
   'liga-das-nacoes',
@@ -4886,8 +4897,8 @@ const ehLigaDasNacoes = [
     .replace(/\s+/g, ' ')
 );
 
-const gruposGE = Array.isArray(retornoGE.grupos)
-  ? retornoGE.grupos
+const gruposGE = Array.isArray(dadosCompeticaoGE.grupos)
+  ? dadosCompeticaoGE.grupos
   : [];
 
 const normalizarEquipe = item => ({
@@ -4902,7 +4913,7 @@ const normalizarEquipe = item => ({
   saldo_gols: item.saldo_gols ?? 0
 });
 
-const tabelaGE = (retornoGE.classificacao || [])
+const tabelaGE = (dadosCompeticaoGE.classificacao || [])
   .map(normalizarEquipe);
 
 const totalEquipes = ehLigaDasNacoes
@@ -4965,7 +4976,9 @@ function montarTabela(lista) {
 
 area.innerHTML = `
   <p style="color:#d4af37;font-weight:900">
-    ${retornoGE.dados_originais?.temporada || 'Temporada atual'}
+   ${dadosCompeticaoGE.dados_originais?.edicao?.nome ||
+  dadosCompeticaoGE.dados_originais?.temporada ||
+  'Temporada atual'}
     · ${totalEquipes} equipes
   </p>
 
@@ -4989,6 +5002,66 @@ area.innerHTML = `
       : montarTabela(tabelaGE)
   }
 `;
+      
+if (areaJogos) {
+  const jogosGE = dadosCompeticaoGE.jogos || [];
+
+  areaJogos.innerHTML = jogosGE.length
+    ? `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
+          <thead>
+            <tr style="background:#171717;color:#e4bd43">
+              <th>DATA</th>
+              <th>MANDANTE</th>
+              <th>PLACAR</th>
+              <th>VISITANTE</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${jogosGE.map(jogo => {
+              const data = jogo.data
+                ? new Date(jogo.data).toLocaleDateString('pt-BR', {
+                    timeZone: 'UTC'
+                  })
+                : '-';
+
+              return `
+                <tr style="border-bottom:1px solid #ddd;text-align:center">
+                  <td>${data}<br>${jogo.hora || ''}</td>
+                  <td style="padding:8px">
+                    ${jogo.mandante?.escudo
+                      ? `<img src="${jogo.mandante.escudo}" style="width:23px;height:23px;object-fit:contain">`
+                      : ''}
+                    <br>
+                    <strong>${jogo.mandante?.nome_popular || jogo.mandante?.nome || '-'}</strong>
+                  </td>
+                  <td>
+                    <strong>
+                      ${jogo.placar
+                        ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
+                        : 'x'}
+                    </strong>
+                  </td>
+                  <td style="padding:8px">
+                    ${jogo.visitante?.escudo
+                      ? `<img src="${jogo.visitante.escudo}" style="width:23px;height:23px;object-fit:contain">`
+                      : ''}
+                    <br>
+                    <strong>${jogo.visitante?.nome_popular || jogo.visitante?.nome || '-'}</strong>
+                  </td>
+                  <td>${jogo.status || '-'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `
+    : '<p>Nenhum jogo encontrado para esta competição.</p>';
+}
+      
    // ARTILHARIA OFICIAL — CHAMPIONS LEAGUE
 if (competicao === 'CHAMPIONS LEAGUE') {
   const painel = document.getElementById('profissionalArtilharia');
