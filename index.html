@@ -4852,9 +4852,11 @@ const listaConfrontos = Object.values(confrontos);
 const competicoesGE = {
   'CHAMPIONS LEAGUE': 'champions',
   'EUROPA LEAGUE': 'europa',
-  'LIGA DAS NAÇÕES': 'liga-das-nacoes'
+  'LIGA DAS NAÇÕES': 'liga-das-nacoes',
+  'LIBERTADORES': 'libertadores',
+  'SUL-AMERICANA': 'sul-americana'
 };
-
+    
   const nomeCompeticaoNormalizado = String(competicao || '')
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
@@ -4874,6 +4876,220 @@ console.log('DIAGNÓSTICO GE:', {
   areaEncontrada: !!area,
   areaJogosEncontrada: !!areaJogos
 });
+    
+// LIBERTADORES E SUL-AMERICANA — SELETOR DE FASES DO GE
+if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
+  const painelFases = area;
+  const painelJogos = areaJogos;
+
+  async function buscarDadosConmebol(slug = '') {
+    const url = `/api/competicoes?competicao=${chaveGE}` +
+      (slug ? `&fase=${encodeURIComponent(slug)}` : '');
+
+    const resposta = await fetch(url);
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao consultar o GE.');
+    }
+
+    const retorno = await resposta.json();
+
+    const dados = (retorno.competicoes || [])
+      .find(item => item.chave === chaveGE);
+
+    if (!retorno.sucesso || !dados || dados.sucesso === false) {
+      throw new Error(dados?.erro || 'Dados não encontrados.');
+    }
+
+    return dados;
+  }
+
+  function montarClassificacaoConmebol(dados) {
+    const grupos = Array.isArray(dados.grupos)
+      ? dados.grupos
+      : [];
+
+    if (!grupos.length) {
+      return '<p>Classificação não disponível nesta fase.</p>';
+    }
+
+    return grupos.map((grupo, indice) => {
+      const lista = grupo.classificacao || [];
+
+      return `
+        <div style="margin-bottom:22px">
+          <h3 style="background:#171717;color:#e4bd43;padding:12px">
+            ${grupo.nome || `GRUPO ${indice + 1}`}
+          </h3>
+
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
+              <thead>
+                <tr style="background:#171717;color:#e4bd43">
+                  <th>POS</th><th>CLUBE</th><th>PTS</th>
+                  <th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${lista.map((item, i) => `
+                  <tr style="text-align:center;border-bottom:1px solid #ddd">
+                    <td>${item.posicao ?? i + 1}</td>
+                    <td style="text-align:left;padding:7px">
+                      ${item.escudo ? `<img src="${item.escudo}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle">` : ''}
+                      <strong>${item.equipe || item.nome_popular || ''}</strong>
+                    </td>
+                    <td><strong>${item.pontos ?? 0}</strong></td>
+                    <td>${item.jogos ?? 0}</td>
+                    <td>${item.vitorias ?? 0}</td>
+                    <td>${item.empates ?? 0}</td>
+                    <td>${item.derrotas ?? 0}</td>
+                    <td>${item.saldo_gols ?? 0}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function montarJogosConmebol(jogos) {
+    if (!jogos.length) {
+      return '<p>Nenhum jogo encontrado nesta fase.</p>';
+    }
+
+    return `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
+          <thead>
+            <tr style="background:#171717;color:#e4bd43">
+              <th>DATA</th><th>MANDANTE</th>
+              <th>PLACAR</th><th>VISITANTE</th><th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${jogos.map(jogo => {
+              const data = jogo.data
+                ? new Date(jogo.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+                : '-';
+
+              return `
+                <tr style="text-align:center;border-bottom:1px solid #ddd">
+                  <td>${data}<br>${jogo.hora || ''}</td>
+                  <td style="padding:7px">
+                    ${jogo.mandante?.escudo ? `<img src="${jogo.mandante.escudo}" style="width:25px;height:25px;object-fit:contain"><br>` : ''}
+                    <strong>${jogo.mandante?.nome || '-'}</strong>
+                  </td>
+                  <td>
+                    <strong>
+                      ${jogo.placar
+                        ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
+                        : ' x '}
+                    </strong>
+                    ${jogo.penaltis ? `<br><small>Pênaltis: ${jogo.penaltis}</small>` : ''}
+                  </td>
+                  <td style="padding:7px">
+                    ${jogo.visitante?.escudo ? `<img src="${jogo.visitante.escudo}" style="width:25px;height:25px;object-fit:contain"><br>` : ''}
+                    <strong>${jogo.visitante?.nome || '-'}</strong>
+                  </td>
+                  <td>${jogo.status || '-'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  try {
+    painelFases.innerHTML = '<p>Carregando fases do GE...</p>';
+
+    const dadosInicial = await buscarDadosConmebol();
+
+    const navegacao =
+      dadosInicial.dados_originais?.fases_navegacao || [];
+
+    if (!navegacao.length) {
+      throw new Error('O GE não retornou a lista de fases.');
+    }
+
+    const faseAtual = navegacao.find(f => f.atual) || navegacao[0];
+
+    painelFases.innerHTML = `
+      <div style="margin-bottom:15px">
+        <label style="display:block;color:#d4af37;font-weight:900;margin-bottom:7px">
+          ESCOLHA A FASE
+        </label>
+        <select id="seletorFaseConmebol"
+          style="width:100%;max-width:380px;padding:11px;border-radius:7px;border:1px solid #d4af37;font-weight:800;background:#171717;color:#fff">
+          ${navegacao.map(f => `
+            <option value="${f.slug}" ${f.slug === faseAtual.slug ? 'selected' : ''}>
+              ${f.nome}${f.atual ? ' — FASE ATUAL' : ''}
+            </option>
+          `).join('')}
+        </select>
+        <p id="statusFaseConmebol" style="color:#d4af37;font-size:12px">
+          Fonte: GE Globo
+        </p>
+        <div id="classificacaoConmebol"></div>
+      </div>
+    `;
+
+    const seletor = document.getElementById('seletorFaseConmebol');
+    const classificacao = document.getElementById('classificacaoConmebol');
+    const status = document.getElementById('statusFaseConmebol');
+
+    async function carregarFaseConmebol(slug) {
+      status.textContent = 'Carregando dados da fase...';
+      classificacao.innerHTML = '<p>Consultando classificação...</p>';
+
+      if (painelJogos) {
+        painelJogos.innerHTML = '<p>Carregando jogos...</p>';
+      }
+
+      try {
+        const dados = await buscarDadosConmebol(slug);
+
+        classificacao.innerHTML = montarClassificacaoConmebol(dados);
+
+        if (painelJogos) {
+          painelJogos.innerHTML = montarJogosConmebol(dados.jogos || []);
+        }
+
+        status.textContent =
+          `Fonte: GE Globo · ${dados.dados_originais?.fase_url_encontrada || slug}`;
+      } catch (erro) {
+        classificacao.innerHTML =
+          `<p style="color:red">${erro.message}</p>`;
+
+        if (painelJogos) {
+          painelJogos.innerHTML = '<p>Não foi possível carregar os jogos.</p>';
+        }
+
+        status.textContent = 'Erro ao carregar a fase.';
+      }
+    }
+
+    seletor.addEventListener('change', () => {
+      carregarFaseConmebol(seletor.value);
+    });
+
+    await carregarFaseConmebol(faseAtual.slug);
+
+  } catch (erro) {
+    painelFases.innerHTML =
+      `<p style="color:red">Erro: ${erro.message}</p>`;
+
+    if (painelJogos) {
+      painelJogos.innerHTML = '<p>Não foi possível carregar os jogos.</p>';
+    }
+  }
+
+  return;
+}
+
   if (chaveGE) {
     area.innerHTML = '<p>Carregando classificação do GE...</p>';
 
