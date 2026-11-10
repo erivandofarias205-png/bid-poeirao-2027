@@ -14,11 +14,18 @@ export default async function handler(req, res) {
   }
 
   try {
+    const europa = req.query.competicao === 'europa';
+
+    const competitionId = europa ? '14' : '1';
+    const nomeCompeticao = europa
+      ? 'Europa League'
+      : 'Champions League';
+
     const url = new URL(
       'https://compstats.uefa.com/v2/player-ranking'
     );
 
-    url.searchParams.set('competitionId', '1');
+    url.searchParams.set('competitionId', competitionId);
     url.searchParams.set('limit', '100');
     url.searchParams.set('offset', '0');
     url.searchParams.set('optionalFields', 'PLAYER,TEAM');
@@ -66,7 +73,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       sucesso: true,
-      competicao: 'Champions League',
+      competicao: nomeCompeticao,
       temporada: '2026/2027',
       fonte: 'UEFA',
       total: artilheiros.length,
