@@ -695,7 +695,134 @@ try {
       jogos = dados.jogos || [];
       dadosOriginais = dados;
     }
-      else if (chave === 'copa-do-brasil') {
+         else if (chave === 'liga-das-nacoes') {
+      const urlGE =
+        'https://ge.globo.com/futebol/futebol-internacional/liga-das-nacoes/';
+
+      const respostaGE = await fetch(urlGE, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Accept': 'text/html,application/xhtml+xml'
+        }
+      });
+
+      if (!respostaGE.ok) {
+        throw new Error(`GE respondeu com HTTP ${respostaGE.status}.`);
+      }
+
+      const html = await respostaGE.text();
+
+      const scriptReact = [
+        ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
+      ].find(item => /\bid=["']scriptReact["']/.test(item[1]));
+
+      if (!scriptReact) {
+        throw new Error('Dados da Liga das Nações não encontrados no GE.');
+      }
+
+      const script = scriptReact[2];
+
+      function extrairJSONGE(variavel) {
+        const marcador = new RegExp(`\\bconst\\s+${variavel}\\s*=\\s*`);
+        const encontro = marcador.exec(script);
+
+        if (!encontro) {
+          throw new Error(`Dados ${variavel} não encontrados no GE.`);
+        }
+
+        const inicio = encontro.index + encontro[0].length;
+        const abertura = script[inicio];
+        const fechamento = abertura === '[' ? ']' : '}';
+
+        let nivel = 0;
+        let dentroString = false;
+        let escape = false;
+
+        for (let i = inicio; i < script.length; i++) {
+          const c = script[i];
+
+          if (dentroString) {
+            if (escape) escape = false;
+            else if (c === '\\') escape = true;
+            else if (c === '"') dentroString = false;
+            continue;
+          }
+
+          if (c === '"') {
+            dentroString = true;
+            continue;
+          }
+
+          if (c === abertura || c === '{' || c === '[') nivel++;
+
+          if (
+            c === fechamento ||
+            (abertura === '[' && c === '}') ||
+            (abertura === '{' && c === ']')
+          ) nivel--;
+
+          if (nivel === 0) {
+            return JSON.parse(script.slice(inicio, i + 1));
+          }
+        }
+
+        throw new Error(`JSON incompleto em ${variavel}.`);
+      }
+
+      const dados = extrairJSONGE('classificacao');
+      const gruposGE = dados.grupos || [];
+
+      grupos = gruposGE.map(grupo => ({
+        nome: grupo.nome_grupo || '',
+        classificacao: grupo.classificacao || [],
+        jogos: grupo.lista_jogos || [],
+        rodada: grupo.rodada || {}
+      }));
+
+      classificacao = grupos.flatMap(grupo =>
+        grupo.classificacao.map(equipe => ({
+          ...equipe,
+          grupo: grupo.nome
+        }))
+      );
+
+      jogos = grupos.flatMap(grupo =>
+        grupo.jogos.map(jogo => ({
+          id: jogo.id,
+          data: jogo.data_realizacao || '',
+          hora: jogo.hora_realizacao || '',
+          estadio: jogo.sede?.nome_popular || '',
+          status: jogo.placar_oficial_mandante != null &&
+                  jogo.placar_oficial_visitante != null
+            ? 'ENCERRADA'
+            : jogo.jogo_ja_comecou
+              ? 'EM_ANDAMENTO'
+              : 'AGENDADA',
+          mandante: jogo.equipes?.mandante || {},
+          visitante: jogo.equipes?.visitante || {},
+          placar: jogo.placar_oficial_mandante != null &&
+                  jogo.placar_oficial_visitante != null
+            ? {
+                mandante: Number(jogo.placar_oficial_mandante),
+                visitante: Number(jogo.placar_oficial_visitante)
+              }
+            : null
+        }))
+      );
+
+      fonte = 'GE Globo';
+      nome = 'Liga das Nações';
+
+      rodadaFinal = Math.max(
+        0,
+        ...gruposGE.map(grupo =>
+          Number(grupo.rodada?.atual || 0)
+        )
+      );
+
+      dadosOriginais = dados;
+    }
+         else if (chave === 'copa-do-brasil') {
   const urlBase = 'https://ge.globo.com/futebol/copa-do-brasil/';
 
   if (faseCopa < 0 || faseCopa > 8) {
