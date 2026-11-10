@@ -4855,8 +4855,25 @@ const competicoesGE = {
   'LIGA DAS NAÇÕES': 'liga-das-nacoes'
 };
 
-  const chaveGE = competicoesGE[competicao];
+  const nomeCompeticaoNormalizado = String(competicao || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .trim()
+  .toUpperCase();
 
+const chaveGE = Object.entries(competicoesGE)
+  .find(([nome]) =>
+    nome.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toUpperCase() === nomeCompeticaoNormalizado
+  )?.[1];
+console.log('DIAGNÓSTICO GE:', {
+  competicaoRecebida: competicao,
+  chaveGE: chaveGE,
+  areaEncontrada: !!area,
+  areaJogosEncontrada: !!areaJogos
+});
   if (chaveGE) {
     area.innerHTML = '<p>Carregando classificação do GE...</p>';
 
