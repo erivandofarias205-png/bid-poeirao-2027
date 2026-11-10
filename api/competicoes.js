@@ -402,6 +402,16 @@ const fase = String(req.query.fase || 'final').toLowerCase();
       atualizado_em: new Date().toISOString()
     };
   }
+  const paginasConmebol = {
+  'libertadores': {
+    nome: 'CONMEBOL Libertadores',
+    url: 'https://ge.globo.com/futebol/libertadores/'
+  },
+  'sul-americana': {
+    nome: 'Copa Sul-Americana',
+    url: 'https://ge.globo.com/futebol/copa-sul-americana/'
+  }
+};
   async function consultarCompeticao(chave, faseCopa = 8) {
     let fonte = '';
     let nome = '';
@@ -1187,16 +1197,7 @@ fase_url_encontrada: slug,
         'champions',
         'europa'
       ];
-const paginasConmebol = {
-  'libertadores': {
-    nome: 'CONMEBOL Libertadores',
-    url: 'https://ge.globo.com/futebol/libertadores/'
-  },
-  'sul-americana': {
-    nome: 'Copa Sul-Americana',
-    url: 'https://ge.globo.com/futebol/copa-sul-americana/'
-  }
-};
+
       const selecionadasArtilharia = competicao === 'todas'
         ? permitidasArtilharia
         : [competicao];
