@@ -5289,14 +5289,18 @@ if (areaJogos) {
 }
       
    // ARTILHARIA OFICIAL — CHAMPIONS LEAGUE
-if (competicao === 'CHAMPIONS LEAGUE') {
+if (['CHAMPIONS LEAGUE', 'EUROPA LEAGUE'].includes(competicao)) {
   const painel = document.getElementById('profissionalArtilharia');
 
   if (painel) {
     painel.innerHTML = '<p>Carregando artilharia da UEFA...</p>';
 
     try {
-      const respostaArtilharia = await fetch('/api/artilharia-champions');
+      cconst respostaArtilharia = await fetch(
+  competicao === 'EUROPA LEAGUE'
+    ? '/api/artilharia-champions?competicao=europa'
+    : '/api/artilharia-champions'
+);
 
       if (!respostaArtilharia.ok) {
         throw new Error('Não foi possível consultar a artilharia.');
