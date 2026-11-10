@@ -777,15 +777,7 @@ try {
       }
 
       const dados = extrairJSONGE('classificacao');
-           console.log(
-  'IDENTIFICADORES LIGA:',
-  JSON.stringify({
-    edicao: dados.edicao,
-    fase: dados.fase,
-    fases_navegacao: dados.fases_navegacao
-  }, null, 2)
-);
-                      console.log(
+                                console.log(
   'GRUPOS COMPLETOS LIGA:',
   JSON.stringify(dados.grupos, null, 2)
 );
@@ -793,7 +785,15 @@ try {
   'ESTRUTURA COMPLETA LIGA:',
   JSON.stringify(dados, null, 2)
 );
-      const gruposGE = dados.grupos || [];
+     console.log(
+  'IDENTIFICADORES LIGA:',
+  JSON.stringify({
+    edicao: dados.edicao,
+    fase: dados.fase,
+    fases_navegacao: dados.fases_navegacao
+  }, null, 2)
+);
+           const gruposGE = dados.grupos || [];
 
       grupos = gruposGE.map(grupo => ({
         nome: grupo.nome_grupo || '',
