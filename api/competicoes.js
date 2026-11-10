@@ -845,21 +845,23 @@ const retorno = await consultarAPI(caminhoEuropa);
       dadosOriginais = dados;
     }
            
+
 else if (chave === 'libertadores' || chave === 'sul-americana') {
   const config = paginasConmebol[chave];
 
-  const respostaGE = await fetch(config.url, {
+  // Busca a página principal do GE para identificar a competição e suas fases
+  const respostaPagina = await fetch(config.url, {
     headers: {
       'User-Agent': 'Mozilla/5.0',
       'Accept': 'text/html,application/xhtml+xml'
     }
   });
 
-  if (!respostaGE.ok) {
-    throw new Error(`GE respondeu com HTTP ${respostaGE.status}.`);
+  if (!respostaPagina.ok) {
+    throw new Error(`GE respondeu com HTTP ${respostaPagina.status}.`);
   }
 
-  const html = await respostaGE.text();
+  const html = await respostaPagina.text();
 
   const scriptReact = [
     ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
@@ -875,16 +877,12 @@ else if (chave === 'libertadores' || chave === 'sul-americana') {
     const marcador = new RegExp(`\\bconst\\s+${variavel}\\s*=\\s*`);
     const encontro = marcador.exec(script);
 
-    if (!encontro) {
-      throw new Error(`Dados ${variavel} não encontrados no GE.`);
-    }
+    if (!encontro) return null;
 
     const inicio = encontro.index + encontro[0].length;
     const abertura = script[inicio];
 
-    if (abertura !== '{' && abertura !== '[') {
-      throw new Error(`Formato inválido em ${variavel}.`);
-    }
+    if (abertura !== '{' && abertura !== '[') return null;
 
     let nivel = 0;
     let dentroString = false;
@@ -906,7 +904,6 @@ else if (chave === 'libertadores' || chave === 'sul-americana') {
       }
 
       if (c === '{' || c === '[') nivel++;
-
       if (c === '}' || c === ']') nivel--;
 
       if (nivel === 0) {
@@ -914,10 +911,45 @@ else if (chave === 'libertadores' || chave === 'sul-americana') {
       }
     }
 
-    throw new Error(`JSON incompleto em ${variavel}.`);
+    throw new Error(`JSON incompleto em ${variavel} no GE.`);
   }
 
-  const dados = extrairJSONConmebol('classificacao');
+  const dadosPagina = extrairJSONConmebol('classificacao') || {};
+  const fasePagina = extrairJSONConmebol('fase') || {};
+
+  const resourceId =
+    script.match(/tUUID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] ||
+    html.match(/RESOURCE_ID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1];
+
+  if (!resourceId) {
+    throw new Error(`Identificador da tabela de ${config.nome} não encontrado.`);
+  }
+
+  const fasesNavegacao = dadosPagina.fases_navegacao || [];
+  const slugAtual = fasePagina.slug || '';
+  const slugSolicitado = fase && fase !== 'final'
+    ? fase
+    : slugAtual;
+
+  if (!slugSolicitado) {
+    throw new Error(`Fase de ${config.nome} não identificada.`);
+  }
+
+  const urlAPI =
+    `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugSolicitado)}/classificacao/`;
+
+  const respostaGE = await fetch(urlAPI, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!respostaGE.ok) {
+    throw new Error(`API GE respondeu HTTP ${respostaGE.status} na fase ${slugSolicitado}.`);
+  }
+
+  const dados = await respostaGE.json();
 
   const gruposGE = Array.isArray(dados.grupos)
     ? dados.grupos
@@ -953,10 +985,14 @@ else if (chave === 'libertadores' || chave === 'sul-americana') {
     });
   });
 
+  (dados.lista_jogos || []).forEach(jogo => {
+    jogosEncontrados.push(jogo);
+  });
+
   const jogosUnicos = [
     ...new Map(
       jogosEncontrados.map((jogo, indice) => [
-        jogo.id || `${jogo.data_realizacao}-${indice}`,
+        jogo.id || `${jogo.data_realizacao || ''}-${indice}`,
         jogo
       ])
     ).values()
@@ -970,32 +1006,47 @@ else if (chave === 'libertadores' || chave === 'sul-americana') {
       jogo.placar_oficial_mandante != null &&
       jogo.placar_oficial_visitante != null;
 
+    const temPenaltis =
+      jogo.placar_penaltis_mandante != null &&
+      jogo.placar_penaltis_visitante != null;
+
     return {
       id: jogo.id,
       data: jogo.data_realizacao || '',
       hora: jogo.hora_realizacao || '',
       estadio: jogo.sede?.nome_popular || '',
+
       status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
         ? 'ENCERRADA'
         : jogo.jogo_ja_comecou
           ? 'EM_ANDAMENTO'
           : 'AGENDADA',
+
       mandante: {
         id: mandante.id || '',
         nome: mandante.nome_popular || '',
+        sigla: mandante.sigla || '',
         escudo: mandante.escudo || ''
       },
+
       visitante: {
         id: visitante.id || '',
         nome: visitante.nome_popular || '',
+        sigla: visitante.sigla || '',
         escudo: visitante.escudo || ''
       },
-      placar: temPlacar
-        ? {
-            mandante: Number(jogo.placar_oficial_mandante),
-            visitante: Number(jogo.placar_oficial_visitante)
-          }
-        : null
+
+      placar: temPlacar ? {
+        mandante: Number(jogo.placar_oficial_mandante),
+        visitante: Number(jogo.placar_oficial_visitante)
+      } : null,
+
+      penaltis: temPenaltis ? {
+        mandante: Number(jogo.placar_penaltis_mandante),
+        visitante: Number(jogo.placar_penaltis_visitante)
+      } : null,
+
+      grupo: jogo.grupo || jogo.nome_grupo || ''
     };
   });
 
@@ -1004,12 +1055,17 @@ else if (chave === 'libertadores' || chave === 'sul-americana') {
 
   rodadaFinal = Math.max(
     0,
-    ...gruposGE.map(grupo =>
-      Number(grupo.rodada?.atual || 0)
-    )
+    ...gruposGE.map(grupo => Number(grupo.rodada?.atual || 0))
   );
 
-  dadosOriginais = dados;
+  dadosOriginais = {
+    ...dados,
+    fase_selecionada: slugSolicitado,
+    fase_atual: slugAtual,
+    fases_navegacao: fasesNavegacao,
+    resource_id: resourceId,
+    url_api: urlAPI
+  };
 }
 
          else if (chave === 'copa-do-brasil') {
