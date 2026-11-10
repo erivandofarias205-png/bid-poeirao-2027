@@ -471,6 +471,13 @@ const fase = String(req.query.fase || 'final').toLowerCase();
       grupos = dados.grupos || {};
       jogos = Object.values(grupos).flat();
       dadosOriginais = dados;
+      console.log('DIAGNÓSTICO RODADAS LIGA:', 
+  gruposGE.map(grupo => ({
+    nome: grupo.nome_grupo,
+    rodada: grupo.rodada,
+    primeiroJogo: grupo.lista_jogos?.[0]
+  }))
+);
     }
     else if (chave === 'brasileirao-b') {
      const urlRodadaB = numero =>
