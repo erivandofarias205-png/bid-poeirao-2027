@@ -4987,7 +4987,7 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
                         ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
                         : ' x '}
                     </strong>
-                    ${jogo.penaltis ? `<br><small>Pênaltis: ${jogo.penaltis}</small>` : ''}
+                   ${jogo.penaltis ? `<br><small>Pênaltis: ${typeof jogo.penaltis === 'object' ? Object.values(jogo.penaltis).filter(v => v !== null && typeof v !== 'object').join(' x ') : jogo.penaltis}</small>` : ''}
                   </td>
                   <td style="padding:7px">
                     ${jogo.visitante?.escudo ? `<img src="${jogo.visitante.escudo}" style="width:25px;height:25px;object-fit:contain"><br>` : ''}
