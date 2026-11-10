@@ -5296,7 +5296,7 @@ if (['CHAMPIONS LEAGUE', 'EUROPA LEAGUE'].includes(competicao)) {
     painel.innerHTML = '<p>Carregando artilharia da UEFA...</p>';
 
     try {
-      cconst respostaArtilharia = await fetch(
+     const respostaArtilharia = await fetch(
   competicao === 'EUROPA LEAGUE'
     ? '/api/artilharia-champions?competicao=europa'
     : '/api/artilharia-champions'
