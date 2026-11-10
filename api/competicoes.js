@@ -1313,9 +1313,11 @@ fase_url_encontrada: slug,
         try {
           return {
             sucesso: true,
-           ...await consultarCompeticao(
+          ...await consultarCompeticao(
   chave,
-  Number(req.query.fase ?? 8)
+  chave === 'copa-do-brasil'
+    ? Number(req.query.fase ?? 8)
+    : 8
 )
           };
         } catch (erro) {
