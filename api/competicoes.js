@@ -777,6 +777,14 @@ try {
       }
 
       const dados = extrairJSONGE('classificacao');
+           console.log(
+  'IDENTIFICADORES LIGA:',
+  JSON.stringify({
+    edicao: dados.edicao,
+    fase: dados.fase,
+    fases_navegacao: dados.fases_navegacao
+  }, null, 2)
+);
                       console.log(
   'GRUPOS COMPLETOS LIGA:',
   JSON.stringify(dados.grupos, null, 2)
