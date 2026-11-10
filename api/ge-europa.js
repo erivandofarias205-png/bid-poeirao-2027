@@ -175,6 +175,7 @@ async function consultarGE(config, rodadaSolicitada) {
  
   // Identifica automaticamente a primeira rodada ainda não encerrada.
   const ultimaRodada = Number(classificacao.rodada?.ultima || 8);
+  const rodadaAtual = Number(classificacao.rodada?.atual || 1);
 
   async function consultarJogosRodada(numero) {
     const url =
