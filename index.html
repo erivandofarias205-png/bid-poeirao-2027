@@ -4873,67 +4873,121 @@ const competicoesGE = {
 
       const retornoGE = await respostaGE.json();
 
-const dadosGE = {
-  temporada: retornoGE.dados_originais?.temporada || 'Temporada atual',
-  total_equipes: (retornoGE.classificacao || []).length,
-  classificacao: (retornoGE.classificacao || []).map(item => ({
-    posicao: item.posicao,
-    equipe: item.equipe || '',
-    escudo: item.escudo || '',
-    pontos: item.pontos,
-    jogos: item.jogos,
-    vitorias: item.vitorias,
-    empates: item.empates,
-    derrotas: item.derrotas,
-    saldo_gols: item.saldo_gols
-  }))
-};
-      if (!retornoGE.sucesso || !dadosGE.classificacao.length) {
+
+const ehLigaDasNacoes = [
+  'liga-das-nacoes',
+  'liga das nacoes',
+  'liga das nações'
+].includes(
+  String(competicao || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+);
+
+const gruposGE = Array.isArray(retornoGE.grupos)
+  ? retornoGE.grupos
+  : [];
+
+const normalizarEquipe = item => ({
+  posicao: item.posicao ?? item.ordem ?? '-',
+  equipe: item.equipe || item.nome_popular || '',
+  escudo: item.escudo || '',
+  pontos: item.pontos ?? 0,
+  jogos: item.jogos ?? 0,
+  vitorias: item.vitorias ?? 0,
+  empates: item.empates ?? 0,
+  derrotas: item.derrotas ?? 0,
+  saldo_gols: item.saldo_gols ?? 0
+});
+
+const tabelaGE = (retornoGE.classificacao || [])
+  .map(normalizarEquipe);
+
+const totalEquipes = ehLigaDasNacoes
+  ? gruposGE.reduce(
+      (total, grupo) => total + (grupo.classificacao || []).length,
+      0
+    )
+  : tabelaGE.length;
+
+if (
+  !retornoGE.sucesso ||
+  (ehLigaDasNacoes ? !gruposGE.length : !tabelaGE.length)
+) {
   throw new Error('Dados da classificação não encontrados.');
 }
 
-const tabelaGE = dadosGE.classificacao;
+function montarTabela(lista) {
+  return `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
+        <thead>
+          <tr style="background:#171717;color:#e4bd43">
+            <th>POS</th>
+            <th style="text-align:left">CLUBE</th>
+            <th>PTS</th>
+            <th>J</th>
+            <th>V</th>
+            <th>E</th>
+            <th>D</th>
+            <th>SG</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lista.map(dado => {
+            const item = normalizarEquipe(dado);
+
+            return `
+              <tr style="border-bottom:1px solid #ddd;text-align:center">
+                <td><strong>${item.posicao}</strong></td>
+                <td style="text-align:left;padding:7px;white-space:nowrap">
+                  <div style="display:flex;align-items:center;gap:6px">
+                    ${item.escudo ? `<img src="${item.escudo}" style="width:23px;height:23px;object-fit:contain">` : ''}
+                    <strong>${item.equipe}</strong>
+                  </div>
+                </td>
+                <td><strong>${item.pontos}</strong></td>
+                <td>${item.jogos}</td>
+                <td>${item.vitorias}</td>
+                <td>${item.empates}</td>
+                <td>${item.derrotas}</td>
+                <td>${item.saldo_gols}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
 
 area.innerHTML = `
   <p style="color:#d4af37;font-weight:900">
-    ${dadosGE.temporada} · ${dadosGE.total_equipes} equipes
+    ${retornoGE.dados_originais?.temporada || 'Temporada atual'}
+    · ${totalEquipes} equipes
   </p>
 
-  <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
-      <thead>
-        <tr style="background:#171717;color:#e4bd43">
-          <th>POS</th>
-          <th style="text-align:left">CLUBE</th>
-          <th>PTS</th>
-          <th>J</th>
-          <th>V</th>
-          <th>E</th>
-          <th>D</th>
-          <th>SG</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${tabelaGE.map(item => `
-          <tr style="border-bottom:1px solid #ddd;text-align:center">
-            <td><strong>${item.posicao ?? '-'}</strong></td>
-            <td style="text-align:left;padding:7px;white-space:nowrap">
-              <div style="display:flex;align-items:center;gap:6px">
-                ${item.escudo ? `<img src="${item.escudo}" style="width:23px;height:23px;object-fit:contain">` : ''}
-                <strong>${item.equipe}</strong>
-              </div>
-            </td>
-            <td><strong>${item.pontos ?? 0}</strong></td>
-            <td>${item.jogos ?? 0}</td>
-            <td>${item.vitorias ?? 0}</td>
-            <td>${item.empates ?? 0}</td>
-            <td>${item.derrotas ?? 0}</td>
-            <td>${item.saldo_gols ?? 0}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  </div>
+  ${
+    ehLigaDasNacoes
+      ? gruposGE.map((grupo, indice) => `
+          <div style="margin-bottom:22px">
+            <h3 style="
+              background:#171717;
+              color:#e4bd43;
+              padding:12px;
+              margin:12px 0;
+              font-weight:900;
+            ">
+              ${grupo.nome || `GRUPO ${indice + 1}`}
+            </h3>
+
+            ${montarTabela(grupo.classificacao || [])}
+          </div>
+        `).join('')
+      : montarTabela(tabelaGE)
+  }
 `;
    // ARTILHARIA OFICIAL — CHAMPIONS LEAGUE
 if (competicao === 'CHAMPIONS LEAGUE') {
