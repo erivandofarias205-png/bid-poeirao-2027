@@ -5411,7 +5411,12 @@ async function buscarRodadaInternacional(numero, consultaAutomatica = false) {
       throw new Error('Erro ao buscar rodada.');
     }
 
-    const retornoRodada = await resposta.json();
+   const respostaCompleta = await resposta.json();
+
+const retornoRodada =
+  (respostaCompleta.competicoes || [])
+    .find(item => item.chave === chaveRodada)
+  || respostaCompleta;
 
     if (!retornoRodada.sucesso) {
       throw new Error(retornoRodada.erro || 'Erro ao consultar o GE.');
