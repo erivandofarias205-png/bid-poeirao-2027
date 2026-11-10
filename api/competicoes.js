@@ -728,7 +728,12 @@ try {
       }
 
       const script = scriptReact[2];
-
+console.log(
+  'ROTAS ENCONTRADAS NO GE:',
+  [...new Set(
+    script.match(/https?:[^"' ]+|\/tabela\/[^"' ]+/g) || []
+  )]
+);
       function extrairJSONGE(variavel) {
         const marcador = new RegExp(`\\bconst\\s+${variavel}\\s*=\\s*`);
         const encontro = marcador.exec(script);
