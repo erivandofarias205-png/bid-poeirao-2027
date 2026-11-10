@@ -21,13 +21,13 @@ const fase = String(req.query.fase || 'final').toLowerCase();
   'brasileirao-b',
   'brasileirao-c',
   'brasileirao-d',
-    'champions',
+  'champions',
   'europa',
   'copa-do-brasil',
   'liga-das-nacoes',
-  'amistosos'
-      'libertadores',
-  'sul-americana',
+  'amistosos',
+  'libertadores',
+  'sul-americana'
 ];
 
   const host = process.env.VERCEL_URL
