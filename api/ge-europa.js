@@ -172,11 +172,53 @@ async function consultarGE(config, rodadaSolicitada) {
     } catch {}
   }
 
-  // Identifica a rodada atual e a quantidade de rodadas da primeira fase.
-  const rodadaAtual = Number(classificacao.rodada?.atual || 1);
+ 
+  // Identifica automaticamente a primeira rodada ainda não encerrada.
   const ultimaRodada = Number(classificacao.rodada?.ultima || 8);
 
-  const rodada = rodadaSolicitada || rodadaAtual;
+  async function consultarJogosRodada(numero) {
+    const url =
+      `https://api.globoesporte.globo.com/tabela/` +
+      `${config.tabelaId}/fase/${config.faseSlug}/rodada/${numero}/jogos/`;
+
+    const resposta = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'application/json',
+        'Referer': config.url,
+        'Origin': 'https://ge.globo.com'
+      }
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`Erro ao consultar a rodada ${numero} no GE.`);
+    }
+
+    const lista = await resposta.json();
+
+    if (!Array.isArray(lista)) {
+      throw new Error(`Lista inválida de jogos na rodada ${numero}.`);
+    }
+
+    return mapearJogos(lista);
+  }
+
+  let rodadaAutomatica = ultimaRodada;
+
+  for (let numero = 1; numero <= ultimaRodada; numero++) {
+    const jogosVerificados = await consultarJogosRodada(numero);
+
+    if (
+      jogosVerificados.length === 0 ||
+      jogosVerificados.some(jogo => jogo.status !== 'ENCERRADA')
+    ) {
+      rodadaAutomatica = numero;
+      break;
+    }
+  }
+
+  const rodada = rodadaSolicitada || rodadaAutomatica;
+
 
   if (rodada < 1 || rodada > ultimaRodada) {
     throw new Error(
