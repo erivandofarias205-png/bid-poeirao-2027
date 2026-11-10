@@ -782,6 +782,10 @@ try {
   JSON.stringify(dados.grupos, null, 2)
 );
            console.log(
+  'GRUPOS COMPLETOS LIGA:',
+  JSON.stringify(dados.grupos, null, 2)
+);
+           console.log(
   'ESTRUTURA COMPLETA LIGA:',
   JSON.stringify(dados, null, 2)
 );
