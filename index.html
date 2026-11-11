@@ -5202,86 +5202,147 @@ function montarTabela(lista) {
   `;
 }
 
+
 area.innerHTML = `
   <p style="color:#d4af37;font-weight:900">
-   ${dadosCompeticaoGE.dados_originais?.edicao?.nome ||
-  dadosCompeticaoGE.dados_originais?.temporada ||
-  'Temporada atual'}
+    ${dadosCompeticaoGE.dados_originais?.edicao?.nome ||
+      dadosCompeticaoGE.dados_originais?.temporada ||
+      'Temporada atual'}
     · ${totalEquipes} equipes
   </p>
 
   ${
     ehLigaDasNacoes
-      ? gruposGE.map((grupo, indice) => `
-          <div style="margin-bottom:22px">
-            <h3 style="
-              background:#171717;
-              color:#e4bd43;
-              padding:12px;
-              margin:12px 0;
-              font-weight:900;
-            ">
-              ${grupo.nome || `GRUPO ${indice + 1}`}
-            </h3>
+      ? gruposGE.map((grupo, indice) => {
+          const jogosGrupo = grupo.jogos || [];
 
-            ${montarTabela(grupo.classificacao || [])}
-          </div>
-        `).join('')
+          return `
+            <div style="
+              margin-bottom:25px;
+              border:1px solid #d4af37;
+              border-radius:12px;
+              overflow:hidden;
+              background:#fff;
+            ">
+              <h3 style="
+                background:#171717;
+                color:#e4bd43;
+                padding:13px;
+                margin:0;
+                font-weight:900;
+              ">
+                ${grupo.nome || `GRUPO ${indice + 1}`}
+              </h3>
+
+              ${montarTabela(grupo.classificacao || [])}
+
+              <div style="
+                background:#171717;
+                color:#e4bd43;
+                padding:11px;
+                font-weight:900;
+                margin-top:5px;
+              ">
+                ⚽ JOGOS E RESULTADOS
+              </div>
+
+              <div style="padding:10px">
+                ${
+                  jogosGrupo.length
+                    ? jogosGrupo.map(jogo => {
+                        const mandante = jogo.equipes?.mandante || {};
+                        const visitante = jogo.equipes?.visitante || {};
+
+                        const temPlacar =
+                          jogo.placar_oficial_mandante != null &&
+                          jogo.placar_oficial_visitante != null;
+
+                        const data = jogo.data_realizacao
+                          ? new Date(jogo.data_realizacao)
+                              .toLocaleDateString('pt-BR', {
+                                timeZone: 'UTC'
+                              })
+                          : '-';
+
+                        const status = temPlacar
+                          ? 'FINALIZADO'
+                          : jogo.jogo_ja_comecou
+                            ? 'EM ANDAMENTO'
+                            : 'AGENDADO';
+
+                        return `
+                          <div style="
+                            display:grid;
+                            grid-template-columns:1fr auto 1fr;
+                            align-items:center;
+                            gap:8px;
+                            padding:13px 5px;
+                            border-bottom:1px solid #ddd;
+                            color:#222;
+                            text-align:center;
+                          ">
+                            <div>
+                              ${
+                                mandante.escudo
+                                  ? `<img src="${mandante.escudo}" style="width:35px;height:35px;object-fit:contain">`
+                                  : ''
+                              }
+                              <div style="font-size:12px;font-weight:900">
+                                ${mandante.nome_popular || '-'}
+                              </div>
+                            </div>
+
+                            <div>
+                              <strong style="
+                                font-size:19px;
+                                color:#171717;
+                              ">
+                                ${
+                                  temPlacar
+                                    ? `${jogo.placar_oficial_mandante} x ${jogo.placar_oficial_visitante}`
+                                    : ' x '
+                                }
+                              </strong>
+                              <div style="font-size:10px;color:#777">
+                                ${data}
+                              </div>
+                              <div style="font-size:11px;color:#b58920;font-weight:900">
+                                ${jogo.hora_realizacao || ''}
+                              </div>
+                            </div>
+
+                            <div>
+                              ${
+                                visitante.escudo
+                                  ? `<img src="${visitante.escudo}" style="width:35px;height:35px;object-fit:contain">`
+                                  : ''
+                              }
+                              <div style="font-size:12px;font-weight:900">
+                                ${visitante.nome_popular || '-'}
+                              </div>
+                            </div>
+
+                            <div style="
+                              grid-column:1 / -1;
+                              font-size:10px;
+                              font-weight:900;
+                              color:#777;
+                            ">
+                              ${status}
+                            </div>
+                          </div>
+                        `;
+                      }).join('')
+                    : '<p style="text-align:center;color:#777">Nenhum jogo encontrado neste grupo.</p>'
+                }
+              </div>
+            </div>
+          `;
+        }).join('')
       : montarTabela(tabelaGE)
   }
 `;
-      
-if (areaJogos) {
-  const jogosGE = dadosCompeticaoGE.jogos || [];
 
-  areaJogos.innerHTML = jogosGE.length
-    ? `
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
-          <thead>
-            <tr style="background:#171717;color:#e4bd43">
-              <th>DATA</th>
-              <th>MANDANTE</th>
-              <th>PLACAR</th>
-              <th>VISITANTE</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${jogosGE.map(jogo => {
-              const data = jogo.data
-                ? new Date(jogo.data).toLocaleDateString('pt-BR', {
-                    timeZone: 'UTC'
-                  })
-                : '-';
-
-              return `
-                <tr style="border-bottom:1px solid #ddd;text-align:center">
-                  <td>${data}<br>${jogo.hora || ''}</td>
-                  <td style="padding:8px">
-                    ${jogo.mandante?.escudo
-                      ? `<img src="${jogo.mandante.escudo}" style="width:23px;height:23px;object-fit:contain">`
-                      : ''}
-                    <br>
-                    <strong>${jogo.mandante?.nome_popular || jogo.mandante?.nome || '-'}</strong>
-                  </td>
-                  <td>
-                    <strong>
-                      ${jogo.placar
-                        ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
-                        : 'x'}
-                    </strong>
-                  </td>
-                  <td style="padding:8px">
-                    ${jogo.visitante?.escudo
-                      ? `<img src="${jogo.visitante.escudo}" style="width:23px;height:23px;object-fit:contain">`
-                      : ''}
-                    <br>
-                    <strong>${jogo.visitante?.nome_popular || jogo.visitante?.nome || '-'}</strong>
-                  </td>
-                  <td>${jogo.status || '-'}</td>
-                </tr>
-              `;
             }).join('')}
           </tbody>
         </table>
