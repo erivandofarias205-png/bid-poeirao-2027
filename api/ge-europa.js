@@ -302,11 +302,12 @@ if (!Array.isArray(listaJogos)) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader(
-    'Cache-Control',
-    's-maxage=300, stale-while-revalidate=600'
-  );
-
+ res.setHeader(
+  'Cache-Control',
+  'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
+);
+res.setHeader('Pragma', 'no-cache');
+res.setHeader('Expires', '0');
   const competicoes = {
     champions: {
       nome: 'UEFA Champions League',
