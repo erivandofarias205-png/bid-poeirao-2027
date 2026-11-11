@@ -794,6 +794,20 @@ const retorno = await consultarAPI(caminhoEuropa);
       const dados = extrairJSONGE('classificacao');
                                 const gruposGE = dados.grupos || [];
 
+           console.log(
+  'DIAGNÓSTICO RODADAS LIGA:',
+  JSON.stringify(
+    gruposGE.map(grupo => ({
+      nome: grupo.nome_grupo,
+      rodada: grupo.rodada,
+      totalJogos: grupo.lista_jogos?.length || 0,
+      exemploJogo: grupo.lista_jogos?.[0] || null
+    })),
+    null,
+    2
+  )
+);
+           
       grupos = gruposGE.map(grupo => ({
         nome: grupo.nome_grupo || '',
         classificacao: grupo.classificacao || [],
