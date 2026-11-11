@@ -886,7 +886,12 @@ else if (chave === 'libertadores' || chave === 'sul-americana') {
   }
 
   const script = scriptReact[2];
-
+console.log(
+  'VARIÁVEIS DISPONÍVEIS NO GE:',
+  [...script.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=/g)]
+    .map(item => item[1])
+);
+  
   function extrairJSONConmebol(variavel) {
     const marcador = new RegExp(`\\bconst\\s+${variavel}\\s*=\\s*`);
     const encontro = marcador.exec(script);
