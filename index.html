@@ -4594,6 +4594,14 @@ async function abrirCompeticaoProfissional(nome) {
     .trim();
 
   const competicao = normalizar(nome);
+  const painelJogosSeparado = document
+  .getElementById('profissionalJogos')
+  ?.closest('.prof-section');
+
+if (painelJogosSeparado) {
+  painelJogosSeparado.style.display =
+    competicao === 'LIGA DAS NACOES' ? 'none' : '';
+}
 const painelTabela = document
   .getElementById('profissionalClassificacao')
   ?.closest('.prof-section');
