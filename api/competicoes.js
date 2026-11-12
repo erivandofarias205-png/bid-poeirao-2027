@@ -15,6 +15,16 @@ module.exports = async function handler(req, res) {
   ? String(req.query.rodada)
   : '';
 const fase = String(req.query.fase || 'final').toLowerCase();
+  const ligaNacoes = String(req.query.liga || 'A')
+  .trim()
+  .toUpperCase();
+
+if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
+  return res.status(400).json({
+    sucesso: false,
+    erro: 'Liga inválida. Informe A, B, C ou D.'
+  });
+}
   
   const permitidas = [
   'brasileirao-a',
@@ -792,7 +802,59 @@ const retorno = await consultarAPI(caminhoEuropa);
         throw new Error(`JSON incompleto em ${variavel}.`);
       }
 
-      const dados = extrairJSONGE('classificacao');
+      const dadosPagina = extrairJSONGE('classificacao');
+
+const resourceId =
+  script.match(/tUUID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] ||
+  html.match(/RESOURCE_ID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1];
+
+if (!resourceId) {
+  throw new Error('Identificador da tabela da Liga das Nações não encontrado no GE.');
+}
+
+const ligaNacoes = String(req.query.liga || 'A')
+  .trim()
+  .toUpperCase();
+
+if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
+  throw new Error('Liga inválida. Informe A, B, C ou D.');
+}
+
+const fasesNavegacao = dadosPagina.fases_navegacao || [];
+
+const faseSelecionada = fasesNavegacao.find(item => {
+  const slug = typeof item === 'string'
+    ? item
+    : item?.slug || '';
+
+  return slug.toLowerCase().includes(
+    `liga-${ligaNacoes.toLowerCase()}-liga-das-nacoes`
+  );
+});
+
+const slugSolicitado = typeof faseSelecionada === 'string'
+  ? faseSelecionada
+  : faseSelecionada?.slug || '';
+
+if (!slugSolicitado) {
+  throw new Error(`Fase da Liga ${ligaNacoes} não encontrada no GE.`);
+}
+
+const urlAPI =
+  `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugSolicitado)}/classificacao/`;
+
+const respostaAPI = await fetch(urlAPI, {
+  headers: {
+    'User-Agent': 'Mozilla/5.0',
+    'Accept': 'application/json'
+  }
+});
+
+if (!respostaAPI.ok) {
+  throw new Error(`GE respondeu HTTP ${respostaAPI.status} na Liga ${ligaNacoes}.`);
+}
+
+const dados = await respostaAPI.json();
                                 const gruposGE = dados.grupos || [];
 
                      
