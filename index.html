@@ -5114,9 +5114,12 @@ const respostaGE = await fetch(
       }
 
       const retornoGE = await respostaGE.json();
-    const dadosCompeticaoGE = (retornoGE.competicoes || [])
-  .find(item => item.chave === chaveGE);
-
+   const dadosCompeticaoGE = Array.isArray(retornoGE.competicoes)
+  ? retornoGE.competicoes.find(item => item.chave === chaveGE)
+  : retornoGE.chave === chaveGE
+    ? retornoGE
+    : null;
+      
 if (
   !retornoGE.sucesso ||
   !dadosCompeticaoGE ||
