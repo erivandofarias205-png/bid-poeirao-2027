@@ -6203,7 +6203,11 @@ if (!resultado?.sucesso || !resultado.artilheiros?.length) {
   throw new Error('Artilharia não encontrada.');
 }
 
-const jogadores = resultado.artilheiros;
+const jogadores = resultado.artilheiros.map(jogador => ({
+  ...jogador,
+  nome: jogador.nome || jogador.jogador,
+  clube: jogador.clube || jogador.equipe
+}));
 
 area.innerHTML = `
   <div style="margin-bottom:10px">
