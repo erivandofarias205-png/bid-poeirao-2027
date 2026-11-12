@@ -868,6 +868,60 @@ const retorno = await consultarAPI(caminhoEuropa);
 
   const tabelaGE = JSON.parse(json);
 
+
+  const resourceId =
+    script.match(/tUUID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] ||
+    html.match(/RESOURCE_ID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1];
+
+  const slug = tabelaGE.fase?.slug;
+
+  if (!slug) {
+    throw new Error(`Fase não encontrada: ${config.nome}.`);
+  }
+
+  const ultimaRodada = Number(tabelaGE.rodada?.ultima || 0);
+  const rodadaAtual = Number(tabelaGE.rodada?.atual || 1);
+
+  let numeroRodada = rodada
+    ? Number(rodada)
+    : rodadaAtual;
+
+  if (
+    !Number.isInteger(numeroRodada) ||
+    numeroRodada < 1 ||
+    numeroRodada > ultimaRodada
+  ) {
+    throw new Error(`Rodada inválida: ${config.nome}.`);
+  }
+
+  let jogosGE = tabelaGE.lista_jogos || [];
+
+  if (rodada) {
+    if (!resourceId) {
+      throw new Error(`Identificador GE não encontrado: ${config.nome}.`);
+    }
+
+    const urlJogos =
+      `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slug)}/rodada/${String(numeroRodada).padStart(2, '0')}/jogos/`;
+
+    const respostaJogos = await fetch(urlJogos, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!respostaJogos.ok) {
+      throw new Error(`GE respondeu HTTP ${respostaJogos.status} nos jogos.`);
+    }
+
+    const retornoJogos = await respostaJogos.json();
+
+    jogosGE = Array.isArray(retornoJogos)
+      ? retornoJogos
+      : retornoJogos.jogos || [];
+  }
+
   fonte = 'GE Globo';
   nome = config.nome;
 
@@ -891,11 +945,62 @@ const retorno = await consultarAPI(caminhoEuropa);
     }))
   }];
 
-  rodadaFinal = Number(tabelaGE.rodada?.atual || rodada) || null;
+  jogos = jogosGE.map(jogo => {
+    const mandante = jogo.equipes?.mandante || {};
+    const visitante = jogo.equipes?.visitante || {};
 
-  dadosOriginais = tabelaGE;
-}    
-    else if (chave === 'liga-das-nacoes') {
+    const temPlacar =
+      jogo.placar_oficial_mandante != null &&
+      jogo.placar_oficial_visitante != null;
+
+    return {
+      id: jogo.id,
+      data: jogo.data_realizacao || '',
+      hora: jogo.hora_realizacao || '',
+      estadio: jogo.sede?.nome_popular || '',
+      status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+        ? 'ENCERRADA'
+        : jogo.jogo_ja_comecou
+          ? 'EM_ANDAMENTO'
+          : 'AGENDADA',
+      mandante: {
+        id: mandante.id || '',
+        nome: mandante.nome_popular || '',
+        sigla: mandante.sigla || '',
+        escudo: mandante.escudo || ''
+      },
+      visitante: {
+        id: visitante.id || '',
+        nome: visitante.nome_popular || '',
+        sigla: visitante.sigla || '',
+        escudo: visitante.escudo || ''
+      },
+      placar: temPlacar
+        ? {
+            mandante: Number(jogo.placar_oficial_mandante),
+            visitante: Number(jogo.placar_oficial_visitante)
+          }
+        : null
+    };
+  });
+
+  rodadaFinal = numeroRodada;
+
+  dadosOriginais = {
+    ...tabelaGE,
+    resource_id: resourceId || null,
+    fase_selecionada: slug,
+    rodada_selecionada: numeroRodada,
+    rodadas_disponiveis: Array.from(
+      { length: ultimaRodada },
+      (_, i) => i + 1
+    ),
+    lista_jogos: jogosGE
+  };
+      
+} // FECHA O BLOCO DAS CINCO LIGAS
+      
+      else if (chave === 'liga-das-nacoes') {
                 const urlGE =
         'https://ge.globo.com/futebol/futebol-internacional/liga-das-nacoes/';
 
