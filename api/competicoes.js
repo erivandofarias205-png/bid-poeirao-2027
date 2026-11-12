@@ -880,7 +880,47 @@ const dados = await respostaAPI.json();
     rodada: grupo.rodada || {}
   };
 });
+if (rodada) {
+  const numeroRodada = String(rodada).padStart(2, '0');
 
+  const urlJogosRodada =
+    `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugSolicitado)}/rodada/${numeroRodada}/jogos/`;
+
+  const respostaJogosRodada = await fetch(urlJogosRodada, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!respostaJogosRodada.ok) {
+    throw new Error(
+      `GE respondeu HTTP ${respostaJogosRodada.status} na rodada ${numeroRodada}.`
+    );
+  }
+
+  const dadosJogosRodada = await respostaJogosRodada.json();
+
+  const jogosRodada = Array.isArray(dadosJogosRodada)
+    ? dadosJogosRodada
+    : dadosJogosRodada.jogos || [];
+
+  grupos.forEach(grupo => {
+    const idsEquipes = new Set(
+      grupo.classificacao.map(equipe =>
+        String(equipe.equipe?.id || equipe.id || '')
+      )
+    );
+
+    grupo.jogos = jogosRodada.filter(jogo => {
+      const mandante = String(jogo.equipes?.mandante?.id || '');
+      const visitante = String(jogo.equipes?.visitante?.id || '');
+
+      return idsEquipes.has(mandante) &&
+             idsEquipes.has(visitante);
+    });
+  });
+}
       classificacao = grupos.flatMap(grupo =>
         grupo.classificacao.map(equipe => ({
           ...equipe,
