@@ -37,7 +37,12 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
   'liga-das-nacoes',
   'amistosos',
   'libertadores',
-  'sul-americana'
+  'sul-americana',
+  'premier-league',
+  'la-liga',
+  'serie-a-italia',
+  'bundesliga',
+  'ligue-1'
 ];
 
   const host = process.env.VERCEL_URL
@@ -99,9 +104,29 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
         url: 'https://ge.globo.com/futebol/futebol-internacional/liga-dos-campeoes/'
       },
       'europa': {
-        nome: 'Europa League',
-        url: 'https://ge.globo.com/futebol/futebol-internacional/liga-europa/'
-      }
+  nome: 'Europa League',
+  url: 'https://ge.globo.com/futebol/futebol-internacional/liga-europa/'
+},
+'premier-league': {
+  nome: 'Premier League',
+  url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-ingles/'
+},
+'la-liga': {
+  nome: 'La Liga',
+  url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-espanhol/'
+},
+'serie-a-italia': {
+  nome: 'Campeonato Italiano',
+  url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-italiano/'
+},
+'bundesliga': {
+  nome: 'Bundesliga',
+  url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-alemao/'
+},
+'ligue-1': {
+  nome: 'Campeonato Francês',
+  url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-frances/'
+}
     };
 
     if (chave === 'champions') {
@@ -728,7 +753,141 @@ const retorno = await consultarAPI(caminhoEuropa);
 ) || null;
       dadosOriginais = dados;
     }
-         else if (chave === 'liga-das-nacoes') {
+    else if ([
+  'premier-league',
+  'la-liga',
+  'serie-a-italia',
+  'bundesliga',
+  'ligue-1'
+].includes(chave)) {
+
+  const ligasGE = {
+    'premier-league': {
+      nome: 'Premier League',
+      url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-ingles/'
+    },
+    'la-liga': {
+      nome: 'La Liga',
+      url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-espanhol/'
+    },
+    'serie-a-italia': {
+      nome: 'Campeonato Italiano',
+      url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-italiano/'
+    },
+    'bundesliga': {
+      nome: 'Bundesliga',
+      url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-alemao/'
+    },
+    'ligue-1': {
+      nome: 'Campeonato Francês',
+      url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-frances/'
+    }
+  };
+
+  const config = ligasGE[chave];
+
+  const respostaGE = await fetch(config.url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'text/html,application/xhtml+xml'
+    }
+  });
+
+  if (!respostaGE.ok) {
+    throw new Error(`GE respondeu HTTP ${respostaGE.status}.`);
+  }
+
+  const html = await respostaGE.text();
+
+  const scriptReact = [
+    ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
+  ].find(item => /\bid=["']scriptReact["']/.test(item[1]));
+
+  if (!scriptReact) {
+    throw new Error(`Dados do GE não encontrados: ${config.nome}.`);
+  }
+
+  const script = scriptReact[2];
+
+  const marcador = /\bconst\s+classificacao\s*=\s*/;
+  const encontro = marcador.exec(script);
+
+  if (!encontro) {
+    throw new Error(`Classificação não encontrada: ${config.nome}.`);
+  }
+
+  const inicio = encontro.index + encontro[0].length;
+  const abertura = script[inicio];
+  const fechamento = abertura === '[' ? ']' : '}';
+
+  let nivel = 0;
+  let dentroString = false;
+  let escape = false;
+  let json = '';
+
+  for (let i = inicio; i < script.length; i++) {
+    const c = script[i];
+
+    if (dentroString) {
+      if (escape) escape = false;
+      else if (c === '\\') escape = true;
+      else if (c === '"') dentroString = false;
+      continue;
+    }
+
+    if (c === '"') {
+      dentroString = true;
+      continue;
+    }
+
+    if (c === abertura || c === '{' || c === '[') nivel++;
+
+    if (
+      c === fechamento ||
+      (abertura === '[' && c === '}') ||
+      (abertura === '{' && c === ']')
+    ) nivel--;
+
+    if (nivel === 0) {
+      json = script.slice(inicio, i + 1);
+      break;
+    }
+  }
+
+  if (!json) {
+    throw new Error(`Não foi possível interpretar a tabela de ${config.nome}.`);
+  }
+
+  const tabelaGE = JSON.parse(json);
+
+  fonte = 'GE Globo';
+  nome = config.nome;
+
+  classificacao = [{
+    name: 'CLASSIFICAÇÃO',
+    entries: (tabelaGE.classificacao || []).map(item => ({
+      position: item.ordem,
+      team: {
+        name: item.nome_popular || '',
+        badge: item.escudo || ''
+      },
+      points: item.pontos,
+      matches: item.jogos,
+      wins: item.vitorias,
+      draws: item.empates,
+      losses: item.derrotas,
+      goalsFor: item.gols_pro,
+      goalsAgainst: item.gols_contra,
+      goalDifference: item.saldo_gols,
+      efficiency: item.aproveitamento
+    }))
+  }];
+
+  rodadaFinal = Number(tabelaGE.rodada?.atual || rodada) || null;
+
+  dadosOriginais = tabelaGE;
+}    
+    else if (chave === 'liga-das-nacoes') {
                 const urlGE =
         'https://ge.globo.com/futebol/futebol-internacional/liga-das-nacoes/';
 
@@ -1367,18 +1526,21 @@ fase_url_encontrada: slug,
     const tipo = String(req.query.tipo || 'jogos').toLowerCase();
 
     if (tipo === 'artilharia') {
-      const permitidasArtilharia = [
-       'serie-a',
-        'serie-b',
-        'serie-c',
-        'serie-d',
-        'copa-do-brasil',
-        'libertadores',
-        'sul-americana',
-        'champions',
-        'europa'
-      ];
-
+     const permitidasArtilharia = [
+  'serie-b',
+  'serie-c',
+  'serie-d',
+  'copa-do-brasil',
+  'libertadores',
+  'sul-americana',
+  'champions',
+  'europa',
+  'premier-league',
+  'la-liga',
+  'serie-a-italia',
+  'bundesliga',
+  'ligue-1'
+];
       const selecionadasArtilharia = competicao === 'todas'
         ? permitidasArtilharia
         : [competicao];
