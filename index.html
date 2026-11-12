@@ -4572,7 +4572,11 @@ function alterarDataJogos(dias) {
   carregarJogosHojeProfissional();
 }
   
-async function abrirCompeticaoProfissional(nome, ligaNacoes = 'A') {
+async function abrirCompeticaoProfissional(
+  nome,
+  ligaNacoes = 'A',
+  rodadaNacoes = 1
+) {
     // ESCONDER A CENTRAL DE JOGOS AO ABRIR UMA COMPETIÇÃO
   const painelJogos = document.getElementById('profissionalJogosHoje');
   if (painelJogos) painelJogos.hidden = true;
@@ -5101,10 +5105,10 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
     }
 
     try {
-     const parametroLiga = chaveGE === 'liga-das-nacoes'
-  ? `&liga=${encodeURIComponent(ligaNacoes)}`
+    const parametroLiga = chaveGE === 'liga-das-nacoes'
+  ? `&liga=${encodeURIComponent(ligaNacoes)}&rodada=${encodeURIComponent(rodadaNacoes)}`
   : '';
-
+      
 const respostaGE = await fetch(
   `/api/competicoes?competicao=${chaveGE}${parametroLiga}`
 );
@@ -5263,11 +5267,44 @@ area.innerHTML = `
     · ${totalEquipes} equipes
   </p>
 
+${
+  ehLigaDasNacoes
+    ? `
+      <div style="margin:15px 0">
+        <label style="color:#d4af37;font-weight:900">
+          RODADA:
+        </label>
+        <select id="seletorRodadaNacoes" style="
+          width:100%;
+          padding:14px;
+          margin-top:8px;
+          background:#071735;
+          color:#fff;
+          border:1px solid #d4af37;
+          border-radius:10px;
+          font-weight:900;
+        ">
+          ${Array.from(
+            { length: ligaNacoes === 'D' ? 4 : 6 },
+            (_, i) => `
+              <option value="${i + 1}" ${Number(rodadaNacoes) === i + 1 ? 'selected' : ''}>
+                ${i + 1}ª RODADA
+              </option>
+            `
+          ).join('')}
+        </select>
+      </div>
+    `
+    : ''
+}
+
   ${
     ehLigaDasNacoes
       ? gruposGE.map((grupo, indice) => {
           const jogosGrupo = grupo.jogos || [];
-
+const rodadaAtualGrupo = Number(grupo.rodada?.atual || 1);
+const ultimaRodadaGrupo = Number(grupo.rodada?.ultima || 6);
+        
           return `
             <div style="
               margin-bottom:25px;
@@ -5285,6 +5322,39 @@ area.innerHTML = `
               ">
                 ${grupo.nome || `GRUPO ${indice + 1}`}
               </h3>
+              
+<div style="padding:12px;background:#f5f5f5">
+  <label style="font-weight:900;color:#171717">
+    RODADA:
+  </label>
+
+  <select
+    id="seletorRodadaGrupo${indice}"
+    data-grupo="${indice}"
+    style="
+      width:100%;
+      padding:12px;
+      margin-top:6px;
+      background:#071735;
+      color:#fff;
+      border:1px solid #d4af37;
+      border-radius:8px;
+      font-weight:900;
+    "
+  >
+    ${Array.from(
+      { length: ultimaRodadaGrupo },
+      (_, i) => `
+        <option
+          value="${i + 1}"
+          ${rodadaAtualGrupo === i + 1 ? 'selected' : ''}
+        >
+          ${i + 1}ª RODADA
+        </option>
+      `
+    ).join('')}
+  </select>
+</div>
 
               ${montarTabela(grupo.classificacao || [])}
 
@@ -5395,13 +5465,14 @@ area.innerHTML = `
   }
 `;
 
+           
   if (ehLigaDasNacoes) {
   const seletorLiga = document.getElementById('seletorLigaNacoes');
 
   if (seletorLiga) {
-    seletorLiga.addEventListener('change', () => {
-      abrirCompeticaoProfissional(nome, seletorLiga.value);
-    });
+   seletorLiga.addEventListener('change', () => {
+  abrirCompeticaoProfissional(nome, seletorLiga.value, 1);
+});
   }
 }    
    // ARTILHARIA OFICIAL — CHAMPIONS LEAGUE
