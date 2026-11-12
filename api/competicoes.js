@@ -958,11 +958,24 @@ const retorno = await consultarAPI(caminhoEuropa);
       data: jogo.data_realizacao || '',
       hora: jogo.hora_realizacao || '',
       estadio: jogo.sede?.nome_popular || '',
-      status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
-        ? 'ENCERRADA'
-        : jogo.jogo_ja_comecou
-          ? 'EM_ANDAMENTO'
-          : 'AGENDADA',
+     status: (() => {
+  const inicio = new Date(jogo.data_realizacao).getTime();
+  const passouTempoDeJogo =
+    Number.isFinite(inicio) &&
+    Date.now() > inicio + (4 * 60 * 60 * 1000);
+
+  if (jogo.transmissao?.broadcast?.id === 'ENCERRADA') {
+    return 'ENCERRADA';
+  }
+
+  if (passouTempoDeJogo && temPlacar) {
+    return 'ENCERRADA';
+  }
+
+  return jogo.jogo_ja_comecou
+    ? 'EM_ANDAMENTO'
+    : 'AGENDADA';
+})(),
       mandante: {
         id: mandante.id || '',
         nome: mandante.nome_popular || '',
