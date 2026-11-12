@@ -369,7 +369,16 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
 
     const html = await resposta.text();
 
-    const bloco = html.match(
+   console.log('[DEBUG ARTILHARIA GE]', {
+  competicao: config.nome,
+  tamanhoHTML: html.length,
+  wrapper: html.includes('artilharia-wrapper'),
+  ranking: html.includes('ranking-item-wrapper'),
+  scriptReact: /id=["']scriptReact["']/.test(html),
+  termoArtilharia: /artilharia|artilheiro|top.?scorer/i.test(html)
+});
+   
+   const bloco = html.match(
       /<section class="artilharia-wrapper">([\s\S]*?)<\/section>/
     );
 
