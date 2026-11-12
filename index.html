@@ -5562,17 +5562,19 @@ painelJogos.innerHTML = jogosNovos.map(jogo => {
   }
 }    
    // ARTILHARIA OFICIAL — CHAMPIONS LEAGUE
-if (['CHAMPIONS LEAGUE', 'EUROPA LEAGUE'].includes(competicao)) {
+if (['CHAMPIONS LEAGUE', 'EUROPA LEAGUE', 'LIGA DAS NAÇÕES'].includes(competicao)) {
   const painel = document.getElementById('profissionalArtilharia');
 
   if (painel) {
     painel.innerHTML = '<p>Carregando artilharia da UEFA...</p>';
 
     try {
-     const respostaArtilharia = await fetch(
+    const respostaArtilharia = await fetch(
   competicao === 'EUROPA LEAGUE'
     ? '/api/artilharia-champions?competicao=europa'
-    : '/api/artilharia-champions'
+    : competicao === 'LIGA DAS NAÇÕES'
+      ? '/api/artilharia-champions?competicao=nacoes'
+      : '/api/artilharia-champions'
 );
 
       if (!respostaArtilharia.ok) {
