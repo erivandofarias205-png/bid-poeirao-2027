@@ -719,6 +719,45 @@ const retorno = await consultarAPI(caminhoEuropa);
       dadosOriginais = dados;
     }
          else if (chave === 'liga-das-nacoes') {
+           const apiKey = process.env.API_FOOTBALL_KEY;
+
+if (!apiKey) {
+  throw new Error('API_FOOTBALL_KEY não encontrada na Vercel.');
+}
+
+const respostaAPI = await fetch(
+  'https://v3.football.api-sports.io/leagues?id=5&season=2026',
+  {
+    headers: {
+      'x-apisports-key': apiKey
+    }
+  }
+);
+
+const coberturaAPI = await respostaAPI.json();
+
+if (!respostaAPI.ok || coberturaAPI.errors &&
+    Object.keys(coberturaAPI.errors).length) {
+  throw new Error(
+    'Erro ao consultar cobertura: ' +
+    JSON.stringify(coberturaAPI.errors)
+  );
+}
+
+const ligaAPI = coberturaAPI.response?.[0];
+
+if (!ligaAPI) {
+  throw new Error('Liga das Nações 2026 não encontrada na API-Football.');
+}
+
+const temporadaAPI = ligaAPI.seasons?.find(
+  item => Number(item.year) === 2026
+);
+
+console.log('COBERTURA LIGA DAS NAÇÕES 2026:', {
+  liga: ligaAPI.league,
+  temporada: temporadaAPI
+});
       const urlGE =
         'https://ge.globo.com/futebol/futebol-internacional/liga-das-nacoes/';
 
@@ -1344,7 +1383,7 @@ fase_url_encontrada: slug,
     );
 
     return res.status(200).json({
-      sucesso: true,
+    
       central: 'TVFP ESPORTES',
       competicoes: resultados,
       jogos,
