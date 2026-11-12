@@ -5434,7 +5434,40 @@ const ultimaRodadaGrupo = Number(grupo.rodada?.ultima || 6);
   }
 `;
 
-           
+ if (ehLigaDasNacoes) {
+  gruposGE.forEach((grupo, indice) => {
+    const seletorRodada = document.getElementById(
+      `seletorRodadaGrupo${indice}`
+    );
+
+    if (seletorRodada) {
+      seletorRodada.addEventListener('change', async () => {
+        const rodadaEscolhida = Number(seletorRodada.value);
+
+        const resposta = await fetch(
+          `/api/competicoes?competicao=liga-das-nacoes&liga=${encodeURIComponent(ligaNacoes)}&rodada=${rodadaEscolhida}`
+        );
+
+        const dados = await resposta.json();
+
+        const gruposAtualizados =
+          dados.competicoes?.[0]?.grupos || dados.grupos || [];
+
+        const grupoAtualizado = gruposAtualizados.find(
+          item => item.nome === grupo.nome
+        );
+
+        if (!grupoAtualizado) {
+          alert('Não foi possível localizar os jogos deste grupo.');
+          return;
+        }
+
+        // Atualização dos jogos será ligada ao painel do grupo
+      });
+    }
+  });
+}
+      
   if (ehLigaDasNacoes) {
   const seletorLiga = document.getElementById('seletorLigaNacoes');
 
