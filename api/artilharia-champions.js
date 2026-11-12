@@ -15,11 +15,19 @@ export default async function handler(req, res) {
 
   try {
     const europa = req.query.competicao === 'europa';
+const nacoes = req.query.competicao === 'nacoes';
 
-    const competitionId = europa ? '14' : '1';
-    const nomeCompeticao = europa
-      ? 'Europa League'
-      : 'Champions League';
+const competitionId = europa
+  ? '14'
+  : nacoes
+    ? '2014'
+    : '1';
+
+const nomeCompeticao = europa
+  ? 'Europa League'
+  : nacoes
+    ? 'UEFA Nations League'
+    : 'Champions League';
 
     const url = new URL(
       'https://compstats.uefa.com/v2/player-ranking'
