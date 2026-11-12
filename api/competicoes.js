@@ -808,6 +808,14 @@ const retorno = await consultarAPI(caminhoEuropa);
   }
 
   const script = scriptReact[2];
+      console.log('DEBUG LIGAS INTERNACIONAIS:', {
+  variaveis: [
+    ...script.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=/g)
+  ].map(item => item[1]),
+
+  resourceId:
+    script.match(/tUUID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] || null
+});
 
   const marcador = /\bconst\s+classificacao\s*=\s*/;
   const encontro = marcador.exec(script);
@@ -913,6 +921,7 @@ const retorno = await consultarAPI(caminhoEuropa);
       }
 
       const script = scriptReact[2];
+          
           
       function extrairJSONGE(variavel) {
         const marcador = new RegExp(`\\bconst\\s+${variavel}\\s*=\\s*`);
