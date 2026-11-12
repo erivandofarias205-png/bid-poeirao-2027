@@ -4572,7 +4572,7 @@ function alterarDataJogos(dias) {
   carregarJogosHojeProfissional();
 }
   
-async function abrirCompeticaoProfissional(nome) {
+async function abrirCompeticaoProfissional(nome, ligaNacoes = 'A') {
     // ESCONDER A CENTRAL DE JOGOS AO ABRIR UMA COMPETIÇÃO
   const painelJogos = document.getElementById('profissionalJogosHoje');
   if (painelJogos) painelJogos.hidden = true;
@@ -5101,7 +5101,13 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
     }
 
     try {
-      const respostaGE = await fetch(`/api/competicoes?competicao=${chaveGE}`);
+     const parametroLiga = chaveGE === 'liga-das-nacoes'
+  ? `&liga=${encodeURIComponent(ligaNacoes)}`
+  : '';
+
+const respostaGE = await fetch(
+  `/api/competicoes?competicao=${chaveGE}${parametroLiga}`
+);
 
       if (!respostaGE.ok) {
         throw new Error('Erro ao consultar os dados do GE.');
@@ -5134,7 +5140,11 @@ const ehLigaDasNacoes = [
 );
 
 const gruposGE = Array.isArray(dadosCompeticaoGE.grupos)
-  ? dadosCompeticaoGE.grupos
+  ? dadosCompeticaoGE.grupos.map(grupo => ({
+      ...grupo,
+      liga: String(grupo.liga || '').toUpperCase(),
+      numero_grupo: Number(grupo.numero_grupo) || null
+    }))
   : [];
 
 const normalizarEquipe = item => ({
@@ -5212,6 +5222,37 @@ function montarTabela(lista) {
 
 
 area.innerHTML = `
+  ${ehLigaDasNacoes ? `
+    <div style="margin-bottom:18px">
+      <label style="
+        display:block;
+        color:#d4af37;
+        font-weight:900;
+        margin-bottom:8px;
+      ">
+        ESCOLHA A LIGA
+      </label>
+
+      <select id="seletorLigaNacoes"
+        style="
+          width:100%;
+          max-width:380px;
+          padding:12px;
+          border-radius:8px;
+          border:1px solid #d4af37;
+          background:#171717;
+          color:#fff;
+          font-weight:900;
+        ">
+        ${['A', 'B', 'C', 'D'].map(letra => `
+          <option value="${letra}" ${ligaNacoes === letra ? 'selected' : ''}>
+            LIGA ${letra}
+          </option>
+        `).join('')}
+      </select>
+    </div>
+  ` : ''}
+
   <p style="color:#d4af37;font-weight:900">
     ${dadosCompeticaoGE.dados_originais?.edicao?.nome ||
       dadosCompeticaoGE.dados_originais?.temporada ||
@@ -5351,7 +5392,15 @@ area.innerHTML = `
   }
 `;
 
-      
+  if (ehLigaDasNacoes) {
+  const seletorLiga = document.getElementById('seletorLigaNacoes');
+
+  if (seletorLiga) {
+    seletorLiga.addEventListener('change', () => {
+      abrirCompeticaoProfissional(nome, seletorLiga.value);
+    });
+  }
+}    
    // ARTILHARIA OFICIAL — CHAMPIONS LEAGUE
 if (['CHAMPIONS LEAGUE', 'EUROPA LEAGUE'].includes(competicao)) {
   const painel = document.getElementById('profissionalArtilharia');
