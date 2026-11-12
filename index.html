@@ -5172,8 +5172,9 @@ const totalEquipes = ehLigaDasNacoes
   : tabelaGE.length;
 
 if (
-  !retornoGE.sucesso ||
-  (ehLigaDasNacoes ? !gruposGE.length : !tabelaGE.length)
+  ehLigaDasNacoes
+    ? !gruposGE.length
+    : !tabelaGE.length
 ) {
   throw new Error('Dados da classificação não encontrados.');
 }
