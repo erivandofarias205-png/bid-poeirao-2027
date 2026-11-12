@@ -908,7 +908,7 @@ if (rodada) {
   grupos.forEach(grupo => {
     const idsEquipes = new Set(
       grupo.classificacao.map(equipe =>
-        String(equipe.equipe?.id || equipe.id || '')
+      String(equipe.equipe_id || equipe.equipe?.id || equipe.id || '')
       )
     );
 
