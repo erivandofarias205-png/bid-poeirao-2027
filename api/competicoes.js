@@ -796,12 +796,28 @@ const retorno = await consultarAPI(caminhoEuropa);
                                 const gruposGE = dados.grupos || [];
 
                      
-      grupos = gruposGE.map(grupo => ({
-        nome: grupo.nome_grupo || '',
-        classificacao: grupo.classificacao || [],
-        jogos: grupo.lista_jogos || [],
-        rodada: grupo.rodada || {}
-      }));
+     grupos = gruposGE.map(grupo => {
+  const nomeGrupo = String(
+    grupo.nome_grupo || grupo.nome || ''
+  ).trim();
+
+  const identificacao =
+    nomeGrupo.match(/\b([A-D])\s*[- ]?\s*(\d+)\b/i) ||
+    nomeGrupo.match(/\bLiga\s*([A-D])\b.*?\bGrupo\s*(\d+)\b/i);
+
+  return {
+    nome: nomeGrupo,
+    liga: identificacao
+      ? identificacao[1].toUpperCase()
+      : '',
+    numero_grupo: identificacao
+      ? Number(identificacao[2])
+      : null,
+    classificacao: grupo.classificacao || [],
+    jogos: grupo.lista_jogos || [],
+    rodada: grupo.rodada || {}
+  };
+});
 
       classificacao = grupos.flatMap(grupo =>
         grupo.classificacao.map(equipe => ({
