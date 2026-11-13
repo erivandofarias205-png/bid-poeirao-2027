@@ -538,7 +538,17 @@ console.log('[DEBUG SCRIPTS GE]',
     .map(item => item[1])
     .filter(Boolean)
 );
+const scriptsJsonGE = [
+  ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
+]
+  .filter(item => /type=["']application\/json["']/i.test(item[1]))
+  .map(item => ({
+    atributos: item[1],
+    tamanho: item[2].length,
+    conteudo: item[2].slice(0, 2000)
+  }));
 
+console.log('[DEBUG JSON GE]', scriptsJsonGE);
 console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
   classesEncontradas: classesGE,
   variaveisScript: scriptArt
