@@ -615,17 +615,25 @@ console.log('[DEBUG SCRIPT ARTILHARIA]', diagnosticoScript);
         /class="jogador-gols">\s*(\d+)/
       )?.[1];
 
-      const foto = item.match(
-        /class="jogador-foto">\s*<img[^>]*src="([^"]+)"/
-      )?.[1];
+      const blocoFoto = item.match(
+  /class="jogador-foto"[\s\S]*?<img\b[^>]*>/i
+)?.[0] || '';
+
+const foto = Array.from(
+  blocoFoto.matchAll(/\b(?:src|data-src|data-original|data-lazy-src)=["']([^"']*)["']/gi)
+).map(match => match[1]).find(Boolean) || '';
 
       const posicao = item.match(
         /class="jogador-posicao">([\s\S]*?)<\/div>/
       )?.[1];
 
-      const escudo = item.match(
-        /class="jogador-escudo">\s*<img[^>]*src="([^"]+)"/
-      )?.[1];
+     const blocoEscudo = item.match(
+  /class="jogador-escudo"[\s\S]*?<img\b[^>]*>/i
+)?.[0] || '';
+
+const escudo = Array.from(
+  blocoEscudo.matchAll(/\b(?:src|data-src|data-original|data-lazy-src)=["']([^"']*)["']/gi)
+).map(match => match[1]).find(Boolean) || '';
 
       if (nome && clube && gols) {
         artilheiros.push({
