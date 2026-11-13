@@ -6211,26 +6211,25 @@ async function carregarArtilhariaProfissional(nome) {
 
   const chave = normalizar(nome);
 
-    const fontes = {
-    const fontes = {
-  'BRASILEIRAO SERIE A': '/api/artilharia-serie-a',
-  'BRASILEIRAO SERIE B': '/api/artilharia?competicao=serie-b',
-  'BRASILEIRAO SERIE C': '/api/competicoes?tipo=artilharia&competicao=serie-c',
-  'BRASILEIRAO SERIE D': '/api/competicoes?tipo=artilharia&competicao=serie-d',
-  'COPA DO BRASIL': '/api/artilharia?competicao=copa-do-brasil',
-  'LIBERTADORES': '/api/artilharia?competicao=libertadores',
-  'SUL-AMERICANA': '/api/artilharia?competicao=sul-americana',
-  'CHAMPIONS LEAGUE': '/api/competicoes?tipo=artilharia&competicao=champions',
-  'EUROPA LEAGUE': '/api/competicoes?tipo=artilharia&competicao=europa',
-  'CONFERENCE LEAGUE': '/api/competicoes?tipo=artilharia&competicao=conference',
-  'PREMIER LEAGUE': '/api/competicoes?tipo=artilharia&competicao=premier-league',
-  'LA LIGA': '/api/competicoes?tipo=artilharia&competicao=la-liga',
-  'CAMPEONATO ITALIANO': '/api/competicoes?tipo=artilharia&competicao=serie-a-italia',
-  'BUNDESLIGA': '/api/competicoes?tipo=artilharia&competicao=bundesliga',
-  'CAMPEONATO FRANCES': '/api/competicoes?tipo=artilharia&competicao=ligue-1'
-};
+  const fontes = {
+    'BRASILEIRAO SERIE A': '/api/artilharia-serie-a',
+    'BRASILEIRAO SERIE B': '/api/artilharia?competicao=serie-b',
+    'BRASILEIRAO SERIE C': '/api/competicoes?tipo=artilharia&competicao=serie-c',
+    'BRASILEIRAO SERIE D': '/api/competicoes?tipo=artilharia&competicao=serie-d',
+    'COPA DO BRASIL': '/api/artilharia?competicao=copa-do-brasil',
+    'LIBERTADORES': '/api/artilharia?competicao=libertadores',
+    'SUL-AMERICANA': '/api/artilharia?competicao=sul-americana',
+    'CHAMPIONS LEAGUE': '/api/competicoes?tipo=artilharia&competicao=champions',
+    'EUROPA LEAGUE': '/api/competicoes?tipo=artilharia&competicao=europa',
+    'CONFERENCE LEAGUE': '/api/competicoes?tipo=artilharia&competicao=conference',
+    'PREMIER LEAGUE': '/api/competicoes?tipo=artilharia&competicao=premier-league',
+    'LA LIGA': '/api/competicoes?tipo=artilharia&competicao=la-liga',
+    'CAMPEONATO ITALIANO': '/api/competicoes?tipo=artilharia&competicao=serie-a-italia',
+    'BUNDESLIGA': '/api/competicoes?tipo=artilharia&competicao=bundesliga',
+    'CAMPEONATO FRANCES': '/api/competicoes?tipo=artilharia&competicao=ligue-1'
+  };
 
-const endereco = fontes[chave];
+  const endereco = fontes[chave];
 
   if (!endereco) {
     area.innerHTML = '<p>Artilharia ainda não disponível para esta competição.</p>';
