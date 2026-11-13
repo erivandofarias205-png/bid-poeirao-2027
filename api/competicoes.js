@@ -439,9 +439,7 @@ for (const termo of termosScript) {
 }
 
 console.log('[DEBUG SCRIPT ARTILHARIA]', diagnosticoScript);
-  total: ocorrenciasWrapper.length,
-  ocorrencias: ocorrenciasWrapper.slice(0, 15)
-});
+ 
    const bloco = html.match(
       /<section class="artilharia-wrapper">([\s\S]*?)<\/section>/
     );
