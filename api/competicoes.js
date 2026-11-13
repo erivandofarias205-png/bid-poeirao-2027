@@ -664,7 +664,7 @@ const ligaPitch = ligas.find(
 
       const jogos = (dadosJogos.data?.matches || [])
         .filter(jogo => jogo.status === 'finished')
-        .slice(-12);
+        .slice(-30);
 
       const respostasJogadores = await Promise.allSettled(
         jogos.map(async jogo => {
