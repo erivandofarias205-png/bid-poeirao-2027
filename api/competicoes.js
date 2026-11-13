@@ -632,17 +632,23 @@ console.log('[PITCHAPI LIGAS DISPONIVEIS]', ligas.map(liga => ({
   temporadas: liga.seasons
 })));
     
-    const ligaPitch = ligas.find(liga =>
-      normalizarNome(liga.name) ===
-      normalizarNome(configAPI.nome)
-    );
+   const idsPitch = {
+  'la-liga': 'l_0ErfuF',
+  'serie-a-italia': 'l_0ALvwF',
+  'bundesliga': 'l_1Isor4',
+  'ligue-1': 'l_3FJFUl'
+};
+
+const ligaPitch = ligas.find(
+  liga => liga.id === idsPitch[chave]
+);
 
     if (ligaPitch) {
       const urlJogos = new URL(
         `https://api.pitchapi.dev/v1/leagues/${ligaPitch.id}/matches`
       );
 
-      urlJogos.searchParams.set('season', ligaPitch.seasons?.[0] || '');
+      urlJogos.searchParams.set('season', '2026/2027');
 
       const respostaJogos = await fetch(urlJogos, {
         headers: pitchHeaders
