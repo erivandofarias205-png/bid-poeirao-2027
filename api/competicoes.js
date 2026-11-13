@@ -628,6 +628,7 @@ if (process.env.PITCHAPI_KEY) {
 console.log('[PITCHAPI LIGAS DISPONIVEIS]', ligas.map(liga => ({
   id: liga.id,
   nome: liga.name,
+  pais: liga.country_code,
   temporadas: liga.seasons
 })));
     
