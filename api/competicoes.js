@@ -469,6 +469,98 @@ escudo: item.playerMetadata?.currentTeam?.id
 }
 
     const config = competicoes[chave];
+   
+if ([
+  'la-liga',
+  'serie-a-italia',
+  'bundesliga',
+  'ligue-1'
+].includes(chave)) {
+
+  const ligasAPI = {
+    'la-liga': {
+      id: 140,
+      nome: 'La Liga'
+    },
+    'serie-a-italia': {
+      id: 135,
+      nome: 'Campeonato Italiano'
+    },
+    'bundesliga': {
+      id: 78,
+      nome: 'Bundesliga'
+    },
+    'ligue-1': {
+      id: 61,
+      nome: 'Campeonato Francês'
+    }
+  };
+
+  const configAPI = ligasAPI[chave];
+  const apiKey = process.env.API_FOOTBALL_KEY;
+
+  if (!apiKey) {
+    throw new Error('API_FOOTBALL_KEY não encontrada na Vercel.');
+  }
+
+  const temporada = new Date().getFullYear();
+
+  const url = new URL(
+    'https://v3.football.api-sports.io/players/topscorers'
+  );
+
+  url.searchParams.set('league', String(configAPI.id));
+  url.searchParams.set('season', String(temporada));
+
+  const resposta = await fetch(url.toString(), {
+    headers: {
+      'x-apisports-key': apiKey
+    }
+  });
+
+  const dados = await resposta.json();
+
+  if (!resposta.ok || (dados.errors &&
+      Object.keys(dados.errors).length > 0)) {
+    throw new Error(
+      JSON.stringify(dados.errors || `HTTP ${resposta.status}`)
+    );
+  }
+
+  const artilheiros = (dados.response || [])
+    .map((item, indice) => {
+      const jogador = item.player || {};
+      const estatistica = item.statistics?.[0] || {};
+      const clube = estatistica.team || {};
+      const gols = estatistica.goals || {};
+
+      return {
+        nome: jogador.name || '',
+        clube: clube.name || '',
+        gols: Number(gols.total || 0),
+        foto: jogador.photo || '',
+        escudo: clube.logo || '',
+        posicao: String(indice + 1),
+        participacoes: Number(
+          estatistica.games?.appearences || 0
+        ),
+        gols_penalti: Number(gols.penalty || 0)
+      };
+    })
+    .filter(jogador => jogador.nome)
+    .sort((a, b) => b.gols - a.gols);
+
+  return {
+    chave,
+    competicao: configAPI.nome,
+    temporada: String(temporada),
+    fonte: 'API-Football',
+    total: artilheiros.length,
+    artilheiros,
+    atualizado_em: new Date().toISOString()
+  };
+}
+
 
     if (!config) {
       throw new Error(`Artilharia não cadastrada: ${chave}`);
