@@ -1031,7 +1031,10 @@ const retorno = await consultarAPI(caminhoEuropa);
   const scriptReact = [
     ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
   ].find(item => /\bid=["']scriptReact["']/.test(item[1]));
-
+console.log('[DEBUG SCRIPTS GE]',
+  [...html.matchAll(/<script\b([^>]*)>/gi)]
+    .map(item => item[1])
+);
   if (!scriptReact) {
     throw new Error(`Dados do GE não encontrados: ${config.nome}.`);
   }
