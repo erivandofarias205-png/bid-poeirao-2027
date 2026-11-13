@@ -6212,16 +6212,25 @@ async function carregarArtilhariaProfissional(nome) {
   const chave = normalizar(nome);
 
     const fontes = {
-    'BRASILEIRAO SERIE A': '/api/artilharia-serie-a',
-    'BRASILEIRAO SERIE B': '/api/artilharia?competicao=serie-b',
-      'BRASILEIRAO SERIE C': '/api/competicoes?tipo=artilharia&competicao=serie-c',
-'BRASILEIRAO SERIE D': '/api/competicoes?tipo=artilharia&competicao=serie-d',
-    'COPA DO BRASIL': '/api/artilharia?competicao=copa-do-brasil',
-    'LIBERTADORES': '/api/artilharia?competicao=libertadores',
-    'SUL-AMERICANA': '/api/artilharia?competicao=sul-americana',
-    'CHAMPIONS LEAGUE': '/api/artilharia-champions',
-'LIGA DAS NACOES': '/api/artilharia-champions?competicao=nacoes'
-  };
+    const fontes = {
+  'BRASILEIRAO SERIE A': '/api/artilharia-serie-a',
+  'BRASILEIRAO SERIE B': '/api/artilharia?competicao=serie-b',
+  'BRASILEIRAO SERIE C': '/api/competicoes?tipo=artilharia&competicao=serie-c',
+  'BRASILEIRAO SERIE D': '/api/competicoes?tipo=artilharia&competicao=serie-d',
+  'COPA DO BRASIL': '/api/artilharia?competicao=copa-do-brasil',
+  'LIBERTADORES': '/api/artilharia?competicao=libertadores',
+  'SUL-AMERICANA': '/api/artilharia?competicao=sul-americana',
+  'CHAMPIONS LEAGUE': '/api/competicoes?tipo=artilharia&competicao=champions',
+  'EUROPA LEAGUE': '/api/competicoes?tipo=artilharia&competicao=europa',
+  'CONFERENCE LEAGUE': '/api/competicoes?tipo=artilharia&competicao=conference',
+  'PREMIER LEAGUE': '/api/competicoes?tipo=artilharia&competicao=premier-league',
+  'LA LIGA': '/api/competicoes?tipo=artilharia&competicao=la-liga',
+  'CAMPEONATO ITALIANO': '/api/competicoes?tipo=artilharia&competicao=serie-a-italia',
+  'BUNDESLIGA': '/api/competicoes?tipo=artilharia&competicao=bundesliga',
+  'CAMPEONATO FRANCES': '/api/competicoes?tipo=artilharia&competicao=ligue-1'
+};
+
+const endereco = fontes[chave];
 
   const endereco = fontes[chave];
 
@@ -6249,8 +6258,23 @@ async function carregarArtilhariaProfissional(nome) {
 
     const dados = await resposta.json();
 
-   const resultado = chave === 'BRASILEIRAO SERIE C'
-  ? dados.competicoes?.find(item => item.chave === 'serie-c')
+  const chavesAPI = {
+  'BRASILEIRAO SERIE C': 'serie-c',
+  'BRASILEIRAO SERIE D': 'serie-d',
+  'CHAMPIONS LEAGUE': 'champions',
+  'EUROPA LEAGUE': 'europa',
+  'CONFERENCE LEAGUE': 'conference',
+  'PREMIER LEAGUE': 'premier-league',
+  'LA LIGA': 'la-liga',
+  'CAMPEONATO ITALIANO': 'serie-a-italia',
+  'BUNDESLIGA': 'bundesliga',
+  'CAMPEONATO FRANCES': 'ligue-1'
+};
+
+const resultado = Array.isArray(dados.competicoes)
+  ? dados.competicoes.find(
+      item => item.chave === chavesAPI[chave]
+    ) || dados.competicoes[0]
   : dados;
 
 if (!resultado?.sucesso || !resultado.artilheiros?.length) {
