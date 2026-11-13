@@ -443,8 +443,12 @@ if (chave === 'premier-league') {
       nome: item.playerMetadata?.name || '',
       clube: item.playerMetadata?.currentTeam?.name || '',
       gols: Number(item.stats?.goals || 0),
-      foto: '',
-      escudo: '',
+      foto: item.playerMetadata?.id
+  ? `https://resources.premierleague.com/premierleague25/photos/players/110x140/${item.playerMetadata.id}.png`
+  : '',
+escudo: item.playerMetadata?.currentTeam?.id
+  ? `https://resources.premierleague.com/premierleague25/badges/${item.playerMetadata.currentTeam.id}.svg`
+  : '',
       posicao: String(indice + 1),
       participacoes: Number(item.stats?.gamesPlayed || 0),
       gols_penalti: Number(item.stats?.penaltyGoals || 0)
