@@ -2022,184 +2022,165 @@ console.log(
 
         
 
+
 else if (chave === 'copa-do-brasil') {
-  const temporada = 2026;
+  const urlBase = 'https://ge.globo.com/futebol/copa-do-brasil/';
 
-  if (!Number.isInteger(faseCopa) || faseCopa < 0 || faseCopa > 8) {
-    throw new Error('Fase inválida da Copa do Brasil.');
+  if (
+    !Number.isInteger(faseCopa) ||
+    faseCopa < 0 ||
+    faseCopa > 8
+  ) {
+    throw new Error('Fase inválida. Informe um número inteiro de 0 a 8.');
   }
 
-  const apiKey = process.env.API_FOOTBALL_KEY;
+  const nomesFases = [
+    'Primeira fase',
+    'Segunda fase',
+    'Terceira fase',
+    'Quarta fase',
+    'Quinta fase',
+    'Oitavas de final',
+    'Quartas de final',
+    'Semifinal',
+    'Final'
+  ];
 
-  if (!apiKey) {
-    throw new Error('API_FOOTBALL_KEY não encontrada na Vercel.');
+  // Consulta a página principal do GE
+  const respostaGE = await fetch(urlBase);
+
+  if (!respostaGE.ok) {
+    throw new Error(`GE retornou ${respostaGE.status}`);
   }
 
-  const consultarFootball = async (endpoint) => {
-    const resposta = await fetch(
-      `https://v3.football.api-sports.io/${endpoint}`,
-      {
-        headers: {
-          'x-apisports-key': apiKey
-        }
+  const htmlGE = await respostaGE.text();
+
+  function extrairClassificacao(html) {
+    const bloco = html.match(
+      /const classificacao = (\{[\s\S]*?\});/
+    );
+
+    if (!bloco) {
+      throw new Error('Estrutura da Copa não encontrada no GE.');
+    }
+
+    return JSON.parse(bloco[1]);
+  }
+
+  const dadosGE = extrairClassificacao(htmlGE);
+
+  const edicao = dadosGE.edicao || {};
+  const temporada = String(
+    edicao.nome?.match(/\d{4}/)?.[0] ||
+    new Date().getFullYear()
+  );
+
+  // Localiza automaticamente o endereço da fase escolhida
+  const navegacao = dadosGE.fases_navegacao || [];
+  const faseSelecionada = navegacao[faseCopa];
+
+  const slug = typeof faseSelecionada === 'string'
+    ? faseSelecionada
+    : faseSelecionada?.slug || '';
+
+  let htmlFase = htmlGE;
+
+  if (slug) {
+    const links = [
+      ...htmlGE.matchAll(/href=["']([^"']+)["']/g)
+    ];
+
+    const linkFase = links
+      .map(item => item[1].replace(/&amp;/g, '&'))
+      .find(link => link.includes(slug));
+
+    if (linkFase) {
+      const urlFase = new URL(linkFase, urlBase).href;
+      const respostaFase = await fetch(urlFase);
+
+      if (respostaFase.ok) {
+        htmlFase = await respostaFase.text();
       }
-    );
-
-    const dados = await resposta.json();
-
-    if (!resposta.ok || (dados.errors &&
-        Object.keys(dados.errors).length > 0)) {
-      throw new Error(
-        JSON.stringify(dados.errors || `HTTP ${resposta.status}`)
-      );
     }
-
-    return dados.response || [];
-  };
-
-  // Localiza a Copa do Brasil na temporada
-  const ligas = await consultarFootball(
-    `leagues?country=Brazil&season=${temporada}`
-  );
-
-  const ligaEncontrada = ligas.find(item =>
-    String(item.league?.name || '')
-      .toLowerCase()
-      .trim() === 'copa do brasil'
-  );
-
-  if (!ligaEncontrada) {
-    throw new Error(
-      `Copa do Brasil não encontrada na API-Football em ${temporada}.`
-    );
   }
 
-  const ligaId = ligaEncontrada.league.id;
+  const dadosFase = extrairClassificacao(htmlFase);
+  const secoes = dadosFase.secao || [];
 
-  // Busca os jogos da temporada
-  const partidasAPI = await consultarFootball(
-    `fixtures?league=${ligaId}&season=${temporada}`
-  );
+  // Extrai os jogos das chaves da fase
+  const jogosGE = [];
 
-  // Organiza as fases pela data do primeiro jogo
-  const mapaFases = new Map();
+  secoes.forEach(secao => {
+    (secao.chave || []).forEach(chaveGE => {
+      (chaveGE.jogos || []).forEach(jogo => {
+        const mandante = jogo.equipes?.mandante || {};
+        const visitante = jogo.equipes?.visitante || {};
 
-  partidasAPI.forEach(partida => {
-    const nomeRodada = partida.league?.round;
+        jogosGE.push({
+          id: jogo.id,
+          grupo: chaveGE.id || chaveGE.nome || '',
+          nome_grupo: chaveGE.nome || '',
 
-    if (!nomeRodada) return;
+          data: jogo.data_realizacao
+            ? new Date(jogo.data_realizacao).toLocaleDateString('pt-BR', {
+                timeZone: 'UTC'
+              })
+            : '',
 
-    if (!mapaFases.has(nomeRodada)) {
-      mapaFases.set(nomeRodada, []);
-    }
+          hora: jogo.hora_realizacao || '',
+          estadio: jogo.sede?.nome_popular || '',
 
-    mapaFases.get(nomeRodada).push(partida);
+          mandante: {
+            id: mandante.id || '',
+            nome: mandante.nome_popular || '',
+            escudo: mandante.escudo || ''
+          },
+
+          visitante: {
+            id: visitante.id || '',
+            nome: visitante.nome_popular || '',
+            escudo: visitante.escudo || ''
+          },
+
+          placar:
+            jogo.placar_oficial_mandante != null &&
+            jogo.placar_oficial_visitante != null
+              ? {
+                  mandante: Number(jogo.placar_oficial_mandante),
+                  visitante: Number(jogo.placar_oficial_visitante)
+                }
+              : null,
+
+          penaltis:
+            jogo.placar_penaltis_mandante != null &&
+            jogo.placar_penaltis_visitante != null
+              ? `${jogo.placar_penaltis_mandante} x ${jogo.placar_penaltis_visitante}`
+              : null,
+
+          status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+            ? 'FINALIZADO'
+            : jogo.jogo_ja_comecou
+              ? 'EM ANDAMENTO'
+              : 'AGENDADO'
+        });
+      });
+    });
   });
 
-  const fasesOrdenadas = [...mapaFases.entries()]
-    .map(([nome, partidas]) => ({
-      nome,
-      partidas,
-      primeiraData: Math.min(
-        ...partidas.map(p =>
-          new Date(p.fixture?.date || 0).getTime()
-        )
-      )
-    }))
-    .sort((a, b) => a.primeiraData - b.primeiraData);
-
-  const faseSelecionada = fasesOrdenadas[faseCopa];
-
-  if (!faseSelecionada) {
-    throw new Error(
-      `Fase ${faseCopa + 1} ainda não disponível na API-Football.`
-    );
-  }
-
-  jogos = faseSelecionada.partidas.map(partida => {
-    const status = partida.fixture?.status?.short || '';
-    const gols = partida.goals || {};
-
-    const temPlacar =
-      gols.home !== null &&
-      gols.home !== undefined &&
-      gols.away !== null &&
-      gols.away !== undefined;
-
-    const penaltis = partida.score?.penalty || {};
-
-    const temPenaltis =
-      penaltis.home !== null &&
-      penaltis.home !== undefined &&
-      penaltis.away !== null &&
-      penaltis.away !== undefined;
-
-    return {
-      id: partida.fixture?.id,
-
-      data: partida.fixture?.date || '',
-      hora: partida.fixture?.date
-        ? new Date(partida.fixture.date).toLocaleTimeString(
-            'pt-BR',
-            {
-              timeZone: 'America/Sao_Paulo',
-              hour: '2-digit',
-              minute: '2-digit'
-            }
-          )
-        : '',
-
-      estadio: partida.fixture?.venue?.name || '',
-
-      mandante: {
-        id: partida.teams?.home?.id || '',
-        nome: partida.teams?.home?.name || '',
-        sigla: '',
-        escudo: ''
-      },
-
-      visitante: {
-        id: partida.teams?.away?.id || '',
-        nome: partida.teams?.away?.name || '',
-        sigla: '',
-        escudo: ''
-      },
-
-      placar: temPlacar ? {
-        mandante: Number(gols.home),
-        visitante: Number(gols.away)
-      } : null,
-
-      penaltis: temPenaltis ? {
-        mandante: Number(penaltis.home),
-        visitante: Number(penaltis.away)
-      } : null,
-
-      status: ['FT', 'AET', 'PEN'].includes(status)
-        ? 'FINALIZADO'
-        : ['1H', '2H', 'HT', 'ET', 'BT', 'P'].includes(status)
-          ? 'EM ANDAMENTO'
-          : status === 'PST'
-            ? 'ADIADO'
-            : status === 'CANC'
-              ? 'CANCELADO'
-              : 'AGENDADO',
-
-      fase: faseSelecionada.nome
-    };
-  });
-
-  fonte = 'API-Football';
+  fonte = 'GE Globo';
   nome = `Copa do Brasil ${temporada}`;
   classificacao = [];
+  jogos = jogosGE;
 
   dadosOriginais = {
     temporada,
-    liga_id: ligaId,
+    fases: nomesFases,
     fase_atual: faseCopa,
-    nome_fase: faseSelecionada.nome,
-    fases: fasesOrdenadas.map(f => f.nome),
-    total_fases: fasesOrdenadas.length,
+    nome_fase: nomesFases[faseCopa],
+    total_fases: nomesFases.length,
+    edicao,
+    fases_navegacao: dadosGE.fases_navegacao,
+    fase_url_encontrada: slug,
     atualizado_em: new Date().toISOString()
   };
 }
