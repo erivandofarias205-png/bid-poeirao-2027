@@ -459,6 +459,7 @@ if (chave === 'premier-league') {
     fonte: 'Premier League',
     total: artilheiros.length,
     artilheiros,
+    debug_primeiro: dados.data?.[0] || null,
     atualizado_em: new Date().toISOString()
   };
 }
