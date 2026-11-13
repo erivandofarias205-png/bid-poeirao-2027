@@ -590,21 +590,117 @@ if ([
     );
   }
 
+
 const normalizarNome = texto =>
   (texto || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 
 const artilheiros = [];
+
+// Consulta o catálogo de ligas da PitchAPI
+const pitchHeaders = {
+  'X-API-KEY': process.env.PITCHAPI_KEY
+};
+
+let mapaFotos = new Map();
+
+if (process.env.PITCHAPI_KEY) {
+  try {
+    const respostaLigas = await fetch(
+      'https://api.pitchapi.dev/v1/leagues',
+      { headers: pitchHeaders }
+    );
+
+    const dadosLigas = await respostaLigas.json();
+
+    if (!respostaLigas.ok || dadosLigas.error) {
+      throw new Error(
+        dadosLigas.error?.message || 'Falha ao consultar ligas'
+      );
+    }
+
+    const ligas = dadosLigas.data?.leagues || [];
+console.log('[PITCHAPI LIGAS DISPONIVEIS]', ligas.map(liga => ({
+  id: liga.id,
+  nome: liga.name,
+  temporadas: liga.seasons
+})));
+    
+    const ligaPitch = ligas.find(liga =>
+      normalizarNome(liga.name) ===
+      normalizarNome(configAPI.nome)
+    );
+
+    if (ligaPitch) {
+      const urlJogos = new URL(
+        `https://api.pitchapi.dev/v1/leagues/${ligaPitch.id}/matches`
+      );
+
+      urlJogos.searchParams.set('season', ligaPitch.seasons?.[0] || '');
+
+      const respostaJogos = await fetch(urlJogos, {
+        headers: pitchHeaders
+      });
+
+      const dadosJogos = await respostaJogos.json();
+
+      if (!respostaJogos.ok || dadosJogos.error) {
+        throw new Error(
+          dadosJogos.error?.message || 'Falha ao consultar jogos'
+        );
+      }
+
+      const jogos = (dadosJogos.data?.matches || [])
+        .filter(jogo => jogo.status === 'finished')
+        .slice(-12);
+
+      const respostasJogadores = await Promise.allSettled(
+        jogos.map(async jogo => {
+          const resposta = await fetch(
+            `https://api.pitchapi.dev/v1/matches/${jogo.id}/players`,
+            { headers: pitchHeaders }
+          );
+
+          const dados = await resposta.json();
+
+          if (!resposta.ok || dados.error) return [];
+
+          return (dados.data || []).map(registro => ({
+            nome: registro.player?.name || '',
+            foto: registro.player?.image_url || '',
+            timeId: registro.team_id || ''
+          }));
+        })
+      );
+
+      for (const resultado of respostasJogadores) {
+        if (resultado.status !== 'fulfilled') continue;
+
+        for (const jogador of resultado.value) {
+          if (jogador.nome && jogador.foto) {
+            mapaFotos.set(
+              normalizarNome(jogador.nome),
+              jogador.foto
+            );
+          }
+            }
+        }
+      }
+    } catch (erro) {
+    console.error('[ERRO PITCHAPI FOTOS]', erro.message);
+  }
+}
 
 for (const [indice, item] of (dados.scorers || []).entries()) {
   const jogador = item.player || {};
   const nome = jogador.name || '';
   let foto = '';
 
-  // 1. Primeiro procura a foto já salva no Supabase
   try {
     const fotoSalva = await consultarFotoSalva(chave, nome);
     foto = fotoSalva?.foto_url || '';
@@ -612,56 +708,30 @@ for (const [indice, item] of (dados.scorers || []).entries()) {
     console.error('[ERRO FOTO SUPABASE]', nome, erro.message);
   }
 
- 
-  // 2. Se não encontrou, procura pelo perfil do jogador
-  // sem depender da temporada 2026
-  if (!foto && process.env.API_FOOTBALL_KEY) {
-    try {
-      const urlFoto = new URL(
-        'https://v3.football.api-sports.io/players/profiles'
-      );
+  if (!foto) {
+    const nomeNormalizado = normalizarNome(nome);
+    const partesNome = nomeNormalizado.split(' ');
+    const sobrenome = partesNome[partesNome.length - 1];
 
-      urlFoto.searchParams.set('search', nome);
-
-      const respostaFoto = await fetch(urlFoto.toString(), {
-        headers: {
-          'x-apisports-key': process.env.API_FOOTBALL_KEY
-        }
-      });
-
-      const dadosFoto = await respostaFoto.json();
-
-      const errosFoto = dadosFoto.errors || {};
+    for (const [nomePitch, urlFoto] of mapaFotos) {
+      const partesPitch = nomePitch.split(' ');
+      const sobrenomePitch = partesPitch[partesPitch.length - 1];
 
       if (
-        respostaFoto.ok &&
-        Object.keys(errosFoto).length === 0
+        nomePitch === nomeNormalizado ||
+        (sobrenome && sobrenome === sobrenomePitch)
       ) {
-        const encontrado = (dadosFoto.response || []).find(
-          registro =>
-            normalizarNome(registro.player?.name) ===
-            normalizarNome(nome)
-        );
-
-        foto = encontrado?.player?.photo || '';
-
-        // 3. Salva a foto encontrada no Supabase
-        if (foto) {
-          await salvarFoto(
-            chave,
-            nome,
-            encontrado.player.id,
-            foto
-          );
-        }
-      } else {
-        console.warn('[ERRO PERFIL FOTO]', {
-          jogador: nome,
-          erros: errosFoto
-        });
+        foto = urlFoto;
+        break;
       }
+    }
+  }
+
+  if (foto) {
+    try {
+      await salvarFoto(chave, nome, jogador.id || null, foto);
     } catch (erro) {
-      console.error('[ERRO BUSCA FOTO]', nome, erro.message);
+      console.error('[ERRO SALVAR FOTO]', nome, erro.message);
     }
   }
 
