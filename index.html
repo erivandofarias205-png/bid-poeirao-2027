@@ -3539,7 +3539,7 @@ jogosDaFase.push(
   padding: 3mm;
   border: 2px solid #c99b32;
   display: flex;
-  flex-direction: row;
+ flex-direction: column;
   overflow: hidden;
   break-after: page;
   page-break-after: always;
@@ -3732,7 +3732,14 @@ footer strong {
     </html>
   `);
 
-  janela.document.close();
+ janela.document.close();
+
+setTimeout(() => {
+  if (!janela.closed) {
+    janela.focus();
+    janela.print();
+  }
+}, 1000);
 }
 
  
