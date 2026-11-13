@@ -4915,7 +4915,12 @@ const competicoesGE = {
   'EUROPA LEAGUE': 'europa',
   'LIGA DAS NAÇÕES': 'liga-das-nacoes',
   'LIBERTADORES': 'libertadores',
-  'SUL-AMERICANA': 'sul-americana'
+  'SUL-AMERICANA': 'sul-americana',
+  'PREMIER LEAGUE': 'premier-league',
+  'LA LIGA': 'la-liga',
+  'CAMPEONATO ITALIANO': 'serie-a-italia',
+  'BUNDESLIGA': 'bundesliga',
+  'CAMPEONATO FRANCÊS': 'ligue-1'
 };
     
   const nomeCompeticaoNormalizado = String(competicao || '')
@@ -5208,19 +5213,32 @@ const gruposGE = Array.isArray(dadosCompeticaoGE.grupos)
   : [];
 
 const normalizarEquipe = item => ({
-  posicao: item.posicao ?? item.ordem ?? '-',
-  equipe: item.equipe || item.nome_popular || '',
-  escudo: item.escudo || '',
-  pontos: item.pontos ?? 0,
-  jogos: item.jogos ?? 0,
-  vitorias: item.vitorias ?? 0,
-  empates: item.empates ?? 0,
-  derrotas: item.derrotas ?? 0,
-  saldo_gols: item.saldo_gols ?? 0
+  posicao: item.position ?? item.posicao ?? item.ordem ?? '-',
+  equipe: item.team?.name || item.equipe || item.nome_popular || '',
+  escudo: item.team?.badge || item.escudo || '',
+  pontos: item.points ?? item.pontos ?? 0,
+  jogos: item.matches ?? item.jogos ?? 0,
+  vitorias: item.wins ?? item.vitorias ?? 0,
+  empates: item.draws ?? item.empates ?? 0,
+  derrotas: item.losses ?? item.derrotas ?? 0,
+  saldo_gols: item.goalDifference ?? item.saldo_gols ?? 0
 });
 
-const tabelaGE = (dadosCompeticaoGE.classificacao || [])
-  .map(normalizarEquipe);
+const ehLigaEuropeia = [
+  'premier-league',
+  'la-liga',
+  'serie-a-italia',
+  'bundesliga',
+  'ligue-1'
+].includes(chaveGE);
+
+const classificacaoBruta = dadosCompeticaoGE.classificacao || [];
+
+const listaClassificacao = ehLigaEuropeia
+  ? classificacaoBruta.flatMap(item => item.entries || [])
+  : classificacaoBruta;
+
+const tabelaGE = listaClassificacao.map(normalizarEquipe);
 
 const totalEquipes = ehLigaDasNacoes
   ? gruposGE.reduce(
@@ -5488,7 +5506,131 @@ const ultimaRodadaGrupo = Number(grupo.rodada?.ultima || 6);
   }
 `;
 
- if (ehLigaDasNacoes) {
+
+if (ehLigaEuropeia && areaJogos) {
+  const rodadasDisponiveis =
+    dadosCompeticaoGE.dados_originais?.rodadas_disponiveis || [];
+
+  const rodadaAtual = Number(dadosCompeticaoGE.rodada) || 1;
+
+  function montarJogosEuropeus(jogos) {
+    if (!Array.isArray(jogos) || !jogos.length) {
+      return '<p style="text-align:center;color:#777">Nenhum jogo encontrado nesta rodada.</p>';
+    }
+
+    return jogos.map(jogo => {
+      const mandante = jogo.mandante || {};
+      const visitante = jogo.visitante || {};
+      const placar = jogo.placar;
+
+      const resultado = placar
+        ? `${placar.mandante ?? '-'} × ${placar.visitante ?? '-'}`
+        : '×';
+
+      return `
+        <div style="
+          background:#fff;
+          color:#222;
+          border:1px solid #ddd;
+          border-radius:10px;
+          padding:12px;
+          margin-bottom:10px;
+        ">
+          <div style="text-align:center;font-size:11px;color:#777;margin-bottom:8px">
+            ${jogo.data || ''} ${jogo.hora || ''}
+          </div>
+
+          <div style="
+            display:grid;
+            grid-template-columns:1fr auto 1fr;
+            align-items:center;
+            gap:8px;
+            text-align:center;
+          ">
+            <div>
+              ${mandante.escudo ? `<img src="${mandante.escudo}" style="width:35px;height:35px;object-fit:contain">` : ''}
+              <div style="font-size:12px;font-weight:800">${mandante.nome || '-'}</div>
+            </div>
+
+            <div style="font-size:18px;font-weight:900">
+              ${resultado}
+            </div>
+
+            <div>
+              ${visitante.escudo ? `<img src="${visitante.escudo}" style="width:35px;height:35px;object-fit:contain">` : ''}
+              <div style="font-size:12px;font-weight:800">${visitante.nome || '-'}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center;font-size:10px;color:#777;margin-top:8px">
+            ${jogo.status || ''} ${jogo.estadio ? ' · ' + jogo.estadio : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  areaJogos.innerHTML = `
+    <div style="margin-bottom:15px">
+      <h3 style="margin-bottom:10px">JOGOS</h3>
+
+      <select id="seletorRodadaEuropeia"
+        style="width:100%;padding:10px;border-radius:8px">
+        ${rodadasDisponiveis.length
+          ? rodadasDisponiveis.map(rodada => `
+              <option value="${rodada}" ${Number(rodada) === rodadaAtual ? 'selected' : ''}>
+                Rodada ${rodada}
+              </option>
+            `).join('')
+          : `<option value="${rodadaAtual}">Rodada ${rodadaAtual}</option>`
+        }
+      </select>
+    </div>
+
+    <div id="listaJogosEuropeus">
+      ${montarJogosEuropeus(dadosCompeticaoGE.jogos || [])}
+    </div>
+  `;
+
+  const seletorRodadaEuropeia =
+    document.getElementById('seletorRodadaEuropeia');
+
+  seletorRodadaEuropeia.addEventListener('change', async () => {
+    const rodadaEscolhida = Number(seletorRodadaEuropeia.value);
+    const painelJogos = document.getElementById('listaJogosEuropeus');
+
+    painelJogos.innerHTML =
+      '<p style="text-align:center">Carregando jogos...</p>';
+
+    try {
+      const respostaRodada = await fetch(
+        `/api/competicoes?competicao=${chaveGE}&rodada=${rodadaEscolhida}`
+      );
+
+      if (!respostaRodada.ok) {
+        throw new Error('Erro ao carregar a rodada.');
+      }
+
+      const retornoRodada = await respostaRodada.json();
+
+      const dadosRodada = Array.isArray(retornoRodada.competicoes)
+        ? retornoRodada.competicoes.find(item => item.chave === chaveGE)
+        : retornoRodada.chave === chaveGE
+          ? retornoRodada
+          : retornoRodada;
+
+      painelJogos.innerHTML = montarJogosEuropeus(
+        dadosRodada?.jogos || []
+      );
+
+    } catch (erro) {
+      painelJogos.innerHTML =
+        `<p style="color:red;text-align:center">${erro.message}</p>`;
+    }
+  });
+}
+
+      if (ehLigaDasNacoes) {
   gruposGE.forEach((grupo, indice) => {
     const seletorRodada = document.getElementById(
       `seletorRodadaGrupo${indice}`
