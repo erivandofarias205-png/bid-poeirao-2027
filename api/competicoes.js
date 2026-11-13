@@ -629,8 +629,19 @@ urlFoto.searchParams.set('season', '2026');
         }
       });
 
-      if (respostaFoto.ok) {
-        const dadosFoto = await respostaFoto.json();
+      const dadosFoto = await respostaFoto.json();
+
+console.log('[DIAGNÓSTICO API-FOOTBALL FOTO]', {
+  jogador: nome,
+  liga: configAPI.id,
+  temporada: 2026,
+  status: respostaFoto.status,
+  erros: dadosFoto.errors || null,
+  totalResultados: dadosFoto.results || 0,
+  primeiroResultado: dadosFoto.response?.[0]?.player || null
+});
+
+if (respostaFoto.ok && !Object.keys(dadosFoto.errors || {}).length) {
 
         const encontrado = (dadosFoto.response || []).find(
           registro =>
