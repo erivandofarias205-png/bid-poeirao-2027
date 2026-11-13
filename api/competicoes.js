@@ -351,6 +351,54 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
       };
     }
 
+if (chave === 'premier-league') {
+  const url = new URL(
+    'https://sdp-prem-prod.premier-league-prod.pulselive.com/api/v3/competitions/8/seasons/2026/players/stats/leaderboard'
+  );
+
+  url.searchParams.set('_sort', 'goals:desc');
+  url.searchParams.set('_limit', '100');
+
+  const resposta = await fetch(url.toString(), {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!resposta.ok) {
+    throw new Error(
+      `Premier League respondeu com HTTP ${resposta.status}`
+    );
+  }
+
+  const dados = await resposta.json();
+
+  const artilheiros = (dados.data || [])
+    .map((item, indice) => ({
+      nome: item.playerMetadata?.name || '',
+      clube: item.playerMetadata?.currentTeam?.name || '',
+      gols: Number(item.stats?.goals || 0),
+      foto: '',
+      escudo: '',
+      posicao: String(indice + 1),
+      participacoes: Number(item.stats?.gamesPlayed || 0),
+      gols_penalti: Number(item.stats?.penaltyGoals || 0)
+    }))
+    .filter(jogador => jogador.nome)
+    .sort((a, b) => b.gols - a.gols);
+
+  return {
+    chave,
+    competicao: 'Premier League',
+    temporada: '2026/2027',
+    fonte: 'Premier League',
+    total: artilheiros.length,
+    artilheiros,
+    atualizado_em: new Date().toISOString()
+  };
+}
+
     const config = competicoes[chave];
 
     if (!config) {
