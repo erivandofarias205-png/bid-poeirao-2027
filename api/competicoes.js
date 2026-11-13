@@ -377,7 +377,31 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
   scriptReact: /id=["']scriptReact["']/.test(html),
   termoArtilharia: /artilharia|artilheiro|top.?scorer/i.test(html)
 });
-   
+  const indiceWrapper = html.indexOf('artilharia-wrapper');
+
+const trechoWrapper = indiceWrapper >= 0
+  ? html.slice(indiceWrapper, indiceWrapper + 5000)
+  : '';
+
+const classesGE = [
+  ...new Set(
+    [...trechoWrapper.matchAll(/class=["']([^"']+)["']/g)]
+      .flatMap(item => item[1].split(/\s+/))
+  )
+];
+
+const scriptArt = [
+  ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
+].find(item => /\bid=["']scriptReact["']/.test(item[1]));
+
+console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
+  classesEncontradas: classesGE,
+  variaveisScript: scriptArt
+    ? [...scriptArt[2].matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=/g)]
+        .map(item => item[1])
+    : [],
+  trecho: trechoWrapper.slice(0, 1500)
+}); 
    const bloco = html.match(
       /<section class="artilharia-wrapper">([\s\S]*?)<\/section>/
     );
