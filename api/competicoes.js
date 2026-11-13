@@ -612,16 +612,16 @@ for (const [indice, item] of (dados.scorers || []).entries()) {
     console.error('[ERRO FOTO SUPABASE]', nome, erro.message);
   }
 
-  // 2. Se não encontrou, procura na API-Football
+ 
+  // 2. Se não encontrou, procura pelo perfil do jogador
+  // sem depender da temporada 2026
   if (!foto && process.env.API_FOOTBALL_KEY) {
     try {
-     const urlFoto = new URL(
-  'https://v3.football.api-sports.io/players'
-);
+      const urlFoto = new URL(
+        'https://v3.football.api-sports.io/players/profiles'
+      );
 
-urlFoto.searchParams.set('search', nome);
-urlFoto.searchParams.set('league', String(configAPI.id));
-urlFoto.searchParams.set('season', '2026');
+      urlFoto.searchParams.set('search', nome);
 
       const respostaFoto = await fetch(urlFoto.toString(), {
         headers: {
@@ -631,18 +631,12 @@ urlFoto.searchParams.set('season', '2026');
 
       const dadosFoto = await respostaFoto.json();
 
-console.log('[DIAGNÓSTICO API-FOOTBALL FOTO]', {
-  jogador: nome,
-  liga: configAPI.id,
-  temporada: 2026,
-  status: respostaFoto.status,
-  erros: dadosFoto.errors || null,
-  totalResultados: dadosFoto.results || 0,
-  primeiroResultado: dadosFoto.response?.[0]?.player || null
-});
+      const errosFoto = dadosFoto.errors || {};
 
-if (respostaFoto.ok && !Object.keys(dadosFoto.errors || {}).length) {
-
+      if (
+        respostaFoto.ok &&
+        Object.keys(errosFoto).length === 0
+      ) {
         const encontrado = (dadosFoto.response || []).find(
           registro =>
             normalizarNome(registro.player?.name) ===
@@ -651,7 +645,7 @@ if (respostaFoto.ok && !Object.keys(dadosFoto.errors || {}).length) {
 
         foto = encontrado?.player?.photo || '';
 
-        // 3. Salva a foto encontrada para reutilizar depois
+        // 3. Salva a foto encontrada no Supabase
         if (foto) {
           await salvarFoto(
             chave,
@@ -660,13 +654,18 @@ if (respostaFoto.ok && !Object.keys(dadosFoto.errors || {}).length) {
             foto
           );
         }
+      } else {
+        console.warn('[ERRO PERFIL FOTO]', {
+          jogador: nome,
+          erros: errosFoto
+        });
       }
     } catch (erro) {
       console.error('[ERRO BUSCA FOTO]', nome, erro.message);
     }
   }
 
-  artilheiros.push({
+       artilheiros.push({
     nome,
     clube: item.team?.name || '',
     gols: Number(item.goals || 0),
@@ -677,7 +676,6 @@ if (respostaFoto.ok && !Object.keys(dadosFoto.errors || {}).length) {
     gols_penalti: Number(item.penalties || 0)
   });
 }
-
 
   return {
     chave,
