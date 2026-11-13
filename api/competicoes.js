@@ -256,7 +256,70 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
       };
     }
 
+if (chave === 'conference') {
+  const url = new URL(
+    'https://compstats.uefa.com/v2/player-ranking'
+  );
 
+  url.searchParams.set('competitionId', '2019');
+  url.searchParams.set('limit', '100');
+  url.searchParams.set('offset', '0');
+  url.searchParams.set('optionalFields', 'PLAYER,TEAM');
+  url.searchParams.set('order', 'DESC');
+  url.searchParams.set('phase', 'TOURNAMENT');
+  url.searchParams.set('seasonYear', '2027');
+  url.searchParams.set(
+    'stats',
+    'goals,penalty_scored,matches_appearance'
+  );
+
+  const resposta = await fetch(url.toString(), {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!resposta.ok) {
+    throw new Error(
+      `UEFA Conference respondeu com status ${resposta.status}`
+    );
+  }
+
+  const dados = await resposta.json();
+
+  const artilheiros = (Array.isArray(dados) ? dados : [])
+    .map((item, indice) => {
+      const estatistica = nome =>
+        Number(
+          item.statistics?.find(s => s.name === nome)?.value || 0
+        );
+
+      return {
+        nome: item.player?.internationalName || '',
+        clube: item.team?.translations?.displayName?.PT ||
+          item.team?.internationalName || '',
+        gols: estatistica('goals'),
+        foto: item.player?.imageUrl || '',
+        escudo: item.team?.logoUrl || '',
+        posicao: String(indice + 1),
+        participacoes: estatistica('matches_appearance'),
+        gols_penalti: estatistica('penalty_scored')
+      };
+    })
+    .filter(jogador => jogador.nome)
+    .sort((a, b) => b.gols - a.gols);
+
+  return {
+    chave,
+    competicao: 'Conference League',
+    temporada: '2026/2027',
+    fonte: 'UEFA',
+    total: artilheiros.length,
+    artilheiros,
+    atualizado_em: new Date().toISOString()
+  };
+}
     if (chave === 'serie-c' || chave === 'serie-d') {
       const apiKey = process.env.API_FOOTBALL_KEY;
 
