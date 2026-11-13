@@ -412,8 +412,13 @@ console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
   )
 }));
 
+
 console.log('[DEBUG OCORRENCIAS ARTILHARIA]', {
-  const termosScript = [
+  total: ocorrenciasWrapper.length,
+  ocorrencias: ocorrenciasWrapper.slice(0, 15)
+});
+
+const termosScript = [
   'artilharia',
   'artilheiro',
   'artilheiros',
@@ -439,6 +444,7 @@ for (const termo of termosScript) {
 }
 
 console.log('[DEBUG SCRIPT ARTILHARIA]', diagnosticoScript);
+
  
    const bloco = html.match(
       /<section class="artilharia-wrapper">([\s\S]*?)<\/section>/
