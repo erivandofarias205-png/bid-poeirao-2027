@@ -4740,10 +4740,7 @@ if (painelClassificacao) {
         `/api/competicoes?competicao=copa-do-brasil&fase=${fase}`
       );
 
-      const retorno = await resposta.json();
-
-      if (!resposta.ok || !retorno.sucesso) {
-       const retorno = await resposta.json();
+const retorno = await resposta.json();
 
 const dadosCopa = (retorno.competicoes || [])
   .find(item => item.chave === 'copa-do-brasil');
