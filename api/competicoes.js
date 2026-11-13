@@ -546,8 +546,9 @@ console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
         .map(item => item[1])
     : [],
   trecho: trechoWrapper.slice(0, 1500)
-}); 
-   const ocorrenciasWrapper = [
+});
+
+const ocorrenciasWrapper = [
   ...html.matchAll(/artilharia-wrapper/gi)
 ].map(item => ({
   indice: item.index,
@@ -556,7 +557,6 @@ console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
     Math.min(html.length, item.index + 800)
   )
 }));
-
 
 console.log('[DEBUG OCORRENCIAS ARTILHARIA]', {
   total: ocorrenciasWrapper.length,
