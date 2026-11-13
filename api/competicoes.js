@@ -525,13 +525,47 @@ if ([
       JSON.stringify(dados)
     );
   }
+let fotoPrimeiroJogador = '';
 
+if (chave === 'la-liga' && dados.scorers?.length) {
+  const nome = dados.scorers[0].player?.name || '';
+  const sobrenome = nome.trim().split(' ').pop();
+
+  const urlFoto = new URL(
+    'https://v3.football.api-sports.io/players/profiles'
+  );
+
+  urlFoto.searchParams.set('search', sobrenome);
+
+  const respostaFoto = await fetch(urlFoto.toString(), {
+    headers: {
+      'x-apisports-key': process.env.API_FOOTBALL_KEY
+    }
+  });
+
+  const dadosFoto = await respostaFoto.json();
+
+  const normalizar = texto =>
+    (texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+  const jogadorEncontrado = (dadosFoto.response || [])
+    .find(item =>
+      normalizar(item.player?.name) === normalizar(nome)
+    );
+
+  fotoPrimeiroJogador =
+    jogadorEncontrado?.player?.photo || '';
+}
   const artilheiros = (dados.scorers || [])
     .map((item, indice) => ({
       nome: item.player?.name || '',
       clube: item.team?.name || '',
       gols: Number(item.goals || 0),
-      foto: '',
+      foto: indice === 0 ? fotoPrimeiroJogador : '',
       escudo: item.team?.crest || '',
       posicao: String(indice + 1),
      participacoes: Number(item.playedMatches || 0),
