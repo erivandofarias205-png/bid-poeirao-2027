@@ -402,6 +402,20 @@ console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
     : [],
   trecho: trechoWrapper.slice(0, 1500)
 }); 
+   const ocorrenciasWrapper = [
+  ...html.matchAll(/artilharia-wrapper/gi)
+].map(item => ({
+  indice: item.index,
+  trecho: html.slice(
+    Math.max(0, item.index - 200),
+    Math.min(html.length, item.index + 800)
+  )
+}));
+
+console.log('[DEBUG OCORRENCIAS ARTILHARIA]', {
+  total: ocorrenciasWrapper.length,
+  ocorrencias: ocorrenciasWrapper.slice(0, 15)
+});
    const bloco = html.match(
       /<section class="artilharia-wrapper">([\s\S]*?)<\/section>/
     );
