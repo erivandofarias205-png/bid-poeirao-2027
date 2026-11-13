@@ -2107,11 +2107,9 @@ else if (chave === 'copa-do-brasil') {
     )
   );
 
-    if (!linkFase) {
-      throw new Error(
-        `O GE não disponibilizou o link da fase: ${slug}`
-      );
-    }
+   if (!linkFase) {
+  linkFase = `https://ge.globo.com/futebol/copa-do-brasil/${slug}/`;
+}
 
     const urlFase = new URL(linkFase, urlBase).href;
     const respostaFase = await fetch(urlFase);
