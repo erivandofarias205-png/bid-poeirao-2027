@@ -2021,154 +2021,185 @@ console.log(
 }
 
         
-else if (chave === 'copa-do-brasil') {
-  const temporada = '2026';
 
-  if (
-    !Number.isInteger(faseCopa) ||
-    faseCopa < 0 ||
-    faseCopa > 8
-  ) {
-    throw new Error('Fase inválida. Informe um número de 0 a 8.');
+else if (chave === 'copa-do-brasil') {
+  const temporada = 2026;
+
+  if (!Number.isInteger(faseCopa) || faseCopa < 0 || faseCopa > 8) {
+    throw new Error('Fase inválida da Copa do Brasil.');
   }
 
-  const apiKey = process.env.DADOS_FUTEBOL_API_KEY;
+  const apiKey = process.env.API_FOOTBALL_KEY;
 
   if (!apiKey) {
-    throw new Error('DADOS_FUTEBOL_API_KEY não configurada.');
+    throw new Error('API_FOOTBALL_KEY não encontrada na Vercel.');
   }
 
-  const consultarDadosFutebol = async (url) => {
-    const resposta = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: 'application/json'
+  const consultarFootball = async (endpoint) => {
+    const resposta = await fetch(
+      `https://v3.football.api-sports.io/${endpoint}`,
+      {
+        headers: {
+          'x-apisports-key': apiKey
+        }
       }
-    });
+    );
 
     const dados = await resposta.json();
 
-    if (!resposta.ok) {
+    if (!resposta.ok || (dados.errors &&
+        Object.keys(dados.errors).length > 0)) {
       throw new Error(
-        dados.mensagem ||
-        dados.erro ||
-        `Dados Futebol respondeu HTTP ${resposta.status}.`
+        JSON.stringify(dados.errors || `HTTP ${resposta.status}`)
       );
     }
 
-    return dados;
+    return dados.response || [];
   };
 
-  // Localiza o ID da Copa do Brasil da temporada
-  const retornoCampeonatos = await consultarDadosFutebol(
-    `https://api.dadosfutebol.com.br/v1/campeonatos?temporada=${temporada}&por_pagina=100`
+  // Localiza a Copa do Brasil na temporada
+  const ligas = await consultarFootball(
+    `leagues?country=Brazil&season=${temporada}`
   );
 
-  const campeonato = (retornoCampeonatos.data || []).find(item =>
-    String(item.nome || '').toUpperCase().includes('COPA DO BRASIL')
+  const ligaEncontrada = ligas.find(item =>
+    String(item.league?.name || '')
+      .toLowerCase()
+      .trim() === 'copa do brasil'
   );
 
-  if (!campeonato) {
+  if (!ligaEncontrada) {
     throw new Error(
-      `Copa do Brasil ${temporada} não encontrada na Dados Futebol.`
+      `Copa do Brasil não encontrada na API-Football em ${temporada}.`
     );
   }
 
-  // Busca o chaveamento completo
-  const retornoChave = await consultarDadosFutebol(
-    `https://api.dadosfutebol.com.br/v1/campeonatos/${campeonato.id}/chave`
+  const ligaId = ligaEncontrada.league.id;
+
+  // Busca os jogos da temporada
+  const partidasAPI = await consultarFootball(
+    `fixtures?league=${ligaId}&season=${temporada}`
   );
 
-  const dadosChave = retornoChave.data || {};
-  const fases = dadosChave.fases || [];
+  // Organiza as fases pela data do primeiro jogo
+  const mapaFases = new Map();
 
-  const faseSelecionada = fases[faseCopa];
+  partidasAPI.forEach(partida => {
+    const nomeRodada = partida.league?.round;
+
+    if (!nomeRodada) return;
+
+    if (!mapaFases.has(nomeRodada)) {
+      mapaFases.set(nomeRodada, []);
+    }
+
+    mapaFases.get(nomeRodada).push(partida);
+  });
+
+  const fasesOrdenadas = [...mapaFases.entries()]
+    .map(([nome, partidas]) => ({
+      nome,
+      partidas,
+      primeiraData: Math.min(
+        ...partidas.map(p =>
+          new Date(p.fixture?.date || 0).getTime()
+        )
+      )
+    }))
+    .sort((a, b) => a.primeiraData - b.primeiraData);
+
+  const faseSelecionada = fasesOrdenadas[faseCopa];
 
   if (!faseSelecionada) {
     throw new Error(
-      `Fase ${faseCopa + 1} não encontrada na Copa do Brasil.`
+      `Fase ${faseCopa + 1} ainda não disponível na API-Football.`
     );
   }
 
-  const partidasEncontradas = [];
-  const idsPartidas = new Set();
+  jogos = faseSelecionada.partidas.map(partida => {
+    const status = partida.fixture?.status?.short || '';
+    const gols = partida.goals || {};
 
-  (faseSelecionada.chaves || []).forEach(chave => {
-    ['partida_ida', 'partida_volta'].forEach(tipo => {
-      const partida = chave[tipo];
+    const temPlacar =
+      gols.home !== null &&
+      gols.home !== undefined &&
+      gols.away !== null &&
+      gols.away !== undefined;
 
-      if (!partida || idsPartidas.has(String(partida.id))) {
-        return;
-      }
+    const penaltis = partida.score?.penalty || {};
 
-      idsPartidas.add(String(partida.id));
+    const temPenaltis =
+      penaltis.home !== null &&
+      penaltis.home !== undefined &&
+      penaltis.away !== null &&
+      penaltis.away !== undefined;
 
-      const temPlacar =
-        partida.placar_mandante !== null &&
-        partida.placar_mandante !== undefined &&
-        partida.placar_visitante !== null &&
-        partida.placar_visitante !== undefined;
+    return {
+      id: partida.fixture?.id,
 
-      const temPenaltis =
-        partida.penalti?.placar_mandante !== null &&
-        partida.penalti?.placar_mandante !== undefined &&
-        partida.penalti?.placar_visitante !== null &&
-        partida.penalti?.placar_visitante !== undefined;
+      data: partida.fixture?.date || '',
+      hora: partida.fixture?.date
+        ? new Date(partida.fixture.date).toLocaleTimeString(
+            'pt-BR',
+            {
+              timeZone: 'America/Sao_Paulo',
+              hour: '2-digit',
+              minute: '2-digit'
+            }
+          )
+        : '',
 
-      partidasEncontradas.push({
-        id: partida.id,
-        data: partida.data_realizacao || '',
-        hora: partida.hora_realizacao || '',
-        estadio: partida.estadio || '',
+      estadio: partida.fixture?.venue?.name || '',
 
-        mandante: {
-          id: partida.time_mandante?.id || '',
-          nome: partida.time_mandante?.nome || '',
-          sigla: partida.time_mandante?.sigla || '',
-          escudo: ''
-        },
+      mandante: {
+        id: partida.teams?.home?.id || '',
+        nome: partida.teams?.home?.name || '',
+        sigla: '',
+        escudo: ''
+      },
 
-        visitante: {
-          id: partida.time_visitante?.id || '',
-          nome: partida.time_visitante?.nome || '',
-          sigla: partida.time_visitante?.sigla || '',
-          escudo: ''
-        },
+      visitante: {
+        id: partida.teams?.away?.id || '',
+        nome: partida.teams?.away?.name || '',
+        sigla: '',
+        escudo: ''
+      },
 
-        placar: temPlacar ? {
-          mandante: Number(partida.placar_mandante),
-          visitante: Number(partida.placar_visitante)
-        } : null,
+      placar: temPlacar ? {
+        mandante: Number(gols.home),
+        visitante: Number(gols.away)
+      } : null,
 
-        penaltis: temPenaltis ? {
-          mandante: Number(partida.penalti.placar_mandante),
-          visitante: Number(partida.penalti.placar_visitante)
-        } : null,
+      penaltis: temPenaltis ? {
+        mandante: Number(penaltis.home),
+        visitante: Number(penaltis.away)
+      } : null,
 
-        status: partida.status === 'encerrado'
-          ? 'FINALIZADO'
-          : partida.status === 'ao_vivo'
-            ? 'EM ANDAMENTO'
-            : partida.status === 'adiado'
-              ? 'ADIADO'
+      status: ['FT', 'AET', 'PEN'].includes(status)
+        ? 'FINALIZADO'
+        : ['1H', '2H', 'HT', 'ET', 'BT', 'P'].includes(status)
+          ? 'EM ANDAMENTO'
+          : status === 'PST'
+            ? 'ADIADO'
+            : status === 'CANC'
+              ? 'CANCELADO'
               : 'AGENDADO',
 
-        fase: faseSelecionada.nome || ''
-      });
-    });
+      fase: faseSelecionada.nome
+    };
   });
 
-  fonte = 'Dados Futebol';
+  fonte = 'API-Football';
   nome = `Copa do Brasil ${temporada}`;
   classificacao = [];
-  jogos = partidasEncontradas;
 
   dadosOriginais = {
     temporada,
+    liga_id: ligaId,
     fase_atual: faseCopa,
-    nome_fase: faseSelecionada.nome || '',
-    fases: fases.map(fase => fase.nome),
-    total_fases: fases.length,
+    nome_fase: faseSelecionada.nome,
+    fases: fasesOrdenadas.map(f => f.nome),
+    total_fases: fasesOrdenadas.length,
     atualizado_em: new Date().toISOString()
   };
 }
