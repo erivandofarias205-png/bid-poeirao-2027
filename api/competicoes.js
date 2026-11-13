@@ -33,6 +33,7 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
   'brasileirao-d',
   'champions',
   'europa',
+    'conference',
   'copa-do-brasil',
   'liga-das-nacoes',
   'amistosos',
