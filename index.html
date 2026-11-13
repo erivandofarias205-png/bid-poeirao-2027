@@ -4743,7 +4743,20 @@ if (painelClassificacao) {
       const retorno = await resposta.json();
 
       if (!resposta.ok || !retorno.sucesso) {
-        throw new Error(retorno.erro || 'Erro ao carregar Copa do Brasil.');
+       const retorno = await resposta.json();
+
+const dadosCopa = (retorno.competicoes || [])
+  .find(item => item.chave === 'copa-do-brasil');
+
+if (!resposta.ok || !dadosCopa || !dadosCopa.sucesso) {
+  throw new Error(
+    dadosCopa?.erro ||
+    retorno.erro ||
+    'Erro ao carregar Copa do Brasil.'
+  );
+}
+
+const jogos = dadosCopa.jogos || retorno.jogos || [];
       }
 
       const jogos = retorno.jogos || [];
