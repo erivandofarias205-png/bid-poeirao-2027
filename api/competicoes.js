@@ -2020,161 +2020,159 @@ console.log(
   };
 }
 
-         else if (chave === 'copa-do-brasil') {
-  const urlBase = 'https://ge.globo.com/futebol/copa-do-brasil/';
+        
+else if (chave === 'copa-do-brasil') {
+  const temporada = '2026';
 
- if (
-  !Number.isInteger(faseCopa) ||
-  faseCopa < 0 ||
-  faseCopa > 8
-) {
-  throw new Error('Fase inválida. Informe um número inteiro de 0 a 8.');
-}
-
-  const nomesFases = [
-    'Primeira fase',
-    'Segunda fase',
-    'Terceira fase',
-    'Quarta fase',
-    'Quinta fase',
-    'Oitavas de final',
-    'Quartas de final',
-    'Semifinal',
-    'Final'
-  ];
-
-  // Consulta a página principal do GE
-  const respostaGE = await fetch(urlBase);
-
-  if (!respostaGE.ok) {
-    throw new Error(`GE retornou ${respostaGE.status}`);
+  if (
+    !Number.isInteger(faseCopa) ||
+    faseCopa < 0 ||
+    faseCopa > 8
+  ) {
+    throw new Error('Fase inválida. Informe um número de 0 a 8.');
   }
 
-  const htmlGE = await respostaGE.text();
+  const apiKey = process.env.DADOS_FUTEBOL_API_KEY;
 
-  function extrairClassificacao(html) {
-    const bloco = html.match(
-      /const classificacao = (\{[\s\S]*?\});/
-    );
+  if (!apiKey) {
+    throw new Error('DADOS_FUTEBOL_API_KEY não configurada.');
+  }
 
-    if (!bloco) {
-      throw new Error('Estrutura da Copa não encontrada no GE.');
+  const consultarDadosFutebol = async (url) => {
+    const resposta = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: 'application/json'
+      }
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok) {
+      throw new Error(
+        dados.mensagem ||
+        dados.erro ||
+        `Dados Futebol respondeu HTTP ${resposta.status}.`
+      );
     }
 
-    return JSON.parse(bloco[1]);
-  }
+    return dados;
+  };
 
-  const dadosGE = extrairClassificacao(htmlGE);
-
-  const edicao = dadosGE.edicao || {};
-  const temporada = String(
-    edicao.nome?.match(/\d{4}/)?.[0] ||
-    new Date().getFullYear()
+  // Localiza o ID da Copa do Brasil da temporada
+  const retornoCampeonatos = await consultarDadosFutebol(
+    `https://api.dadosfutebol.com.br/v1/campeonatos?temporada=${temporada}&por_pagina=100`
   );
 
-  // Localiza automaticamente o endereço da fase escolhida
-  const navegacao = dadosGE.fases_navegacao || [];
-  const faseSelecionada = navegacao[faseCopa];
+  const campeonato = (retornoCampeonatos.data || []).find(item =>
+    String(item.nome || '').toUpperCase().includes('COPA DO BRASIL')
+  );
 
-  const slug = typeof faseSelecionada === 'string'
-    ? faseSelecionada
-    : faseSelecionada?.slug || '';
-
-  let htmlFase = htmlGE;
-
-  if (slug) {
-    const links = [
-      ...htmlGE.matchAll(/href=["']([^"']+)["']/g)
-    ];
-
-    const linkFase = links
-      .map(item => item[1].replace(/&amp;/g, '&'))
-      .find(link => link.includes(slug));
-
-    
-if (linkFase) {
-  const urlFase = new URL(linkFase, urlBase).href;
-  const respostaFase = await fetch(urlFase);
-
-  if (respostaFase.ok) {
-    htmlFase = await respostaFase.text();
+  if (!campeonato) {
+    throw new Error(
+      `Copa do Brasil ${temporada} não encontrada na Dados Futebol.`
+    );
   }
-}
-}
-        
-  const dadosFase = extrairClassificacao(htmlFase);
-  const secoes = dadosFase.secao || [];
 
-  // Extrai os jogos das chaves da fase
-  const jogosGE = [];
+  // Busca o chaveamento completo
+  const retornoChave = await consultarDadosFutebol(
+    `https://api.dadosfutebol.com.br/v1/campeonatos/${campeonato.id}/chave`
+  );
 
-  secoes.forEach(secao => {
-    (secao.chave || []).forEach(chaveGE => {
-      (chaveGE.jogos || []).forEach(jogo => {
-        const mandante = jogo.equipes?.mandante || {};
-        const visitante = jogo.equipes?.visitante || {};
+  const dadosChave = retornoChave.data || {};
+  const fases = dadosChave.fases || [];
 
-        jogosGE.push({
-          id: jogo.id,
-          grupo: chaveGE.id || chaveGE.nome || '',
-          nome_grupo: chaveGE.nome || '',
-          data: jogo.data_realizacao
-            ? new Date(jogo.data_realizacao).toLocaleDateString('pt-BR', {
-                timeZone: 'UTC'
-              })
-            : '',
-          hora: jogo.hora_realizacao || '',
-          estadio: jogo.sede?.nome_popular || '',
-          mandante: {
-            id: mandante.id || '',
-            nome: mandante.nome_popular || '',
-            escudo: mandante.escudo || ''
-          },
-          visitante: {
-            id: visitante.id || '',
-            nome: visitante.nome_popular || '',
-            escudo: visitante.escudo || ''
-          },
-          placar:
-            jogo.placar_oficial_mandante != null &&
-            jogo.placar_oficial_visitante != null
-              ? {
-                  mandante: Number(jogo.placar_oficial_mandante),
-                  visitante: Number(jogo.placar_oficial_visitante)
-                }
-              : null,
-          penaltis:
-            jogo.placar_penaltis_mandante != null &&
-            jogo.placar_penaltis_visitante != null
-              ? `${jogo.placar_penaltis_mandante} x ${jogo.placar_penaltis_visitante}`
-              : null,
-          status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
-            ? 'FINALIZADO'
-            : jogo.jogo_ja_comecou
-              ? 'EM ANDAMENTO'
-              : 'AGENDADO'
-        });
+  const faseSelecionada = fases[faseCopa];
+
+  if (!faseSelecionada) {
+    throw new Error(
+      `Fase ${faseCopa + 1} não encontrada na Copa do Brasil.`
+    );
+  }
+
+  const partidasEncontradas = [];
+  const idsPartidas = new Set();
+
+  (faseSelecionada.chaves || []).forEach(chave => {
+    ['partida_ida', 'partida_volta'].forEach(tipo => {
+      const partida = chave[tipo];
+
+      if (!partida || idsPartidas.has(String(partida.id))) {
+        return;
+      }
+
+      idsPartidas.add(String(partida.id));
+
+      const temPlacar =
+        partida.placar_mandante !== null &&
+        partida.placar_mandante !== undefined &&
+        partida.placar_visitante !== null &&
+        partida.placar_visitante !== undefined;
+
+      const temPenaltis =
+        partida.penalti?.placar_mandante !== null &&
+        partida.penalti?.placar_mandante !== undefined &&
+        partida.penalti?.placar_visitante !== null &&
+        partida.penalti?.placar_visitante !== undefined;
+
+      partidasEncontradas.push({
+        id: partida.id,
+        data: partida.data_realizacao || '',
+        hora: partida.hora_realizacao || '',
+        estadio: partida.estadio || '',
+
+        mandante: {
+          id: partida.time_mandante?.id || '',
+          nome: partida.time_mandante?.nome || '',
+          sigla: partida.time_mandante?.sigla || '',
+          escudo: ''
+        },
+
+        visitante: {
+          id: partida.time_visitante?.id || '',
+          nome: partida.time_visitante?.nome || '',
+          sigla: partida.time_visitante?.sigla || '',
+          escudo: ''
+        },
+
+        placar: temPlacar ? {
+          mandante: Number(partida.placar_mandante),
+          visitante: Number(partida.placar_visitante)
+        } : null,
+
+        penaltis: temPenaltis ? {
+          mandante: Number(partida.penalti.placar_mandante),
+          visitante: Number(partida.penalti.placar_visitante)
+        } : null,
+
+        status: partida.status === 'encerrado'
+          ? 'FINALIZADO'
+          : partida.status === 'ao_vivo'
+            ? 'EM ANDAMENTO'
+            : partida.status === 'adiado'
+              ? 'ADIADO'
+              : 'AGENDADO',
+
+        fase: faseSelecionada.nome || ''
       });
     });
   });
 
-  fonte = 'GE Globo';
+  fonte = 'Dados Futebol';
   nome = `Copa do Brasil ${temporada}`;
   classificacao = [];
-  jogos = jogosGE;
+  jogos = partidasEncontradas;
 
   dadosOriginais = {
     temporada,
-    fases: nomesFases,
     fase_atual: faseCopa,
-    nome_fase: nomesFases[faseCopa],
-    total_fases: nomesFases.length,
-    edicao,
-fases_navegacao: dadosGE.fases_navegacao,
-fase_url_encontrada: slug,
+    nome_fase: faseSelecionada.nome || '',
+    fases: fases.map(fase => fase.nome),
+    total_fases: fases.length,
     atualizado_em: new Date().toISOString()
   };
 }
+
     return {
       chave,
       fonte,
