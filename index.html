@@ -5901,7 +5901,11 @@ const retornoRodada =
     }
 
     const rodadaRecebida =
-      Number(retornoRodada.rodada?.selecionada || numero);
+  Number(
+    retornoRodada.rodada?.selecionada ||
+    retornoRodada.rodada ||
+    numero
+  );
 
     const jogosRodada = (retornoRodada.jogos || []).map(jogo => ({
       data: jogo.data,
