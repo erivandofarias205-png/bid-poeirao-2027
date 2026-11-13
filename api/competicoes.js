@@ -2083,6 +2083,7 @@ else if (chave === 'copa-do-brasil') {
     ? faseSelecionada
     : faseSelecionada?.slug || '';
 
+ 
   let htmlFase = htmlGE;
 
   if (slug) {
@@ -2090,21 +2091,41 @@ else if (chave === 'copa-do-brasil') {
       ...htmlGE.matchAll(/href=["']([^"']+)["']/g)
     ];
 
-    const linkFase = links
-      .map(item => item[1].replace(/&amp;/g, '&'))
-      .find(link => link.includes(slug));
+   const linkFase = links
+  .map(item => item[1].replace(/&amp;/g, '&'))
+  .find(link =>
+    link.toLowerCase().includes(slug.toLowerCase()) ||
+    (
+      faseSelecionada?.nome &&
+      link.toLowerCase().includes(
+        faseSelecionada.nome
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+      )
+    )
+  );
 
-    if (linkFase) {
-      const urlFase = new URL(linkFase, urlBase).href;
-      const respostaFase = await fetch(urlFase);
-
-      if (respostaFase.ok) {
-        htmlFase = await respostaFase.text();
-      }
+    if (!linkFase) {
+      throw new Error(
+        `O GE não disponibilizou o link da fase: ${slug}`
+      );
     }
+
+    const urlFase = new URL(linkFase, urlBase).href;
+    const respostaFase = await fetch(urlFase);
+
+    if (!respostaFase.ok) {
+      throw new Error(
+        `Não foi possível carregar a fase no GE. HTTP ${respostaFase.status}`
+      );
+    }
+
+    htmlFase = await respostaFase.text();
   }
 
-  const dadosFase = extrairClassificacao(htmlFase);
+   const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
 
   // Extrai os jogos das chaves da fase
