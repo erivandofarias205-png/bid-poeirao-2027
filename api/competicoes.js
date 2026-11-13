@@ -413,6 +413,32 @@ console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
 }));
 
 console.log('[DEBUG OCORRENCIAS ARTILHARIA]', {
+  const termosScript = [
+  'artilharia',
+  'artilheiro',
+  'artilheiros',
+  'goleadores',
+  'ranking',
+  'gols'
+];
+
+const diagnosticoScript = {};
+
+for (const termo of termosScript) {
+  const regex = new RegExp(termo, 'gi');
+
+  diagnosticoScript[termo] = [
+    ...scriptArt[2].matchAll(regex)
+  ].slice(0, 5).map(item => ({
+    indice: item.index,
+    trecho: scriptArt[2].slice(
+      Math.max(0, item.index - 150),
+      item.index + 350
+    )
+  }));
+}
+
+console.log('[DEBUG SCRIPT ARTILHARIA]', diagnosticoScript);
   total: ocorrenciasWrapper.length,
   ocorrencias: ocorrenciasWrapper.slice(0, 15)
 });
