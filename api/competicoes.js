@@ -530,6 +530,11 @@ const classesGE = [
 ];
 
 const scriptArt = [
+  console.log('[DEBUG SCRIPTS GE]', 
+  [...html.matchAll(/<script\b([^>]*)>/gi)]
+    .map(item => item[1])
+    .filter(Boolean)
+);
   ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
 ].find(item => /\bid=["']scriptReact["']/.test(item[1]));
 
