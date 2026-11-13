@@ -369,6 +369,28 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
 
     const html = await resposta.text();
 
+console.log('[DEBUG HTML ARTILHARIA REAL]', {
+  sectionArtilharia: (
+    html.match(/<section[^>]*artilharia-wrapper/gi) || []
+  ).length,
+
+  rankingItem: (
+    html.match(/ranking-item-wrapper/gi) || []
+  ).length,
+
+  jogadorNome: (
+    html.match(/jogador-nome/gi) || []
+  ).length,
+
+  rankingHeader: (
+    html.match(/ranking-header/gi) || []
+  ).length,
+
+  ocorrenciasArtilharia: (
+    html.match(/artilharia/gi) || []
+  ).length
+});
+
    console.log('[DEBUG ARTILHARIA GE]', {
   competicao: config.nome,
   tamanhoHTML: html.length,
