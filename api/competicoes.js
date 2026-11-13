@@ -50,6 +50,66 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
     ? `https://${process.env.VERCEL_URL}`
     : `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
 
+  async function consultarFotoSalva(competicao, jogadorNome) {
+    const url = process.env.SUPABASE_URL;
+    const chave = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !chave) {
+      throw new Error('Conexão Supabase não configurada.');
+    }
+
+    const consulta = new URL(
+      `${url}/rest/v1/fotos_artilheiros`
+    );
+
+    consulta.searchParams.set('competicao', `eq.${competicao}`);
+    consulta.searchParams.set('jogador_nome', `eq.${jogadorNome}`);
+    consulta.searchParams.set('select', 'jogador_id,foto_url');
+    consulta.searchParams.set('limit', '1');
+
+    const resposta = await fetch(consulta.toString(), {
+      headers: {
+        apikey: chave,
+        Authorization: `Bearer ${chave}`
+      }
+    });
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao consultar fotos no Supabase.');
+    }
+
+    const dados = await resposta.json();
+    return dados[0] || null;
+  }
+
+  async function salvarFoto(competicao, jogadorNome, jogadorId, fotoUrl) {
+    const url = process.env.SUPABASE_URL;
+    const chave = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    const resposta = await fetch(
+      `${url}/rest/v1/fotos_artilheiros?on_conflict=competicao,jogador_nome`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: chave,
+          Authorization: `Bearer ${chave}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+          competicao,
+          jogador_nome: jogadorNome,
+          jogador_id: jogadorId || null,
+          foto_url: fotoUrl
+        })
+      }
+    );
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao salvar foto no Supabase.');
+    }
+  }
+
   async function consultarAPI(caminho) {
     const resposta = await fetch(`${host}${caminho}`);
     const texto = await resposta.text();
@@ -478,24 +538,28 @@ if ([
   'ligue-1'
 ].includes(chave)) {
 
-  const ligasFootballData = {
-    'la-liga': {
-      codigo: 'PD',
-      nome: 'La Liga'
-    },
-    'serie-a-italia': {
-      codigo: 'SA',
-      nome: 'Campeonato Italiano'
-    },
-    'bundesliga': {
-      codigo: 'BL1',
-      nome: 'Bundesliga'
-    },
-    'ligue-1': {
-      codigo: 'FL1',
-      nome: 'Campeonato Francês'
-    }
-  };
+ const ligasFootballData = {
+  'la-liga': {
+    codigo: 'PD',
+    id: 140,
+    nome: 'La Liga'
+  },
+  'serie-a-italia': {
+    codigo: 'SA',
+    id: 135,
+    nome: 'Campeonato Italiano'
+  },
+  'bundesliga': {
+    codigo: 'BL1',
+    id: 78,
+    nome: 'Bundesliga'
+  },
+  'ligue-1': {
+    codigo: 'FL1',
+    id: 61,
+    nome: 'Campeonato Francês'
+  }
+};
 
   const configAPI = ligasFootballData[chave];
   const token = process.env.FOOTBALL_DATA_TOKEN;
@@ -525,53 +589,84 @@ if ([
       JSON.stringify(dados)
     );
   }
-let fotoPrimeiroJogador = '';
 
-if (chave === 'la-liga' && dados.scorers?.length) {
-  const nome = dados.scorers[0].player?.name || '';
-  const sobrenome = nome.trim().split(' ').pop();
+const normalizarNome = texto =>
+  (texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 
-  const urlFoto = new URL(
-    'https://v3.football.api-sports.io/players/profiles'
-  );
+const artilheiros = [];
 
-  urlFoto.searchParams.set('search', sobrenome);
+for (const [indice, item] of (dados.scorers || []).entries()) {
+  const jogador = item.player || {};
+  const nome = jogador.name || '';
+  let foto = '';
 
-  const respostaFoto = await fetch(urlFoto.toString(), {
-    headers: {
-      'x-apisports-key': process.env.API_FOOTBALL_KEY
+  // 1. Primeiro procura a foto já salva no Supabase
+  try {
+    const fotoSalva = await consultarFotoSalva(chave, nome);
+    foto = fotoSalva?.foto_url || '';
+  } catch (erro) {
+    console.error('[ERRO FOTO SUPABASE]', nome, erro.message);
+  }
+
+  // 2. Se não encontrou, procura na API-Football
+  if (!foto && process.env.API_FOOTBALL_KEY) {
+    try {
+     const urlFoto = new URL(
+  'https://v3.football.api-sports.io/players'
+);
+
+urlFoto.searchParams.set('search', nome);
+urlFoto.searchParams.set('league', String(configAPI.id));
+urlFoto.searchParams.set('season', '2026');
+
+      const respostaFoto = await fetch(urlFoto.toString(), {
+        headers: {
+          'x-apisports-key': process.env.API_FOOTBALL_KEY
+        }
+      });
+
+      if (respostaFoto.ok) {
+        const dadosFoto = await respostaFoto.json();
+
+        const encontrado = (dadosFoto.response || []).find(
+          registro =>
+            normalizarNome(registro.player?.name) ===
+            normalizarNome(nome)
+        );
+
+        foto = encontrado?.player?.photo || '';
+
+        // 3. Salva a foto encontrada para reutilizar depois
+        if (foto) {
+          await salvarFoto(
+            chave,
+            nome,
+            encontrado.player.id,
+            foto
+          );
+        }
+      }
+    } catch (erro) {
+      console.error('[ERRO BUSCA FOTO]', nome, erro.message);
     }
+  }
+
+  artilheiros.push({
+    nome,
+    clube: item.team?.name || '',
+    gols: Number(item.goals || 0),
+    foto,
+    escudo: item.team?.crest || '',
+    posicao: String(indice + 1),
+    participacoes: Number(item.playedMatches || 0),
+    gols_penalti: Number(item.penalties || 0)
   });
-
-  const dadosFoto = await respostaFoto.json();
-
-  const normalizar = texto =>
-    (texto || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
-
-  const jogadorEncontrado = (dadosFoto.response || [])
-    .find(item =>
-      normalizar(item.player?.name) === normalizar(nome)
-    );
-
-  fotoPrimeiroJogador =
-    jogadorEncontrado?.player?.photo || '';
 }
-  const artilheiros = (dados.scorers || [])
-    .map((item, indice) => ({
-      nome: item.player?.name || '',
-      clube: item.team?.name || '',
-      gols: Number(item.goals || 0),
-      foto: indice === 0 ? fotoPrimeiroJogador : '',
-      escudo: item.team?.crest || '',
-      posicao: String(indice + 1),
-     participacoes: Number(item.playedMatches || 0),
-      gols_penalti: Number(item.penalties || 0)
-    }))
-    .filter(jogador => jogador.nome);
+
 
   return {
     chave,
