@@ -176,7 +176,25 @@ async function consultarGE(config, rodadaSolicitada) {
   // Identifica automaticamente a primeira rodada ainda não encerrada.
   const ultimaRodada = Number(classificacao.rodada?.ultima || 8);
   const rodadaAtual = Number(classificacao.rodada?.atual || 1);
+function jogoFoiAdiado(jogo, primeiraData) {
+  if (jogo.status === 'ENCERRADA') return false;
 
+  const dataJogo = new Date(jogo.data);
+  const dataInicial = new Date(primeiraData);
+
+  if (
+    Number.isNaN(dataJogo.getTime()) ||
+    Number.isNaN(dataInicial.getTime())
+  ) {
+    return false;
+  }
+
+  const diferencaDias =
+    (dataJogo - dataInicial) / (1000 * 60 * 60 * 24);
+
+  return diferencaDias > 7;
+}
+  
   async function consultarJogosRodada(numero) {
     const url =
       `https://api.globoesporte.globo.com/tabela/` +
@@ -206,17 +224,37 @@ async function consultarGE(config, rodadaSolicitada) {
 
   let rodadaAutomatica = ultimaRodada;
 
-  for (let numero = 1; numero <= ultimaRodada; numero++) {
-    const jogosVerificados = await consultarJogosRodada(numero);
+for (let numero = 1; numero <= ultimaRodada; numero++) {
+  const jogosVerificados = await consultarJogosRodada(numero);
 
-    if (
-      jogosVerificados.length === 0 ||
-      jogosVerificados.some(jogo => jogo.status !== 'ENCERRADA')
-    ) {
-      rodadaAutomatica = numero;
-      break;
-    }
+  if (jogosVerificados.length === 0) {
+    rodadaAutomatica = numero;
+    break;
   }
+
+  const datasValidas = jogosVerificados
+    .map(jogo => new Date(jogo.data))
+    .filter(data => !Number.isNaN(data.getTime()));
+
+  if (datasValidas.length === 0) {
+    rodadaAutomatica = numero;
+    break;
+  }
+
+  const primeiraData = new Date(
+    Math.min(...datasValidas.map(data => data.getTime()))
+  );
+
+  const existemJogosPendentes = jogosVerificados.some(jogo =>
+    jogo.status !== 'ENCERRADA' &&
+    !jogoFoiAdiado(jogo, primeiraData)
+  );
+
+  if (existemJogosPendentes) {
+    rodadaAutomatica = numero;
+    break;
+  }
+}
 
   const rodada = rodadaSolicitada || rodadaAutomatica;
 
