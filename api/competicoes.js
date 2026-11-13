@@ -470,6 +470,7 @@ escudo: item.playerMetadata?.currentTeam?.id
 
     const config = competicoes[chave];
    
+
 if ([
   'la-liga',
   'serie-a-italia',
@@ -477,90 +478,80 @@ if ([
   'ligue-1'
 ].includes(chave)) {
 
-  const ligasAPI = {
+  const ligasFootballData = {
     'la-liga': {
-      id: 140,
+      codigo: 'PD',
       nome: 'La Liga'
     },
     'serie-a-italia': {
-      id: 135,
+      codigo: 'SA',
       nome: 'Campeonato Italiano'
     },
     'bundesliga': {
-      id: 78,
+      codigo: 'BL1',
       nome: 'Bundesliga'
     },
     'ligue-1': {
-      id: 61,
+      codigo: 'FL1',
       nome: 'Campeonato Francês'
     }
   };
 
-  const configAPI = ligasAPI[chave];
-  const apiKey = process.env.API_FOOTBALL_KEY;
+  const configAPI = ligasFootballData[chave];
+  const token = process.env.FOOTBALL_DATA_TOKEN;
 
-  if (!apiKey) {
-    throw new Error('API_FOOTBALL_KEY não encontrada na Vercel.');
+  if (!token) {
+    throw new Error(
+      'FOOTBALL_DATA_TOKEN não encontrada na Vercel.'
+    );
   }
 
-  const temporada = new Date().getFullYear();
-
   const url = new URL(
-    'https://v3.football.api-sports.io/players/topscorers'
+    `https://api.football-data.org/v4/competitions/${configAPI.codigo}/scorers`
   );
 
-  url.searchParams.set('league', String(configAPI.id));
-  url.searchParams.set('season', String(temporada));
+  url.searchParams.set('limit', '20');
 
   const resposta = await fetch(url.toString(), {
     headers: {
-      'x-apisports-key': apiKey
+      'X-Auth-Token': token
     }
   });
 
   const dados = await resposta.json();
 
-  if (!resposta.ok || (dados.errors &&
-      Object.keys(dados.errors).length > 0)) {
+  if (!resposta.ok) {
     throw new Error(
-      JSON.stringify(dados.errors || `HTTP ${resposta.status}`)
+      JSON.stringify(dados)
     );
   }
 
-  const artilheiros = (dados.response || [])
-    .map((item, indice) => {
-      const jogador = item.player || {};
-      const estatistica = item.statistics?.[0] || {};
-      const clube = estatistica.team || {};
-      const gols = estatistica.goals || {};
-
-      return {
-        nome: jogador.name || '',
-        clube: clube.name || '',
-        gols: Number(gols.total || 0),
-        foto: jogador.photo || '',
-        escudo: clube.logo || '',
-        posicao: String(indice + 1),
-        participacoes: Number(
-          estatistica.games?.appearences || 0
-        ),
-        gols_penalti: Number(gols.penalty || 0)
-      };
-    })
-    .filter(jogador => jogador.nome)
-    .sort((a, b) => b.gols - a.gols);
+  const artilheiros = (dados.scorers || [])
+    .map((item, indice) => ({
+      nome: item.player?.name || '',
+      clube: item.team?.name || '',
+      gols: Number(item.goals || 0),
+      foto: '',
+      escudo: item.team?.crest || '',
+      posicao: String(indice + 1),
+     participacoes: Number(item.playedMatches || 0),
+      gols_penalti: Number(item.penalties || 0)
+    }))
+    .filter(jogador => jogador.nome);
 
   return {
     chave,
     competicao: configAPI.nome,
-    temporada: String(temporada),
-    fonte: 'API-Football',
+    temporada: String(
+      dados.season?.startDate?.slice(0, 4) ||
+      new Date().getFullYear()
+    ),
+    fonte: 'Football-Data.org',
     total: artilheiros.length,
     artilheiros,
     atualizado_em: new Date().toISOString()
   };
 }
-
 
     if (!config) {
       throw new Error(`Artilharia não cadastrada: ${chave}`);
