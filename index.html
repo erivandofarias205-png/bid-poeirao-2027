@@ -7050,41 +7050,7 @@ async function buscarJogosEquipeProfissional() {
   }
 }
   
-    const jogosOrdenados = [...jogos].sort((a, b) =>
-      new Date(a.data || '').getTime() - new Date(b.data || '').getTime()
-    );
-
-    if (!jogosOrdenados.length) {
-      area.innerHTML = `
-        <div style="padding:20px;text-align:center;color:#b58920">
-          <h3>NENHUM JOGO ENCONTRADO</h3>
-          <p>Não foram encontradas partidas para esta equipe na Série A de 2026.</p>
-        </div>
-      `;
-      return;
-    }
-
-    area.innerHTML = `
-      <div style="background:#fff;color:#111;padding:15px;border-radius:10px">
-        <h3 style="color:#b58920;margin-top:0">
-          JOGOS DA EQUIPE — TEMPORADA 2026
-        </h3>
-        <p>${jogosOrdenados.length} partida(s) encontrada(s)</p>
-        ${jogosOrdenados.map(formatarJogo).join('')}
-      </div>
-    `;
-
-  } catch (erro) {
-    console.error('Erro ao pesquisar jogos da equipe:', erro);
-
-    area.innerHTML = `
-      <p style="color:#c00;padding:15px">
-        Não foi possível pesquisar os jogos: ${erro.message}
-      </p>
-    `;
-  }
-}
-
+   
 </script>
   
     <div style="text-align:center;margin:20px 0">
