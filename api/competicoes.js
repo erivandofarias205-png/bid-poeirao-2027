@@ -2163,29 +2163,36 @@ const linkFase = linksGE
     link.toLowerCase().includes(slug.toLowerCase())
   );
 
-if (!linkFase) {
+let htmlFase;
+
+if (linkFase) {
+  const urlFase = new URL(linkFase, urlBase).href;
+
+  const respostaFase = await fetch(urlFase, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'text/html,application/xhtml+xml'
+    }
+  });
+
+  if (!respostaFase.ok) {
+    throw new Error(
+      `GE não carregou ${nomesFases[faseCopa]}. HTTP ${respostaFase.status}`
+    );
+  }
+
+  htmlFase = await respostaFase.text();
+
+} else if (faseCopa === 8) {
+  // A final pode ainda não ter página independente no GE.
+  // Usa a página principal como fonte, sem inventar confrontos.
+  htmlFase = htmlGE;
+
+} else {
   throw new Error(
     `Link da fase ${nomesFases[faseCopa]} não encontrado na página do GE.`
   );
 }
-
-const urlFase = new URL(linkFase, urlBase).href;
-
-const respostaFase = await fetch(urlFase, {
-  headers: {
-    'User-Agent': 'Mozilla/5.0',
-    'Accept': 'text/html,application/xhtml+xml'
-  }
-});
-
-
-  if (!respostaFase.ok) {
-    throw new Error(
-      `Não foi possível carregar ${nomesFases[faseCopa]} no GE. HTTP ${respostaFase.status}`
-    );
-  }
-
-  const htmlFase = await respostaFase.text();
 
   const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
