@@ -2149,17 +2149,35 @@ else if (chave === 'copa-do-brasil') {
     edicao.nome?.match(/\d{4}/)?.[0] || '2026'
   );
 
-  // Busca diretamente a página da fase selecionada
-  const slug = slugsFases[faseCopa];
+  
+// Localiza o link REAL da fase disponibilizado pelo GE
+const slug = slugsFases[faseCopa];
 
-  const urlFase = `${urlBase}${slug}/`;
+const linksGE = [
+  ...htmlGE.matchAll(/href=["']([^"']+)["']/gi)
+];
 
-  const respostaFase = await fetch(urlFase, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-      'Accept': 'text/html,application/xhtml+xml'
-    }
-  });
+const linkFase = linksGE
+  .map(item => item[1].replace(/&amp;/g, '&'))
+  .find(link =>
+    link.toLowerCase().includes(slug.toLowerCase())
+  );
+
+if (!linkFase) {
+  throw new Error(
+    `Link da fase ${nomesFases[faseCopa]} não encontrado na página do GE.`
+  );
+}
+
+const urlFase = new URL(linkFase, urlBase).href;
+
+const respostaFase = await fetch(urlFase, {
+  headers: {
+    'User-Agent': 'Mozilla/5.0',
+    'Accept': 'text/html,application/xhtml+xml'
+  }
+});
+
 
   if (!respostaFase.ok) {
     throw new Error(
