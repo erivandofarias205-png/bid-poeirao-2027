@@ -2157,13 +2157,7 @@ const linksGE = [
   ...htmlGE.matchAll(/href=["']([^"']+)["']/gi)
 ];
 
-const linkFase = linksGE
-  .map(item => item[1].replace(/&amp;/g, '&'))
-  .find(link =>
-    link.toLowerCase().includes(slug.toLowerCase())
-  );
-
-let htmlFase;
+let htmlFase = htmlGE;
 
 if (linkFase) {
   const urlFase = new URL(linkFase, urlBase).href;
@@ -2181,6 +2175,13 @@ if (linkFase) {
     );
   }
 
+  htmlFase = await respostaFase.text();
+
+} else if (faseCopa !== 7 && faseCopa !== 8) {
+  throw new Error(
+    `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
+  );
+}
   htmlFase = await respostaFase.text();
 
 } else if (faseCopa === 8) {
