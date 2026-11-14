@@ -2023,6 +2023,7 @@ console.log(
         
 
 
+
 else if (chave === 'copa-do-brasil') {
   const urlBase = 'https://ge.globo.com/futebol/copa-do-brasil/';
 
@@ -2046,86 +2047,129 @@ else if (chave === 'copa-do-brasil') {
     'Final'
   ];
 
-  // Consulta a página principal do GE
-  const respostaGE = await fetch(urlBase);
+  // Slugs das fases da Copa do Brasil no GE
+  const slugsFases = [
+    'primeira-fase-copa-do-brasil-2026',
+    'segunda-fase-copa-do-brasil-2026',
+    'terceira-fase-copa-do-brasil-2026',
+    'quarta-fase-copa-do-brasil-2026',
+    'quinta-fase-copa-do-brasil-2026',
+    'oitavas-de-final-copa-do-brasil-2026',
+    'quartas-de-final-copa-do-brasil-2026',
+    'semifinal-copa-do-brasil-2026',
+    'final-copa-do-brasil-2026'
+  ];
 
-  if (!respostaGE.ok) {
-    throw new Error(`GE retornou ${respostaGE.status}`);
-  }
-
-  const htmlGE = await respostaGE.text();
-
-
-function extrairClassificacao(html) {
-  const bloco = html.match(
-    /const classificacao = (\{[\s\S]*?\});/
-  );
-
-  if (!bloco) {
-    throw new Error('Estrutura da Copa não encontrada no GE.');
-  }
-
-  return JSON.parse(bloco[1]);
-}
-
-
-  const dadosGE = extrairClassificacao(htmlGE);
-
-  const edicao = dadosGE.edicao || {};
-  const temporada = String(
-    edicao.nome?.match(/\d{4}/)?.[0] ||
-    new Date().getFullYear()
-  );
-
-  // Localiza automaticamente o endereço da fase escolhida
-  const navegacao = dadosGE.fases_navegacao || [];
-  const faseSelecionada = navegacao[faseCopa];
-
-  const slug = typeof faseSelecionada === 'string'
-    ? faseSelecionada
-    : faseSelecionada?.slug || '';
-
- 
-  let htmlFase = htmlGE;
-
-  if (slug) {
-    const links = [
-      ...htmlGE.matchAll(/href=["']([^"']+)["']/g)
-    ];
-
-   const linkFase = links
-  .map(item => item[1].replace(/&amp;/g, '&'))
-  .find(link =>
-    link.toLowerCase().includes(slug.toLowerCase()) ||
-    (
-      faseSelecionada?.nome &&
-      link.toLowerCase().includes(
-        faseSelecionada.nome
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toLowerCase()
-          .replace(/\s+/g, '-')
+  // Extrai os dados diretamente do scriptReact do GE
+  function extrairClassificacao(html) {
+    const scriptReact = [
+      ...html.matchAll(
+        /<script\b([^>]*)>([\s\S]*?)<\/script>/gi
       )
-    )
-  );
+    ].find(item => /\bid=["']scriptReact["']/i.test(item[1]));
 
-   if (!linkFase) {
-  linkFase = `https://ge.globo.com/futebol/copa-do-brasil/${slug}/`;
-}
-
-    const urlFase = new URL(linkFase, urlBase).href;
-    const respostaFase = await fetch(urlFase);
-
-    if (!respostaFase.ok) {
+    if (!scriptReact) {
       throw new Error(
-        `Não foi possível carregar a fase no GE. HTTP ${respostaFase.status}`
+        'GE: scriptReact não encontrado na página da Copa do Brasil.'
       );
     }
 
-    htmlFase = await respostaFase.text();
+    const script = scriptReact[2];
+
+    const marcador = /\b(?:const|let|var)\s+classificacao\s*=\s*/.exec(script);
+
+    if (!marcador) {
+      throw new Error(
+        'GE: variável classificacao não encontrada dentro do scriptReact.'
+      );
+    }
+
+    const inicio = marcador.index + marcador[0].length;
+    const abertura = script[inicio];
+
+    if (abertura !== '{' && abertura !== '[') {
+      throw new Error('GE: formato inválido nos dados da classificação.');
+    }
+
+    let nivel = 0;
+    let dentroString = false;
+    let escape = false;
+
+    for (let i = inicio; i < script.length; i++) {
+      const c = script[i];
+
+      if (dentroString) {
+        if (escape) {
+          escape = false;
+        } else if (c === '\\') {
+          escape = true;
+        } else if (c === '"') {
+          dentroString = false;
+        }
+        continue;
+      }
+
+      if (c === '"') {
+        dentroString = true;
+        continue;
+      }
+
+      if (c === '{' || c === '[') {
+        nivel++;
+      } else if (c === '}' || c === ']') {
+        nivel--;
+
+        if (nivel === 0) {
+          return JSON.parse(script.slice(inicio, i + 1));
+        }
+      }
+    }
+
+    throw new Error('GE: dados incompletos na classificação da Copa.');
   }
 
-   const dadosFase = extrairClassificacao(htmlFase);
+  // Busca a página principal
+  const respostaGE = await fetch(urlBase, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'text/html,application/xhtml+xml'
+    }
+  });
+
+  if (!respostaGE.ok) {
+    throw new Error(`GE retornou HTTP ${respostaGE.status}.`);
+  }
+
+  const htmlGE = await respostaGE.text();
+  const dadosGE = extrairClassificacao(htmlGE);
+
+  const edicao = dadosGE.edicao || {};
+
+  const temporada = String(
+    edicao.nome?.match(/\d{4}/)?.[0] || '2026'
+  );
+
+  // Busca diretamente a página da fase selecionada
+  const slug = slugsFases[faseCopa];
+
+  const urlFase = `${urlBase}${slug}/`;
+
+  const respostaFase = await fetch(urlFase, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'text/html,application/xhtml+xml'
+    }
+  });
+
+  if (!respostaFase.ok) {
+    throw new Error(
+      `Não foi possível carregar ${nomesFases[faseCopa]} no GE. HTTP ${respostaFase.status}`
+    );
+  }
+
+  const htmlFase = await respostaFase.text();
+
+  const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
 
   // Extrai os jogos das chaves da fase
@@ -2200,7 +2244,7 @@ function extrairClassificacao(html) {
     nome_fase: nomesFases[faseCopa],
     total_fases: nomesFases.length,
     edicao,
-    fases_navegacao: dadosGE.fases_navegacao,
+    fases_navegacao: dadosGE.fases_navegacao || [],
     fase_url_encontrada: slug,
     atualizado_em: new Date().toISOString()
   };
