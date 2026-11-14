@@ -6927,9 +6927,15 @@ if (listaEquipes) {
     .join('');
 }
   
+
 async function buscarJogosEquipeProfissional() {
   const campo = document.getElementById('buscaEquipeProfissional');
   const area = document.getElementById('listaJogosHoje');
+
+  if (!campo || !area) {
+    console.error('Campo de pesquisa ou área de jogos não encontrado.');
+    return;
+  }
 
   const normalizar = texto => String(texto || '')
     .normalize('NFD')
@@ -6937,21 +6943,18 @@ async function buscarJogosEquipeProfissional() {
     .toUpperCase()
     .trim();
 
-  const equipe = normalizar(campo?.value);
+  const equipe = normalizar(campo.value);
 
   if (!equipe) {
     alert('Digite o nome de uma equipe para pesquisar.');
-    campo?.focus();
+    campo.focus();
     return;
   }
 
-  area.innerHTML = '<p style="color:#111">Pesquisando todos os jogos da temporada...</p>';
+  area.innerHTML = '<p>Pesquisando jogos da temporada...</p>';
 
   try {
-    const resposta = await fetch(
-      '/api/ge-serie-a-jogos?temporada=2026'
-    );
-
+    const resposta = await fetch('/api/ge-serie-a-jogos?temporada=2026');
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso || !Array.isArray(dados.jogos)) {
@@ -6963,68 +6966,89 @@ async function buscarJogosEquipeProfissional() {
       normalizar(jogo.visitante?.nome).includes(equipe)
     );
 
+    if (!jogos.length) {
+      area.innerHTML = `
+        <p style="color:#d4af37;font-weight:bold">
+          Nenhum jogo encontrado para ${campo.value} na Série A de 2026.
+        </p>
+      `;
+      return;
+    }
+
     const formatarData = valor => {
-      if (!valor) return '';
-      return new Date(valor).toLocaleDateString('pt-BR', {
-        timeZone: 'America/Fortaleza'
-      });
+      if (!valor) return 'Data a definir';
+
+      const data = new Date(valor);
+
+      return Number.isNaN(data.getTime())
+        ? 'Data a definir'
+        : data.toLocaleDateString('pt-BR', {
+            timeZone: 'America/Fortaleza'
+          });
     };
 
-   
-const formatarJogo = jogo => {
-  const mandante = jogo.mandante?.nome || 'A definir';
-  const visitante = jogo.visitante?.nome || 'A definir';
+    const imagem = url => url
+      ? `<img src="${url}" style="width:34px;height:34px;object-fit:contain"
+           onerror="this.style.display='none'">`
+      : '⚽';
 
-  const escudoM = jogo.mandante?.escudo || '';
-  const escudoV = jogo.visitante?.escudo || '';
+    const formatarJogo = jogo => {
+      const mandante = jogo.mandante?.nome || 'A definir';
+      const visitante = jogo.visitante?.nome || 'A definir';
 
-  const placar = jogo.encerrado
-    ? `${jogo.mandante.gols ?? 0} x ${jogo.visitante.gols ?? 0}`
-    : 'VS';
+      const placar = jogo.encerrado
+        ? `${jogo.mandante?.gols ?? 0} x ${jogo.visitante?.gols ?? 0}`
+        : 'VS';
 
-  const imagem = url => url
-    ? `<img src="${url}" style="width:32px;height:32px;object-fit:contain" onerror="this.style.display='none'">`
-    : '⚽';
+      return `
+        <div style="background:#fff;color:#111;padding:13px;
+                    border-bottom:1px solid #ddd;border-radius:8px;margin-bottom:8px">
+          <div style="font-size:12px;color:#a17b20;font-weight:bold;margin-bottom:10px">
+            BRASILEIRÃO SÉRIE A 2026
+          </div>
 
-  return `
-    <div style="
-      background:#fff;
-      color:#111!important;
-      padding:13px 10px;
-      border-bottom:1px solid #ddd;
-    ">
-      <div style="
-        display:grid;
-        grid-template-columns:1fr auto 1fr;
-        align-items:center;
-        gap:10px;
-      ">
-        <div style="display:flex;align-items:center;gap:8px;color:#111">
-          ${imagem(escudoM)}
-          <strong>${mandante}</strong>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;
+                      align-items:center;gap:8px">
+            <div style="display:flex;align-items:center;gap:6px">
+              ${imagem(jogo.mandante?.escudo)}
+              <strong>${mandante}</strong>
+            </div>
+
+            <strong style="color:#b58920;font-size:19px">${placar}</strong>
+
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">
+              <strong>${visitante}</strong>
+              ${imagem(jogo.visitante?.escudo)}
+            </div>
+          </div>
+
+          <div style="font-size:11px;color:#666;margin-top:10px">
+            📅 ${formatarData(jogo.data)}
+            · ${jogo.hora || 'Horário a definir'}
+            ${jogo.estadio ? ' · 🏟️ ' + jogo.estadio : ''}
+          </div>
         </div>
+      `;
+    };
 
-        <strong style="color:#b58920;font-size:19px">
-          ${placar}
-        </strong>
+    area.innerHTML = `
+      <h3 style="color:#d4af37">
+        JOGOS DE ${campo.value.toUpperCase()} — TEMPORADA 2026
+      </h3>
+      <p style="color:#ccc">${jogos.length} partida(s) encontrada(s)</p>
+      ${jogos.map(formatarJogo).join('')}
+    `;
 
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;color:#111">
-          <strong>${visitante}</strong>
-          ${imagem(escudoV)}
-        </div>
-      </div>
+  } catch (erro) {
+    console.error('Erro na pesquisa de equipe:', erro);
 
-      <div style="font-size:11px;color:#666;margin-top:8px">
-        📅 ${formatarData(jogo.data)}
-        ${jogo.hora || ''}
-        ${jogo.estadio ? ' · 🏟️ ' + jogo.estadio : ''}
-      </div>
-    </div>
-  `;
-};
-
-
-</script>
+    area.innerHTML = `
+      <p style="color:#ff7777">
+        Erro ao pesquisar jogos: ${erro.message}
+      </p>
+    `;
+  }
+}
     
     <div style="text-align:center;margin:20px 0">
     <button class="tab" type="button"
