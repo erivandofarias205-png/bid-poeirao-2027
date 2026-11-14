@@ -101,7 +101,32 @@ export default async function handler(req, res) {
       }
 
       jogosGE = await consultarRodada(rodada);
+    } else if (req.query.temporada) {
+      // CONSULTA DE TODAS AS PARTIDAS DA TEMPORADA 2026
 
+      const temporada = String(req.query.temporada);
+
+      if (temporada !== '2026') {
+        return res.status(400).json({
+          sucesso: false,
+          erro: 'Temporada inválida. Esta API está configurada para 2026.'
+        });
+      }
+
+      const todasRodadas = await Promise.all(
+        Array.from({ length: 38 }, (_, i) =>
+          consultarRodada(i + 1)
+        )
+      );
+
+      jogosGE = todasRodadas.flat();
+
+      // Ordena os jogos pela data e horário
+      jogosGE.sort((a, b) =>
+        new Date(a.data_realizacao) - new Date(b.data_realizacao)
+      );
+
+      rodada = 'temporada 2026';
         } else if (req.query.data) {
       // CONSULTA DOS JOGOS DE UMA DATA ESPECÍFICA
       const dataConsulta = String(req.query.data);
