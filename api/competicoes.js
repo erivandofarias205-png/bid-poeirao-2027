@@ -2057,21 +2057,15 @@ else if (chave === 'copa-do-brasil') {
 
 
 function extrairClassificacao(html) {
-  const bloco = html.match(
-    /const classificacao = (\{[\s\S]*?\});/
-  );
+  const pos = html.toLowerCase().indexOf('classificacao');
 
-  if (!bloco) {
-    throw new Error(
-      'Classificação não encontrada. ' +
-      'HTML recebido: ' + html.length + ' caracteres. ' +
-      'Contém "classificacao": ' +
-      html.toLowerCase().includes('classificacao') + '. ' +
-      'Contém "fases_navegacao": ' +
-      html.includes('fases_navegacao') + '. ' +
-      'Início recebido: ' + html.slice(0, 250)
-    );
-  }
+  throw new Error(
+    'DIAGNÓSTICO GE | ' +
+    'Posição: ' + pos + ' | ' +
+    'Trecho encontrado: ' +
+    html.slice(Math.max(0, pos - 300), pos + 1200)
+  );
+}
 
   return JSON.parse(bloco[1]);
 }
