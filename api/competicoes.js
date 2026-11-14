@@ -2057,15 +2057,13 @@ else if (chave === 'copa-do-brasil') {
 
 
 function extrairClassificacao(html) {
-  const pos = html.toLowerCase().indexOf('classificacao');
-
-  throw new Error(
-    'DIAGNÓSTICO GE | ' +
-    'Posição: ' + pos + ' | ' +
-    'Trecho encontrado: ' +
-    html.slice(Math.max(0, pos - 300), pos + 1200)
+  const bloco = html.match(
+    /const classificacao = (\{[\s\S]*?\});/
   );
-}
+
+  if (!bloco) {
+    throw new Error('Estrutura da Copa não encontrada no GE.');
+  }
 
   return JSON.parse(bloco[1]);
 }
