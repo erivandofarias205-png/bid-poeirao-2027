@@ -2055,17 +2055,27 @@ else if (chave === 'copa-do-brasil') {
 
   const htmlGE = await respostaGE.text();
 
-  function extrairClassificacao(html) {
-    const bloco = html.match(
-      /const classificacao = (\{[\s\S]*?\});/
+
+function extrairClassificacao(html) {
+  const bloco = html.match(
+    /const classificacao = (\{[\s\S]*?\});/
+  );
+
+  if (!bloco) {
+    throw new Error(
+      'Classificação não encontrada. ' +
+      'HTML recebido: ' + html.length + ' caracteres. ' +
+      'Contém "classificacao": ' +
+      html.toLowerCase().includes('classificacao') + '. ' +
+      'Contém "fases_navegacao": ' +
+      html.includes('fases_navegacao') + '. ' +
+      'Início recebido: ' + html.slice(0, 250)
     );
-
-    if (!bloco) {
-      throw new Error('Estrutura da Copa não encontrada no GE.');
-    }
-
-    return JSON.parse(bloco[1]);
   }
+
+  return JSON.parse(bloco[1]);
+}
+
 
   const dadosGE = extrairClassificacao(htmlGE);
 
