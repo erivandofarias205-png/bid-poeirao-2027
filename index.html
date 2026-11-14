@@ -4456,69 +4456,51 @@ carregarJogosHojeProfissional();
     </p>
   </div>
 
-  <div style="
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:12px;
-  ">
+  
+<div style="
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  align-items:end;
+">
 
-    <label>
-      
-    </label>
+  <div>
     <label style="color:#e4bd43;font-size:12px;font-weight:900">
       📅 ESCOLHER DATA
-      <input
-        type="date"
-        id="dataConsultaJogos"
-        onchange="carregarJogosHojeProfissional()"
-        style="
-          display:block;
-          box-sizing:border-box;
-          width:100%;
-          margin-top:7px;
-          background:#111;
-          color:#e4bd43;
-          border:1px solid #c99b32;
-          border-radius:8px;
-          padding:12px;
-          font-weight:900;
-        "
-      >
-   
-<div>
-  <label style="color:#e4bd43;font-size:12px;font-weight:900">
-    🔎 PESQUISAR EQUIPE OU SELEÇÃO
-  </label>
-
-  <input
-    type="text"
-    id="buscaEquipeProfissional"
-    list="listaEquipesProfissional"
-    placeholder="Digite Vasco, Flamengo, Brasil..."
-    autocomplete="off"
-    style="margin-top:7px;background:#111;color:#fff;border:1px solid #c99b32"
-  >
-
-  <datalist id="listaEquipesProfissional"></datalist>
-
-  <button
-    type="button"
-    onclick="buscarJogosEquipeProfissional()"
-    style="width:100%;margin-top:7px;background:#c99b32;color:#111;font-weight:900"
-  >
-    🔎 BUSCAR JOGOS
-  </button>
-</div>
-
-
+    </label>
+    <input
+      type="date"
+      id="dataConsultaJogos"
+      onchange="carregarJogosHojeProfissional()"
+      style="display:block;width:100%;box-sizing:border-box;margin-top:7px;background:#111;color:#e4bd43;border:1px solid #c99b32;border-radius:8px;padding:12px;font-weight:900"
+    >
   </div>
 
-  <div style="
-    margin-top:14px;
-    text-align:center;
-    color:#bbb;
-    font-size:11px;
-  ">
+  <div>
+    <label style="color:#e4bd43;font-size:12px;font-weight:900">
+      🔎 PESQUISAR EQUIPE OU SELEÇÃO
+    </label>
+    <input
+      type="text"
+      id="buscaEquipeProfissional"
+      list="listaEquipesProfissional"
+      placeholder="Digite o nome da equipe"
+      autocomplete="off"
+      oninput="filtrarEquipesProfissional()"
+      style="display:block;width:100%;box-sizing:border-box;margin-top:7px;background:#111;color:#e4bd43;border:1px solid #c99b32;border-radius:8px;padding:12px;font-weight:900"
+    >
+    <datalist id="listaEquipesProfissional"></datalist>
+
+    <button
+      type="button"
+      onclick="buscarJogosEquipeProfissional()"
+      style="width:100%;margin-top:7px;background:#c99b32;color:#111;border:0;border-radius:8px;padding:12px;font-weight:900;cursor:pointer"
+    >
+      🔎 BUSCAR JOGOS
+    </button>
+  </div>
+
+</div>
     Acompanhe partidas, horários e resultados das competições da nossa grade.
   </div>
 
