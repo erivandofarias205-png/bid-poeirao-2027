@@ -6926,6 +6926,108 @@ if (listaEquipes) {
     .map(nome => `<option value="${abreviar(nome)}"></option>`)
     .join('');
 }
+  
+async function buscarJogosEquipeProfissional() {
+  const campo = document.getElementById('buscaEquipeProfissional');
+  const area = document.getElementById('listaJogosHoje');
+
+  const normalizar = texto => String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+
+  const equipe = normalizar(campo?.value);
+
+  if (!equipe) {
+    alert('Digite o nome de uma equipe para pesquisar.');
+    campo?.focus();
+    return;
+  }
+
+  area.innerHTML = '<p style="color:#111">Pesquisando todos os jogos da temporada...</p>';
+
+  try {
+    const resposta = await fetch(
+      '/api/ge-serie-a-jogos?temporada=2026'
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso || !Array.isArray(dados.jogos)) {
+      throw new Error(dados.erro || 'Não foi possível consultar os jogos.');
+    }
+
+    const jogos = dados.jogos.filter(jogo =>
+      normalizar(jogo.mandante?.nome).includes(equipe) ||
+      normalizar(jogo.visitante?.nome).includes(equipe)
+    );
+
+    const formatarData = valor => {
+      if (!valor) return '';
+      return new Date(valor).toLocaleDateString('pt-BR', {
+        timeZone: 'America/Fortaleza'
+      });
+    };
+
+    const formatarJogo = jogo => {
+      const mandante = jogo.mandante?.nome || 'A definir';
+      const visitante = jogo.visitante?.nome || 'A definir';
+
+      const placar = jogo.encerrado
+        ? `${jogo.mandante.gols ?? 0} x ${jogo.visitante.gols ?? 0}`
+        : 'VS';
+
+      const horario = jogo.hora || '';
+
+      return `
+        <div style="padding:12px 5px;border-bottom:1px solid #ddd;color:#111">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <strong>${mandante}</strong>
+            <strong style="color:#b58920">${placar}</strong>
+            <strong>${visitante}</strong>
+          </div>
+          <div style="font-size:11px;color:#777;margin-top:6px">
+            ${formatarData(jogo.data)} ${horario}
+            ${jogo.estadio ? ' · ' + jogo.estadio : ''}
+          </div>
+        </div>
+      `;
+    };
+
+    const finalizados = jogos.filter(j => j.encerrado);
+    const agendados = jogos.filter(j => !j.encerrado);
+
+    const secao = (titulo, lista, cor) => `
+      <section style="margin-bottom:22px">
+        <h3 style="color:${cor};border-bottom:2px solid ${cor};padding:8px">
+          ${titulo} (${lista.length})
+        </h3>
+        ${lista.length
+          ? lista.map(formatarJogo).join('')
+          : '<p style="color:#777">Nenhuma partida encontrada.</p>'}
+      </section>
+    `;
+
+    area.innerHTML = `
+      <div style="color:#111">
+        <h3>RESULTADOS DE: ${campo.value}</h3>
+        <p>Total de jogos encontrados: ${jogos.length}</p>
+        ${secao('FINALIZADOS', finalizados, '#16834a')}
+        ${secao('AGENDADOS / NÃO FINALIZADOS', agendados, '#2456a4')}
+      </div>
+    `;
+
+  } catch (erro) {
+    console.error('Erro na pesquisa de equipe:', erro);
+    area.innerHTML = `
+      <p style="color:red">
+        Erro ao pesquisar: ${erro.message}
+      </p>
+    `;
+  }
+}
+
 </script>
     
     <div style="text-align:center;margin:20px 0">
