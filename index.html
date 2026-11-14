@@ -4462,6 +4462,9 @@ carregarJogosHojeProfissional();
     gap:12px;
   ">
 
+    <label>
+      
+    </label>
     <label style="color:#e4bd43;font-size:12px;font-weight:900">
       📅 ESCOLHER DATA
       <input
@@ -4481,32 +4484,32 @@ carregarJogosHojeProfissional();
           font-weight:900;
         "
       >
-    </label>
+   
+<div>
+  <label style="color:#e4bd43;font-size:12px;font-weight:900">
+    🔎 PESQUISAR EQUIPE OU SELEÇÃO
+  </label>
 
-    <label style="color:#e4bd43;font-size:12px;font-weight:900">
-      🔎 PESQUISAR EQUIPE
-      <input
-        type="text"
-        id="buscaEquipeProfissional"
-        list="listaEquipesProfissional"
-        placeholder="Digite o nome da equipe"
-        autocomplete="off"
-        oninput="filtrarEquipesProfissional()"
-        style="
-          display:block;
-          box-sizing:border-box;
-          width:100%;
-          margin-top:7px;
-          background:#111;
-          color:#e4bd43;
-          border:1px solid #c99b32;
-          border-radius:8px;
-          padding:12px;
-          font-weight:900;
-        "
-      >
-      <datalist id="listaEquipesProfissional"></datalist>
-    </label>
+  <input
+    type="text"
+    id="buscaEquipeProfissional"
+    list="listaEquipesProfissional"
+    placeholder="Digite Vasco, Flamengo, Brasil..."
+    autocomplete="off"
+    style="margin-top:7px;background:#111;color:#fff;border:1px solid #c99b32"
+  >
+
+  <datalist id="listaEquipesProfissional"></datalist>
+
+  <button
+    type="button"
+    onclick="buscarJogosEquipeProfissional()"
+    style="width:100%;margin-top:7px;background:#c99b32;color:#111;font-weight:900"
+  >
+    🔎 BUSCAR JOGOS
+  </button>
+</div>
+
 
   </div>
 
