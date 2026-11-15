@@ -1540,20 +1540,19 @@ console.log('[DEBUG SCRIPTS GE]',
   }
 
   const ultimaRodada = Number(tabelaGE.rodada?.ultima || 0);
-  const rodadaAtual = Number(tabelaGE.rodada?.atual || 1);
+const rodadaAtual = Number(tabelaGE.rodada?.atual || 1);
 
-  let numeroRodada = rodada
-    ? Number(rodada)
-    : rodadaAtual;
+let numeroRodada = rodada
+  ? Number(rodada)
+  : rodadaAtual;
 
-  if (
-    !Number.isInteger(numeroRodada) ||
-    numeroRodada < 1 ||
-    numeroRodada > ultimaRodada
-  ) {
-    throw new Error(`Rodada inválida: ${config.nome}.`);
-  }
-
+if (
+  !Number.isInteger(numeroRodada) ||
+  numeroRodada < 1 ||
+  (ultimaRodada > 0 && numeroRodada > ultimaRodada)
+) {
+  throw new Error(`Rodada inválida: ${config.nome}.`);
+}
   let jogosGE = tabelaGE.lista_jogos || [];
 
   if (rodada) {
