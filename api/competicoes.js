@@ -51,7 +51,9 @@ const permitidas = [
   'mineiro',
   'gaucho',
   'pernambucano',
-  'baiano'
+  'baiano',
+  'copa-do-mundo',
+  'copinha'
 ];
 
 
@@ -196,6 +198,14 @@ const permitidas = [
 'ligue-1': {
   nome: 'Campeonato Francês',
   url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-frances/'
+},
+'copa-do-mundo': {
+  nome: 'Copa do Mundo',
+  url: 'https://ge.globo.com/futebol/copa-do-mundo/'
+},
+'copinha': {
+  nome: 'Copinha',
+  url: 'https://ge.globo.com/futebol/copa-sp-de-futebol-junior/'
 },
 ...paginasEstaduais,
      };
@@ -1037,6 +1047,14 @@ const escudo = Array.from(
   'sul-americana': {
     nome: 'Copa Sul-Americana',
     url: 'https://ge.globo.com/futebol/copa-sul-americana/'
+  },
+  'copa-do-mundo': {
+    nome: 'Copa do Mundo',
+    url: 'https://ge.globo.com/futebol/copa-do-mundo/'
+  },
+  'copinha': {
+    nome: 'Copinha - Copa São Paulo de Futebol Júnior',
+    url: 'https://ge.globo.com/futebol/copa-sp-de-futebol-junior/'
   }
 };
   const paginasEstaduais = {
@@ -1380,14 +1398,7 @@ const retorno = await consultarAPI(caminhoEuropa);
   'la-liga',
   'serie-a-italia',
   'bundesliga',
-  'ligue-1',
-  'cearense',
-  'paulista',
-  'carioca',
-  'mineiro',
-  'gaucho',
-  'pernambucano',
-  'baiano'
+  'ligue-1'
 ].includes(chave)) {
 
   const ligasGE = {
@@ -1981,8 +1992,9 @@ if (rodada) {
     }
            
 
-else if (chave === 'libertadores' || chave === 'sul-americana') {
-  const config = paginasConmebol[chave];
+else if (paginasConmebol[chave] || paginasEstaduais[chave]) {
+  // LIBERTADORES, SUL-AMERICANA, COPA DO MUNDO, COPINHA E ESTADUAIS (POR FASE)
+  const config = paginasConmebol[chave] || paginasEstaduais[chave];
 
   // Busca a página principal do GE para identificar a competição e suas fases
   const respostaPagina = await fetch(config.url, {
@@ -2102,6 +2114,16 @@ console.log(
     rodada: grupo.rodada || {}
   }));
 
+  // Fases com tabela única (ex.: primeira fase do Paulista)
+  if (!grupos.length && Array.isArray(dados.classificacao) && dados.classificacao.length) {
+    grupos = [{
+      nome: 'CLASSIFICAÇÃO',
+      classificacao: dados.classificacao,
+      jogos: dados.lista_jogos || [],
+      rodada: dados.rodada || {}
+    }];
+  }
+
   classificacao = grupos.flatMap(grupo =>
     grupo.classificacao.map(equipe => ({
       ...equipe,
@@ -2138,7 +2160,33 @@ console.log(
     ).values()
   ];
 
-  jogos = jogosUnicos.map(jogo => {
+  const infoRodada =
+    (dados.rodada && dados.rodada.ultima ? dados.rodada : null) ||
+    gruposGE.map(grupo => grupo.rodada).find(r => r && r.ultima) ||
+    null;
+
+  let listaJogosFinal = jogosUnicos;
+
+  if (rodada && infoRodada) {
+    const urlRodada =
+      `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugSolicitado)}/rodada/${String(rodada).padStart(2, '0')}/jogos/`;
+
+    const respostaRodada = await fetch(urlRodada, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (respostaRodada.ok) {
+      const retornoRodada = await respostaRodada.json();
+      listaJogosFinal = Array.isArray(retornoRodada)
+        ? retornoRodada
+        : retornoRodada.jogos || [];
+    }
+  }
+
+  jogos = listaJogosFinal.map(jogo => {
     const mandante = jogo.equipes?.mandante || {};
     const visitante = jogo.equipes?.visitante || {};
 
@@ -2156,7 +2204,8 @@ console.log(
       hora: jogo.hora_realizacao || '',
       estadio: jogo.sede?.nome_popular || '',
 
-      status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+      status: jogo.transmissao?.broadcast?.id === 'ENCERRADA' ||
+        (temPlacar && Date.now() > Date.parse(jogo.data_realizacao || '') + 14400000)
         ? 'ENCERRADA'
         : jogo.jogo_ja_comecou
           ? 'EM_ANDAMENTO'
@@ -2193,13 +2242,13 @@ console.log(
   fonte = 'GE Globo';
   nome = config.nome;
 
-  rodadaFinal = Math.max(
-    0,
-    ...gruposGE.map(grupo => Number(grupo.rodada?.atual || 0))
-  );
+  rodadaFinal = rodada
+    ? Number(rodada)
+    : Number(infoRodada?.atual || 0);
 
   dadosOriginais = {
     ...dados,
+    rodada_info: infoRodada,
     fase_selecionada: slugSolicitado,
     fase_atual: slugAtual,
     fases_navegacao: fasesNavegacao,
@@ -2591,7 +2640,7 @@ if (linkFase) {
     );
 
     return res.status(200).json({
-    
+      sucesso: true,
       central: 'TVFP ESPORTES',
       competicoes: resultados,
       jogos,
