@@ -5015,56 +5015,157 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
     return dados;
   }
 
-  function montarClassificacaoConmebol(dados) {
-    const grupos = Array.isArray(dados.grupos)
-      ? dados.grupos
-      : [];
+ function montarClassificacaoConmebol(dados) {
+  const grupos = Array.isArray(dados.grupos)
+    ? dados.grupos
+    : [];
 
-    if (!grupos.length) {
-      return '<p>Classificação não disponível nesta fase.</p>';
-    }
-
-    return grupos.map((grupo, indice) => {
-      const lista = grupo.classificacao || [];
-
-      return `
-        <div style="margin-bottom:22px">
-          <h3 style="background:#171717;color:#e4bd43;padding:12px">
-            ${grupo.nome || `GRUPO ${indice + 1}`}
-          </h3>
-
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
-              <thead>
-                <tr style="background:#171717;color:#e4bd43">
-                  <th>POS</th><th>CLUBE</th><th>PTS</th>
-                  <th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${lista.map((item, i) => `
-                  <tr style="text-align:center;border-bottom:1px solid #ddd">
-                    <td>${item.posicao ?? i + 1}</td>
-                    <td style="text-align:left;padding:7px">
-                      ${item.escudo ? `<img src="${item.escudo}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle">` : ''}
-                      <strong>${item.equipe || item.nome_popular || ''}</strong>
-                    </td>
-                    <td><strong>${item.pontos ?? 0}</strong></td>
-                    <td>${item.jogos ?? 0}</td>
-                    <td>${item.vitorias ?? 0}</td>
-                    <td>${item.empates ?? 0}</td>
-                    <td>${item.derrotas ?? 0}</td>
-                    <td>${item.saldo_gols ?? 0}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }).join('');
+  if (!grupos.length) {
+    return '<p>Classificação não disponível nesta fase.</p>';
   }
 
+  const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[c]);
+
+  return grupos.map((grupo, indice) => {
+    const lista = grupo.classificacao || [];
+    const jogosGrupo = grupo.jogos || [];
+
+    return `
+      <div style="margin-bottom:22px">
+
+        <h3 style="
+          background:#171717;
+          color:#e4bd43;
+          padding:12px;
+          margin:0;
+        ">
+          ${escapar(grupo.nome || `GRUPO ${indice + 1}`)}
+        </h3>
+
+        <div style="overflow-x:auto">
+          <table style="
+            width:100%;
+            border-collapse:collapse;
+            background:#fff;
+            color:#222;
+            font-size:12px;
+          ">
+            <thead>
+              <tr style="background:#17376f;color:#fff">
+                <th>POS</th>
+                <th style="text-align:left">CLUBE</th>
+                <th>PTS</th>
+                <th>J</th>
+                <th>V</th>
+                <th>E</th>
+                <th>D</th>
+                <th>SG</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              ${lista.map((item, i) => `
+                <tr style="text-align:center;border-bottom:1px solid #ddd">
+                  <td>${item.posicao ?? i + 1}</td>
+                  <td style="text-align:left;padding:7px">
+                    ${item.escudo ? `<img src="${item.escudo}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle">` : ''}
+                    <strong>${escapar(item.equipe || item.nome_popular || '')}</strong>
+                  </td>
+                  <td><strong>${item.pontos ?? 0}</strong></td>
+                  <td>${item.jogos ?? 0}</td>
+                  <td>${item.vitorias ?? 0}</td>
+                  <td>${item.empates ?? 0}</td>
+                  <td>${item.derrotas ?? 0}</td>
+                  <td>${item.saldo_gols ?? 0}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="
+          background:#f5f5f5;
+          border:1px solid #ddd;
+          border-radius:7px;
+          padding:8px 12px;
+        ">
+          <div style="
+            color:#b8860b;
+            font-size:11px;
+            font-weight:900;
+            margin-bottom:6px;
+          ">
+            JOGOS DO ${escapar(grupo.nome || `GRUPO ${indice + 1}`)}
+          </div>
+
+          ${jogosGrupo.length ? jogosGrupo.map(jogo => {
+            const mandante = jogo.equipes?.mandante || {};
+            const visitante = jogo.equipes?.visitante || {};
+
+            const temPlacar =
+              jogo.placar_oficial_mandante != null &&
+              jogo.placar_oficial_visitante != null;
+
+            const data = jogo.data_realizacao
+              ? new Date(jogo.data_realizacao).toLocaleDateString('pt-BR', {
+                  timeZone: 'UTC'
+                })
+              : '';
+
+            return `
+              <div style="
+                display:grid;
+                grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);
+                align-items:center;
+                gap:8px;
+                padding:7px 0;
+                border-bottom:1px solid #ddd;
+                font-size:11px;
+              ">
+                <div style="display:flex;align-items:center;gap:5px;min-width:0">
+                  ${mandante.escudo ? `<img src="${mandante.escudo}" style="width:20px;height:20px;object-fit:contain">` : ''}
+                  <strong>${escapar(mandante.nome_popular || 'A definir')}</strong>
+                </div>
+
+                <div style="text-align:center;font-weight:900;font-size:13px">
+                  ${temPlacar
+                    ? `${jogo.placar_oficial_mandante} x ${jogo.placar_oficial_visitante}`
+                    : ' x '}
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;text-align:right;min-width:0">
+                  <strong>${escapar(visitante.nome_popular || 'A definir')}</strong>
+                  ${visitante.escudo ? `<img src="${visitante.escudo}" style="width:20px;height:20px;object-fit:contain">` : ''}
+                </div>
+
+                <div style="
+                  grid-column:1/4;
+                  color:#777;
+                  font-size:9px;
+                ">
+                  ${data} · ${escapar(jogo.hora_realizacao || '')}
+                  · ${escapar(jogo.sede?.nome_popular || '')}
+                  · ${temPlacar ? 'ENCERRADA' : jogo.jogo_ja_comecou ? 'EM ANDAMENTO' : 'AGENDADA'}
+                </div>
+              </div>
+            `;
+          }).join('') : `
+            <p style="font-size:11px;color:#777">
+              Jogos deste grupo não encontrados.
+            </p>
+          `}
+        </div>
+
+      </div>
+    `;
+  }).join('');
+}
   
 function montarJogosConmebol(jogos) {
   if (!jogos || !jogos.length) {
