@@ -6307,7 +6307,9 @@ if (!tabelasValidas.length) {
   `;
   return;
 }
-
+const ehSerieB = /série\s*b/i.test(
+  dados.competition?.name || ''
+);
 const idVisualizacao = 'visualizacao-serie-b-' + Date.now();
 
 area.innerHTML = `
@@ -6344,7 +6346,7 @@ area.innerHTML = `
             document.getElementById('${idVisualizacao}-classificacao').style.background='#222';
             document.getElementById('${idVisualizacao}-classificacao').style.color='#fff';
           "
-          style="background:#222;color:#fff;border:1px solid #d4af37;padding:9px 15px;border-radius:6px;font-weight:bold;cursor:pointer">
+         style="${ehSerieB ? 'background:#222;color:#fff;border:1px solid #d4af37;padding:9px 15px;border-radius:6px;font-weight:bold;cursor:pointer' : 'display:none'}">
           PLAYOFFS
         </button>
       </div>
