@@ -26,14 +26,15 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
   });
 }
   
-  const permitidas = [
+ 
+const permitidas = [
   'brasileirao-a',
   'brasileirao-b',
   'brasileirao-c',
   'brasileirao-d',
   'champions',
   'europa',
-    'conference',
+  'conference',
   'copa-do-brasil',
   'liga-das-nacoes',
   'amistosos',
@@ -43,8 +44,16 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
   'la-liga',
   'serie-a-italia',
   'bundesliga',
-  'ligue-1'
+  'ligue-1',
+  'cearense',
+  'paulista',
+  'carioca',
+  'mineiro',
+  'gaucho',
+  'pernambucano',
+  'baiano'
 ];
+
 
   const host = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
@@ -187,8 +196,9 @@ if (!['A', 'B', 'C', 'D'].includes(ligaNacoes)) {
 'ligue-1': {
   nome: 'Campeonato Francês',
   url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-frances/'
-}
-    };
+},
+...paginasEstaduais,
+     };
 
     if (chave === 'champions') {
       const url = new URL(
@@ -985,6 +995,36 @@ const escudo = Array.from(
     url: 'https://ge.globo.com/futebol/copa-sul-americana/'
   }
 };
+  const paginasEstaduais = {
+  'cearense': {
+    nome: 'Campeonato Cearense',
+    url: 'https://ge.globo.com/ce/futebol/campeonato-cearense/'
+  },
+  'paulista': {
+    nome: 'Campeonato Paulista',
+    url: 'https://ge.globo.com/sp/futebol/campeonato-paulista/'
+  },
+  'carioca': {
+    nome: 'Campeonato Carioca',
+    url: 'https://ge.globo.com/rj/futebol/campeonato-carioca/'
+  },
+  'mineiro': {
+    nome: 'Campeonato Mineiro',
+    url: 'https://ge.globo.com/mg/futebol/campeonato-mineiro/'
+  },
+  'gaucho': {
+    nome: 'Campeonato Gaúcho',
+    url: 'https://ge.globo.com/rs/futebol/campeonato-gaucho/'
+  },
+  'pernambucano': {
+    nome: 'Campeonato Pernambucano',
+    url: 'https://ge.globo.com/pe/futebol/campeonato-pernambucano/'
+  },
+  'baiano': {
+    nome: 'Campeonato Baiano',
+    url: 'https://ge.globo.com/ba/futebol/campeonato-baiano/'
+  }
+};
   async function consultarCompeticao(chave, faseCopa = 8) {
     let fonte = '';
     let nome = '';
@@ -1291,12 +1331,19 @@ const retorno = await consultarAPI(caminhoEuropa);
 ) || null;
       dadosOriginais = dados;
     }
-    else if ([
+   else if ([
   'premier-league',
   'la-liga',
   'serie-a-italia',
   'bundesliga',
-  'ligue-1'
+  'ligue-1',
+  'cearense',
+  'paulista',
+  'carioca',
+  'mineiro',
+  'gaucho',
+  'pernambucano',
+  'baiano'
 ].includes(chave)) {
 
   const ligasGE = {
@@ -1319,6 +1366,34 @@ const retorno = await consultarAPI(caminhoEuropa);
     'ligue-1': {
       nome: 'Campeonato Francês',
       url: 'https://ge.globo.com/futebol/futebol-internacional/futebol-frances/'
+        },
+    'cearense': {
+      nome: 'Campeonato Cearense',
+      url: 'https://ge.globo.com/ce/futebol/campeonato-cearense/'
+    },
+    'paulista': {
+      nome: 'Campeonato Paulista',
+      url: 'https://ge.globo.com/sp/futebol/campeonato-paulista/'
+    },
+    'carioca': {
+      nome: 'Campeonato Carioca',
+      url: 'https://ge.globo.com/rj/futebol/campeonato-carioca/'
+    },
+    'mineiro': {
+      nome: 'Campeonato Mineiro',
+      url: 'https://ge.globo.com/mg/futebol/campeonato-mineiro/'
+    },
+    'gaucho': {
+      nome: 'Campeonato Gaúcho',
+      url: 'https://ge.globo.com/rs/futebol/campeonato-gaucho/'
+    },
+    'pernambucano': {
+      nome: 'Campeonato Pernambucano',
+      url: 'https://ge.globo.com/pe/futebol/campeonato-pernambucano/'
+    },
+    'baiano': {
+      nome: 'Campeonato Baiano',
+      url: 'https://ge.globo.com/ba/futebol/campeonato-baiano/'
     }
   };
 
@@ -1466,25 +1541,77 @@ console.log('[DEBUG SCRIPTS GE]',
   fonte = 'GE Globo';
   nome = config.nome;
 
-  classificacao = [{
-    name: 'CLASSIFICAÇÃO',
-    entries: (tabelaGE.classificacao || []).map(item => ({
-      position: item.ordem,
-      team: {
-        name: item.nome_popular || '',
-        badge: item.escudo || ''
-      },
-      points: item.pontos,
-      matches: item.jogos,
-      wins: item.vitorias,
-      draws: item.empates,
-      losses: item.derrotas,
-      goalsFor: item.gols_pro,
-      goalsAgainst: item.gols_contra,
-      goalDifference: item.saldo_gols,
-      efficiency: item.aproveitamento
-    }))
-  }];
+ 
+const normalizarClassificacao = item => ({
+  position: item.ordem ?? item.posicao ?? item.position ?? null,
+  team: {
+    name: item.nome_popular || item.nome || item.time?.nome || '',
+    badge: item.escudo || item.time?.escudo || ''
+  },
+  points: item.pontos ?? item.points ?? 0,
+  matches: item.jogos ?? item.partidas ?? item.matches ?? 0,
+  wins: item.vitorias ?? item.wins ?? 0,
+  draws: item.empates ?? item.draws ?? 0,
+  losses: item.derrotas ?? item.losses ?? 0,
+  goalsFor: item.gols_pro ?? item.gols_marcados ?? item.goalsFor ?? 0,
+  goalsAgainst: item.gols_contra ?? item.goals_sofridos ?? item.goalsAgainst ?? 0,
+  goalDifference: item.saldo_gols ?? item.saldo ?? item.goalDifference ?? 0,
+  efficiency: item.aproveitamento ?? item.efficiency ?? 0
+});
+
+const dadosClassificacao = tabelaGE.classificacao || [];
+
+if (Array.isArray(dadosClassificacao)) {
+  const gruposDetectados = new Map();
+
+  dadosClassificacao.forEach(item => {
+    const nomeGrupo =
+      item.grupo?.nome ||
+      item.nome_grupo ||
+      item.grupo_nome ||
+      item.grupo ||
+      'CLASSIFICAÇÃO';
+
+    if (!gruposDetectados.has(nomeGrupo)) {
+      gruposDetectados.set(nomeGrupo, []);
+    }
+
+    gruposDetectados.get(nomeGrupo).push(normalizarClassificacao(item));
+  });
+
+  classificacao = Array.from(gruposDetectados.entries()).map(
+    ([nomeGrupo, entries]) => ({
+      name: nomeGrupo === 'CLASSIFICAÇÃO'
+        ? 'CLASSIFICAÇÃO'
+        : `GRUPO ${nomeGrupo}`,
+      entries
+    })
+  );
+
+} else if (
+  dadosClassificacao &&
+  typeof dadosClassificacao === 'object'
+) {
+  classificacao = Object.entries(dadosClassificacao)
+    .map(([nomeGrupo, dadosGrupo]) => {
+      const lista = Array.isArray(dadosGrupo)
+        ? dadosGrupo
+        : dadosGrupo?.classificacao ||
+          dadosGrupo?.times ||
+          dadosGrupo?.equipes ||
+          dadosGrupo?.tabela ||
+          [];
+
+      return {
+        name: nomeGrupo.toUpperCase(),
+        entries: lista.map(normalizarClassificacao)
+      };
+    })
+    .filter(grupo => grupo.entries.length > 0);
+
+} else {
+  classificacao = [];
+}
 
   jogos = jogosGE.map(jogo => {
     const mandante = jogo.equipes?.mandante || {};
@@ -2150,12 +2277,17 @@ else if (chave === 'copa-do-brasil') {
   );
 
   
+
 // Localiza o link REAL da fase disponibilizado pelo GE
 const slug = slugsFases[faseCopa];
 
 const linksGE = [
-  ...htmlGE.matchAll(/href=["']([^"']+)["']/gi)
+...htmlGE.matchAll(/href=["']([^"']+)["']/gi)
 ];
+
+const linkFase = linksGE
+  .map(item => item[1])
+  .find(href => href.includes(slug));
 
 let htmlFase = htmlGE;
 
@@ -2177,23 +2309,16 @@ if (linkFase) {
 
   htmlFase = await respostaFase.text();
 
-} else if (faseCopa !== 7 && faseCopa !== 8) {
-  throw new Error(
-    `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
-  );
-}
-  htmlFase = await respostaFase.text();
-
-} else if (faseCopa === 8) {
-  // A final pode ainda não ter página independente no GE.
-  // Usa a página principal como fonte, sem inventar confrontos.
+} else if (faseCopa === 7 || faseCopa === 8) {
+  // Sem página específica: usa somente os dados disponíveis na página principal.
   htmlFase = htmlGE;
 
 } else {
   throw new Error(
-    `Link da fase ${nomesFases[faseCopa]} não encontrado na página do GE.`
+    `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
   );
 }
+
 
   const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
@@ -2295,21 +2420,22 @@ if (linkFase) {
     const tipo = String(req.query.tipo || 'jogos').toLowerCase();
 
     if (tipo === 'artilharia') {
-     const permitidasArtilharia = [
+ const permitidasArtilharia = [
   'serie-b',
   'serie-c',
   'serie-d',
   'copa-do-brasil',
   'libertadores',
   'sul-americana',
-   'champions',
+  'champions',
   'europa',
   'conference',
   'premier-league',
   'la-liga',
   'serie-a-italia',
   'bundesliga',
-  'ligue-1'
+  'ligue-1',
+  'cearense'
 ];
       const selecionadasArtilharia = competicao === 'todas'
         ? permitidasArtilharia
