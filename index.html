@@ -5227,7 +5227,159 @@ function montarSeletorRodadasConmebol(jogos, rodadaAtual, totalRodadas) {
   `;
 }
 
+function montarJogosConmebol(jogos) {
+  if (!jogos || !jogos.length) {
+    return `
+      <p style="text-align:center;padding:25px;color:#888">
+        Nenhum confronto encontrado nesta fase.
+      </p>
+    `;
+  }
 
+  const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[c]);
+
+  const confrontos = {};
+
+  jogos.forEach(jogo => {
+    const nomes = [
+      jogo.mandante?.nome || 'A definir',
+      jogo.visitante?.nome || 'A definir'
+    ].sort();
+
+    const chave = nomes.join('|');
+
+    if (!confrontos[chave]) confrontos[chave] = [];
+    confrontos[chave].push(jogo);
+  });
+
+  return `
+    <div style="display:grid;gap:16px">
+      ${Object.values(confrontos).map(partidas => {
+        const primeiro = partidas[0];
+
+        const equipes = [primeiro.mandante, primeiro.visitante];
+        const gols = {};
+
+        equipes.forEach(e => gols[e?.nome || 'A definir'] = 0);
+
+        partidas.forEach(jogo => {
+          if (jogo.placar) {
+            gols[jogo.mandante?.nome || 'A definir'] =
+              (gols[jogo.mandante?.nome || 'A definir'] || 0) +
+              Number(jogo.placar.mandante || 0);
+
+            gols[jogo.visitante?.nome || 'A definir'] =
+              (gols[jogo.visitante?.nome || 'A definir'] || 0) +
+              Number(jogo.placar.visitante || 0);
+          }
+        });
+
+        const agregado = partidas.length > 1
+          ? `${gols[equipes[0]?.nome || 'A definir']} X ${gols[equipes[1]?.nome || 'A definir']}`
+          : '';
+
+        return `
+          <div style="
+            background:#fff;
+            color:#171717;
+            border:1px solid #d4af37;
+            border-radius:10px;
+            padding:14px;
+          ">
+            <h3 style="text-align:center;color:#a87912">
+              CONFRONTO
+            </h3>
+
+            ${partidas.map((jogo, indice) => {
+              const data = jogo.data
+                ? new Date(jogo.data).toLocaleDateString(
+                    'pt-BR',
+                    { timeZone:'UTC' }
+                  )
+                : 'Data a definir';
+
+              const escudo = equipe => equipe?.escudo
+                ? `<img src="${escapar(equipe.escudo)}"
+                    style="width:34px;height:34px;object-fit:contain">`
+                : '';
+
+              const placar = jogo.placar
+                ? `${jogo.placar.mandante} X ${jogo.placar.visitante}`
+                : 'X';
+
+              return `
+                <div style="
+                  display:grid;
+                  grid-template-columns:1fr 90px 1fr;
+                  align-items:center;
+                  gap:8px;
+                  padding:12px 0;
+                  border-bottom:${indice < partidas.length - 1
+                    ? '1px solid #ddd' : 'none'}
+                ">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    ${escudo(jogo.mandante)}
+                    <strong>
+                      ${escapar(jogo.mandante?.nome || 'A definir')}
+                    </strong>
+                  </div>
+
+                  <div style="text-align:center">
+                    <strong style="font-size:18px">${placar}</strong>
+                    <div style="font-size:10px;color:#888">
+                      ${indice === 0 ? 'IDA' : 'VOLTA'}
+                    </div>
+                  </div>
+
+                  <div style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:flex-end;
+                    gap:8px;
+                    text-align:right
+                  ">
+                    <strong>
+                      ${escapar(jogo.visitante?.nome || 'A definir')}
+                    </strong>
+                    ${escudo(jogo.visitante)}
+                  </div>
+
+                  <div style="grid-column:1/4;font-size:10px;color:#777">
+                    ${data} · ${escapar(jogo.hora || '')}
+                    · ${escapar(jogo.estadio || '')}
+                    · ${escapar(jogo.status || '')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+
+            ${partidas.length > 1 ? `
+              <div style="
+                background:#111;
+                color:#e4bd43;
+                border-radius:7px;
+                padding:15px;
+                text-align:center;
+                margin-top:10px;
+                font-size:17px;
+                font-weight:900;
+              ">
+                AGREGADO: ${agregado}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+  
 function desenharJogosConmebol(jogos) {
   const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;',
