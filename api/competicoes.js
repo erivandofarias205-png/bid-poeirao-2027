@@ -2693,12 +2693,21 @@ console.log('[COPA DO BRASIL - FASE]', {
                 }
               : null,
 
-          penaltis:
-            jogo.placar_penaltis_mandante != null &&
-            jogo.placar_penaltis_visitante != null
-              ? `${jogo.placar_penaltis_mandante} x ${jogo.placar_penaltis_visitante}`
-              : null,
+         penaltis: (() => {
+  const pm = jogo.placar_penaltis_mandante;
+  const pv = jogo.placar_penaltis_visitante;
 
+  if (pm !== null && pm !== undefined &&
+      pv !== null && pv !== undefined) {
+    return {
+      mandante: Number(pm),
+      visitante: Number(pv)
+    };
+  }
+
+  return null;
+})(),
+          
           status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
             ? 'FINALIZADO'
             : jogo.jogo_ja_comecou
