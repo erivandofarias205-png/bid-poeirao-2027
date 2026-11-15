@@ -5048,54 +5048,170 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
     }).join('');
   }
 
-  function montarJogosConmebol(jogos) {
-    if (!jogos.length) {
-      return '<p>Nenhum jogo encontrado nesta fase.</p>';
-    }
-
+  
+function montarJogosConmebol(jogos) {
+  if (!jogos || !jogos.length) {
     return `
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
-          <thead>
-            <tr style="background:#171717;color:#e4bd43">
-              <th>DATA</th><th>MANDANTE</th>
-              <th>PLACAR</th><th>VISITANTE</th><th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${jogos.map(jogo => {
-              const data = jogo.data
-                ? new Date(jogo.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
-                : '-';
-
-              return `
-                <tr style="text-align:center;border-bottom:1px solid #ddd">
-                  <td>${data}<br>${jogo.hora || ''}</td>
-                  <td style="padding:7px">
-                    ${jogo.mandante?.escudo ? `<img src="${jogo.mandante.escudo}" style="width:25px;height:25px;object-fit:contain"><br>` : ''}
-                    <strong>${jogo.mandante?.nome || '-'}</strong>
-                  </td>
-                  <td>
-                    <strong>
-                      ${jogo.placar
-                        ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
-                        : ' x '}
-                    </strong>
-                   ${jogo.penaltis ? `<br><small>Pênaltis: ${typeof jogo.penaltis === 'object' ? Object.values(jogo.penaltis).filter(v => v !== null && typeof v !== 'object').join(' x ') : jogo.penaltis}</small>` : ''}
-                  </td>
-                  <td style="padding:7px">
-                    ${jogo.visitante?.escudo ? `<img src="${jogo.visitante.escudo}" style="width:25px;height:25px;object-fit:contain"><br>` : ''}
-                    <strong>${jogo.visitante?.nome || '-'}</strong>
-                  </td>
-                  <td>${jogo.status || '-'}</td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
+      <p style="text-align:center;padding:25px;color:#888">
+        Nenhum confronto encontrado nesta fase.
+      </p>
     `;
   }
+
+  const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[c]);
+
+  const confrontos = {};
+
+  jogos.forEach(jogo => {
+    const nomes = [
+      jogo.mandante?.nome || 'A definir',
+      jogo.visitante?.nome || 'A definir'
+    ].sort();
+
+    const chave = nomes.join('|');
+
+    if (!confrontos[chave]) confrontos[chave] = [];
+    confrontos[chave].push(jogo);
+  });
+
+  return `
+    <div style="display:grid;gap:16px">
+      ${Object.values(confrontos).map(partidas => {
+        const primeiro = partidas[0];
+
+        const equipes = [
+          primeiro.mandante,
+          primeiro.visitante
+        ];
+
+        const gols = {};
+        equipes.forEach(e => gols[e?.nome || 'A definir'] = 0);
+
+        partidas.forEach(jogo => {
+          if (jogo.placar) {
+            gols[jogo.mandante.nome] =
+              (gols[jogo.mandante.nome] || 0) +
+              Number(jogo.placar.mandante || 0);
+
+            gols[jogo.visitante.nome] =
+              (gols[jogo.visitante.nome] || 0) +
+              Number(jogo.placar.visitante || 0);
+          }
+        });
+
+        const agregado = partidas.length > 1
+          ? `${gols[equipes[0]?.nome]} X ${gols[equipes[1]?.nome]}`
+          : '';
+
+        return `
+          <div style="
+            background:#fff;
+            color:#171717;
+            border:1px solid #d4af37;
+            border-radius:10px;
+            padding:14px;
+            box-shadow:0 3px 10px rgba(0,0,0,.07)
+          ">
+
+            <h3 style="
+              text-align:center;
+              color:#a87912;
+              font-size:15px;
+              margin:2px 0 14px;
+              letter-spacing:1px
+            ">CONFRONTO</h3>
+
+            ${partidas.map((jogo, indice) => {
+              const data = jogo.data
+                ? new Date(jogo.data).toLocaleDateString(
+                    'pt-BR',
+                    { timeZone:'UTC' }
+                  )
+                : 'Data a definir';
+
+              const escudo = equipe => equipe?.escudo
+                ? `<img src="${escapar(equipe.escudo)}"
+                    style="width:34px;height:34px;object-fit:contain">`
+                : '';
+
+              const placar = jogo.placar
+                ? `${jogo.placar.mandante} X ${jogo.placar.visitante}`
+                : 'X';
+
+              return `
+                <div style="
+                  display:grid;
+                  grid-template-columns:1fr 90px 1fr;
+                  align-items:center;
+                  gap:8px;
+                  padding:12px 0;
+                  border-bottom:${indice < partidas.length - 1
+                    ? '1px solid #ddd' : 'none'}
+                ">
+
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                    ${escudo(jogo.mandante)}
+                    <strong style="font-size:13px">
+                      ${escapar(jogo.mandante?.nome || 'A definir')}
+                    </strong>
+                  </div>
+
+                  <div style="text-align:center">
+                    <strong style="font-size:18px">
+                      ${placar}
+                    </strong>
+                    <div style="font-size:10px;color:#888">
+                      ${indice === 0 ? 'IDA' : 'VOLTA'}
+                    </div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;text-align:right;min-width:0">
+                    <strong style="font-size:13px">
+                      ${escapar(jogo.visitante?.nome || 'A definir')}
+                    </strong>
+                    ${escudo(jogo.visitante)}
+                  </div>
+
+                  <div style="
+                    grid-column:1/4;
+                    font-size:10px;
+                    color:#777;
+                    margin-top:3px
+                  ">
+                    ${data} · ${escapar(jogo.hora || '')}
+                    · ${escapar(jogo.estadio || '')}
+                    · ${escapar(jogo.status || '')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+
+            ${partidas.length > 1 ? `
+              <div style="
+                background:#111;
+                color:#e4bd43;
+                border-radius:7px;
+                padding:15px;
+                text-align:center;
+                font-size:18px;
+                font-weight:900;
+                margin-top:10px
+              ">
+                AGREGADO: ${agregado}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
 
   try {
     painelFases.innerHTML = '<p>Carregando fases do GE...</p>';
@@ -5109,27 +5225,103 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
       throw new Error('O GE não retornou a lista de fases.');
     }
 
-    const faseAtual = navegacao.find(f => f.atual) || navegacao[0];
+    
+const faseAtual = navegacao.find(f => f.atual) || navegacao[0];
 
-    painelFases.innerHTML = `
-      <div style="margin-bottom:15px">
-        <label style="display:block;color:#d4af37;font-weight:900;margin-bottom:7px">
-          ESCOLHA A FASE
-        </label>
-        <select id="seletorFaseConmebol"
-          style="width:100%;max-width:380px;padding:11px;border-radius:7px;border:1px solid #d4af37;font-weight:800;background:#171717;color:#fff">
-          ${navegacao.map(f => `
-            <option value="${f.slug}" ${f.slug === faseAtual.slug ? 'selected' : ''}>
-              ${f.nome}${f.atual ? ' — FASE ATUAL' : ''}
-            </option>
-          `).join('')}
-        </select>
-        <p id="statusFaseConmebol" style="color:#d4af37;font-size:12px">
-          Fonte: GE Globo
-        </p>
-        <div id="classificacaoConmebol"></div>
-      </div>
-    `;
+painelFases.innerHTML = `
+  <div style="
+    background:#111;
+    color:#d4af37;
+    padding:18px;
+    border-radius:10px;
+    border:1px solid #c99b32;
+    margin-bottom:15px;
+  ">
+    <h3 style="
+      text-align:center;
+      margin:0 0 16px;
+      font-size:19px;
+      font-weight:900;
+    ">
+      🏆 ${chaveGE === 'libertadores' ? 'LIBERTADORES' : 'SUL-AMERICANA'}
+    </h3>
+
+    <label style="
+      display:block;
+      font-size:12px;
+      font-weight:900;
+      margin-bottom:8px;
+      letter-spacing:1px;
+    ">
+      ESCOLHA A FASE
+    </label>
+
+    <select id="seletorFaseConmebol"
+      style="
+        width:100%;
+        padding:13px;
+        border-radius:9px;
+        border:1px solid #d4af37;
+        background:#07152e;
+        color:#fff;
+        font-size:15px;
+        font-weight:900;
+        box-sizing:border-box;
+      ">
+      ${navegacao.map(f => `
+        <option value="${f.slug}" ${f.slug === faseAtual.slug ? 'selected' : ''}>
+          ${f.nome}${f.atual ? ' — FASE ATUAL' : ''}
+        </option>
+      `).join('')}
+    </select>
+
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top:14px;
+    ">
+      <button id="faseAnteriorConmebol" type="button"
+        style="
+          background:#1b1b1b;
+          color:#fff;
+          border:1px solid #555;
+          border-radius:9px;
+          padding:12px 15px;
+          font-weight:900;
+          cursor:pointer;
+        ">
+        ‹ ANTERIOR
+      </button>
+
+      <span id="contadorFaseConmebol"
+        style="font-weight:900;color:#e4bd43">
+        ${navegacao.findIndex(f => f.slug === faseAtual.slug) + 1}/${navegacao.length}
+      </span>
+
+      <button id="proximaFaseConmebol" type="button"
+        style="
+          background:#1b1b1b;
+          color:#fff;
+          border:1px solid #555;
+          border-radius:9px;
+          padding:12px 15px;
+          font-weight:900;
+          cursor:pointer;
+        ">
+        PRÓXIMA ›
+      </button>
+    </div>
+
+    <p id="statusFaseConmebol"
+      style="color:#d4af37;font-size:11px;margin:14px 0 0">
+      FONTE: GE GLOBO
+    </p>
+  </div>
+
+  <div id="classificacaoConmebol"></div>
+`;
 
     const seletor = document.getElementById('seletorFaseConmebol');
     const classificacao = document.getElementById('classificacaoConmebol');
@@ -5166,11 +5358,59 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
       }
     }
 
-    seletor.addEventListener('change', () => {
-      carregarFaseConmebol(seletor.value);
-    });
+   
+let indiceFase = navegacao.findIndex(
+  f => f.slug === faseAtual.slug
+);
 
-    await carregarFaseConmebol(faseAtual.slug);
+const anterior = document.getElementById('faseAnteriorConmebol');
+const proxima = document.getElementById('proximaFaseConmebol');
+const contador = document.getElementById('contadorFaseConmebol');
+
+function atualizarBotoesFase() {
+  contador.textContent = `${indiceFase + 1}/${navegacao.length}`;
+
+  anterior.disabled = indiceFase <= 0;
+  proxima.disabled = indiceFase >= navegacao.length - 1;
+
+  anterior.style.opacity = anterior.disabled ? '0.4' : '1';
+  proxima.style.opacity = proxima.disabled ? '0.4' : '1';
+}
+
+seletor.addEventListener('change', async () => {
+  indiceFase = navegacao.findIndex(
+    f => f.slug === seletor.value
+  );
+
+  if (indiceFase < 0) return;
+
+  atualizarBotoesFase();
+  await carregarFaseConmebol(navegacao[indiceFase].slug);
+});
+
+anterior.addEventListener('click', async () => {
+  if (indiceFase <= 0) return;
+
+  indiceFase--;
+  seletor.value = navegacao[indiceFase].slug;
+
+  atualizarBotoesFase();
+  await carregarFaseConmebol(navegacao[indiceFase].slug);
+});
+
+proxima.addEventListener('click', async () => {
+  if (indiceFase >= navegacao.length - 1) return;
+
+  indiceFase++;
+  seletor.value = navegacao[indiceFase].slug;
+
+  atualizarBotoesFase();
+  await carregarFaseConmebol(navegacao[indiceFase].slug);
+});
+
+atualizarBotoesFase();
+
+await carregarFaseConmebol(faseAtual.slug);
 
   } catch (erro) {
     painelFases.innerHTML =
