@@ -2519,47 +2519,45 @@ if (!slug) {
     `GE não informou o endereço da fase: ${nomesFases[faseCopa]}.`
   );
 }
+// CONSULTA DIRETA À API DE TABELAS DO GE
+if (!resourceIdCopa) {
+  throw new Error('GE não informou o identificador da Copa do Brasil.');
+}
 
-const linkFase = new URL(
-  `${slug.replace(/^\/|\/$/g, '')}/`,
-  urlBase
-).href;
-  console.log('[COPA - URL DA FASE]', {
-  faseCopa,
-  nome: nomesFases[faseCopa],
+const urlFaseAPI =
+  `https://api.globoesporte.globo.com/tabela/${resourceIdCopa}/fase/${encodeURIComponent(slug)}/classificacao/`;
+
+console.log('[COPA - CONSULTA API]', {
+  fase: nomesFases[faseCopa],
+  resourceId: resourceIdCopa,
   slug,
-  urlBase,
-  linkFase
+  url: urlFaseAPI
 });
-  
-let htmlFase = htmlGE;
 
-if (linkFase) {
-  const urlFase = linkFase;
-  
-  const respostaFase = await fetch(urlFase, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-      'Accept': 'text/html,application/xhtml+xml'
-    }
-  });
-
-  if (!respostaFase.ok) {
-    throw new Error(
-      `GE não carregou ${nomesFases[faseCopa]}. HTTP ${respostaFase.status}`
-    );
+const respostaFase = await fetch(urlFaseAPI, {
+  headers: {
+    'User-Agent': 'Mozilla/5.0',
+    'Accept': 'application/json'
   }
+});
 
-  htmlFase = await respostaFase.text();
-
-} else {
+if (!respostaFase.ok) {
   throw new Error(
-    `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
+    `API do GE retornou HTTP ${respostaFase.status} na fase ${nomesFases[faseCopa]}.`
   );
 }
 
-  const dadosFase = extrairClassificacao(htmlFase);
-  const secoes = dadosFase.secao || [];
+const dadosFase = await respostaFase.json();
+
+console.log('[COPA - RESPOSTA DA API]', {
+  fase: nomesFases[faseCopa],
+  propriedades: Object.keys(dadosFase || {}),
+  grupos: dadosFase.grupos?.length || 0,
+  secoes: dadosFase.secao?.length || 0,
+  jogos: dadosFase.lista_jogos?.length || 0
+});
+
+const secoes = dadosFase.secao || [];
 console.log('[COPA DO BRASIL - FASE]', {
   fase: faseCopa,
   nome: nomesFases[faseCopa],
