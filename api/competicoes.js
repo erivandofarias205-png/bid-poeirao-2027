@@ -2514,6 +2514,13 @@ const linkFase = new URL(
   `${slug.replace(/^\/|\/$/g, '')}/`,
   urlBase
 ).href;
+  console.log('[COPA - URL DA FASE]', {
+  faseCopa,
+  nome: nomesFases[faseCopa],
+  slug,
+  urlBase,
+  linkFase
+});
   
 let htmlFase = htmlGE;
 
