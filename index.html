@@ -5170,7 +5170,7 @@ function montarClassificacaoConmebol(dados) {
   }).join('');
 }
  
-function montarJogosConmebol(jogos, rodadaAtual, totalRodadas) {
+function montarSeletorRodadasConmebol(jogos, rodadaAtual, totalRodadas) {
   const atual = Number(rodadaAtual) || 1;
   const total = Math.max(Number(totalRodadas) || 6, atual);
 
@@ -5541,12 +5541,11 @@ async function carregarFaseConmebol(slug, rodadaSelecionada = '') {
         const rodadaAtual =
           Number(dados.rodada || rodadaSelecionada) || 1;
 
-        painelJogos.innerHTML = montarJogosConmebol(
-          dados.jogos || [],
-          rodadaAtual,
-          totalRodadas
-        );
-
+        painelJogos.innerHTML = montarSeletorRodadasConmebol(
+  dados.jogos || [],
+  rodadaAtual,
+  totalRodadas
+);
         const seletorRodada = document.getElementById(
           'seletorRodadaConmebol'
         );
