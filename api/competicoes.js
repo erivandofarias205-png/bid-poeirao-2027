@@ -2494,11 +2494,11 @@ if (linkFase) {
       const resultadosArtilharia = await Promise.all(
         selecionadasArtilharia.map(async chave => {
           try {
-            return {
-              sucesso: true,
-              ...await consultarArtilharia(chave)
-            };
-catch (erro) {
+  return {
+    sucesso: true,
+    ...await consultarArtilharia(chave)
+  };
+} catch (erro) {
   console.warn('[ARTILHARIA INDISPONÍVEL]', chave, erro.message);
 
   return {
