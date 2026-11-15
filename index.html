@@ -4755,7 +4755,7 @@ jogos.forEach(jogo => {
 
 const listaConfrontos = Object.values(confrontos);
       
-      
+ areaJogos.innerHTML = `     
 <div style="
   background:#111;
   color:#d4af37;
@@ -4928,6 +4928,7 @@ const listaConfrontos = Object.values(confrontos);
     try {
       await window.carregarFaseCopaBrasil(8);
     } catch (erro) {
+    
       areaJogos.innerHTML = `
         <p style="color:red">Erro ao carregar Copa do Brasil: ${erro.message}</p>
       `;
