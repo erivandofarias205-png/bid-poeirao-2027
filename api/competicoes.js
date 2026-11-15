@@ -1553,7 +1553,25 @@ if (
 ) {
   throw new Error(`Rodada inválida: ${config.nome}.`);
 }
-  let jogosGE = tabelaGE.lista_jogos || [];
+  const jogosLista = Array.isArray(tabelaGE.lista_jogos)
+  ? tabelaGE.lista_jogos
+  : [];
+
+const jogosDaSecao = (tabelaGE.secao || []).flatMap(secao => {
+  const chaves = Array.isArray(secao.chave)
+    ? secao.chave
+    : secao.chave
+      ? [secao.chave]
+      : [];
+
+  return chaves.flatMap(chave =>
+    Array.isArray(chave.jogos) ? chave.jogos : []
+  );
+});
+
+let jogosGE = jogosLista.length
+  ? jogosLista
+  : jogosDaSecao;
 
   if (rodada) {
     if (!resourceId) {
