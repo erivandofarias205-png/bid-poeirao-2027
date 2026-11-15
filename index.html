@@ -5500,7 +5500,15 @@ painelFases.innerHTML = `
 
       try {
         const dados = await buscarDadosConmebol(slug);
-
+console.log('DIAGNÓSTICO JOGOS LIBERTADORES:', {
+  fase: slug,
+  totalJogos: dados.jogos?.length,
+  grupos: dados.grupos?.map(g => ({
+    nome: g.nome,
+    equipes: g.classificacao?.length
+  })),
+  dadosOriginais: dados.dados_originais
+});
         const faseEhGrupos = /grupo/i.test(
   dados.dados_originais?.fase_url_encontrada || slug
 );
