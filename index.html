@@ -5015,7 +5015,8 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
     return dados;
   }
 
- function montarClassificacaoConmebol(dados) {
+ 
+function montarClassificacaoConmebol(dados) {
   const grupos = Array.isArray(dados.grupos)
     ? dados.grupos
     : [];
@@ -5023,6 +5024,16 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
   if (!grupos.length) {
     return '<p>Classificação não disponível nesta fase.</p>';
   }
+
+  const jogos = Array.isArray(dados.jogos)
+    ? dados.jogos
+    : [];
+
+  const normalizarNome = nome => String(nome || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toUpperCase();
 
   const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;',
@@ -5034,48 +5045,46 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
 
   return grupos.map((grupo, indice) => {
     const lista = grupo.classificacao || [];
-    const jogosGrupo = grupo.jogos || [];
+
+    const equipesGrupo = new Set(
+      lista.map(item =>
+        normalizarNome(
+          item.equipe || item.nome_popular || item.nome
+        )
+      )
+    );
+
+    const jogosGrupo = jogos.filter(jogo => {
+      const mandante = normalizarNome(jogo.mandante?.nome);
+      const visitante = normalizarNome(jogo.visitante?.nome);
+
+      return equipesGrupo.has(mandante) &&
+             equipesGrupo.has(visitante);
+    }).sort((a, b) =>
+      new Date(a.data || 0) - new Date(b.data || 0)
+    );
 
     return `
       <div style="margin-bottom:22px">
-
-        <h3 style="
-          background:#171717;
-          color:#e4bd43;
-          padding:12px;
-          margin:0;
-        ">
-          ${escapar(grupo.nome || `GRUPO ${indice + 1}`)}
+        <h3 style="background:#171717;color:#e4bd43;padding:12px">
+          ${escapar(grupo.nome || `GRUPO ${String.fromCharCode(65 + indice)}`)}
         </h3>
 
         <div style="overflow-x:auto">
-          <table style="
-            width:100%;
-            border-collapse:collapse;
-            background:#fff;
-            color:#222;
-            font-size:12px;
-          ">
+          <table style="width:100%;border-collapse:collapse;background:#fff;color:#222;font-size:12px">
             <thead>
-              <tr style="background:#17376f;color:#fff">
-                <th>POS</th>
-                <th style="text-align:left">CLUBE</th>
-                <th>PTS</th>
-                <th>J</th>
-                <th>V</th>
-                <th>E</th>
-                <th>D</th>
-                <th>SG</th>
+              <tr style="background:#171717;color:#e4bd43">
+                <th>POS</th><th>CLUBE</th><th>PTS</th>
+                <th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th>
               </tr>
             </thead>
-
             <tbody>
               ${lista.map((item, i) => `
                 <tr style="text-align:center;border-bottom:1px solid #ddd">
                   <td>${item.posicao ?? i + 1}</td>
                   <td style="text-align:left;padding:7px">
-                    ${item.escudo ? `<img src="${item.escudo}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle">` : ''}
-                    <strong>${escapar(item.equipe || item.nome_popular || '')}</strong>
+                    ${item.escudo ? `<img src="${escapar(item.escudo)}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle">` : ''}
+                    <strong>${escapar(item.equipe || item.nome_popular || item.nome || '')}</strong>
                   </td>
                   <td><strong>${item.pontos ?? 0}</strong></td>
                   <td>${item.jogos ?? 0}</td>
@@ -5094,79 +5103,70 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
           border:1px solid #ddd;
           border-radius:7px;
           padding:8px 12px;
+          margin-top:8px;
         ">
           <div style="
-            color:#b8860b;
+            color:#a87912;
             font-size:11px;
             font-weight:900;
-            margin-bottom:6px;
+            margin-bottom:5px;
           ">
-            JOGOS DO ${escapar(grupo.nome || `GRUPO ${indice + 1}`)}
+            JOGOS DO ${escapar(grupo.nome || `GRUPO ${String.fromCharCode(65 + indice)}`)}
           </div>
 
-          ${jogosGrupo.length ? jogosGrupo.map(jogo => {
-            const mandante = jogo.equipes?.mandante || {};
-            const visitante = jogo.equipes?.visitante || {};
+          ${jogosGrupo.length
+            ? jogosGrupo.map(jogo => {
+                const placar = jogo.placar
+                  ? `${escapar(jogo.placar.mandante)} X ${escapar(jogo.placar.visitante)}`
+                  : 'VS';
 
-            const temPlacar =
-              jogo.placar_oficial_mandante != null &&
-              jogo.placar_oficial_visitante != null;
+                const data = jogo.data
+                  ? new Date(jogo.data).toLocaleDateString('pt-BR', {timeZone:'UTC'})
+                  : '';
 
-            const data = jogo.data_realizacao
-              ? new Date(jogo.data_realizacao).toLocaleDateString('pt-BR', {
-                  timeZone: 'UTC'
-                })
-              : '';
+                return `
+                  <div style="
+                    display:grid;
+                    grid-template-columns:minmax(0,1fr) 55px minmax(0,1fr);
+                    align-items:center;
+                    gap:6px;
+                    padding:7px 0;
+                    border-bottom:1px solid #ddd;
+                    font-size:11px;
+                    color:#111;
+                  ">
+                    <div style="display:flex;align-items:center;gap:5px;min-width:0">
+                      ${jogo.mandante?.escudo
+                        ? `<img src="${escapar(jogo.mandante.escudo)}" style="width:19px;height:19px;object-fit:contain">`
+                        : ''}
+                      <strong>${escapar(jogo.mandante?.nome || 'A definir')}</strong>
+                    </div>
 
-            return `
-              <div style="
-                display:grid;
-                grid-template-columns:minmax(0,1fr) 65px minmax(0,1fr);
-                align-items:center;
-                gap:8px;
-                padding:7px 0;
-                border-bottom:1px solid #ddd;
-                font-size:11px;
-              ">
-                <div style="display:flex;align-items:center;gap:5px;min-width:0">
-                  ${mandante.escudo ? `<img src="${mandante.escudo}" style="width:20px;height:20px;object-fit:contain">` : ''}
-                  <strong>${escapar(mandante.nome_popular || 'A definir')}</strong>
-                </div>
+                    <div style="text-align:center;font-weight:900;color:#a87912">
+                      ${placar}
+                    </div>
 
-                <div style="text-align:center;font-weight:900;font-size:13px">
-                  ${temPlacar
-                    ? `${jogo.placar_oficial_mandante} x ${jogo.placar_oficial_visitante}`
-                    : ' x '}
-                </div>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0;text-align:right">
+                      <strong>${escapar(jogo.visitante?.nome || 'A definir')}</strong>
+                      ${jogo.visitante?.escudo
+                        ? `<img src="${escapar(jogo.visitante.escudo)}" style="width:19px;height:19px;object-fit:contain">`
+                        : ''}
+                    </div>
 
-                <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;text-align:right;min-width:0">
-                  <strong>${escapar(visitante.nome_popular || 'A definir')}</strong>
-                  ${visitante.escudo ? `<img src="${visitante.escudo}" style="width:20px;height:20px;object-fit:contain">` : ''}
-                </div>
-
-                <div style="
-                  grid-column:1/4;
-                  color:#777;
-                  font-size:9px;
-                ">
-                  ${data} · ${escapar(jogo.hora_realizacao || '')}
-                  · ${escapar(jogo.sede?.nome_popular || '')}
-                  · ${temPlacar ? 'ENCERRADA' : jogo.jogo_ja_comecou ? 'EM ANDAMENTO' : 'AGENDADA'}
-                </div>
-              </div>
-            `;
-          }).join('') : `
-            <p style="font-size:11px;color:#777">
-              Jogos deste grupo não encontrados.
-            </p>
-          `}
+                    <div style="grid-column:1/4;font-size:9px;color:#777">
+                      ${data} · ${escapar(jogo.hora || '')} · ${escapar(jogo.status || '')}
+                    </div>
+                  </div>
+                `;
+              }).join('')
+            : '<p style="font-size:11px;color:#777">Jogos deste grupo não encontrados.</p>'
+          }
         </div>
-
       </div>
     `;
   }).join('');
 }
-  
+ 
 function montarJogosConmebol(jogos) {
   if (!jogos || !jogos.length) {
     return `
