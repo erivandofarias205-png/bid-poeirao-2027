@@ -5189,7 +5189,12 @@ function montarJogosConmebol(jogos) {
         const agregado = partidas.length > 1
           ? `${gols[equipes[0]?.nome || 'A definir']} X ${gols[equipes[1]?.nome || 'A definir']}`
           : '';
-
+const penaltis = partidas.find(jogo =>
+  jogo.penaltis &&
+  jogo.penaltis.mandante != null &&
+  jogo.penaltis.visitante != null
+)?.penaltis;
+        
         return `
           <div style="
             background:#fff;
@@ -5265,20 +5270,47 @@ function montarJogosConmebol(jogos) {
               `;
             }).join('')}
 
-            ${partidas.length > 1 ? `
-              <div style="
-                background:#111;
-                color:#e4bd43;
-                border-radius:7px;
-                padding:15px;
-                text-align:center;
-                margin-top:10px;
-                font-size:17px;
-                font-weight:900;
-              ">
-                AGREGADO: ${agregado}
-              </div>
-            ` : ''}
+            ${partidas.length > 1 || penaltis ? `
+  <div style="
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  ">
+    ${partidas.length > 1 ? `
+      <div style="
+        flex:1;
+        min-width:150px;
+        background:#111;
+        color:#e4bd43;
+        border-radius:7px;
+        padding:15px;
+        text-align:center;
+        font-size:16px;
+        font-weight:900;
+      ">
+        AGREGADO: ${agregado}
+      </div>
+    ` : ''}
+
+    ${penaltis ? `
+      <div style="
+        flex:1;
+        min-width:150px;
+        background:#252525;
+        color:#e4bd43;
+        border:1px solid #d4af37;
+        border-radius:7px;
+        padding:15px;
+        text-align:center;
+        font-size:15px;
+        font-weight:900;
+      ">
+        PÊNALTIS: ${penaltis.mandante} X ${penaltis.visitante}
+      </div>
+    ` : ''}
+  </div>
+` : ''}
           </div>
         `;
       }).join('')}
