@@ -1335,9 +1335,8 @@ try {
     script.match(/tUUID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] ||
     htmlPagina.match(/RESOURCE_ID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1];
 
-  const slugTabela = tabelaGE.fase?.slug ||
-    'brasileiro-serie-b-2026-fase-unica';
-
+ const slugTabela = 'brasileiro-serie-b-2026-fase-unica';
+  
   if (!resourceId) {
     throw new Error('Identificador da tabela da Série B não encontrado no GE.');
   }
