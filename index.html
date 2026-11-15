@@ -4755,37 +4755,59 @@ jogos.forEach(jogo => {
 
 const listaConfrontos = Object.values(confrontos);
       
-      areaJogos.innerHTML = `
-        <div style="
-          background:#111;
-          color:#d4af37;
-          padding:14px;
-          border-radius:10px;
-          text-align:center;
-          border:1px solid #c99b32;
-        ">
-          <h3 style="margin:0 0 12px">
-            ${nomesFases[fase]}
-          </h3>
+      
+<div style="
+  background:#111;
+  color:#d4af37;
+  padding:14px;
+  border-radius:10px;
+  text-align:center;
+  border:1px solid #c99b32;
+">
+  <h3 style="margin:0 0 12px;color:#d4af37">
+    ${nomesFases[fase]}
+  </h3>
 
-          <div style="display:flex;justify-content:space-between;gap:8px">
-            <button class="tab"
-              ${fase === 0 ? 'disabled' : ''}
-              onclick="carregarFaseCopaBrasil(${fase - 1})">
-              ‹ ANTERIOR
-            </button>
+  <select
+    onchange="carregarFaseCopaBrasil(Number(this.value))"
+    style="
+      width:100%;
+      max-width:420px;
+      margin:0 auto 12px;
+      background:#080808;
+      color:#d4af37;
+      border:1px solid #d4af37;
+      font-weight:900;
+      padding:12px;
+      border-radius:8px;
+    "
+  >
+    ${nomesFases.map((nome, indice) => `
+      <option value="${indice}" ${indice === fase ? 'selected' : ''}>
+        ${nome}
+      </option>
+    `).join('')}
+  </select>
 
-            <span style="font-weight:900">
-              ${fase + 1}/9
-            </span>
+  <div style="display:flex;justify-content:space-between;gap:8px">
+    <button class="tab"
+      ${fase === 0 ? 'disabled' : ''}
+      onclick="carregarFaseCopaBrasil(${fase - 1})">
+      ‹ ANTERIOR
+    </button>
 
-            <button class="tab"
-              ${fase === 8 ? 'disabled' : ''}
-              onclick="carregarFaseCopaBrasil(${fase + 1})">
-              PRÓXIMA ›
-            </button>
-          </div>
-        </div>
+    <span style="font-weight:900;align-self:center">
+      ${fase + 1}/9
+    </span>
+
+    <button class="tab"
+      ${fase === 8 ? 'disabled' : ''}
+      onclick="carregarFaseCopaBrasil(${fase + 1})">
+      PRÓXIMA ›
+    </button>
+  </div>
+</div>
+
 
         <div style="margin-top:12px">
           ${
@@ -4845,9 +4867,12 @@ const listaConfrontos = Object.values(confrontos);
               padding:12px 0;
               border-bottom:1px solid #ddd;
             ">
-              <div style="font-weight:900">
-                ${jogo.mandante?.nome || 'A definir'}
-              </div>
+             <div style="display:flex;align-items:center;gap:8px;font-weight:900">
+  ${jogo.mandante?.escudo
+    ? `<img src="${jogo.mandante.escudo}" style="width:34px;height:34px;object-fit:contain">`
+    : ''}
+  <span>${jogo.mandante?.nome || 'A definir'}</span>
+</div>
 
               <strong style="font-size:17px">
                 ${jogo.placar
@@ -4855,9 +4880,15 @@ const listaConfrontos = Object.values(confrontos);
                   : ' x '}
               </strong>
 
-              <div style="text-align:right;font-weight:900">
-                ${jogo.visitante?.nome || 'A definir'}
-              </div>
+             
+<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;text-align:right;font-weight:900">
+  <span>${jogo.visitante?.nome || 'A definir'}</span>
+  ${jogo.visitante?.escudo
+    ? `<img src="${jogo.visitante.escudo}" alt=""
+        style="width:34px;height:34px;object-fit:contain;flex-shrink:0">`
+    : ''}
+</div>
+
 
               <div style="grid-column:1/4;font-size:10px;color:#666">
                 ${jogo.data || ''} · ${jogo.hora || ''}
