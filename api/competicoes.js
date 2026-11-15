@@ -1404,7 +1404,11 @@ console.error(
       jogos = listaGE.map(jogo => {
         const mandante = jogo.equipes?.mandante || {};
         const visitante = jogo.equipes?.visitante || {};
-
+if (jogo.placar_penaltis_mandante != null ||
+    jogo.placar_penaltis_visitante != null) {
+  console.log('[COPA - DADOS DE PÊNALTIS]', jogo);
+}
+        
         const temPlacar =
           jogo.placar_oficial_mandante != null &&
           jogo.placar_oficial_visitante != null;
