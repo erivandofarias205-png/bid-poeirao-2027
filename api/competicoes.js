@@ -2482,8 +2482,29 @@ else if (chave === 'copa-do-brasil') {
 
   
 
-// Localiza o link REAL da fase disponibilizado pelo GE
-const slug = slugsFases[faseCopa];
+// LOCALIZA A FASE PELA NAVEGAÇÃO ORIGINAL DO GE
+const navegacao = dadosGE.fases_navegacao || [];
+const faseSelecionada = navegacao[faseCopa];
+console.log('DEBUG COPA GE:', {
+  faseCopa,
+  navegacao,
+  faseSelecionada
+});
+  
+const slug = typeof faseSelecionada === 'string'
+  ? faseSelecionada
+  : (
+      faseSelecionada?.slug ||
+      faseSelecionada?.url ||
+      faseSelecionada?.href ||
+      ''
+    );
+
+if (!slug) {
+  throw new Error(
+    `GE não informou o endereço da fase: ${nomesFases[faseCopa]}.`
+  );
+}
 
 const linksGE = [
 ...htmlGE.matchAll(/href=["']([^"']+)["']/gi)
