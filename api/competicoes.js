@@ -2435,7 +2435,13 @@ if (linkFase) {
   'serie-a-italia',
   'bundesliga',
   'ligue-1',
-  'cearense'
+   'cearense',
+  'paulista',
+  'carioca',
+  'mineiro',
+  'gaucho',
+  'pernambucano',
+  'baiano'
 ];
       const selecionadasArtilharia = competicao === 'todas'
         ? permitidasArtilharia
