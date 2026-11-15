@@ -2484,6 +2484,10 @@ else if (chave === 'copa-do-brasil') {
 
 // LOCALIZA A FASE PELA NAVEGAÇÃO ORIGINAL DO GE
 const navegacao = dadosGE.fases_navegacao || [];
+  console.log(
+  '[COPA - NAVEGACAO ORIGINAL GE]',
+  JSON.stringify(navegacao, null, 2)
+);
 const faseSelecionada = navegacao[faseCopa];
 console.log('DEBUG COPA GE:', {
   faseCopa,
