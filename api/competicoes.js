@@ -2259,26 +2259,89 @@ console.log(
     gruposGE.map(grupo => grupo.rodada).find(r => r && r.ultima) ||
     null;
 
-  let listaJogosFinal = jogosUnicos;
 
-  if (rodada && infoRodada) {
-    const urlRodada =
-      `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugSolicitado)}/rodada/${String(rodada).padStart(2, '0')}/jogos/`;
+let listaJogosFinal = jogosUnicos;
 
-    const respostaRodada = await fetch(urlRodada, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'application/json'
-      }
+// Em fases de grupos, busca todas as rodadas,
+// não apenas os dois jogos da rodada atual.
+if (gruposGE.length > 0 && !rodada && infoRodada) {
+  const totalRodadas = Number(
+    infoRodada.ultima || infoRodada.atual || 0
+  );
+
+  if (totalRodadas > 0) {
+    const consultasRodadas = await Promise.all(
+      Array.from({ length: totalRodadas }, (_, indice) => {
+        const numero = indice + 1;
+
+        const urlRodada =
+          `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugSolicitado)}/rodada/${String(numero).padStart(2, '0')}/jogos/`;
+
+        return fetch(urlRodada, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': 'application/json'
+          }
+        })
+          .then(async resposta => {
+            if (!resposta.ok) return [];
+
+            const retorno = await resposta.json();
+
+            return Array.isArray(retorno)
+              ? retorno
+              : retorno.jogos || [];
+          })
+          .catch(erro => {
+            console.error(
+              `[GE ${config.nome}] Erro na rodada ${numero}:`,
+              erro.message
+            );
+            return [];
+          });
+      })
+    );
+
+    const todosJogosRodadas = consultasRodadas.flat();
+
+    listaJogosFinal = [
+      ...new Map(
+        [...jogosUnicos, ...todosJogosRodadas].map((jogo, indice) => [
+          jogo.id || `${jogo.data_realizacao || ''}-${jogo.equipes?.mandante?.id || ''}-${jogo.equipes?.visitante?.id || ''}-${indice}`,
+          jogo
+        ])
+      ).values()
+    ];
+
+    console.log(`[GE ${config.nome}] JOGOS POR TODAS AS RODADAS:`, {
+      totalRodadas,
+      totalJogos: listaJogosFinal.length
     });
-
-    if (respostaRodada.ok) {
-      const retornoRodada = await respostaRodada.json();
-      listaJogosFinal = Array.isArray(retornoRodada)
-        ? retornoRodada
-        : retornoRodada.jogos || [];
-    }
   }
+}
+
+// Se o usuário solicitar uma rodada específica,
+// mantém o comportamento de consultar somente aquela rodada.
+if (rodada && infoRodada) {
+  const urlRodada =
+    `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugSolicitado)}/rodada/${String(rodada).padStart(2, '0')}/jogos/`;
+
+  const respostaRodada = await fetch(urlRodada, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  });
+
+  if (respostaRodada.ok) {
+    const retornoRodada = await respostaRodada.json();
+
+    listaJogosFinal = Array.isArray(retornoRodada)
+      ? retornoRodada
+      : retornoRodada.jogos || [];
+  }
+}
+
 
   jogos = listaJogosFinal.map(jogo => {
     const mandante = jogo.equipes?.mandante || {};
