@@ -2406,16 +2406,24 @@ if (rodada && infoRodada) {
   rodadaFinal = rodada
     ? Number(rodada)
     : Number(infoRodada?.atual || 0);
+dadosOriginais = {
+  ...dados,
+  rodada_info: infoRodada,
+  fase_selecionada: slugSolicitado,
+  fase_atual: slugAtual,
+  fases_navegacao: fasesNavegacao,
+  resource_id: resourceId,
+  url_api: urlAPI,
 
-  dadosOriginais = {
-    ...dados,
-    rodada_info: infoRodada,
-    fase_selecionada: slugSolicitado,
-    fase_atual: slugAtual,
-    fases_navegacao: fasesNavegacao,
-    resource_id: resourceId,
-    url_api: urlAPI
-  };
+  rodadas_disponiveis: Array.from(
+    {
+      length: Number(
+        infoRodada?.ultima || infoRodada?.atual || 0
+      )
+    },
+    (_, indice) => indice + 1
+  )
+};
 }
 
         
