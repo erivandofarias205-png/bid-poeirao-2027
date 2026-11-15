@@ -2534,10 +2534,10 @@ if (linkFase) {
 
   htmlFase = await respostaFase.text();
 
-} else if (faseCopa === 7 || faseCopa === 8) {
-  // Sem página específica: usa somente os dados disponíveis na página principal.
-  htmlFase = htmlGE;
-
+} else {
+  throw new Error(
+    `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
+  );
 } else {
   throw new Error(
     `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
