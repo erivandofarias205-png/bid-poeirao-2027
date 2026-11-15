@@ -6374,10 +6374,97 @@ area.innerHTML = `
       `).join('')}
     </div>
 
-    <div id="${idVisualizacao}-playoffs" style="display:none;padding:18px;border:1px solid #d4af37;border-radius:8px;text-align:center">
-      <h3 style="color:#d4af37;margin-top:0">PLAYOFFS</h3>
-      <p>Os confrontos dos playoffs ainda precisam ser integrados à fonte de dados.</p>
-    </div>
+    
+<div id="${idVisualizacao}-playoffs"
+  style="display:none;padding:18px;border:1px solid #d4af37;border-radius:8px">
+
+  ${(() => {
+    const classificacaoFinal = [...(tabelasValidas[0]?.entries || [])]
+      .sort((a, b) => Number(a.position) - Number(b.position));
+
+    const terceiro = classificacaoFinal.find(e => Number(e.position) === 3);
+    const quarto = classificacaoFinal.find(e => Number(e.position) === 4);
+    const quinto = classificacaoFinal.find(e => Number(e.position) === 5);
+    const sexto = classificacaoFinal.find(e => Number(e.position) === 6);
+
+    const confrontos = [
+      {
+        titulo: 'PLAYOFF A — ACESSO',
+        ida: [sexto, terceiro],
+        volta: [terceiro, sexto]
+      },
+      {
+        titulo: 'PLAYOFF B — ACESSO',
+        ida: [quinto, quarto],
+        volta: [quarto, quinto]
+      }
+    ];
+
+    const clube = equipe => {
+      if (!equipe) return '<strong>Aguardando classificação</strong>';
+
+      return `
+        <div style="display:flex;align-items:center;justify-content:center;gap:9px;padding:8px">
+          ${equipe.team?.badge
+            ? `<img src="${equipe.team.badge}" style="width:30px;height:30px;object-fit:contain">`
+            : ''}
+          <strong>${equipe.team?.name || 'Clube'}</strong>
+          <span style="color:#d4af37">(${equipe.position}º)</span>
+        </div>
+      `;
+    };
+
+    if (!terceiro || !quarto || !quinto || !sexto) {
+      return `
+        <h3 style="color:#d4af37;text-align:center">PLAYOFFS DE ACESSO</h3>
+        <p style="text-align:center">Aguardando a classificação final da Série B para definir os quatro clubes.</p>
+      `;
+    }
+
+    return `
+      <h3 style="color:#d4af37;text-align:center;margin-top:0">
+        PLAYOFFS DE ACESSO — SÉRIE B 2026
+      </h3>
+
+      <p style="text-align:center">
+        <strong>Vagas para o Brasileirão Série A 2027</strong>
+      </p>
+
+      ${confrontos.map(confronto => `
+        <div style="border:1px solid #d4af37;border-radius:9px;margin:16px 0;padding:14px">
+
+          <h3 style="text-align:center;color:#d4af37">
+            ${confronto.titulo}
+          </h3>
+
+          <div style="text-align:center;font-weight:bold;color:#777">
+            JOGO DE IDA — 21/11/2026
+          </div>
+
+          ${clube(confronto.ida[0])}
+          <div style="text-align:center;color:#d4af37;font-weight:bold">X</div>
+          ${clube(confronto.ida[1])}
+
+          <div style="border-top:1px solid #ddd;margin:12px 0"></div>
+
+          <div style="text-align:center;font-weight:bold;color:#777">
+            JOGO DE VOLTA — 28/11/2026
+          </div>
+
+          ${clube(confronto.volta[0])}
+          <div style="text-align:center;color:#d4af37;font-weight:bold">X</div>
+          ${clube(confronto.volta[1])}
+
+        </div>
+      `).join('')}
+
+      <p style="text-align:center;font-size:13px;color:#777">
+        Os clubes de melhor campanha decidem em casa e têm vantagem em caso de igualdade conforme o regulamento.
+        Não haverá disputa de pênaltis.
+      </p>
+    `;
+  })()}
+</div>
 
   </div>
 `;
