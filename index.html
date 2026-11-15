@@ -4893,8 +4893,7 @@ const listaConfrontos = Object.values(confrontos);
                 ${jogo.data || ''} · ${jogo.hora || ''}
                 · ${jogo.estadio || ''}
                 · ${jogo.status || ''}
-                ${jogo.penaltis ? ' · PÊNALTIS: ' + jogo.penaltis : ''}
-              </div>
+                </div>
             </div>
           `).join('')}
 
@@ -5313,7 +5312,14 @@ painelFases.innerHTML = `
       font-size:19px;
       font-weight:900;
     ">
-      🏆 ${chaveGE === 'libertadores' ? 'LIBERTADORES' : 'SUL-AMERICANA'}
+          <img
+        src="${chaveGE === 'libertadores'
+          ? 'https://upload.wikimedia.org/wikipedia/commons/5/52/Conmebol-libertadores.svg'
+          : 'https://upload.wikimedia.org/wikipedia/commons/9/99/Conmebol-sudamericana.svg'}"
+        alt="${chaveGE === 'libertadores' ? 'Libertadores' : 'Sul-Americana'}"
+        style="width:180px;max-width:80%;height:auto;display:block;margin:0 auto 12px"
+      >
+      ${chaveGE === 'libertadores' ? 'LIBERTADORES' : 'SUL-AMERICANA'}
     </h3>
 
     <label style="
