@@ -2506,19 +2506,16 @@ if (!slug) {
   );
 }
 
-const linksGE = [
-...htmlGE.matchAll(/href=["']([^"']+)["']/gi)
-];
-
-const linkFase = linksGE
-  .map(item => item[1])
-  .find(href => href.includes(slug));
-
+const linkFase = new URL(
+  `${slug.replace(/^\/|\/$/g, '')}/`,
+  urlBase
+).href;
+  
 let htmlFase = htmlGE;
 
 if (linkFase) {
-  const urlFase = new URL(linkFase, urlBase).href;
-
+  const urlFase = linkFase;
+  
   const respostaFase = await fetch(urlFase, {
     headers: {
       'User-Agent': 'Mozilla/5.0',
