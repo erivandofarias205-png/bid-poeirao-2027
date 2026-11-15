@@ -1254,47 +1254,138 @@ for (let i = 1; i <= 38; i++) {
 }
 
 rodadaFinal = numeroRodada;
-     let dadosTabela = { tables: [] };
+ 
+let dadosTabela = { tables: [] };
 
 try {
   const respostaPagina = await fetch(
-    'https://ge.globo.com/futebol/brasileirao-serie-b/'
+    'https://ge.globo.com/futebol/brasileirao-serie-b/',
+    {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'text/html,application/xhtml+xml'
+      }
+    }
   );
 
   if (!respostaPagina.ok) {
-    throw new Error(`GE retornou ${respostaPagina.status}`);
+    throw new Error(`GE retornou HTTP ${respostaPagina.status}`);
   }
 
   const htmlPagina = await respostaPagina.text();
 
-  const blocoTabela = htmlPagina.match(
-    /const classificacao = (\{[\s\S]*?\});/
-  );
+  const scriptReact = [
+    ...htmlPagina.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)
+  ].find(item => /\bid=["']scriptReact["']/i.test(item[1]));
 
-  if (!blocoTabela) {
-    throw new Error('Classificação não encontrada no HTML do GE.');
+  if (!scriptReact) {
+    throw new Error('scriptReact não encontrado na página da Série B.');
   }
 
-  const tabelaGE = JSON.parse(blocoTabela[1]);
+  const script = scriptReact[2];
+  const marcador = /\b(?:const|let|var)\s+classificacao\s*=\s*/.exec(script);
+
+  if (!marcador) {
+    throw new Error('Variável classificacao não encontrada no GE Série B.');
+  }
+
+  const inicio = marcador.index + marcador[0].length;
+  const abertura = script[inicio];
+
+  if (abertura !== '{' && abertura !== '[') {
+    throw new Error('Formato inesperado dos dados de classificação do GE.');
+  }
+
+  let nivel = 0;
+  let dentroString = false;
+  let escape = false;
+  let jsonTabela = '';
+
+  for (let i = inicio; i < script.length; i++) {
+    const c = script[i];
+
+    if (dentroString) {
+      if (escape) escape = false;
+      else if (c === '\\') escape = true;
+      else if (c === '"') dentroString = false;
+      continue;
+    }
+
+    if (c === '"') {
+      dentroString = true;
+      continue;
+    }
+
+    if (c === '{' || c === '[') nivel++;
+    else if (c === '}' || c === ']') nivel--;
+
+    if (nivel === 0) {
+      jsonTabela = script.slice(inicio, i + 1);
+      break;
+    }
+  }
+
+  if (!jsonTabela) {
+    throw new Error('JSON da classificação do GE está incompleto.');
+  }
+
+  const tabelaGE = JSON.parse(jsonTabela);
+
+  const resourceId =
+    script.match(/tUUID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] ||
+    htmlPagina.match(/RESOURCE_ID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1];
+
+  const slugTabela = tabelaGE.fase?.slug ||
+    'brasileiro-serie-b-2026-fase-unica';
+
+  if (!resourceId) {
+    throw new Error('Identificador da tabela da Série B não encontrado no GE.');
+  }
+
+  const urlClassificacao =
+    `https://api.globoesporte.globo.com/tabela/${resourceId}/fase/${encodeURIComponent(slugTabela)}/classificacao/`;
+
+  const respostaClassificacao = await fetch(urlClassificacao, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!respostaClassificacao.ok) {
+    throw new Error(`API de classificação do GE respondeu HTTP ${respostaClassificacao.status}.`);
+  }
+
+  const dadosClassificacaoGE = await respostaClassificacao.json();
+
+  const listaClassificacao = Array.isArray(dadosClassificacaoGE.classificacao)
+    ? dadosClassificacaoGE.classificacao
+    : Array.isArray(dadosClassificacaoGE)
+      ? dadosClassificacaoGE
+      : [];
+
+  if (!listaClassificacao.length) {
+    throw new Error('A API do GE não retornou equipes na classificação da Série B.');
+  }
 
   dadosTabela = {
     tables: [{
       name: 'CLASSIFICAÇÃO',
-      entries: (tabelaGE.classificacao || []).map(item => ({
-        position: item.ordem,
+      entries: listaClassificacao.map((item, indice) => ({
+        position: item.ordem ?? item.posicao ?? indice + 1,
         team: {
-          name: item.nome_popular || '',
-          badge: item.escudo || ''
+          name: item.nome_popular || item.nome || item.time?.nome || '',
+          badge: item.escudo || item.time?.escudo || ''
         },
-        points: item.pontos,
-        matches: item.jogos,
-        wins: item.vitorias,
-        draws: item.empates,
-        losses: item.derrotas,
-        goalsFor: item.gols_pro,
-        goalsAgainst: item.gols_contra,
-        goalDifference: item.saldo_gols,
-        efficiency: item.aproveitamento
+        points: item.pontos ?? 0,
+        matches: item.jogos ?? item.partidas ?? 0,
+        wins: item.vitorias ?? 0,
+        draws: item.empates ?? 0,
+        losses: item.derrotas ?? 0,
+        goalsFor: item.gols_pro ?? item.gols_marcados ?? 0,
+        goalsAgainst: item.gols_contra ?? item.gols_sofridos ?? 0,
+        goalDifference: item.saldo_gols ?? item.saldo ?? 0,
+        efficiency: item.aproveitamento ?? 0
       }))
     }]
   };
@@ -1302,6 +1393,7 @@ try {
 } catch (erroTabela) {
   console.error('Erro classificação GE Série B:', erroTabela.message);
 }
+
 
       fonte = 'GE Globo';
       nome = 'Brasileirão Série B';
