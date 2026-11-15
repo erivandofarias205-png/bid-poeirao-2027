@@ -2513,7 +2513,11 @@ const slug = typeof faseSelecionada === 'string'
       faseSelecionada?.href ||
       ''
     );
-
+  
+const linkFase = slug
+  ? new URL(`${slug.replace(/^\/|\/$/g, '')}/`, urlBase).href
+  : null;
+  
 if (!slug) {
   throw new Error(
     `GE não informou o endereço da fase: ${nomesFases[faseCopa]}.`
