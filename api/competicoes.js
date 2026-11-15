@@ -2547,7 +2547,30 @@ if (linkFase) {
 
   const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
-
+console.log('[COPA DO BRASIL - FASE]', {
+  fase: faseCopa,
+  nome: nomesFases[faseCopa],
+  slug: slug,
+  linkFase: linkFase || null,
+  totalSecoes: secoes.length,
+  jogosEncontrados: secoes.reduce(
+    (total, secao) => total +
+      (secao.chave || []).reduce(
+        (soma, chave) => soma + (chave.jogos || []).length,
+        0
+      ),
+    0
+  ),
+  primeirosJogos: secoes.flatMap(secao =>
+    (secao.chave || []).flatMap(chave =>
+      (chave.jogos || []).map(jogo => ({
+        mandante: jogo.equipes?.mandante?.nome_popular,
+        visitante: jogo.equipes?.visitante?.nome_popular
+      }))
+    )
+  ).slice(0, 5)
+});
+  
   // Extrai os jogos das chaves da fase
   const jogosGE = [];
 
