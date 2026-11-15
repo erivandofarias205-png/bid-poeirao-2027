@@ -4874,11 +4874,26 @@ const listaConfrontos = Object.values(confrontos);
   <span>${jogo.mandante?.nome || 'A definir'}</span>
 </div>
 
-              <strong style="font-size:17px">
-                ${jogo.placar
-                  ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
-                  : ' x '}
-              </strong>
+             <strong style="font-size:18px">
+  ${jogo.placar
+    ? `${jogo.placar.mandante} x ${jogo.placar.visitante}`
+    : ' x '}
+</strong>
+
+${jogo.penaltis ? `
+  <div style="
+    margin-top:7px;
+    display:inline-block;
+    background:#111;
+    color:#e4bd43;
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:900;
+  ">
+    PÊNALTIS: ${jogo.penaltis.mandante} x ${jogo.penaltis.visitante}
+  </div>
+` : ''}
 
              
 <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;text-align:right;font-weight:900">
