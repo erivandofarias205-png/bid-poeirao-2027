@@ -2490,7 +2490,6 @@ console.log('[COPA - RESOURCE ID]', {
   temporada,
   fases: dadosGE.fases_navegacao
 });
-
   
 
 // LOCALIZA A FASE PELA NAVEGAÇÃO ORIGINAL DO GE
