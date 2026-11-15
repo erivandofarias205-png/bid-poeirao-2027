@@ -4914,22 +4914,41 @@ ${jogo.penaltis ? `
             </div>
           `).join('')}
 
-          ${partidas.length > 1 ? `
-            <div style="
-              margin-top:12px;
-              padding:10px;
-              background:#111;
-              color:#e4bd43;
-              border-radius:7px;
-              text-align:center;
-              font-weight:900;
-            ">
-              AGREGADO: ${agregado}
-              <div style="font-size:11px;margin-top:5px">
-                ${classificados}
-              </div>
-            </div>
-          ` : ''}
+         ${partidas.length > 1 ? `
+  <div style="
+    background:#111;
+    color:#e4bd43;
+    border-radius:7px;
+    padding:15px;
+    text-align:center;
+    font-size:17px;
+    font-weight:900;
+    margin-top:10px;
+  ">
+    AGREGADO: ${agregado}
+
+    ${(() => {
+      const jogoPenaltis = partidas.find(j =>
+        j.penaltis &&
+        j.penaltis.mandante != null &&
+        j.penaltis.visitante != null
+      );
+
+      if (!jogoPenaltis) return '';
+
+      return `
+        <div style="
+          margin-top:7px;
+          font-size:13px;
+          color:#fff;
+        ">
+          PÊNALTIS: ${jogoPenaltis.penaltis.mandante}
+          X ${jogoPenaltis.penaltis.visitante}
+        </div>
+      `;
+    })()}
+  </div>
+` : ''}
         </div>
       `;
     }).join('')
