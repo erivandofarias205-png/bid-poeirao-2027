@@ -2480,6 +2480,17 @@ else if (chave === 'copa-do-brasil') {
     edicao.nome?.match(/\d{4}/)?.[0] || '2026'
   );
 
+const resourceIdCopa =
+  htmlGE.match(/tUUID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] ||
+  htmlGE.match(/RESOURCE_ID\s*:\s*["']([0-9a-f-]{36})["']/i)?.[1] ||
+  null;
+
+console.log('[COPA - RESOURCE ID]', {
+  resourceIdCopa,
+  temporada,
+  fases: dadosGE.fases_navegacao
+});
+
   
 
 // LOCALIZA A FASE PELA NAVEGAÇÃO ORIGINAL DO GE
