@@ -857,6 +857,37 @@ const scriptsJsonGE = [
   }));
 
 console.log('[DEBUG JSON GE]', scriptsJsonGE);
+   const tabelaContextMatch = html.match(
+  /<script\b[^>]*id=["']tabela-context["'][^>]*>([\s\S]*?)<\/script>/i
+);
+
+if (tabelaContextMatch) {
+  try {
+    const contexto = JSON.parse(tabelaContextMatch[1]);
+
+    console.log('[DEBUG TABELA CONTEXT CHAVES]', Object.keys(contexto));
+
+    console.log('[DEBUG TABELA CONTEXT REQUISICOES]',
+      Object.entries(contexto)
+        .filter(([key, value]) =>
+          value && typeof value === 'object' &&
+          ('status' in value || 'body' in value)
+        )
+        .map(([key, value]) => ({
+          chave: key,
+          status: value.status,
+          bodyKeys: Object.keys(value.body || {})
+        }))
+    );
+
+    console.log('[DEBUG STANDINGS CHAVES]',
+      Object.keys(contexto.getStandingData?.body?.standings || {})
+    );
+
+  } catch (erro) {
+    console.error('[ERRO TABELA CONTEXT]', erro.message);
+  }
+}
 console.log('[DEBUG ESTRUTURA ARTILHARIA]', {
   classesEncontradas: classesGE,
   variaveisScript: scriptArt
