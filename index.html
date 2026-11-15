@@ -5400,11 +5400,18 @@ painelFases.innerHTML = `
       try {
         const dados = await buscarDadosConmebol(slug);
 
-        classificacao.innerHTML = montarClassificacaoConmebol(dados);
+        const faseEhGrupos = /grupo/i.test(
+  dados.dados_originais?.fase_url_encontrada || slug
+);
 
-        if (painelJogos) {
-          painelJogos.innerHTML = montarJogosConmebol(dados.jogos || []);
-        }
+classificacao.innerHTML = montarClassificacaoConmebol(dados);
+
+if (painelJogos) {
+  painelJogos.innerHTML = faseEhGrupos
+    ? ''
+    : montarJogosConmebol(dados.jogos || []);
+}
+        
 
         status.textContent =
           `Fonte: GE Globo · ${dados.dados_originais?.fase_url_encontrada || slug}`;
