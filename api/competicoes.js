@@ -2538,12 +2538,7 @@ if (linkFase) {
   throw new Error(
     `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
   );
-} else {
-  throw new Error(
-    `Link da fase ${nomesFases[faseCopa]} não encontrado no GE.`
-  );
 }
-
 
   const dadosFase = extrairClassificacao(htmlFase);
   const secoes = dadosFase.secao || [];
