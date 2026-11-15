@@ -1357,7 +1357,10 @@ try {
   }
 
   const dadosClassificacaoGE = await respostaClassificacao.json();
-
+console.error(
+  '[DEBUG CLASSIFICAÇÃO SÉRIE B]',
+  JSON.stringify(dadosClassificacaoGE).slice(0, 5000)
+);
   const listaClassificacao = Array.isArray(dadosClassificacaoGE.classificacao)
     ? dadosClassificacaoGE.classificacao
     : Array.isArray(dadosClassificacaoGE)
