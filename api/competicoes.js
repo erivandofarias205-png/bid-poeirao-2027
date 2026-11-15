@@ -947,8 +947,19 @@ console.log('[DEBUG SCRIPT ARTILHARIA]', diagnosticoScript);
     );
 
     if (!bloco) {
-      throw new Error(`Artilharia não encontrada: ${config.nome}`);
-    }
+  console.warn('[GE SEM ARTILHARIA]', config.nome);
+
+  return {
+    chave,
+    competicao: config.nome,
+    fonte: 'GE Globo',
+    total: 0,
+    artilheiros: [],
+    sem_dados: true,
+    mensagem: 'Artilharia indisponível nesta competição.',
+    atualizado_em: new Date().toISOString()
+  };
+}
 
     const limpar = texto => texto
       .replace(/<[^>]*>/g, '')
