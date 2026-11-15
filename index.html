@@ -4993,30 +4993,27 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
   const painelFases = area;
   const painelJogos = areaJogos;
 
-async function buscarDadosConmebol(slug = '', rodada = '') {
-  const url = `/api/competicoes?competicao=${chaveGE}` +
-    (slug ? `&fase=${encodeURIComponent(slug)}` : '') +
-    (rodada ? `&rodada=${encodeURIComponent(rodada)}` : '');
+  async function buscarDadosConmebol(slug = '') {
+    const url = `/api/competicoes?competicao=${chaveGE}` +
+      (slug ? `&fase=${encodeURIComponent(slug)}` : '');
 
-  const resposta = await fetch(url, {
-    cache: 'no-store'
-  });
+    const resposta = await fetch(url);
 
-  if (!resposta.ok) {
-    throw new Error('Erro ao consultar o GE.');
+    if (!resposta.ok) {
+      throw new Error('Erro ao consultar o GE.');
+    }
+
+    const retorno = await resposta.json();
+
+    const dados = (retorno.competicoes || [])
+      .find(item => item.chave === chaveGE);
+
+    if (!retorno.sucesso || !dados || dados.sucesso === false) {
+      throw new Error(dados?.erro || 'Dados não encontrados.');
+    }
+
+    return dados;
   }
-
-  const retorno = await resposta.json();
-
-  const dados = (retorno.competicoes || [])
-    .find(item => item.chave === chaveGE);
-
-  if (!retorno.sucesso || !dados || dados.sucesso === false) {
-    throw new Error(dados?.erro || 'Dados não encontrados.');
-  }
-
-  return dados;
-}
 
  
 function montarClassificacaoConmebol(dados) {
@@ -5170,65 +5167,15 @@ function montarClassificacaoConmebol(dados) {
   }).join('');
 }
  
-function montarJogosConmebol(jogos, rodadaAtual, totalRodadas) {
-  const atual = Number(rodadaAtual) || 1;
-  const total = Math.max(Number(totalRodadas) || 6, atual);
+function montarJogosConmebol(jogos) {
+  if (!jogos || !jogos.length) {
+    return `
+      <p style="text-align:center;padding:25px;color:#888">
+        Nenhum confronto encontrado nesta fase.
+      </p>
+    `;
+  }
 
-  return `
-    <div style="
-      background:#111;
-      border:1px solid #d4af37;
-      border-radius:10px;
-      padding:14px;
-      margin-bottom:15px;
-    ">
-      <h3 style="
-        color:#e4bd43;
-        text-align:center;
-        margin:0 0 12px;
-        font-size:17px;
-        font-weight:900;
-      ">
-        JOGOS E RESULTADOS
-      </h3>
-
-      <label style="
-        display:block;
-        color:#e4bd43;
-        font-size:12px;
-        font-weight:900;
-        margin-bottom:7px;
-      ">
-        ESCOLHA A RODADA
-      </label>
-
-      <select id="seletorRodadaConmebol" style="
-        width:100%;
-        padding:12px;
-        background:#202020;
-        color:#fff;
-        border:1px solid #d4af37;
-        border-radius:8px;
-        font-weight:900;
-      ">
-        ${Array.from({length:total}, (_, i) => i + 1).map(numero => `
-          <option value="${numero}" ${numero === atual ? 'selected' : ''}>
-            ${numero}ª RODADA
-          </option>
-        `).join('')}
-      </select>
-
-      <div id="listaJogosConmebol" style="margin-top:15px">
-        <p style="text-align:center;color:#aaa;padding:15px">
-          Selecione a rodada para consultar os jogos.
-        </p>
-      </div>
-    </div>
-  `;
-}
-
-
-function desenharJogosConmebol(jogos) {
   const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;',
     '<': '&lt;',
@@ -5237,156 +5184,189 @@ function desenharJogosConmebol(jogos) {
     "'": '&#39;'
   })[c]);
 
-  if (!Array.isArray(jogos) || !jogos.length) {
-    return `
-      <p style="
-        text-align:center;
-        padding:22px;
-        color:#aaa;
-        background:#181818;
-        border-radius:8px;
-      ">
-        Nenhum jogo encontrado nesta rodada.
-      </p>
-    `;
-  }
-
-  const grupos = {};
+  const confrontos = {};
 
   jogos.forEach(jogo => {
-    const nomeGrupo = jogo.grupo || jogo.nome_grupo || 'JOGOS DA RODADA';
+    const nomes = [
+      jogo.mandante?.nome || 'A definir',
+      jogo.visitante?.nome || 'A definir'
+    ].sort();
 
-    if (!grupos[nomeGrupo]) {
-      grupos[nomeGrupo] = [];
-    }
+    const chave = nomes.join('|');
 
-    grupos[nomeGrupo].push(jogo);
+    if (!confrontos[chave]) confrontos[chave] = [];
+    confrontos[chave].push(jogo);
   });
 
-  return Object.entries(grupos).map(([nomeGrupo, partidas]) => `
-    <div style="
-      margin-bottom:16px;
-      border:1px solid #444;
-      border-radius:9px;
-      overflow:hidden;
-      background:#181818;
-    ">
-      <h3 style="
-        background:#d4af37;
-        color:#111;
-        padding:10px;
-        margin:0;
-        font-size:14px;
-        font-weight:900;
-        text-align:center;
-      ">
-        ${escapar(nomeGrupo)}
-      </h3>
+  return `
+    <div style="display:grid;gap:16px">
+      ${Object.values(confrontos).map(partidas => {
+        const primeiro = partidas[0];
 
-      <div style="padding:10px">
-        ${partidas.map(jogo => {
-          const mandante = jogo.mandante || {};
-          const visitante = jogo.visitante || {};
+        const equipes = [
+          primeiro.mandante,
+          primeiro.visitante
+        ];
 
-          const placar = jogo.placar
-            ? `${escapar(jogo.placar.mandante)} X ${escapar(jogo.placar.visitante)}`
-            : 'VS';
+        const gols = {};
+        equipes.forEach(e => gols[e?.nome || 'A definir'] = 0);
 
-          const data = jogo.data
-            ? new Date(jogo.data).toLocaleDateString('pt-BR', {
-                timeZone: 'UTC'
-              })
-            : 'Data a definir';
+        partidas.forEach(jogo => {
+          if (jogo.placar) {
+            gols[jogo.mandante.nome] =
+              (gols[jogo.mandante.nome] || 0) +
+              Number(jogo.placar.mandante || 0);
 
-          const escudoMandante = mandante.escudo
-            ? `<img src="${escapar(mandante.escudo)}" style="width:30px;height:30px;object-fit:contain">`
-            : '';
+            gols[jogo.visitante.nome] =
+              (gols[jogo.visitante.nome] || 0) +
+              Number(jogo.placar.visitante || 0);
+          }
+        });
 
-          const escudoVisitante = visitante.escudo
-            ? `<img src="${escapar(visitante.escudo)}" style="width:30px;height:30px;object-fit:contain">`
-            : '';
+        const agregado = partidas.length > 1
+          ? `${gols[equipes[0]?.nome]} X ${gols[equipes[1]?.nome]}`
+          : '';
 
-          const temPenaltis =
-            jogo.penaltis &&
-            jogo.penaltis.mandante != null &&
-            jogo.penaltis.visitante != null;
+        return `
+          <div style="
+            background:#fff;
+            color:#171717;
+            border:1px solid #d4af37;
+            border-radius:10px;
+            padding:14px;
+            box-shadow:0 3px 10px rgba(0,0,0,.07)
+          ">
 
-          return `
-            <div style="
-              padding:12px 4px;
-              border-bottom:1px solid #383838;
-            ">
-              <div style="
-                display:grid;
-                grid-template-columns:minmax(0,1fr) 75px minmax(0,1fr);
-                align-items:center;
-                gap:6px;
-              ">
+            <h3 style="
+              text-align:center;
+              color:#a87912;
+              font-size:15px;
+              margin:2px 0 14px;
+              letter-spacing:1px
+            ">CONFRONTO</h3>
+
+            ${partidas.map((jogo, indice) => {
+              const data = jogo.data
+                ? new Date(jogo.data).toLocaleDateString(
+                    'pt-BR',
+                    { timeZone:'UTC' }
+                  )
+                : 'Data a definir';
+
+              const escudo = equipe => equipe?.escudo
+                ? `<img src="${escapar(equipe.escudo)}"
+                    style="width:34px;height:34px;object-fit:contain">`
+                : '';
+
+              const placar = jogo.placar
+  ? `${jogo.placar.mandante} X ${jogo.placar.visitante}`
+  : 'X';
+
+const temPenaltis =
+  jogo.penaltis &&
+  jogo.penaltis.mandante != null &&
+  jogo.penaltis.visitante != null;
+
+const placarPenaltis = temPenaltis
+  ? `${jogo.penaltis.mandante} X ${jogo.penaltis.visitante}`
+  : '';
+              
+              return `
                 <div style="
-                  display:flex;
+                  display:grid;
+                  grid-template-columns:1fr 90px 1fr;
                   align-items:center;
-                  gap:6px;
-                  min-width:0;
-                  color:#fff;
-                  font-size:12px;
-                  font-weight:800;
+                  gap:8px;
+                  padding:12px 0;
+                  border-bottom:${indice < partidas.length - 1
+                    ? '1px solid #ddd' : 'none'}
                 ">
-                  ${escudoMandante}
-                  <span>${escapar(mandante.nome || 'A definir')}</span>
-                </div>
 
-                <div style="
-                  text-align:center;
-                  color:#e4bd43;
-                  font-size:17px;
-                  font-weight:900;
-                ">
-                  ${placar}
-                </div>
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                    ${escudo(jogo.mandante)}
+                    <strong style="font-size:13px">
+                      ${escapar(jogo.mandante?.nome || 'A definir')}
+                    </strong>
+                  </div>
 
-                <div style="
-                  display:flex;
-                  align-items:center;
-                  justify-content:flex-end;
-                  gap:6px;
-                  min-width:0;
-                  color:#fff;
-                  font-size:12px;
-                  font-weight:800;
-                  text-align:right;
-                ">
-                  <span>${escapar(visitante.nome || 'A definir')}</span>
-                  ${escudoVisitante}
-                </div>
-              </div>
+                  <div style="text-align:center">
+                    <strong style="font-size:18px">
+                      ${placar}
+                    </strong>
+                   <div style="font-size:10px;color:#888">
+  ${indice === 0 ? 'IDA' : 'VOLTA'}
+</div>
 
-              <div style="
-                color:#aaa;
-                font-size:10px;
-                text-align:center;
-                margin-top:8px;
-              ">
-                ${data} · ${escapar(jogo.hora || '')}
-                · ${escapar(jogo.status || '')}
-              </div>
+                  </div>
 
-              ${temPenaltis ? `
-                <div style="
-                  color:#e4bd43;
-                  font-size:11px;
-                  font-weight:900;
-                  text-align:center;
-                  margin-top:5px;
-                ">
-                  PÊNALTIS: ${jogo.penaltis.mandante} X ${jogo.penaltis.visitante}
+                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;text-align:right;min-width:0">
+                    <strong style="font-size:13px">
+                      ${escapar(jogo.visitante?.nome || 'A definir')}
+                    </strong>
+                    ${escudo(jogo.visitante)}
+                  </div>
+
+                  <div style="
+                    grid-column:1/4;
+                    font-size:10px;
+                    color:#777;
+                    margin-top:3px
+                  ">
+                    ${data} · ${escapar(jogo.hora || '')}
+                    · ${escapar(jogo.estadio || '')}
+                    · ${escapar(jogo.status || '')}
+                  </div>
                 </div>
-              ` : ''}
-            </div>
-          `;
-        }).join('')}
-      </div>
+              `;
+            }).join('')}
+
+           ${partidas.length > 1 ? `
+  <div style="
+    background:#111;
+    color:#e4bd43;
+    border-radius:7px;
+    padding:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:25px;
+    margin-top:10px;
+    font-size:17px;
+    font-weight:900;
+  ">
+    <span>AGREGADO: ${agregado}</span>
+
+    ${(() => {
+      const jogoPenaltis = partidas.find(j =>
+        j.penaltis &&
+        j.penaltis.mandante != null &&
+        j.penaltis.visitante != null
+      );
+
+      if (!jogoPenaltis) return '';
+
+      return `
+        <span style="
+          color:#fff;
+          font-size:15px;
+        ">
+          PÊNALTIS:
+          <strong style="color:#e4bd43">
+            ${jogoPenaltis.penaltis.mandante}
+            X
+            ${jogoPenaltis.penaltis.visitante}
+          </strong>
+        </span>
+      `;
+    })()}
+  </div>
+` : ''}
+          </div>
+        `;
+      }).join('')}
     </div>
-  `).join('');
+  `;
 }
 
   try {
@@ -5510,103 +5490,51 @@ painelFases.innerHTML = `
     const classificacao = document.getElementById('classificacaoConmebol');
     const status = document.getElementById('statusFaseConmebol');
 
-async function carregarFaseConmebol(slug, rodadaSelecionada = '') {
-  status.textContent = 'Carregando dados da fase...';
-  classificacao.innerHTML = '<p>Consultando classificação...</p>';
+    async function carregarFaseConmebol(slug) {
+      status.textContent = 'Carregando dados da fase...';
+      classificacao.innerHTML = '<p>Consultando classificação...</p>';
 
-  if (painelJogos) {
-    painelJogos.innerHTML = '<p>Carregando jogos...</p>';
-  }
+      if (painelJogos) {
+        painelJogos.innerHTML = '<p>Carregando jogos...</p>';
+      }
 
-  try {
-    const dados = await buscarDadosConmebol(slug, rodadaSelecionada);
+      try {
+        const dados = await buscarDadosConmebol(slug);
+console.log('DIAGNÓSTICO JOGOS LIBERTADORES:', {
+  fase: slug,
+  totalJogos: dados.jogos?.length,
+  grupos: dados.grupos?.map(g => ({
+    nome: g.nome,
+    equipes: g.classificacao?.length
+  })),
+  dadosOriginais: dados.dados_originais
+});
+        const faseEhGrupos = /grupo/i.test(
+  dados.dados_originais?.fase_url_encontrada || slug
+);
 
-    const faseEncontrada =
-      dados.dados_originais?.fase_url_encontrada || slug;
+classificacao.innerHTML = montarClassificacaoConmebol(dados);
 
-    const faseEhGrupos = /grupo/i.test(faseEncontrada);
+if (painelJogos) {
+  painelJogos.innerHTML = faseEhGrupos
+    ? ''
+    : montarJogosConmebol(dados.jogos || []);
+}
+        
 
-    classificacao.innerHTML = montarClassificacaoConmebol(dados);
+        status.textContent =
+          `Fonte: GE Globo · ${dados.dados_originais?.fase_url_encontrada || slug}`;
+      } catch (erro) {
+        classificacao.innerHTML =
+          `<p style="color:red">${erro.message}</p>`;
 
-    if (painelJogos) {
-      if (faseEhGrupos) {
-        const rodadasDisponiveis =
-          dados.dados_originais?.rodadas_disponiveis || [];
-
-        const totalRodadas = Math.max(
-          6,
-          ...rodadasDisponiveis.map(Number).filter(Number.isFinite)
-        );
-
-        const rodadaAtual =
-          Number(dados.rodada || rodadaSelecionada) || 1;
-
-        painelJogos.innerHTML = montarJogosConmebol(
-          dados.jogos || [],
-          rodadaAtual,
-          totalRodadas
-        );
-
-        const seletorRodada = document.getElementById(
-          'seletorRodadaConmebol'
-        );
-
-        if (seletorRodada) {
-          seletorRodada.addEventListener('change', async () => {
-            const numero = Number(seletorRodada.value);
-
-            const lista = document.getElementById(
-              'listaJogosConmebol'
-            );
-
-            lista.innerHTML =
-              '<p style="text-align:center;color:#aaa">Carregando jogos da rodada...</p>';
-
-            try {
-              const novosDados = await buscarDadosConmebol(slug, numero);
-
-              lista.innerHTML = desenharJogosConmebol(
-                novosDados.jogos || []
-              );
-
-              status.textContent =
-                `Fonte: GE Globo · ${faseEncontrada} · ${numero}ª rodada`;
-            } catch (erro) {
-              lista.innerHTML =
-                `<p style="color:red;text-align:center">${erro.message}</p>`;
-            }
-          });
-
-          const listaInicial = document.getElementById(
-            'listaJogosConmebol'
-          );
-
-          listaInicial.innerHTML = desenharJogosConmebol(
-            dados.jogos || []
-          );
+        if (painelJogos) {
+          painelJogos.innerHTML = '<p>Não foi possível carregar os jogos.</p>';
         }
-      } else {
-        painelJogos.innerHTML = montarJogosConmebol(
-          dados.jogos || []
-        );
+
+        status.textContent = 'Erro ao carregar a fase.';
       }
     }
-
-    status.textContent =
-      `Fonte: GE Globo · ${faseEncontrada}`;
-
-  } catch (erro) {
-    classificacao.innerHTML =
-      `<p style="color:red">${erro.message}</p>`;
-
-    if (painelJogos) {
-      painelJogos.innerHTML =
-        '<p>Não foi possível carregar os jogos.</p>';
-    }
-
-    status.textContent = 'Erro ao carregar a fase.';
-  }
-}
 
    
 let indiceFase = navegacao.findIndex(
