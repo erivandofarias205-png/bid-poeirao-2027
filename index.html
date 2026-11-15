@@ -13180,20 +13180,38 @@ async function aplicarVisibilidadeProfissionais() {
       visibilidade[comp.chave] = comp.publicada;
     });
 
-    const mapaCartoes = {
-      'BRASILEIRÃO SÉRIE A': 'brasileirao-a',
-      'BRASILEIRÃO SÉRIE B': 'brasileirao-b',
-      'BRASILEIRÃO SÉRIE C': 'brasileirao-c',
-      'BRASILEIRÃO SÉRIE D': 'brasileirao-d',
-      'COPA DO BRASIL': 'copa-brasil',
-      'LIBERTADORES': 'libertadores',
-      'SUL-AMERICANA': 'sul-americana',
-      'CHAMPIONS LEAGUE': 'champions',
-      'EUROPA LEAGUE': 'europa',
-      'PRINCIPAIS LIGAS DO MUNDO': 'internacional',
-      'PRÓXIMOS JOGOS DAS SELEÇÕES': 'selecoes'
-    };
+   const mapaCartoes = {
+  'BRASILEIRÃO SÉRIE A': 'brasileirao-a',
+  'BRASILEIRÃO SÉRIE B': 'brasileirao-b',
+  'BRASILEIRÃO SÉRIE C': 'brasileirao-c',
+  'BRASILEIRÃO SÉRIE D': 'brasileirao-d',
+  'COPA DO BRASIL': 'copa-brasil',
+  'COPINHA': 'copinha',
 
+  'CEARENSE': 'cearense',
+  'PAULISTA': 'paulista',
+  'CARIOCA': 'carioca',
+  'MINEIRO': 'mineiro',
+  'GAÚCHO': 'gaucho',
+  'PERNAMBUCANO': 'pernambucano',
+  'BAIANO': 'baiano',
+
+  'LIBERTADORES': 'libertadores',
+  'SUL-AMERICANA': 'sul-americana',
+  'CHAMPIONS LEAGUE': 'champions',
+  'EUROPA LEAGUE': 'europa',
+  'CONFERENCE LEAGUE': 'conference',
+
+  'PREMIER LEAGUE': 'premier-league',
+  'LA LIGA': 'la-liga',
+  'SERIE A': 'serie-a-italia',
+  'BUNDESLIGA': 'bundesliga',
+  'LIGUE 1': 'ligue-1',
+
+  'COPA DO MUNDO': 'copa-mundo',
+  'LIGA DAS NAÇÕES': 'liga-nacoes',
+  'AMISTOSOS INTERNACIONAIS': 'amistosos'
+};
     document.querySelectorAll('#profissionalView .prof-grid').forEach(grid => {
       grid.querySelectorAll('.prof-card').forEach(card => {
         const nome = card.querySelector('strong')?.textContent.trim();
