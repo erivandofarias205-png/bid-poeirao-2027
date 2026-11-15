@@ -5156,9 +5156,18 @@ function montarJogosConmebol(jogos) {
                 : '';
 
               const placar = jogo.placar
-                ? `${jogo.placar.mandante} X ${jogo.placar.visitante}`
-                : 'X';
+  ? `${jogo.placar.mandante} X ${jogo.placar.visitante}`
+  : 'X';
 
+const temPenaltis =
+  jogo.penaltis &&
+  jogo.penaltis.mandante != null &&
+  jogo.penaltis.visitante != null;
+
+const placarPenaltis = temPenaltis
+  ? `${jogo.penaltis.mandante} X ${jogo.penaltis.visitante}`
+  : '';
+              
               return `
                 <div style="
                   display:grid;
@@ -5181,9 +5190,24 @@ function montarJogosConmebol(jogos) {
                     <strong style="font-size:18px">
                       ${placar}
                     </strong>
-                    <div style="font-size:10px;color:#888">
-                      ${indice === 0 ? 'IDA' : 'VOLTA'}
-                    </div>
+                   <div style="font-size:10px;color:#888">
+  ${indice === 0 ? 'IDA' : 'VOLTA'}
+</div>
+
+${temPenaltis ? `
+  <div style="
+    margin-top:7px;
+    padding:5px 8px;
+    background:#111;
+    color:#e4bd43;
+    border-radius:5px;
+    font-size:11px;
+    font-weight:900;
+    white-space:nowrap;
+  ">
+    PÊNALTIS: ${placarPenaltis}
+  </div>
+` : ''}
                   </div>
 
                   <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;text-align:right;min-width:0">
