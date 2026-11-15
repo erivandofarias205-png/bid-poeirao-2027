@@ -2498,14 +2498,18 @@ if (linkFase) {
               sucesso: true,
               ...await consultarArtilharia(chave)
             };
-          } catch (erro) {
-            return {
-              sucesso: false,
-              chave,
-              erro: erro.message,
-              artilheiros: []
-            };
-          }
+catch (erro) {
+  console.warn('[ARTILHARIA INDISPONÍVEL]', chave, erro.message);
+
+  return {
+    sucesso: true,
+    chave,
+    total: 0,
+    artilheiros: [],
+    sem_dados: true,
+    mensagem: 'Artilharia indisponível nesta competição.'
+  };
+}
         })
       );
 
