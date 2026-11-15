@@ -4993,27 +4993,31 @@ if (chaveGE && ['libertadores', 'sul-americana'].includes(chaveGE)) {
   const painelFases = area;
   const painelJogos = areaJogos;
 
-  async function buscarDadosConmebol(slug = '') {
-    const url = `/api/competicoes?competicao=${chaveGE}` +
-      (slug ? `&fase=${encodeURIComponent(slug)}` : '');
+  
+async function buscarDadosConmebol(slug = '', rodada = '') {
+  const url = `/api/competicoes?competicao=${chaveGE}` +
+    (slug ? `&fase=${encodeURIComponent(slug)}` : '') +
+    (rodada ? `&rodada=${encodeURIComponent(rodada)}` : '');
 
-    const resposta = await fetch(url);
+  const resposta = await fetch(url, {
+    cache: 'no-store'
+  });
 
-    if (!resposta.ok) {
-      throw new Error('Erro ao consultar o GE.');
-    }
-
-    const retorno = await resposta.json();
-
-    const dados = (retorno.competicoes || [])
-      .find(item => item.chave === chaveGE);
-
-    if (!retorno.sucesso || !dados || dados.sucesso === false) {
-      throw new Error(dados?.erro || 'Dados não encontrados.');
-    }
-
-    return dados;
+  if (!resposta.ok) {
+    throw new Error('Erro ao consultar o GE.');
   }
+
+  const retorno = await resposta.json();
+
+  const dados = (retorno.competicoes || [])
+    .find(item => item.chave === chaveGE);
+
+  if (!retorno.sucesso || !dados || dados.sucesso === false) {
+    throw new Error(dados?.erro || 'Dados não encontrados.');
+  }
+
+  return dados;
+}
 
  
 function montarClassificacaoConmebol(dados) {
@@ -5490,51 +5494,92 @@ painelFases.innerHTML = `
     const classificacao = document.getElementById('classificacaoConmebol');
     const status = document.getElementById('statusFaseConmebol');
 
-    async function carregarFaseConmebol(slug) {
-      status.textContent = 'Carregando dados da fase...';
-      classificacao.innerHTML = '<p>Consultando classificação...</p>';
 
-      if (painelJogos) {
-        painelJogos.innerHTML = '<p>Carregando jogos...</p>';
-      }
+async function carregarFaseConmebol(slug, rodadaSelecionada = '') {
+  status.textContent = 'Carregando dados da fase...';
+  classificacao.innerHTML = '<p>Consultando classificação...</p>';
 
-      try {
-        const dados = await buscarDadosConmebol(slug);
-console.log('DIAGNÓSTICO JOGOS LIBERTADORES:', {
-  fase: slug,
-  totalJogos: dados.jogos?.length,
-  grupos: dados.grupos?.map(g => ({
-    nome: g.nome,
-    equipes: g.classificacao?.length
-  })),
-  dadosOriginais: dados.dados_originais
-});
-        const faseEhGrupos = /grupo/i.test(
-  dados.dados_originais?.fase_url_encontrada || slug
-);
+  if (painelJogos) {
+    painelJogos.innerHTML = '<p>Carregando jogos...</p>';
+  }
 
-classificacao.innerHTML = montarClassificacaoConmebol(dados);
+  try {
+    const dados = await buscarDadosConmebol(slug, rodadaSelecionada);
 
-if (painelJogos) {
-  painelJogos.innerHTML = faseEhGrupos
-    ? ''
-    : montarJogosConmebol(dados.jogos || []);
-}
-        
+    const faseEncontrada =
+      dados.dados_originais?.fase_url_encontrada || slug;
 
-        status.textContent =
-          `Fonte: GE Globo · ${dados.dados_originais?.fase_url_encontrada || slug}`;
-      } catch (erro) {
-        classificacao.innerHTML =
-          `<p style="color:red">${erro.message}</p>`;
+    const faseEhGrupos = /grupo/i.test(faseEncontrada);
 
-        if (painelJogos) {
-          painelJogos.innerHTML = '<p>Não foi possível carregar os jogos.</p>';
+    classificacao.innerHTML = montarClassificacaoConmebol(dados);
+
+    if (painelJogos) {
+      if (faseEhGrupos) {
+        const totalRodadas = Math.max(
+          6,
+          ...(dados.dados_originais?.rodadas_disponiveis || [])
+            .map(Number)
+            .filter(Number.isFinite)
+        );
+
+        const rodadaAtual =
+          Number(dados.rodada || rodadaSelecionada) || 1;
+
+        painelJogos.innerHTML = montarSeletorRodadasConmebol(
+          dados.jogos || [],
+          rodadaAtual,
+          totalRodadas
+        );
+
+        const seletorRodada = document.getElementById(
+          'seletorRodadaConmebol'
+        );
+
+        if (seletorRodada) {
+          seletorRodada.addEventListener('change', async () => {
+            const numero = Number(seletorRodada.value);
+            const lista = document.getElementById('listaJogosConmebol');
+
+            lista.innerHTML =
+              '<p style="text-align:center;color:#aaa">Carregando jogos da rodada...</p>';
+
+            try {
+              const novosDados = await buscarDadosConmebol(slug, numero);
+
+              lista.innerHTML = desenharJogosConmebol(
+                novosDados.jogos || []
+              );
+
+              status.textContent =
+                `Fonte: GE Globo · ${faseEncontrada} · ${numero}ª rodada`;
+            } catch (erro) {
+              lista.innerHTML =
+                `<p style="color:red;text-align:center">${erro.message}</p>`;
+            }
+          });
         }
-
-        status.textContent = 'Erro ao carregar a fase.';
+      } else {
+        painelJogos.innerHTML = montarJogosConmebol(
+          dados.jogos || []
+        );
       }
     }
+
+    status.textContent = `Fonte: GE Globo · ${faseEncontrada}`;
+
+  } catch (erro) {
+    classificacao.innerHTML =
+      `<p style="color:red">${erro.message}</p>`;
+
+    if (painelJogos) {
+      painelJogos.innerHTML =
+        '<p>Não foi possível carregar os jogos.</p>';
+    }
+
+    status.textContent = 'Erro ao carregar a fase.';
+  }
+}
+
 
    
 let indiceFase = navegacao.findIndex(
