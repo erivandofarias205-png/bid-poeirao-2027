@@ -5714,8 +5714,8 @@ seletores.forEach(seletor => {
   // Carrega automaticamente a rodada selecionada de cada grupo.
   seletor.dispatchEvent(new Event('change'));
 });
-      });
-    } else if (painelJogos) {
+      
+  } else if (painelJogos) {
       painelJogos.innerHTML = montarJogosConmebol(
         dados.jogos || []
       );
