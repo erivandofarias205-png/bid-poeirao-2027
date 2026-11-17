@@ -7610,7 +7610,8 @@ if (listaEquipes) {
     .join('');
 }
 
- const grupos = competicoesPermitidas
+
+const grupos = competicoesPermitidas
   .map(competicao => ({
     nome: competicao.nome,
     jogos: jogosPermitidos.filter(jogo => {
@@ -7631,66 +7632,129 @@ if (!grupos.length) {
   `;
   return;
 }
-    area.innerHTML = grupos.map(grupo => {
-      const linhas = grupo.jogos
-        .sort((a, b) => new Date(a.time) - new Date(b.time))
-        .map(jogo => {
-          const horario = jogo.time
-            ? new Date(jogo.time).toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'America/Fortaleza'
-              })
-            : '--:--';
 
-          const placar = jogo.home_score != null && jogo.away_score != null
-            ? `${escapar(jogo.home_score)} x ${escapar(jogo.away_score)}`
-            : 'VS';
+const agora = Date.now();
 
-          const mandante = escapar(jogo.home || 'A definir');
-          const visitante = escapar(jogo.away || 'A definir');
+function jogoFinalizado(jogo) {
+  const status = normalizar(
+    jogo.status || jogo.status_name || jogo.state || ''
+  );
 
-          const escudoMandante = jogo.home_logo
-            ? `<img src="${escapar(jogo.home_logo)}" alt="" style="width:23px;height:23px;object-fit:contain">`
-            : '';
+  if (/FINALIZADO|ENCERRADO|FINISHED|COMPLETED|FULL TIME|FT/.test(status)) {
+    return true;
+  }
 
-          const escudoVisitante = jogo.away_logo
-            ? `<img src="${escapar(jogo.away_logo)}" alt="" style="width:23px;height:23px;object-fit:contain">`
-            : '';
+  if (/AGENDADO|SCHEDULED|NOT STARTED|NS|AO VIVO|LIVE|IN PLAY/.test(status)) {
+    return false;
+  }
 
-          const estadio = jogo.venue || jogo.stadium || '';
-          console.log('DADOS COMPLETOS DO JOGO:', jogo);
+  const temPlacar =
+    jogo.home_score != null &&
+    jogo.away_score != null;
 
- return `
-  <div style="
-    display:flex;
-    align-items:center;
-    justify-content:flex-start;
-    gap:10px;
-    padding:8px 4px;
-    border-bottom:1px solid rgba(0,0,0,.15);
-    color:#111;
-    font-size:12px;
-    flex-wrap:wrap;
-  ">
-    <div style="display:flex;align-items:center;gap:5px;flex:0 0 auto">
-      ${escudoMandante}
-      <strong>${mandante}</strong>
+  return temPlacar && new Date(jogo.time).getTime() < agora;
+}
+
+function desenharGrupo(grupo, titulo, partidas) {
+  if (!partidas.length) return '';
+
+  const linhas = partidas
+    .sort((a, b) => new Date(a.time) - new Date(b.time))
+    .map(jogo => {
+      const horario = jogo.time
+        ? new Date(jogo.time).toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'America/Fortaleza'
+          })
+        : '--:--';
+
+      const data = jogo.time
+        ? new Date(jogo.time).toLocaleDateString('pt-BR', {
+            timeZone: 'America/Fortaleza'
+          })
+        : '';
+
+      const placar =
+        jogo.home_score != null && jogo.away_score != null
+          ? `${escapar(jogo.home_score)} x ${escapar(jogo.away_score)}`
+          : 'VS';
+
+      const mandante = escapar(jogo.home || 'A definir');
+      const visitante = escapar(jogo.away || 'A definir');
+
+      const escudoMandante = jogo.home_logo
+        ? `<img src="${escapar(jogo.home_logo)}" style="width:25px;height:25px;object-fit:contain">`
+        : '';
+
+      const escudoVisitante = jogo.away_logo
+        ? `<img src="${escapar(jogo.away_logo)}" style="width:25px;height:25px;object-fit:contain">`
+        : '';
+
+      return `
+        <div style="padding:10px 5px;border-bottom:1px solid #ddd;color:#111">
+          <div style="display:grid;grid-template-columns:1fr 65px 1fr;align-items:center;gap:6px">
+            <div style="display:flex;align-items:center;gap:5px">
+              ${escudoMandante}
+              <strong style="font-size:11px">${mandante}</strong>
+            </div>
+
+            <strong style="text-align:center;color:#b58920;font-size:15px">
+              ${placar}
+            </strong>
+
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px">
+              <strong style="font-size:11px;text-align:right">${visitante}</strong>
+              ${escudoVisitante}
+            </div>
+          </div>
+
+          <div style="font-size:10px;color:#777;margin-top:7px">
+            ${data} · ${horario} · ${escapar(jogo.venue || jogo.stadium || '')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  return `
+    <div style="margin-bottom:14px">
+      <h4 style="color:#111;border-bottom:2px solid #d4af37;padding:8px 5px;margin:0">
+        ${titulo} · ${grupo.nome}
+      </h4>
+      ${linhas}
     </div>
+  `;
+}
 
-    <div style="text-align:center;min-width:55px">
-      <strong style="color:#b58920;font-size:14px">${placar}</strong>
-      <div style="color:#b58920;font-size:10px">${horario}</div>
-    </div>
+const finalizados = grupos.map(grupo => ({
+  nome: grupo.nome,
+  jogos: grupo.jogos.filter(jogoFinalizado)
+})).filter(grupo => grupo.jogos.length);
 
-    <div style="display:flex;align-items:center;gap:5px;flex:0 0 auto">
-      <strong>${visitante}</strong>
-      ${escudoVisitante}
-    </div>
-  </div>
-  ${estadio ? `<div style="font-size:10px;color:#777;padding:2px 4px 6px">Estádio: ${escapar(estadio)}</div>` : ''}
+const agendados = grupos.map(grupo => ({
+  nome: grupo.nome,
+  jogos: grupo.jogos.filter(jogo => !jogoFinalizado(jogo))
+})).filter(grupo => grupo.jogos.length);
+
+area.innerHTML = `
+  <section style="margin-bottom:22px">
+    <h3 style="background:#176b38;color:white;padding:13px;border-radius:8px">
+      ✓ JOGOS FINALIZADOS
+    </h3>
+    ${finalizados.length
+      ? finalizados.map(grupo => desenharGrupo(grupo, 'FINALIZADOS', grupo.jogos)).join('')
+      : '<p style="color:#555;padding:10px">Nenhum jogo finalizado nesta data.</p>'}
+  </section>
+
+  <section>
+    <h3 style="background:#17447d;color:white;padding:13px;border-radius:8px">
+      📅 JOGOS AGENDADOS
+    </h3>
+    ${agendados.length
+      ? agendados.map(grupo => desenharGrupo(grupo, 'AGENDADOS', grupo.jogos)).join('')
+      : '<p style="color:#555;padding:10px">Nenhum jogo agendado nesta data.</p>'}
+  </section>
 `;
-        }).join('');
 
       return `
         <div style="margin-bottom:13px">
