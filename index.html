@@ -5018,7 +5018,8 @@ async function buscarDadosConmebol(slug = '', rodada = '') {
   return dados;
 }
 
- function montarClassificacaoConmebol(dados) {
+
+function montarClassificacaoConmebol(dados) {
   const grupos = Array.isArray(dados.grupos)
     ? dados.grupos
     : [];
@@ -5035,13 +5036,22 @@ async function buscarDadosConmebol(slug = '', rodada = '') {
     "'": '&#39;'
   })[c]);
 
+  const jogos = Array.isArray(dados.jogos) ? dados.jogos : [];
+
   return grupos.map((grupo, indice) => {
     const lista = grupo.classificacao || [];
+    const nomeGrupo = grupo.nome || `GRUPO ${String.fromCharCode(65 + indice)}`;
+
+    const jogosDoGrupo = jogos.filter(jogo =>
+      String(jogo.grupo || jogo.nome_grupo || '').trim().toUpperCase() ===
+      String(nomeGrupo).trim().toUpperCase()
+    );
 
     return `
-      <div style="margin-bottom:22px">
+      <div style="margin-bottom:25px">
+
         <h3 style="background:#171717;color:#e4bd43;padding:12px">
-          ${escapar(grupo.nome || `GRUPO ${String.fromCharCode(65 + indice)}`)}
+          ${escapar(nomeGrupo)}
         </h3>
 
         <div style="overflow-x:auto">
@@ -5071,10 +5081,24 @@ async function buscarDadosConmebol(slug = '', rodada = '') {
             </tbody>
           </table>
         </div>
+
+        <div style="margin-top:12px;background:#111;border:1px solid #d4af37;border-radius:9px;padding:12px">
+          <h4 style="color:#e4bd43;text-align:center;margin:0 0 12px">
+            JOGOS — ${escapar(nomeGrupo)}
+          </h4>
+
+          <div style="color:#aaa;text-align:center;padding:12px">
+            ${jogosDoGrupo.length
+              ? desenharJogosConmebol(jogosDoGrupo)
+              : 'Nenhum jogo deste grupo encontrado nesta rodada.'}
+          </div>
+        </div>
+
       </div>
     `;
   }).join('');
 }
+
  
 function montarSeletorRodadasConmebol(jogos, rodadaAtual, totalRodadas) {
   const atual = Number(rodadaAtual) || 1;
