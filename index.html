@@ -4257,6 +4257,9 @@ function voltarAoBIDPublico() {
   <div class="prof-card" onclick="
     document.querySelectorAll(
   '#profissionalView > h3, #profissionalView > .prof-grid'
+      #profissionalJogosHoje[hidden] {
+  display: none !important;
+}
 ).forEach(el => el.hidden = true);
 
     document.getElementById('profissionalJogosHoje').hidden = false;
@@ -4618,6 +4621,23 @@ function alterarDataJogos(dias) {
 
   carregarJogosHojeProfissional();
 }
+ document.addEventListener('DOMContentLoaded', () => {
+  const campo = document.getElementById('dataConsultaJogos');
+
+  if (campo && !campo.value) {
+    const hoje = new Date();
+
+    campo.value = [
+      hoje.getFullYear(),
+      String(hoje.getMonth() + 1).padStart(2, '0'),
+      String(hoje.getDate()).padStart(2, '0')
+    ].join('-');
+  }
+
+  const painel = document.getElementById('profissionalJogosHoje');
+
+  if (painel) painel.hidden = true;
+});
   
 window.abrirCompeticaoProfissional = async function(
   nome,
