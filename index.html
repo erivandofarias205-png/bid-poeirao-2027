@@ -4641,18 +4641,18 @@ window.abrirCompeticaoProfissional = async function(
     .trim();
 
   const competicao = normalizar(nome);
-  const painelJogosSeparado = document
+ 
+const competicao = normalizar(nome);
+
+const painelJogosSeparado = document
   .getElementById('profissionalJogos')
   ?.closest('.prof-section');
 
 if (painelJogosSeparado) {
   painelJogosSeparado.style.display =
     competicao === 'LIGA DAS NACOES' ? 'none' : '';
-
-  const respostaArtilharia = await fetch(
-    ...
-  );
 }
+
 const painelTabela = document
   .getElementById('profissionalClassificacao')
   ?.closest('.prof-section');
@@ -4660,25 +4660,25 @@ const painelTabela = document
 if (painelTabela) {
   painelTabela.style.display = '';
 }
- 
-  // CONTROLE DO PAINEL DE ARTILHARIA
-  const painelArtilharia = document
-    .getElementById('profissionalArtilharia')
-    ?.closest('.prof-section');
 
-  const ocultarArtilharia =
-    competicao === 'BRASILEIRAO SERIE C' ||
-    competicao === 'BRASILEIRAO SERIE D';
+// CONTROLE DO PAINEL DE ARTILHARIA
+const painelArtilharia = document
+  .getElementById('profissionalArtilharia')
+  ?.closest('.prof-section');
 
-  if (painelArtilharia) {
-    painelArtilharia.style.display =
-      ocultarArtilharia ? 'none' : '';
-  }
+const ocultarArtilharia =
+  competicao === 'BRASILEIRAO SERIE C' ||
+  competicao === 'BRASILEIRAO SERIE D';
 
-  // CARREGAR ARTILHARIA DAS COMPETIÇÕES
-  if (!ocultarArtilharia) {
-    await carregarArtilhariaProfissional(nome);
-  }
+if (painelArtilharia) {
+  painelArtilharia.style.display =
+    ocultarArtilharia ? 'none' : '';
+}
+
+// CARREGAR ARTILHARIA DAS COMPETIÇÕES
+if (!ocultarArtilharia) {
+  await carregarArtilhariaProfissional(nome);
+}
 
   // IDENTIFICAR AS SÉRIES DO BRASILEIRÃO
   const series = {
