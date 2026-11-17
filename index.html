@@ -5019,10 +5019,10 @@ async function buscarDadosConmebol(slug = '', rodada = '') {
 }
 
 
+
 function montarClassificacaoConmebol(dados) {
-  const grupos = Array.isArray(dados.grupos)
-    ? dados.grupos
-    : [];
+  const grupos = Array.isArray(dados.grupos) ? dados.grupos : [];
+  const jogos = Array.isArray(dados.jogos) ? dados.jogos : [];
 
   if (!grupos.length) {
     return '<p>Classificação não disponível nesta fase.</p>';
@@ -5036,15 +5036,24 @@ function montarClassificacaoConmebol(dados) {
     "'": '&#39;'
   })[c]);
 
-  const jogos = Array.isArray(dados.jogos) ? dados.jogos : [];
+  const normalizar = valor =>
+    String(valor || '').trim().toUpperCase().replace(/^GRUPO\s*/, '');
+
+  const totalRodadas = Math.max(
+    6,
+    ...(dados.dados_originais?.rodadas_disponiveis || [])
+      .map(Number).filter(Number.isFinite)
+  );
+
+  const rodadaAtual = Number(dados.rodada) || 1;
 
   return grupos.map((grupo, indice) => {
     const lista = grupo.classificacao || [];
     const nomeGrupo = grupo.nome || `GRUPO ${String.fromCharCode(65 + indice)}`;
+    const chaveGrupo = normalizar(nomeGrupo);
 
     const jogosDoGrupo = jogos.filter(jogo =>
-      String(jogo.grupo || jogo.nome_grupo || '').trim().toUpperCase() ===
-      String(nomeGrupo).trim().toUpperCase()
+      normalizar(jogo.grupo || jogo.nome_grupo) === chaveGrupo
     );
 
     return `
@@ -5087,17 +5096,30 @@ function montarClassificacaoConmebol(dados) {
             JOGOS — ${escapar(nomeGrupo)}
           </h4>
 
-          <div style="color:#aaa;text-align:center;padding:12px">
-            ${jogosDoGrupo.length
-              ? desenharJogosConmebol(jogosDoGrupo)
-              : 'Nenhum jogo deste grupo encontrado nesta rodada.'}
+          <label style="display:block;color:#e4bd43;font-size:12px;font-weight:900;margin-bottom:7px">
+            ESCOLHA A RODADA
+          </label>
+
+          <select class="seletorRodadaGrupoConmebol"
+            data-grupo="${escapar(chaveGrupo)}"
+            data-indice="${indice}"
+            style="width:100%;padding:12px;background:#202020;color:#fff;border:1px solid #d4af37;border-radius:8px;font-weight:900">
+            ${Array.from({length:totalRodadas}, (_, i) => i + 1).map(numero => `
+              <option value="${numero}" ${numero === rodadaAtual ? 'selected' : ''}>
+                ${numero}ª RODADA
+              </option>
+            `).join('')}
+          </select>
+
+          <div id="listaJogosGrupoConmebol-${indice}" style="margin-top:12px">
+            ${desenharJogosConmebol(jogosDoGrupo)}
           </div>
         </div>
-
       </div>
     `;
   }).join('');
 }
+
 
  
 function montarSeletorRodadasConmebol(jogos, rodadaAtual, totalRodadas) {
