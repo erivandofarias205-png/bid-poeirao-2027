@@ -5624,12 +5624,13 @@ painelFases.innerHTML = `
     const classificacao = document.getElementById('classificacaoConmebol');
     const status = document.getElementById('statusFaseConmebol');
 
+
 async function carregarFaseConmebol(slug, rodadaSelecionada = '') {
   status.textContent = 'Carregando dados da fase...';
   classificacao.innerHTML = '<p>Consultando classificação...</p>';
 
   if (painelJogos) {
-    painelJogos.innerHTML = '<p>Carregando jogos...</p>';
+    painelJogos.innerHTML = '';
   }
 
   try {
@@ -5642,67 +5643,56 @@ async function carregarFaseConmebol(slug, rodadaSelecionada = '') {
 
     classificacao.innerHTML = montarClassificacaoConmebol(dados);
 
-    if (painelJogos) {
-      if (faseEhGrupos) {
-        const rodadasDisponiveis =
-          dados.dados_originais?.rodadas_disponiveis || [];
+    if (faseEhGrupos) {
+      const seletores = classificacao.querySelectorAll(
+        '.seletorRodadaGrupoConmebol'
+      );
 
-        const totalRodadas = Math.max(
-          6,
-          ...rodadasDisponiveis.map(Number).filter(Number.isFinite)
-        );
+      seletores.forEach(seletor => {
+        seletor.addEventListener('change', async () => {
+          const numero = Number(seletor.value);
+          const indice = seletor.dataset.indice;
+          const grupoSelecionado = String(
+            seletor.dataset.grupo || ''
+          ).trim().toUpperCase();
 
-        const rodadaAtual =
-          Number(dados.rodada || rodadaSelecionada) || 1;
+          const lista = document.getElementById(
+            `listaJogosGrupoConmebol-${indice}`
+          );
 
-        painelJogos.innerHTML = montarSeletorRodadasConmebol(
-  dados.jogos || [],
-  rodadaAtual,
-  totalRodadas
-);
-        const seletorRodada = document.getElementById(
-          'seletorRodadaConmebol'
-        );
+          if (!lista) return;
 
-        if (seletorRodada) {
-          seletorRodada.addEventListener('change', async () => {
-            const numero = Number(seletorRodada.value);
+          lista.innerHTML =
+            '<p style="text-align:center;color:#aaa;padding:15px">Carregando jogos da rodada...</p>';
 
-            const lista = document.getElementById(
-              'listaJogosConmebol'
+          try {
+            const novosDados = await buscarDadosConmebol(slug, numero);
+
+            const normalizarGrupo = valor =>
+              String(valor || '')
+                .trim()
+                .toUpperCase()
+                .replace(/^GRUPO\s*/, '');
+
+            const jogosDoGrupo = (novosDados.jogos || []).filter(jogo =>
+              normalizarGrupo(jogo.grupo || jogo.nome_grupo) ===
+              grupoSelecionado
             );
 
+            lista.innerHTML = desenharJogosConmebol(jogosDoGrupo);
+
+            status.textContent =
+              `Fonte: GE Globo · ${faseEncontrada} · ${numero}ª rodada`;
+          } catch (erro) {
             lista.innerHTML =
-              '<p style="text-align:center;color:#aaa">Carregando jogos da rodada...</p>';
-
-            try {
-              const novosDados = await buscarDadosConmebol(slug, numero);
-
-              lista.innerHTML = desenharJogosConmebol(
-                novosDados.jogos || []
-              );
-
-              status.textContent =
-                `Fonte: GE Globo · ${faseEncontrada} · ${numero}ª rodada`;
-            } catch (erro) {
-              lista.innerHTML =
-                `<p style="color:red;text-align:center">${erro.message}</p>`;
-            }
-          });
-
-          const listaInicial = document.getElementById(
-            'listaJogosConmebol'
-          );
-
-          listaInicial.innerHTML = desenharJogosConmebol(
-            dados.jogos || []
-          );
-        }
-      } else {
-        painelJogos.innerHTML = montarJogosConmebol(
-          dados.jogos || []
-        );
-      }
+              `<p style="color:red;text-align:center">${erro.message}</p>`;
+          }
+        });
+      });
+    } else if (painelJogos) {
+      painelJogos.innerHTML = montarJogosConmebol(
+        dados.jogos || []
+      );
     }
 
     status.textContent =
@@ -5720,6 +5710,7 @@ async function carregarFaseConmebol(slug, rodadaSelecionada = '') {
     status.textContent = 'Erro ao carregar a fase.';
   }
 }
+
 
    
 let indiceFase = navegacao.findIndex(
