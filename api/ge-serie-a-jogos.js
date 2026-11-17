@@ -127,31 +127,32 @@ export default async function handler(req, res) {
       );
 
       rodada = 'temporada 2026';
-        } else if (req.query.data) {
-      // CONSULTA DOS JOGOS DE UMA DATA ESPECÍFICA
-      const dataConsulta = String(req.query.data);
+       } else if (req.query.data) {
+  // CONSULTA DOS JOGOS DE UMA DATA ESPECÍFICA
 
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(dataConsulta)) {
-        return res.status(400).json({
-          sucesso: false,
-          erro: 'Data inválida. Use AAAA-MM-DD.'
-        });
-      }
+  const dataConsulta = String(req.query.data);
 
-      const todasRodadas = await Promise.all(
-        Array.from({ length: 38 }, (_, i) =>
-          consultarRodada(i + 1)
-        )
-      );
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataConsulta)) {
+    return res.status(400).json({
+      sucesso: false,
+      erro: 'Data inválida. Use AAAA-MM-DD.'
+    });
+  }
 
-      jogosGE = todasRodadas
-        .flat()
-        .filter(jogo =>
-          String(jogo.data_realizacao || '').slice(0, 10) === dataConsulta
-        );
+  // Consulta as rodadas em sequência para evitar excesso de requisições
+  jogosGE = [];
 
-      rodada = 'consulta por data';
+  for (let numero = 1; numero <= 38; numero++) {
+    const partidas = await consultarRodada(numero);
 
+    const jogosDaData = partidas.filter(jogo =>
+      String(jogo.data_realizacao || '').slice(0, 10) === dataConsulta
+    );
+
+    jogosGE.push(...jogosDaData);
+  }
+
+  rodada = 'consulta por data';
     } else {
       // SELEÇÃO AUTOMÁTICA DAS 38 RODADAS
       const todasRodadas = await Promise.all(
