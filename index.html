@@ -5384,6 +5384,7 @@ const penaltis = partidas.find(jogo =>
   `;
 }
   
+
 function desenharJogosConmebol(jogos) {
   const escapar = valor => String(valor ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;',
@@ -5395,155 +5396,132 @@ function desenharJogosConmebol(jogos) {
 
   if (!Array.isArray(jogos) || !jogos.length) {
     return `
-      <p style="
+      <div style="
+        background:#fff;
+        color:#555;
         text-align:center;
         padding:22px;
-        color:#aaa;
-        background:#181818;
         border-radius:8px;
       ">
-        Nenhum jogo encontrado nesta rodada.
-      </p>
+        NENHUM JOGO ENCONTRADO NESTA RODADA.
+      </div>
     `;
   }
 
-  const grupos = {};
-
-  jogos.forEach(jogo => {
-    const nomeGrupo = jogo.grupo || jogo.nome_grupo || 'JOGOS DA RODADA';
-
-    if (!grupos[nomeGrupo]) {
-      grupos[nomeGrupo] = [];
-    }
-
-    grupos[nomeGrupo].push(jogo);
-  });
-
-  return Object.entries(grupos).map(([nomeGrupo, partidas]) => `
+  return `
     <div style="
-      margin-bottom:16px;
-      border:1px solid #444;
+      display:grid;
+      gap:12px;
+      background:#fff;
+      padding:10px;
       border-radius:9px;
-      overflow:hidden;
-      background:#181818;
     ">
-      <h3 style="
-        background:#d4af37;
-        color:#111;
-        padding:10px;
-        margin:0;
-        font-size:14px;
-        font-weight:900;
-        text-align:center;
-      ">
-        ${escapar(nomeGrupo)}
-      </h3>
+      ${jogos.map(jogo => {
+        const mandante = jogo.mandante || {};
+        const visitante = jogo.visitante || {};
 
-      <div style="padding:10px">
-        ${partidas.map(jogo => {
-          const mandante = jogo.mandante || {};
-          const visitante = jogo.visitante || {};
+        const placar = jogo.placar
+          ? `${escapar(jogo.placar.mandante)} X ${escapar(jogo.placar.visitante)}`
+          : 'VS';
 
-          const placar = jogo.placar
-            ? `${escapar(jogo.placar.mandante)} X ${escapar(jogo.placar.visitante)}`
-            : 'VS';
+        const data = jogo.data
+          ? new Date(jogo.data).toLocaleDateString('pt-BR', {
+              timeZone:'UTC'
+            })
+          : 'Data a definir';
 
-          const data = jogo.data
-            ? new Date(jogo.data).toLocaleDateString('pt-BR', {
-                timeZone: 'UTC'
-              })
-            : 'Data a definir';
+        const escudoMandante = mandante.escudo
+          ? `<img src="${escapar(mandante.escudo)}" style="width:34px;height:34px;object-fit:contain">`
+          : '';
 
-          const escudoMandante = mandante.escudo
-            ? `<img src="${escapar(mandante.escudo)}" style="width:30px;height:30px;object-fit:contain">`
-            : '';
+        const escudoVisitante = visitante.escudo
+          ? `<img src="${escapar(visitante.escudo)}" style="width:34px;height:34px;object-fit:contain">`
+          : '';
 
-          const escudoVisitante = visitante.escudo
-            ? `<img src="${escapar(visitante.escudo)}" style="width:30px;height:30px;object-fit:contain">`
-            : '';
+        const temPenaltis =
+          jogo.penaltis &&
+          jogo.penaltis.mandante != null &&
+          jogo.penaltis.visitante != null;
 
-          const temPenaltis =
-            jogo.penaltis &&
-            jogo.penaltis.mandante != null &&
-            jogo.penaltis.visitante != null;
-
-          return `
+        return `
+          <div style="
+            background:#fff;
+            color:#171717;
+            border-bottom:1px solid #ddd;
+            padding:14px 5px;
+          ">
             <div style="
-              padding:12px 4px;
-              border-bottom:1px solid #383838;
+              display:grid;
+              grid-template-columns:minmax(0,1fr) 85px minmax(0,1fr);
+              align-items:center;
+              gap:8px;
             ">
               <div style="
-                display:grid;
-                grid-template-columns:minmax(0,1fr) 75px minmax(0,1fr);
+                display:flex;
                 align-items:center;
-                gap:6px;
+                gap:7px;
+                color:#171717;
+                font-size:12px;
+                font-weight:900;
+                min-width:0;
               ">
-                <div style="
-                  display:flex;
-                  align-items:center;
-                  gap:6px;
-                  min-width:0;
-                  color:#fff;
-                  font-size:12px;
-                  font-weight:800;
-                ">
-                  ${escudoMandante}
-                  <span>${escapar(mandante.nome || 'A definir')}</span>
-                </div>
-
-                <div style="
-                  text-align:center;
-                  color:#e4bd43;
-                  font-size:17px;
-                  font-weight:900;
-                ">
-                  ${placar}
-                </div>
-
-                <div style="
-                  display:flex;
-                  align-items:center;
-                  justify-content:flex-end;
-                  gap:6px;
-                  min-width:0;
-                  color:#fff;
-                  font-size:12px;
-                  font-weight:800;
-                  text-align:right;
-                ">
-                  <span>${escapar(visitante.nome || 'A definir')}</span>
-                  ${escudoVisitante}
-                </div>
+                ${escudoMandante}
+                <span>${escapar(mandante.nome || 'A definir')}</span>
               </div>
 
               <div style="
-                color:#aaa;
-                font-size:10px;
                 text-align:center;
-                margin-top:8px;
+                color:#111;
+                font-size:19px;
+                font-weight:900;
               ">
-                ${data} · ${escapar(jogo.hora || '')}
-                · ${escapar(jogo.status || '')}
+                ${placar}
               </div>
 
-              ${temPenaltis ? `
-                <div style="
-                  color:#e4bd43;
-                  font-size:11px;
-                  font-weight:900;
-                  text-align:center;
-                  margin-top:5px;
-                ">
-                  PÊNALTIS: ${jogo.penaltis.mandante} X ${jogo.penaltis.visitante}
-                </div>
-              ` : ''}
+              <div style="
+                display:flex;
+                align-items:center;
+                justify-content:flex-end;
+                gap:7px;
+                color:#171717;
+                font-size:12px;
+                font-weight:900;
+                text-align:right;
+                min-width:0;
+              ">
+                <span>${escapar(visitante.nome || 'A definir')}</span>
+                ${escudoVisitante}
+              </div>
             </div>
-          `;
-        }).join('')}
-      </div>
+
+            <div style="
+              color:#666;
+              font-size:11px;
+              text-align:center;
+              margin-top:9px;
+            ">
+              ${data} · ${escapar(jogo.hora || '')}
+              · ${escapar(jogo.status || '')}
+            </div>
+
+            ${temPenaltis ? `
+              <div style="
+                color:#9b7410;
+                font-size:12px;
+                font-weight:900;
+                text-align:center;
+                margin-top:7px;
+              ">
+                PÊNALTIS: ${jogo.penaltis.mandante} X ${jogo.penaltis.visitante}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('')}
     </div>
-  `).join('');
+  `;
 }
+
 
   try {
     painelFases.innerHTML = '<p>Carregando fases do GE...</p>';
