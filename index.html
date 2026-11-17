@@ -4266,22 +4266,14 @@ function voltarAoBIDPublico() {
 
 <!-- JOGOS DO DIA -->
 <h3 class="prof-categoria">⚽ ACOMPANHE OS JOGOS</h3>
+
 <div class="prof-grid">
- <div class="prof-card" onclick="
-  document.querySelectorAll(
-    '#profissionalView > h3, #profissionalView > .prof-grid'
-  ).forEach(el => el.hidden = true);
-
-  const painel = document.getElementById('profissionalJogosHoje');
-  painel.hidden = false;
-  painel.scrollIntoView({behavior:'smooth'});
-  carregarJogosHojeProfissional();
-">
+  <div class="prof-card" onclick="abrirPainelJogosHoje()">
     <div class="icon">⚽</div>
-  <strong>JOGOS DE HOJE</strong>
+    <strong>JOGOS DE HOJE</strong>
+  </div>
 </div>
-</div>
-
+  
 <!-- FUTEBOL BRASILEIRO -->
 <h3 class="prof-categoria">🇧🇷 FUTEBOL BRASILEIRO</h3>
 <div class="prof-grid">
@@ -4433,7 +4425,7 @@ function voltarAoBIDPublico() {
 ">
 
    
-<div id="centralJogosCabecalho" style="
+<div id="centralJogosCabecalho" hidden style="
   background:linear-gradient(135deg,#080808,#242424);
   border:1px solid #c99b32;
   border-radius:14px;
@@ -7421,7 +7413,26 @@ function fecharCompeticaoProfissional() {
 }
 
 
+function abrirPainelJogosHoje() {
+  const painel = document.getElementById('profissionalJogosHoje');
+  const detalhes = document.getElementById('profissionalDetalhes');
 
+  if (!painel) return;
+
+  if (detalhes) detalhes.hidden = true;
+
+  painel.hidden = false;
+const cabecalho = document.getElementById('centralJogosCabecalho');
+if (cabecalho) cabecalho.hidden = false;
+  
+  carregarJogosHojeProfissional();
+
+  painel.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+}
+  
 async function carregarJogosHojeProfissional() {
   const area = document.getElementById('listaJogosHoje');
   if (!area) return;
@@ -7435,28 +7446,36 @@ area.style.border = '1px solid #d6ad35';
 area.style.boxSizing = 'border-box';
   
   const competicoesPermitidas = [
-    { nome: 'BRASILEIRÃO SÉRIE A', aliases: ['BRAZILIAN SERIE A', 'BRAZIL SERIE A', 'BRASILEIRÃO SÉRIE A'] },
-    { nome: 'BRASILEIRÃO SÉRIE B', aliases: [
-  'BRAZILIAN SERIE B',
-  'BRAZIL SERIE B',
-  'BRASILEIRÃO SÉRIE B',
-  'CAMPEONATO BRASILEIRO SERIE B',
-  'BRASILEIRO SERIE B'
-] },
-    { nome: 'BRASILEIRÃO SÉRIE C', aliases: ['BRAZILIAN SERIE C', 'BRAZIL SERIE C', 'BRASILEIRÃO SÉRIE C'] },
-    { nome: 'BRASILEIRÃO SÉRIE D', aliases: ['BRAZILIAN SERIE D', 'BRAZIL SERIE D', 'BRASILEIRÃO SÉRIE D'] },
-    { nome: 'COPA DO BRASIL', aliases: ['COPA DO BRASIL', 'BRAZILIAN CUP'] },
-    { nome: 'LIBERTADORES', aliases: ['COPA LIBERTADORES', 'CONMEBOL LIBERTADORES', 'LIBERTADORES'] },
-    { nome: 'SUL-AMERICANA', aliases: ['CONMEBOL SUDAMERICANA', 'COPA SUDAMERICANA', 'SUL-AMERICANA', 'SUDAMERICANA'] },
-    { nome: 'CHAMPIONS LEAGUE', aliases: ['UEFA CHAMPIONS LEAGUE', 'CHAMPIONS LEAGUE'] },
-    { nome: 'EUROPA LEAGUE', aliases: ['UEFA EUROPA LEAGUE', 'EUROPA LEAGUE'] },
-    { nome: 'PREMIER LEAGUE', aliases: ['ENGLISH PREMIER LEAGUE', 'PREMIER LEAGUE'] },
-    { nome: 'LA LIGA', aliases: ['SPANISH LA LIGA', 'LA LIGA', 'LALIGA'] },
-    { nome: 'CAMPEONATO ITALIANO', aliases: ['ITALIAN SERIE A', 'ITALY SERIE A', 'SERIE A ITALY'] },
-    { nome: 'BUNDESLIGA', aliases: ['GERMAN BUNDESLIGA', 'BUNDESLIGA'] },
-    { nome: 'CAMPEONATO FRANCÊS', aliases: ['FRENCH LIGUE 1', 'FRANCE LIGUE 1', 'LIGUE 1'] }
-  ];
-
+  {
+    nome: 'BRASILEIRÃO SÉRIE A',
+    aliases: ['BRAZILIAN SERIE A', 'BRAZIL SERIE A', 'BRASILEIRÃO SÉRIE A']
+  },
+  {
+    nome: 'BRASILEIRÃO SÉRIE B',
+    aliases: ['BRAZILIAN SERIE B', 'BRAZIL SERIE B', 'BRASILEIRÃO SÉRIE B']
+  },
+  {
+    nome: 'BRASILEIRÃO SÉRIE C',
+    aliases: ['BRAZILIAN SERIE C', 'BRAZIL SERIE C', 'BRASILEIRÃO SÉRIE C']
+  },
+  {
+    nome: 'BRASILEIRÃO SÉRIE D',
+    aliases: ['BRAZILIAN SERIE D', 'BRAZIL SERIE D', 'BRASILEIRÃO SÉRIE D']
+  },
+  {
+    nome: 'COPA DO BRASIL',
+    aliases: ['COPA DO BRASIL', 'BRAZILIAN CUP']
+  },
+  {
+    nome: 'LIBERTADORES',
+    aliases: ['COPA LIBERTADORES', 'CONMEBOL LIBERTADORES', 'LIBERTADORES']
+  },
+  {
+    nome: 'SUL-AMERICANA',
+    aliases: ['CONMEBOL SUDAMERICANA', 'COPA SUDAMERICANA', 'SUL-AMERICANA', 'SUDAMERICANA']
+  }
+];
+  
   const normalizar = texto => String(texto || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
