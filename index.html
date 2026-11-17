@@ -4239,6 +4239,19 @@ function voltarAoBIDPublico() {
 #profissionalView #profissionalJogosHoje[hidden] {
   display: none !important;
 }
+    (function() {
+  const campo = document.getElementById('dataConsultaJogos');
+
+  if (campo && !campo.value) {
+    const hoje = new Date();
+
+    campo.value = [
+      hoje.getFullYear(),
+      String(hoje.getMonth() + 1).padStart(2, '0'),
+      String(hoje.getDate()).padStart(2, '0')
+    ].join('-');
+  }
+})();
   </style>
   
   <div class="prof-header">
