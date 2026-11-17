@@ -7842,6 +7842,7 @@ area.innerHTML = `
 }
   
 
+
 async function buscarJogosEquipeProfissional() {
   const campo = document.getElementById('buscaEquipeProfissional');
   const area = document.getElementById('listaJogosHoje');
@@ -7865,7 +7866,7 @@ async function buscarJogosEquipeProfissional() {
     return;
   }
 
-  area.innerHTML = '<p>Pesquisando jogos da temporada...</p>';
+  area.innerHTML = '<p style="color:#d4af37">Pesquisando jogos da equipe...</p>';
 
   try {
     const resposta = await fetch('/api/ge-serie-a-jogos?temporada=2026');
@@ -7875,10 +7876,12 @@ async function buscarJogosEquipeProfissional() {
       throw new Error(dados.erro || 'Não foi possível consultar os jogos.');
     }
 
-    const jogos = dados.jogos.filter(jogo =>
-      normalizar(jogo.mandante?.nome).includes(equipe) ||
-      normalizar(jogo.visitante?.nome).includes(equipe)
-    );
+    const jogos = dados.jogos.filter(jogo => {
+      const mandante = normalizar(jogo.mandante?.nome);
+      const visitante = normalizar(jogo.visitante?.nome);
+
+      return mandante.includes(equipe) || visitante.includes(equipe);
+    });
 
     if (!jogos.length) {
       area.innerHTML = `
@@ -7888,6 +7891,14 @@ async function buscarJogosEquipeProfissional() {
       `;
       return;
     }
+
+    const finalizados = jogos.filter(jogo =>
+      jogo.encerrado === true
+    );
+
+    const agendados = jogos.filter(jogo =>
+      jogo.encerrado !== true
+    );
 
     const formatarData = valor => {
       if (!valor) return 'Data a definir';
@@ -7949,8 +7960,20 @@ async function buscarJogosEquipeProfissional() {
       <h3 style="color:#d4af37">
         JOGOS DE ${campo.value.toUpperCase()} — TEMPORADA 2026
       </h3>
-      <p style="color:#ccc">${jogos.length} partida(s) encontrada(s)</p>
-      ${jogos.map(formatarJogo).join('')}
+
+      <h3 style="color:#d4af37;margin-top:20px">
+        FINALIZADOS (${finalizados.length})
+      </h3>
+      ${finalizados.length
+        ? finalizados.map(formatarJogo).join('')
+        : '<p style="color:#aaa">Nenhum jogo finalizado encontrado.</p>'}
+
+      <h3 style="color:#d4af37;margin-top:25px">
+        AGENDADOS (${agendados.length})
+      </h3>
+      ${agendados.length
+        ? agendados.map(formatarJogo).join('')
+        : '<p style="color:#aaa">Nenhum jogo agendado encontrado.</p>'}
     `;
 
   } catch (erro) {
