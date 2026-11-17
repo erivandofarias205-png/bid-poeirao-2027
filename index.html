@@ -4425,21 +4425,7 @@ function voltarAoBIDPublico() {
 </div>
 
   
-<button type="button"
-  onclick="
-    const painel = document.getElementById('profissionalJogosHoje');
-    const detalhes = document.getElementById('profissionalDetalhes');
-
-    if (detalhes) detalhes.hidden = true;
-
-    painel.hidden = false;
-    carregarJogosHojeProfissional();
-    painel.scrollIntoView({behavior:'smooth',block:'start'});
-  "
-  style="background:#c99b32;color:#111;padding:12px 20px;border:0;border-radius:8px;font-weight:900;cursor:pointer">
-  ⚽ JOGOS DO DIA
-</button>
-  
+ 
   <div id="profissionalJogosHoje" hidden style="
   width:100%;
   box-sizing:border-box;
@@ -4629,7 +4615,8 @@ function alterarDataJogos(dias) {
 
   carregarJogosHojeProfissional();
 }
- document.addEventListener('DOMContentLoaded', () => {
+
+  (() => {
   const campo = document.getElementById('dataConsultaJogos');
 
   if (campo && !campo.value) {
@@ -4645,7 +4632,7 @@ function alterarDataJogos(dias) {
   const painel = document.getElementById('profissionalJogosHoje');
 
   if (painel) painel.hidden = true;
-});
+})();
   
 window.abrirCompeticaoProfissional = async function(
   nome,
