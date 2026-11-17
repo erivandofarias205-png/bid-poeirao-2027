@@ -4267,25 +4267,19 @@ function voltarAoBIDPublico() {
 <!-- JOGOS DO DIA -->
 <h3 class="prof-categoria">⚽ ACOMPANHE OS JOGOS</h3>
 <div class="prof-grid">
-  <div class="prof-card" onclick="
-    document.querySelectorAll(
-  '#profissionalView > h3, #profissionalView > .prof-grid'
-      #profissionalJogosHoje[hidden] {
-  display: none !important;
-}
-).forEach(el => el.hidden = true);
+ <div class="prof-card" onclick="
+  document.querySelectorAll(
+    '#profissionalView > h3, #profissionalView > .prof-grid'
+  ).forEach(el => el.hidden = true);
 
-    document.getElementById('profissionalJogosHoje').hidden = false;
-document.getElementById('profissionalJogosHoje').scrollIntoView({behavior:'smooth'});
-carregarJogosHojeProfissional();
-  ">
-  
-
-<div class="icon">⚽</div>
-<strong>JOGOS DE HOJE</strong>
-  </div>
-</div>
-
+  const painel = document.getElementById('profissionalJogosHoje');
+  painel.hidden = false;
+  painel.scrollIntoView({behavior:'smooth'});
+  carregarJogosHojeProfissional();
+">
+  <div class="icon">⚽</div>
+  <strong>JOGOS DE HOJE</strong>
+</div> 
 
 <!-- FUTEBOL BRASILEIRO -->
 <h3 class="prof-categoria">🇧🇷 FUTEBOL BRASILEIRO</h3>
