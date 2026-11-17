@@ -7606,21 +7606,27 @@ if (listaEquipes) {
     .join('');
 }
 
- const grupos = competicoesPermitidas.map(competicao => ({
-  nome: competicao.nome,
-  jogos: jogosPermitidos.filter(jogo => {
-    const nomeAPI = normalizar(jogo.competition);
-    return competicao.aliases.some(alias =>
-      nomeAPI === normalizar(alias)
-    );
-  })
-}));
+ const grupos = competicoesPermitidas
+  .map(competicao => ({
+    nome: competicao.nome,
+    jogos: jogosPermitidos.filter(jogo => {
+      const nomeAPI = normalizar(jogo.competition);
 
-    if (!grupos.length) {
-      area.innerHTML = '<p>Nenhum jogo encontrado hoje nas 14 competições selecionadas.</p>';
-      return;
-    }
+      return competicao.aliases.some(alias =>
+        nomeAPI === normalizar(alias)
+      );
+    })
+  }))
+  .filter(grupo => grupo.jogos.length > 0);
 
+if (!grupos.length) {
+  area.innerHTML = `
+    <p style="text-align:center;padding:15px">
+      NENHUMA COMPETIÇÃO TEM JOGOS NESTA DATA.
+    </p>
+  `;
+  return;
+}
     area.innerHTML = grupos.map(grupo => {
       const linhas = grupo.jogos
         .sort((a, b) => new Date(a.time) - new Date(b.time))
