@@ -5052,9 +5052,29 @@ function montarClassificacaoConmebol(dados) {
     const nomeGrupo = grupo.nome || `GRUPO ${String.fromCharCode(65 + indice)}`;
     const chaveGrupo = normalizar(nomeGrupo);
 
-    const jogosDoGrupo = jogos.filter(jogo =>
-      normalizar(jogo.grupo || jogo.nome_grupo) === chaveGrupo
-    );
+    const equipesDoGrupo = (grupo.classificacao || []).map(item =>
+  normalizar(item.equipe || item.nome_popular || item.nome)
+);
+
+const jogosDoGrupo = jogos.filter(jogo => {
+  const grupoDoJogo = normalizar(jogo.grupo || jogo.nome_grupo);
+
+  const mandante = normalizar(
+    jogo.mandante?.nome ||
+    jogo.mandante?.nome_popular ||
+    jogo.mandante?.equipe
+  );
+
+  const visitante = normalizar(
+    jogo.visitante?.nome ||
+    jogo.visitante?.nome_popular ||
+    jogo.visitante?.equipe
+  );
+
+  return grupoDoJogo === chaveGrupo ||
+    equipesDoGrupo.includes(mandante) ||
+    equipesDoGrupo.includes(visitante);
+});
 
     return `
       <div style="margin-bottom:25px">
