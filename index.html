@@ -5655,46 +5655,65 @@ async function carregarFaseConmebol(slug, rodadaSelecionada = '') {
         '.seletorRodadaGrupoConmebol'
       );
 
-      seletores.forEach(seletor => {
-        seletor.addEventListener('change', async () => {
-          const numero = Number(seletor.value);
-          const indice = seletor.dataset.indice;
-          const grupoSelecionado = String(
-            seletor.dataset.grupo || ''
-          ).trim().toUpperCase();
+      
+seletores.forEach(seletor => {
+  seletor.addEventListener('change', async () => {
+    const numero = Number(seletor.value);
+    const indice = seletor.dataset.indice;
+    const grupoSelecionado = String(
+      seletor.dataset.grupo || ''
+    ).trim().toUpperCase();
 
-          const lista = document.getElementById(
-            `listaJogosGrupoConmebol-${indice}`
-          );
+    const lista = document.getElementById(
+      `listaJogosGrupoConmebol-${indice}`
+    );
 
-          if (!lista) return;
+    if (!lista) return;
 
-          lista.innerHTML =
-            '<p style="text-align:center;color:#aaa;padding:15px">Carregando jogos da rodada...</p>';
+    lista.innerHTML =
+      '<p style="text-align:center;color:#aaa;padding:15px">Carregando jogos da rodada...</p>';
 
-          try {
-            const novosDados = await buscarDadosConmebol(slug, numero);
+    try {
+      const novosDados = await buscarDadosConmebol(slug, numero);
 
-            const normalizarGrupo = valor =>
-              String(valor || '')
-                .trim()
-                .toUpperCase()
-                .replace(/^GRUPO\s*/, '');
+      const normalizar = valor =>
+        String(valor || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .trim()
+          .toUpperCase()
+          .replace(/^GRUPO\s*/, '');
 
-            const jogosDoGrupo = (novosDados.jogos || []).filter(jogo =>
-              normalizarGrupo(jogo.grupo || jogo.nome_grupo) ===
-              grupoSelecionado
-            );
+      const grupoOriginal = (dados.grupos || []).find(grupo =>
+        normalizar(grupo.nome) === grupoSelecionado
+      );
 
-            lista.innerHTML = desenharJogosConmebol(jogosDoGrupo);
+      const equipesDoGrupo = (grupoOriginal?.classificacao || []).map(item =>
+        normalizar(item.equipe || item.nome_popular || item.nome)
+      );
 
-            status.textContent =
-              `Fonte: GE Globo · ${faseEncontrada} · ${numero}ª rodada`;
-          } catch (erro) {
-            lista.innerHTML =
-              `<p style="color:red;text-align:center">${erro.message}</p>`;
-          }
-        });
+      const jogosDoGrupo = (novosDados.jogos || []).filter(jogo => {
+        const mandante = normalizar(jogo.mandante?.nome);
+        const visitante = normalizar(jogo.visitante?.nome);
+
+        return equipesDoGrupo.includes(mandante) &&
+               equipesDoGrupo.includes(visitante);
+      });
+
+      lista.innerHTML = desenharJogosConmebol(jogosDoGrupo);
+
+      status.textContent =
+        `Fonte: GE Globo · ${faseEncontrada} · ${numero}ª rodada`;
+
+    } catch (erro) {
+      lista.innerHTML =
+        `<p style="color:red;text-align:center">${erro.message}</p>`;
+    }
+  });
+
+  // Carrega automaticamente a rodada selecionada de cada grupo.
+  seletor.dispatchEvent(new Event('change'));
+});
       });
     } else if (painelJogos) {
       painelJogos.innerHTML = montarJogosConmebol(
