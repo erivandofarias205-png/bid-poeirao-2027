@@ -4647,13 +4647,11 @@ window.abrirCompeticaoProfissional = async function(
 
 if (painelJogosSeparado) {
   painelJogosSeparado.style.display =
-    const respostaArtilharia = await fetch(
-  competicao === 'EUROPA LEAGUE'
-    ? '/api/artilharia-champions?competicao=europa'
-    : competicao === 'LIGA DAS NACOES'
-      ? '/api/artilharia-champions?competicao=nacoes'
-      : '/api/artilharia-champions'
-);
+    competicao === 'LIGA DAS NACOES' ? 'none' : '';
+
+  const respostaArtilharia = await fetch(
+    ...
+  );
 }
 const painelTabela = document
   .getElementById('profissionalClassificacao')
