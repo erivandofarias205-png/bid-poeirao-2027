@@ -1097,11 +1097,11 @@ const escudo = Array.from(
    let rodadaFinal = Number(rodada) || null;
    
 
-    if (chave === 'brasileirao-a') {
-      const caminhoJogos = rodada
-  ? `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
-  : '/api/ge-serie-a-jogos';
-
+  if (chave === 'brasileirao-a') {
+  const caminhoJogos = rodada
+    ? `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
+    : '/api/ge-serie-a-jogos?temporada=2026';
+    
 const [tabela, retornoJogos] = await Promise.all([
   consultarAPI('/api/serie-a'),
   consultarAPI(caminhoJogos)
@@ -1249,8 +1249,21 @@ for (let i = 1; i <= 38; i++) {
     partidas => !rodadaLiberadaB(partidas)
   );
 
-  numeroRodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
-  listaGE = todasRodadasB[numeroRodada - 1];
+ numeroRodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
+
+listaGE = [
+  ...new Map(
+    todasRodadasB
+      .flat()
+      .map((jogo, indice) => [
+        String(
+          jogo.id ||
+          `${jogo.data_realizacao || ''}-${jogo.equipes?.mandante?.id || ''}-${jogo.equipes?.visitante?.id || ''}-${indice}`
+        ),
+        jogo
+      ])
+  ).values()
+];
 }
 
 rodadaFinal = numeroRodada;
