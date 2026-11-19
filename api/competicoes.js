@@ -1087,8 +1087,8 @@ const escudo = Array.from(
 
   if (chave === 'brasileirao-a') {
   const caminhoJogos = rodada
-    ? `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
-    : '/api/ge-serie-a-jogos?temporada=2026';
+  ? `/api/ge-serie-a-jogos?rodada=${encodeURIComponent(rodada)}`
+  : '/api/ge-serie-a-jogos';
     
 const [tabela, retornoJogos] = await Promise.all([
   consultarAPI('/api/serie-a'),
