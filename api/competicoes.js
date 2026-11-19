@@ -1237,10 +1237,16 @@ for (let i = 1; i <= 38; i++) {
     partidas => !rodadaLiberadaB(partidas)
   );
 
- numeroRodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
+numeroRodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
 
-listaGE = [
-  ...new Map(
+// MOSTRAR SOMENTE OS JOGOS DA RODADA VIGENTE
+listaGE = todasRodadasB[numeroRodada - 1] || [];
+
+if (!listaGE.length) {
+  throw new Error(
+    `Não foram encontrados jogos para a rodada ${numeroRodada} da Série B.`
+  );
+}
     todasRodadasB
       .flat()
       .map((jogo, indice) => [
