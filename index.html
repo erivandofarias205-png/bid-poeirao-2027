@@ -19320,12 +19320,15 @@ async function atualizarTodasProfissionais() {
       dados.total_competicoes + ' competições e ' +
       dados.total_jogos + ' jogos encontrados.';
 
-    if (dados.falhas && dados.falhas.length) {
-      status.textContent +=
-        ' Atenção: ' + dados.falhas.length +
-        ' competições apresentaram falhas.';
-    }
+   if (dados.falhas && dados.falhas.length) {
+  const detalhes = dados.falhas
+    .map(item => `${item.competicao}: ${item.erro}`)
+    .join(' | ');
 
+  status.textContent +=
+    ' FALHAS: ' + detalhes;
+}
+    
   } catch (erro) {
     console.error('ERRO AO ATUALIZAR COMPETIÇÕES:', erro);
     status.textContent = 'ERRO NA ATUALIZAÇÃO: ' + erro.message;
