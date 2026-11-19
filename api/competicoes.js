@@ -3083,12 +3083,14 @@ try {
         try {
           return {
             sucesso: true,
-            ...await consultarCompeticao(
-              chave,
-              chave === 'copa-do-brasil'
-                ? Number(req.query.fase ?? 8)
-                : 8
-            )
+          ...await consultarCompeticao(
+  chave,
+  chave === 'brasileirao-a'
+    ? (req.query.rodada ? Number(req.query.rodada) : undefined)
+    : chave === 'copa-do-brasil'
+      ? Number(req.query.fase ?? 8)
+      : 8
+)
           };
         } catch (erro) {
           return {
