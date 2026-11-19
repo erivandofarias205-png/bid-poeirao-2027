@@ -3128,39 +3128,7 @@ try {
       atualizado_em: new Date().toISOString()
     });
 
-        } catch (erro) {
-          return {
-            sucesso: false,
-            chave,
-            erro: erro.message,
-            jogos: [],
-            classificacao: []
-          };
-        }
-      })
-    );
-
-    const jogos = resultados.flatMap(item =>
-      item.sucesso ? item.jogos : []
-    );
-
-    return res.status(200).json({
-      sucesso: true,
-      central: 'TVFP ESPORTES',
-      competicoes: resultados,
-      jogos,
-      total_competicoes: resultados.length,
-      total_jogos: jogos.length,
-      falhas: resultados
-        .filter(item => !item.sucesso)
-        .map(item => ({
-          competicao: item.chave,
-          erro: item.erro
-        })),
-      atualizado_em: new Date().toISOString()
-    });
-
-  } catch (erro) {
+       } catch (erro) {
     console.error('Erro na Central Geral:', erro);
 
     return res.status(502).json({
