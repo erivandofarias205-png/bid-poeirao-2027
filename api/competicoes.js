@@ -1441,8 +1441,7 @@ if (jogo.placar_penaltis_mandante != null ||
         classificacao: dadosTabela,
         jogos: listaGE
       };
-    }
-   else if (chave === 'brasileirao-d') {
+      } else if (chave === 'brasileirao-d') {
       const serie = chave.slice(-1);
       const retorno = await consultarAPI(
   serie === 'b'
