@@ -1437,11 +1437,12 @@ if (jogo.placar_penaltis_mandante != null ||
         };
       });
 
-      dadosOriginais = {
-        classificacao: dadosTabela,
-        jogos: listaGE
-      };
-      } else if (chave === 'brasileirao-d') {
+          dadosOriginais = {
+      classificacao: dadosTabela,
+      jogos: listaGE
+    };
+    } // fecha o else da rodada da Série B
+  } else if (chave === 'brasileirao-d') {
       const serie = chave.slice(-1);
       const retorno = await consultarAPI(
   serie === 'b'
