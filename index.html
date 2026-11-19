@@ -8346,11 +8346,11 @@ async function buscarJogosEquipeProfissional() {
 </div></div>
 
 <!-- SÚMULA OFICIAL -->
-<div class="panel" id="officialMatchSheetPanel">
-  <div class="ph">
+<details class="panel" id="officialMatchSheetPanel">
+  <summary class="ph">
     <h3>📋 SÚMULA OFICIAL DA PARTIDA</h3>
     <span class="pill">Gerar PDF</span>
-  </div>
+  </summary>
 
   <div class="pad">
     <p class="small muted">
@@ -8390,7 +8390,7 @@ async function buscarJogosEquipeProfissional() {
 
     <div id="matchSheet"></div>
   </div>
-</div>
+</details>
 <!-- FIM DA SÚMULA OFICIAL -->
     <style id="quarter-finals-style">
   #quarterFinalsPanel .quarter-finals-grid {
@@ -8527,12 +8527,12 @@ async function buscarJogosEquipeProfissional() {
 }
 </style>
  
-<!-- ===== PAINEL DAS SEMIFINAIS ===== -->
-<div class="panel" id="semiFinalsPanel">
-  <div class="ph">
+<!-- PAINEL DAS SEMIFINAIS -->
+<details class="panel" id="semiFinalsPanel">
+  <summary class="ph">
     <h3>Semifinais</h3>
     <span class="pill">Fase eliminatória</span>
-  </div>
+  </summary>
 
   <div class="pad">
     <p class="small muted">
@@ -8554,8 +8554,8 @@ async function buscarJogosEquipeProfissional() {
       Confira os classificados e os confrontos antes de salvar. Os vencedores das semifinais poderão ser encaminhados para a final.
     </div>
   </div>
-</div>
-
+</details>
+    
 <style id="semi-finals-style">
   #semiFinalsPanel .semi-finals-grid {
     display: grid;
@@ -8599,38 +8599,56 @@ async function buscarJogosEquipeProfissional() {
   }
 </style>
  
-<!-- ===== PAINEL DA FINAL ===== -->
-<div class="panel" id="finalMatchPanel">
-  <div class="ph">
+<!-- PAINEL DA FINAL -->
+<details class="panel" id="finalMatchPanel">
+  <summary class="ph">
     <h3>Grande Final</h3>
     <span class="pill">Decisão do campeonato</span>
-  </div>
+  </summary>
+
   <div class="pad">
-    <p class="small muted">Os vencedores das semifinais disputarão o título.</p>
+    <p class="small muted">
+      Os vencedores das semifinais disputarão o título.
+    </p>
+
     <div class="actions">
-      <button class="gold" id="generateFinalists" type="button">GERAR FINALISTAS</button>
-      <button class="secondary" id="saveFinalMatch" type="button">SALVAR FINAL</button>
+      <button class="gold" id="generateFinalists" type="button">
+        GERAR FINALISTAS
+      </button>
+      <button class="secondary" id="saveFinalMatch" type="button">
+        SALVAR FINAL
+      </button>
     </div>
+
     <div id="finalMatchTie" class="final-match-grid"></div>
   </div>
-</div>
-
-<!-- ===== PAINEL DE TERCEIRO E QUARTO LUGAR ===== -->
-<div class="panel" id="thirdPlacePanel">
-  <div class="ph">
+</details>
+    
+<!-- PAINEL DE TERCEIRO E QUARTO LUGAR -->
+<details class="panel" id="thirdPlacePanel">
+  <summary class="ph">
     <h3>Disputa de 3º e 4º lugar</h3>
     <span class="pill">Disputa de colocação</span>
-  </div>
+  </summary>
+
   <div class="pad">
-    <p class="small muted">Os perdedores das semifinais disputarão o terceiro lugar.</p>
+    <p class="small muted">
+      Os perdedores das semifinais disputarão o terceiro lugar.
+    </p>
+
     <div class="actions">
-      <button class="gold" id="generateThirdPlace" type="button">GERAR CLASSIFICADOS</button>
-      <button class="secondary" id="saveThirdPlace" type="button">SALVAR DISPUTA</button>
+      <button class="gold" id="generateThirdPlace" type="button">
+        GERAR CLASSIFICADOS
+      </button>
+      <button class="secondary" id="saveThirdPlace" type="button">
+        SALVAR DISPUTA
+      </button>
     </div>
+
     <div id="thirdPlaceTie" class="final-match-grid"></div>
   </div>
-</div>
-
+</details>
+    
 <style id="final-match-style">
   #finalMatchPanel .final-match-grid,
   #thirdPlacePanel .final-match-grid {
