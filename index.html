@@ -4575,23 +4575,6 @@ function voltarAoBIDPublico() {
   
   <div id="profissionalDetalhes" class="prof-section" hidden>
   <h3 id="profissionalTitulo"></h3>
-<button
-  type="button"
-  onclick="atualizarTabelasProfissionais()"
-  style="
-    display:block;
-    width:100%;
-    margin:10px 0;
-    padding:12px;
-    background:#c99b32;
-    color:#111;
-    border:0;
-    border-radius:8px;
-    font-weight:900;
-    cursor:pointer;
-  ">
-  🔄 ATUALIZAR TABELAS
-</button>
   
 <div class="prof-section">
   <h3>📊 CLASSIFICAÇÃO</h3>
@@ -8145,7 +8128,24 @@ async function buscarJogosEquipeProfissional() {
     <div id="listaAmadoras"></div>
   </div>
 </div>
-
+<div class="panel" id="painelAtualizacaoProfissional">
+  <div class="ph">
+    <h3>🔄 ATUALIZAÇÃO DAS COMPETIÇÕES PROFISSIONAIS</h3>
+  </div>
+  <div class="pad">
+    <button
+      type="button"
+      class="gold"
+      id="btnAtualizarTodasProfissionais"
+      onclick="atualizarTodasProfissionais()"
+      style="width:100%;padding:14px;font-weight:900">
+      🔄 ATUALIZAR TODAS AS COMPETIÇÕES
+    </button>
+    <p id="statusAtualizacaoProfissional" class="small">
+      Atualize classificação, jogos e artilharia das competições.
+    </p>
+  </div>
+</div>
 <!-- PAINEL GERAL ADMINISTRATIVO -->
     <!-- PAINEL GERAL ADMINISTRATIVO -->
 <div class="panel" id="adminDashboard">
@@ -18994,23 +18994,17 @@ document.addEventListener('DOMContentLoaded', function () {
   const area = document.getElementById('adminProtected');
   if (!area) return;
 
-  const paineis = area.querySelectorAll(':scope > .panel');
+  area.querySelectorAll('.panel').forEach(function (painel) {
+    const cabecalho = Array.from(painel.children).find(
+      el => el.classList && el.classList.contains('ph')
+    );
 
-  paineis.forEach(function (painel) {
-    const cabecalho = painel.querySelector(':scope > .ph');
-    if (!cabecalho) return;
+    if (!cabecalho || painel.dataset.recolhivel === 'sim') return;
 
-    const conteudo = Array.from(painel.children)
+    painel.dataset.recolhivel = 'sim';
+
+    const conteudos = Array.from(painel.children)
       .filter(el => el !== cabecalho);
-
-    if (!conteudo.length) return;
-
-    painel.classList.add('admin-collapsible');
-
-    conteudo.forEach(function (el) {
-      el.dataset.adminContent = 'true';
-      el.hidden = true;
-    });
 
     cabecalho.style.cursor = 'pointer';
     cabecalho.setAttribute('role', 'button');
@@ -19022,12 +19016,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
       cabecalho.setAttribute('aria-expanded', String(abrir));
 
-      conteudo.forEach(function (el) {
+      conteudos.forEach(el => {
         el.hidden = !abrir;
       });
     }
 
-    cabecalho.addEventListener('click', alternar);
+    cabecalho.addEventListener('click', function (e) {
+      if (e.target.closest('button, input, select, a')) return;
+      alternar();
+    });
 
     cabecalho.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -19035,11 +19032,31 @@ document.addEventListener('DOMContentLoaded', function () {
         alternar();
       }
     });
+
+    conteudos.forEach(el => {
+      el.hidden = true;
+    });
   });
 });
 </script>
+
 <style>
-#adminProtected [data-admin-content][hidden] {
+#adminProtected .panel > [hidden] {
+  display: none !important;
+}
+
+#adminProtected .panel > .ph::after {
+  content: '＋';
+  float: right;
+  font-size: 20px;
+  margin-left: 10px;
+}
+
+#adminProtected .panel > .ph[aria-expanded="true"]::after {
+  content: '－';
+}
+</style>
+  #adminProtected [data-admin-content][hidden] {
   display: none !important;
 }
 #adminProtected .admin-collapsible > .ph::after {
@@ -19261,6 +19278,44 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 </script>
+<script>
+async function atualizarTodasProfissionais() {
+  const botao = document.getElementById('btnAtualizarTodasProfissionais');
+  const status = document.getElementById('statusAtualizacaoProfissional');
 
+  if (window.__BID_ADMIN_VERIFIED !== true) {
+    alert('Faça login como administrador.');
+    return;
+  }
+
+  botao.disabled = true;
+  botao.textContent = '⏳ ATUALIZANDO TODAS...';
+  status.textContent = 'Consultando as competições profissionais...';
+
+  try {
+    const resposta = await fetch(
+      '/api/competicoes?competicao=todas&tipo=jogos&_=' + Date.now(),
+      { cache: 'no-store' }
+    );
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      throw new Error(dados.erro || 'Falha na atualização.');
+    }
+
+    status.textContent =
+      'Atualização concluída. ' +
+      dados.total_competicoes + ' competições consultadas. ' +
+      dados.total_jogos + ' jogos encontrados.';
+
+  } catch (erro) {
+    status.textContent = 'Erro: ' + erro.message;
+  } finally {
+    botao.disabled = false;
+    botao.textContent = '🔄 ATUALIZAR TODAS AS COMPETIÇÕES';
+  }
+}
+</script>
 </body>
 </html>
