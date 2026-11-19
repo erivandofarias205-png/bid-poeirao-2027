@@ -4562,7 +4562,23 @@ function voltarAoBIDPublico() {
   
   <div id="profissionalDetalhes" class="prof-section" hidden>
   <h3 id="profissionalTitulo"></h3>
-
+<button
+  type="button"
+  onclick="atualizarTabelasProfissionais()"
+  style="
+    display:block;
+    width:100%;
+    margin:10px 0;
+    padding:12px;
+    background:#c99b32;
+    color:#111;
+    border:0;
+    border-radius:8px;
+    font-weight:900;
+    cursor:pointer;
+  ">
+  🔄 ATUALIZAR TABELAS
+</button>
   
 <div class="prof-section">
   <h3>📊 CLASSIFICAÇÃO</h3>
@@ -4631,6 +4647,11 @@ window.abrirCompeticaoProfissional = async function(
   ligaNacoes = 'A',
   rodadaNacoes = 1
 ) {
+  window.competicaoProfissionalAtual = {
+  nome,
+  ligaNacoes,
+  rodadaNacoes
+};
     // ESCONDER A CENTRAL DE JOGOS AO ABRIR UMA COMPETIÇÃO
   const painelJogos = document.getElementById('profissionalJogosHoje');
   if (painelJogos) painelJogos.hidden = true;
@@ -7407,7 +7428,33 @@ mostrarArtilheiros();
   }
 }
 
-  
+ async function atualizarTabelasProfissionais() {
+  const atual = window.competicaoProfissionalAtual;
+
+  if (!atual) return;
+
+  const botao = document.querySelector(
+    '#profissionalDetalhes button[onclick="atualizarTabelasProfissionais()"]'
+  );
+
+  if (botao) {
+    botao.disabled = true;
+    botao.textContent = '⏳ ATUALIZANDO...';
+  }
+
+  try {
+    await window.abrirCompeticaoProfissional(
+      atual.nome,
+      atual.ligaNacoes,
+      atual.rodadaNacoes
+    );
+  } finally {
+    if (botao) {
+      botao.disabled = false;
+      botao.textContent = '🔄 ATUALIZAR TABELAS';
+    }
+  }
+} 
 function fecharCompeticaoProfissional() {
   document.getElementById('profissionalDetalhes').hidden = true;
 }
