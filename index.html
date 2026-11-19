@@ -19279,6 +19279,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <script>
+
 async function atualizarTodasProfissionais() {
   const botao = document.getElementById('btnAtualizarTodasProfissionais');
   const status = document.getElementById('statusAtualizacaoProfissional');
@@ -19289,7 +19290,7 @@ async function atualizarTodasProfissionais() {
   }
 
   botao.disabled = true;
-  botao.textContent = '⏳ ATUALIZANDO TODAS...';
+  botao.textContent = '⏳ ATUALIZANDO...';
   status.textContent = 'Consultando as competições profissionais...';
 
   try {
@@ -19298,19 +19299,36 @@ async function atualizarTodasProfissionais() {
       { cache: 'no-store' }
     );
 
-    const dados = await resposta.json();
+    const texto = await resposta.text();
 
-    if (!resposta.ok || !dados.sucesso) {
+    let dados;
+
+    try {
+      dados = JSON.parse(texto);
+    } catch {
+      throw new Error(
+        'A API não retornou JSON. Resposta: ' + texto.slice(0, 250)
+      );
+    }
+
+    if (!resposta.ok || dados.sucesso === false) {
       throw new Error(dados.erro || 'Falha na atualização.');
     }
 
     status.textContent =
-      'Atualização concluída. ' +
-      dados.total_competicoes + ' competições consultadas. ' +
+      'Consulta concluída: ' +
+      dados.total_competicoes + ' competições e ' +
       dados.total_jogos + ' jogos encontrados.';
 
+    if (dados.falhas && dados.falhas.length) {
+      status.textContent +=
+        ' Atenção: ' + dados.falhas.length +
+        ' competições apresentaram falhas.';
+    }
+
   } catch (erro) {
-    status.textContent = 'Erro: ' + erro.message;
+    console.error('ERRO AO ATUALIZAR COMPETIÇÕES:', erro);
+    status.textContent = 'ERRO NA ATUALIZAÇÃO: ' + erro.message;
   } finally {
     botao.disabled = false;
     botao.textContent = '🔄 ATUALIZAR TODAS AS COMPETIÇÕES';
