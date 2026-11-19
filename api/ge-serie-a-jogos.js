@@ -153,23 +153,61 @@ export default async function handler(req, res) {
   }
 
   rodada = 'consulta por data';
+    
     } else {
-      // SELEÇÃO AUTOMÁTICA DAS 38 RODADAS
+      // SELECIONA A RODADA ATUAL PELA DATA CENTRAL DOS JOGOS
       const todasRodadas = await Promise.all(
         Array.from({ length: 38 }, (_, i) =>
           consultarRodada(i + 1)
         )
       );
 
-      const indiceAtual = todasRodadas.findIndex(
-        partidas => !rodadaLiberada(partidas)
-      );
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
 
-      rodada = indiceAtual === -1 ? 38 : indiceAtual + 1;
+      const candidatas = todasRodadas
+        .map((partidas, indice) => {
+          const datas = partidas
+            .map(jogo => {
+              const data = String(jogo.data_realizacao || '').slice(0, 10);
+
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return null;
+
+              const [ano, mes, dia] = data.split('-').map(Number);
+              return new Date(ano, mes - 1, dia).getTime();
+            })
+            .filter(Number.isFinite)
+            .sort((a, b) => a - b);
+
+          const possuiJogoPendente = partidas.some(
+            jogo => jogo.transmissao?.broadcast?.id !== 'ENCERRADA'
+          );
+
+          if (!datas.length || !possuiJogoPendente) return null;
+
+          const meio = Math.floor(datas.length / 2);
+
+          const dataCentral = datas.length % 2
+            ? datas[meio]
+            : (datas[meio - 1] + datas[meio]) / 2;
+
+          return {
+            numero: indice + 1,
+            distancia: Math.abs(dataCentral - hoje.getTime())
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.distancia - b.distancia);
+
+      if (candidatas.length) {
+        rodada = candidatas[0].numero;
+      } else {
+        rodada = 38;
+      }
 
       jogosGE = todasRodadas[rodada - 1];
     }
-    
+
     const jogos = jogosGE.map(jogo => ({
       id: jogo.id,
       data: jogo.data_realizacao,
