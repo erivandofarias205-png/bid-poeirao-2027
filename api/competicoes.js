@@ -3,12 +3,12 @@ module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({
-      sucesso: false,
-      erro: 'Método não permitido. Utilize GET.'
-    });
-  }
+  if (!['GET', 'POST'].includes(req.method)) {
+  return res.status(405).json({
+    sucesso: false,
+    erro: 'Método não permitido. Utilize GET ou POST.'
+  });
+}
 
   const competicao = String(req.query.competicao || 'todas').toLowerCase();
   const rodada = req.query.rodada
@@ -718,19 +718,7 @@ const ligaPitch = ligas.find(
             }
         }
       }
-    } catch (erro) {
-    console.error('[ERRO PITCHAPI FOTOS]', erro.message);
-  }
-}
-
-for (const [indice, item] of (dados.scorers || []).entries()) {
-  const jogador = item.player || {};
-  const nome = jogador.name || '';
-  let foto = '';
-
-  try {
-    const fotoSalva = await consultarFotoSalva(chave, nome);
-    foto = fotoSalva?.foto_url || '';
+    
   } catch (erro) {
     console.error('[ERRO FOTO SUPABASE]', nome, erro.message);
   }
@@ -2775,34 +2763,269 @@ console.log('[COPA DO BRASIL - FASE]', {
     };
   }
 
-  try {
-    
+try {
+
+    // ==========================================
+    // ATUALIZAÇÃO MANUAL PELO ADMINISTRADOR
+    // ==========================================
+    if (req.method === 'POST') {
+
+      const urlSupabase = process.env.SUPABASE_URL;
+      const chaveSupabase = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!urlSupabase || !chaveSupabase) {
+        return res.status(500).json({
+          sucesso: false,
+          erro: 'Supabase não configurado na Vercel.'
+        });
+      }
+
+      const token = String(req.headers.authorization || '')
+        .replace(/^Bearer\s+/i, '')
+        .trim();
+
+      if (!token) {
+        return res.status(401).json({
+          sucesso: false,
+          erro: 'Token de acesso não informado.'
+        });
+      }
+
+      // Confirma se o usuário está autenticado
+      const usuarioResp = await fetch(
+        `${urlSupabase}/auth/v1/user`,
+        {
+          headers: {
+            apikey: chaveSupabase,
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (!usuarioResp.ok) {
+        return res.status(401).json({
+          sucesso: false,
+          erro: 'Usuário não autenticado.'
+        });
+      }
+
+      // Confirma se o usuário é administrador
+      const adminResp = await fetch(
+        `${urlSupabase}/rest/v1/rpc/is_admin`,
+        {
+          method: 'POST',
+          headers: {
+            apikey: chaveSupabase,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({})
+        }
+      );
+
+      if (!adminResp.ok || await adminResp.json() !== true) {
+        return res.status(403).json({
+          sucesso: false,
+          erro: 'Acesso permitido somente ao administrador.'
+        });
+      }
+
+      const acao = req.body?.acao;
+
+      if (acao !== 'atualizar') {
+        return res.status(400).json({
+          sucesso: false,
+          erro: 'Ação inválida.'
+        });
+      }
+
+      const tipoAtualizacao = String(
+        req.body?.tipo || 'jogos'
+      ).toLowerCase();
+
+      const competicaoAtualizacao = String(
+        req.body?.competicao || 'todas'
+      ).toLowerCase();
+
+      let dadosCache;
+
+      if (tipoAtualizacao === 'jogos') {
+
+        const selecionadas = competicaoAtualizacao === 'todas'
+          ? permitidas
+          : [competicaoAtualizacao];
+
+        const resultados = await Promise.all(
+          selecionadas.map(async chave => {
+            try {
+              return {
+                sucesso: true,
+                ...await consultarCompeticao(
+                  chave,
+                  chave === 'copa-do-brasil' ? 8 : 8
+                )
+              };
+            } catch (erro) {
+              return {
+                sucesso: false,
+                chave,
+                erro: erro.message,
+                jogos: [],
+                classificacao: []
+              };
+            }
+          })
+        );
+
+        dadosCache = {
+          sucesso: true,
+          tipo: 'jogos',
+          competicoes: resultados,
+          jogos: resultados.flatMap(item =>
+            item.sucesso ? item.jogos : []
+          ),
+          total_competicoes: resultados.length,
+          atualizado_em: new Date().toISOString()
+        };
+
+      } else if (tipoAtualizacao === 'artilharia') {
+
+        const permitidasArtilharia = [
+          'serie-b',
+          'serie-c',
+          'serie-d',
+          'copa-do-brasil',
+          'libertadores',
+          'sul-americana',
+          'champions',
+          'europa',
+          'conference',
+          'premier-league',
+          'la-liga',
+          'serie-a-italia',
+          'bundesliga',
+          'ligue-1',
+          'cearense',
+          'paulista',
+          'carioca',
+          'mineiro',
+          'gaucho',
+          'pernambucano',
+          'baiano'
+        ];
+
+        const selecionadas = competicaoAtualizacao === 'todas'
+          ? permitidasArtilharia
+          : [competicaoAtualizacao];
+
+        const resultados = await Promise.all(
+          selecionadas.map(async chave => {
+            try {
+              return {
+                sucesso: true,
+                ...await consultarArtilharia(chave)
+              };
+            } catch (erro) {
+              return {
+                sucesso: false,
+                chave,
+                total: 0,
+                artilheiros: [],
+                erro: erro.message
+              };
+            }
+          })
+        );
+
+        dadosCache = {
+          sucesso: true,
+          tipo: 'artilharia',
+          competicoes: resultados,
+          total_competicoes: resultados.length,
+          total_artilheiros: resultados.reduce(
+            (total, item) =>
+              total + (item.artilheiros || []).length,
+            0
+          ),
+          atualizado_em: new Date().toISOString()
+        };
+
+      } else {
+        return res.status(400).json({
+          sucesso: false,
+          erro: 'Tipo inválido. Utilize jogos ou artilharia.'
+        });
+      }
+
+      // Grava os dados atualizados no Supabase
+      const chaveCache = `${tipoAtualizacao}:${competicaoAtualizacao}`;
+
+      const gravarResp = await fetch(
+        `${urlSupabase}/rest/v1/tvfp_cache_competicoes?on_conflict=chave`,
+        {
+          method: 'POST',
+          headers: {
+            apikey: chaveSupabase,
+            Authorization: `Bearer ${chaveSupabase}`,
+            'Content-Type': 'application/json',
+            Prefer: 'resolution=merge-duplicates,return=minimal'
+          },
+          body: JSON.stringify({
+            chave: chaveCache,
+            dados: dadosCache,
+            atualizado_em: new Date().toISOString()
+          })
+        }
+      );
+
+      if (!gravarResp.ok) {
+        const erroBanco = await gravarResp.text();
+
+        throw new Error(
+          `Erro ao gravar cache no Supabase: ${erroBanco}`
+        );
+      }
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Atualização concluída e salva no Supabase.',
+        chave: chaveCache,
+        atualizado_em: dadosCache.atualizado_em,
+        total_competicoes: dadosCache.total_competicoes
+      });
+    }
+
+    // ==========================================
+    // CONSULTAS GET EXISTENTES
+    // ==========================================
+
     const tipo = String(req.query.tipo || 'jogos').toLowerCase();
 
     if (tipo === 'artilharia') {
- const permitidasArtilharia = [
-  'serie-b',
-  'serie-c',
-  'serie-d',
-  'copa-do-brasil',
-  'libertadores',
-  'sul-americana',
-  'champions',
-  'europa',
-  'conference',
-  'premier-league',
-  'la-liga',
-  'serie-a-italia',
-  'bundesliga',
-  'ligue-1',
-   'cearense',
-  'paulista',
-  'carioca',
-  'mineiro',
-  'gaucho',
-  'pernambucano',
-  'baiano'
-];
+      const permitidasArtilharia = [
+        'serie-b',
+        'serie-c',
+        'serie-d',
+        'copa-do-brasil',
+        'libertadores',
+        'sul-americana',
+        'champions',
+        'europa',
+        'conference',
+        'premier-league',
+        'la-liga',
+        'serie-a-italia',
+        'bundesliga',
+        'ligue-1',
+        'cearense',
+        'paulista',
+        'carioca',
+        'mineiro',
+        'gaucho',
+        'pernambucano',
+        'baiano'
+      ];
+
       const selecionadasArtilharia = competicao === 'todas'
         ? permitidasArtilharia
         : [competicao];
@@ -2810,22 +3033,22 @@ console.log('[COPA DO BRASIL - FASE]', {
       const resultadosArtilharia = await Promise.all(
         selecionadasArtilharia.map(async chave => {
           try {
-  return {
-    sucesso: true,
-    ...await consultarArtilharia(chave)
-  };
-} catch (erro) {
-  console.warn('[ARTILHARIA INDISPONÍVEL]', chave, erro.message);
+            return {
+              sucesso: true,
+              ...await consultarArtilharia(chave)
+            };
+          } catch (erro) {
+            console.warn('[ARTILHARIA INDISPONÍVEL]', chave, erro.message);
 
-  return {
-    sucesso: true,
-    chave,
-    total: 0,
-    artilheiros: [],
-    sem_dados: true,
-    mensagem: 'Artilharia indisponível nesta competição.'
-  };
-}
+            return {
+              sucesso: true,
+              chave,
+              total: 0,
+              artilheiros: [],
+              sem_dados: true,
+              mensagem: 'Artilharia indisponível nesta competição.'
+            };
+          }
         })
       );
 
@@ -2866,13 +3089,45 @@ console.log('[COPA DO BRASIL - FASE]', {
         try {
           return {
             sucesso: true,
-          ...await consultarCompeticao(
-  chave,
-  chave === 'copa-do-brasil'
-    ? Number(req.query.fase ?? 8)
-    : 8
-)
+            ...await consultarCompeticao(
+              chave,
+              chave === 'copa-do-brasil'
+                ? Number(req.query.fase ?? 8)
+                : 8
+            )
           };
+        } catch (erro) {
+          return {
+            sucesso: false,
+            chave,
+            erro: erro.message,
+            jogos: [],
+            classificacao: []
+          };
+        }
+      })
+    );
+
+    const jogos = resultados.flatMap(item =>
+      item.sucesso ? item.jogos : []
+    );
+
+    return res.status(200).json({
+      sucesso: true,
+      central: 'TVFP ESPORTES',
+      competicoes: resultados,
+      jogos,
+      total_competicoes: resultados.length,
+      total_jogos: jogos.length,
+      falhas: resultados
+        .filter(item => !item.sucesso)
+        .map(item => ({
+          competicao: item.chave,
+          erro: item.erro
+        })),
+      atualizado_em: new Date().toISOString()
+    });
+
         } catch (erro) {
           return {
             sucesso: false,
