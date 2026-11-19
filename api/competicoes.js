@@ -1247,19 +1247,7 @@ if (!listaGE.length) {
     `Não foram encontrados jogos para a rodada ${numeroRodada} da Série B.`
   );
 }
-    todasRodadasB
-      .flat()
-      .map((jogo, indice) => [
-        String(
-          jogo.id ||
-          `${jogo.data_realizacao || ''}-${jogo.equipes?.mandante?.id || ''}-${jogo.equipes?.visitante?.id || ''}-${indice}`
-        ),
-        jogo
-      ])
-  ).values()
-];
-}
-
+   
 rodadaFinal = numeroRodada;
  
 let dadosTabela = { tables: [] };
