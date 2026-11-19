@@ -2299,7 +2299,20 @@ margin: 0;
   </p>
 </div>
 
+
 <div class="panel" id="game-promo-panel">
+  <div class="ph">
+    <h3>📢 DIVULGAÇÃO DE JOGOS</h3>
+  </div>
+  <div class="pad">
+    <div class="game-promo-viewport">
+      <div id="gamePromoTrack" class="game-promo-track">
+        <div class="game-promo-empty">As divulgações de jogos aparecerão aqui.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="panel"><div class="ph"><h3>CONSULTAR AS COMPETIÇÕES ADMINISTRADAS</h3><span class="pill">Selecione uma competição</span></div><div class="pad"><div aria-live="polite" class="small" id="publicCompetitionList"></div></div></div>
 <div class="stats"><div class="stat"><small>Equipes cadastradas</small><strong id="nTeams">0</strong></div><div class="stat"><small>Atletas cadastrados</small><strong id="nPlayers">0</strong></div><div class="stat"><small>Partidas com eventos</small><strong id="nMatches">0</strong></div></div>
 <div class="tabs"><button class="tab" data-tab="classification">Classificação</button><button class="tab active" data-tab="games">Tabela de jogos</button><button class="tab" data-tab="teams">Equipes cadastradas</button><button class="tab" type="button" data-tab="profissional">PROFISSIONAL</button><button class="tab" data-tab="profile">Pesquisa de atleta</button><button class="tab regulation-tab" data-public-regulation-tab="true" type="button">REGULAMENTO</button><button class="tab" type="button" data-tab="photos">FOTOS</button><button class="tab" type="button" data-tab="highlights">DESTAQUES DA COMPETIÇÃO</button>
@@ -19202,5 +19215,52 @@ body:not(.admin-verified) #adminView .panel:not(#adminLoginPanel) {
   display: none !important;
 }
 </style>
+  
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const areaAdmin = document.getElementById('adminProtected');
+  if (!areaAdmin) return;
+
+  areaAdmin.querySelectorAll('.panel').forEach(function (painel) {
+    const cabecalho = Array.from(painel.children)
+      .find(el => el.classList && el.classList.contains('ph'));
+
+    if (!cabecalho || painel.dataset.recolhivel === 'sim') return;
+
+    painel.dataset.recolhivel = 'sim';
+    cabecalho.style.cursor = 'pointer';
+    cabecalho.setAttribute('role', 'button');
+    cabecalho.setAttribute('tabindex', '0');
+    cabecalho.setAttribute('aria-expanded', 'false');
+
+    function alternarPainel() {
+      const aberto = cabecalho.getAttribute('aria-expanded') === 'true';
+
+      Array.from(painel.children).forEach(function (item) {
+        if (item !== cabecalho) item.hidden = aberto;
+      });
+
+      cabecalho.setAttribute('aria-expanded', String(!aberto));
+    }
+
+    cabecalho.addEventListener('click', function (evento) {
+      if (evento.target.closest('button, input, select, a')) return;
+      alternarPainel();
+    });
+
+    cabecalho.addEventListener('keydown', function (evento) {
+      if (evento.key === 'Enter' || evento.key === ' ') {
+        evento.preventDefault();
+        alternarPainel();
+      }
+    });
+
+    Array.from(painel.children).forEach(function (item) {
+      if (item !== cabecalho) item.hidden = true;
+    });
+  });
+});
+</script>
+
 </body>
 </html>
