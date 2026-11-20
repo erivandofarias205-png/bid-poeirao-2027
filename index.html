@@ -2139,14 +2139,6 @@ overflow: visible !important;
 }
 </style>
 
-<style id="sumula-subir-conteudo-primeira-folha">
-@media print {
-  #matchSheet .sheet-page-one > * {
-    position: relative !important;
-    top: -20mm !important;
-  }
-}
-</style>
 
 <style id="install-app-banner-styles">
 .install-app-banner {
@@ -19821,5 +19813,99 @@ async function atualizarTodasProfissionais() {
   }
 }
 </script>
+<style id="sumula-impressao-duas-paginas">
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #matchSheet,
+  #matchSheet * {
+    visibility: visible !important;
+  }
+
+  #matchSheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #matchSheet .official-sheet {
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  #matchSheet .sheet-page {
+    display: block !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 5mm !important;
+    overflow: hidden !important;
+    position: relative !important;
+    top: 0 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  #matchSheet .sheet-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
+  #matchSheet .sheet-page-one,
+  #matchSheet .sheet-page-two {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team table {
+    font-size: 6.5pt !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team th,
+  #matchSheet .sheet-page-one .sheet-team td {
+    height: 4mm !important;
+    padding: 0.4mm !important;
+    line-height: 1 !important;
+  }
+
+  #matchSheet .sheet-page-two {
+    font-size: 7pt !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-report div {
+    min-height: 7mm !important;
+    height: 7mm !important;
+  }
+
+  button, .actions {
+    display: none !important;
+  }
+}
+</style>
 </body>
 </html>
