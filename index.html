@@ -2010,9 +2010,29 @@ overflow: visible !important;
     padding: 0 !important;
   }
 
-  #matchSheet .sheet-page-two .sheet-sign-row {
+    #matchSheet .sheet-page-two .sheet-sign-row {
     margin-top: 1mm !important;
     padding: 1mm 0 !important;
+  }
+
+  /* RODAPÉ FIXO DA SEGUNDA FOLHA */
+  #matchSheet .sheet-page-two {
+    position: relative !important;
+  }
+
+  #matchSheet .sheet-page-two .sheet-page-footer {
+    position: absolute !important;
+    left: 3mm !important;
+    right: 3mm !important;
+    bottom: 2mm !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-top: 1px solid #777 !important;
+    padding-top: 2mm !important;
+    font-size: 6pt !important;
+    color: #555 !important;
+    line-height: 1 !important;
   }
 }
 
@@ -14042,9 +14062,15 @@ BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app 
   <span>Representante mandante: ____________________</span>
   <span>Representante visitante: ___________________</span>
 </div>
+
+<div class="sheet-page-footer">
+  BID GERAL FUTEBOL AMADOR • TVFP ESPORTES
+  <span>bidgeralfutebolamador.vercel.app</span>
+  <span>WhatsApp: (88) 99662-3259</span>
+  <b>PÁGINA 2</b>
+</div>
 </div>
 </div>`;
-
  }$('loadSheet')?.addEventListener('click',buildMatchSheet);
  $('sheetMatch')?.addEventListener('change',buildMatchSheet);
   $('sheetCompetition')?.addEventListener('change',()=>{
