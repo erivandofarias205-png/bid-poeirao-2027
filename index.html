@@ -2015,17 +2015,21 @@ overflow: visible !important;
     padding: 1mm 0 !important;
   }
 
-  /* RODAPÉ FIXO DA SEGUNDA FOLHA */
-  #matchSheet .sheet-page-two {
-    position: relative !important;
-  }
+ 
+/* RODAPÉ PADRONIZADO NAS DUAS FOLHAS */
+#matchSheet .sheet-page-one,
+#matchSheet .sheet-page-two {
+  position: relative !important;
+}
 
- #matchSheet .sheet-page-two .sheet-page-footer {
+#matchSheet .sheet-page-one .sheet-page-footer,
+#matchSheet .sheet-page-two .sheet-page-footer {
   position: absolute !important;
   left: 3mm !important;
   right: 3mm !important;
   bottom: 2mm !important;
   height: 19mm !important;
+  box-sizing: border-box !important;
   border-top: 1px solid #d6ad36 !important;
   border-bottom: 1px solid #d6ad36 !important;
   display: flex !important;
@@ -2042,6 +2046,7 @@ overflow: visible !important;
   background: #fff !important;
 }
 
+#matchSheet .sheet-page-one .sheet-page-footer strong,
 #matchSheet .sheet-page-two .sheet-page-footer strong {
   font-size: 9pt !important;
   font-weight: bold !important;
