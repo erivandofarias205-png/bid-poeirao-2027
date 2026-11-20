@@ -2020,22 +2020,32 @@ overflow: visible !important;
     position: relative !important;
   }
 
-  #matchSheet .sheet-page-two .sheet-page-footer {
-    position: absolute !important;
-    left: 3mm !important;
-    right: 3mm !important;
-    bottom: 2mm !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    border-top: 1px solid #777 !important;
-    padding-top: 2mm !important;
-    font-size: 6pt !important;
-    color: #555 !important;
-    line-height: 1 !important;
-  }
+ #matchSheet .sheet-page-two .sheet-page-footer {
+  position: absolute !important;
+  left: 3mm !important;
+  right: 3mm !important;
+  bottom: 2mm !important;
+  height: 19mm !important;
+  border-top: 1px solid #d6ad36 !important;
+  border-bottom: 1px solid #d6ad36 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 1mm !important;
+  padding: 2mm !important;
+  color: #333 !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 8pt !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  background: #fff !important;
 }
 
+#matchSheet .sheet-page-two .sheet-page-footer strong {
+  font-size: 9pt !important;
+  font-weight: bold !important;
+}
 
 /* AJUSTE DA PRIMEIRA FOLHA — SÚMULA A4 */
 @media print {
@@ -14033,9 +14043,6 @@ const person=r.second?matching[1]:matching[0];
     `).join('')}
   </section>
 </div>
- <div style="text-align:center;font-family:Arial,sans-serif;font-size:5pt;color:#555;margin-top:1mm;white-space:nowrap;line-height:1;">
-BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app - WhatsApp: (88) 99662-3259
-</div>
 
 <!-- ARBITRAGEM E ASSINATURAS -->
 <div class="sheet-referee-grid">
@@ -14064,10 +14071,10 @@ BID GERAL FUTEBOL AMADOR • TVFP ESPORTES • bidgeralfutebolamador.vercel.app 
 </div>
 
 <div class="sheet-page-footer">
-  BID GERAL FUTEBOL AMADOR • TVFP ESPORTES
-  <span>bidgeralfutebolamador.vercel.app</span>
-  <span>WhatsApp: (88) 99662-3259</span>
-  <b>PÁGINA 2</b>
+  <strong>BID FUTEBOL AMADOR - TVFP SPORTS</strong>
+  <span>Erivando Farias | WhatsApp: (88) 99662-3259</span>
+  <span>https://bidgeralfutebolamador.vercel.app/</span>
+</div>
 </div>
 </div>
 </div>`;
