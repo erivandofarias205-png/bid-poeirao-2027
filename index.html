@@ -10772,6 +10772,69 @@ async function editAthlete(id){
   if(!f)return;
 
   const {p,t}=f;
+    // EDIÇÃO RÁPIDA DE DIRETOR, TREINADOR E COMISSÃO
+  if(p._remotePersonnel){
+
+    try{
+      const {data:sessionData,error:sessionError} =
+        await supabaseClient.auth.getSession();
+
+      if(sessionError) throw sessionError;
+
+      if(!sessionData?.session){
+        alert('Entre com o login de administrador.');
+        return;
+      }
+
+      const {data:adminCheck,error:adminError} =
+        await supabaseClient.rpc('is_admin');
+
+      if(adminError) throw adminError;
+
+      if(adminCheck !== true){
+        alert('Acesso permitido somente ao administrador.');
+        return;
+      }
+
+      // Mantém o ID real do Supabase para atualizar o registro existente.
+      athleteMatchedByCpf = {
+        ...p,
+        id: p.dbId,
+        _remotePersonnel: true
+      };
+
+      $('athName').value = p.name || '';
+      $('athBirth').value = p.birth || '';
+      $('athCity').value = p.city || '';
+      $('athCpf').value = p.cpf || '';
+      $('athSportsName').value = p.sportsName || '';
+      $('athBid').value = p.id || '';
+      $('athRole').value = p.role || 'diretor';
+      $('athTeam').value = t.id;
+
+      if($('athPhoto')) $('athPhoto').value = '';
+
+      showTab('admin');
+
+      setTimeout(()=>{
+        $('athName')?.scrollIntoView({
+          behavior:'smooth',
+          block:'center'
+        });
+      },150);
+
+      alert(
+        'Cadastro carregado para edição. ' +
+        'Altere a função ou os dados e clique em SALVAR.'
+      );
+
+    }catch(error){
+      console.error('Erro ao abrir edição:',error);
+      alert('Não foi possível abrir o cadastro: '+error.message);
+    }
+
+    return;
+  }
   const athleteEvents=(db.events||[]).filter(e=>
   String(e.playerId||'')===String(p.id)
 ).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
