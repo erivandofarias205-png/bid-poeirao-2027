@@ -8691,34 +8691,212 @@ async function buscarJogosEquipeProfissional() {
     min-width: 0;
   }
 </style>
-<details class="panel"><summary class="ph"><h3>Cadastrar equipe</h3><span class="pill">1 · Equipes</span></summary><div class="pad"><div class="formgrid"> <label>Competição<select id="teamCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Nome da equipe<input id="teamName" placeholder="Ex.: Português de Águas Belas"/></label><label>Sigla para o escudo<input id="teamInitials" maxlength="5" placeholder="Ex.: PAB"/></label><label>Grupo da equipe (opcional)<input id="teamGroup" placeholder="Ex.: A, B, C"/></label><label>Escudo da equipe (opcional)<input accept="image/*" id="teamLogo" type="file"/></label><label>Vídeo da equipe (opcional)<input accept="video/*" id="teamVideo" type="file"/></label><label>Patrocinadores da equipe<input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona"/></label></div><div class="actions"><button class="gold" id="saveTeam">Cadastrar equipe</button></div></div></details>
+<<details class="panel">
+  <summary class="ph">
+    <h3>Cadastrar equipe</h3>
+    <span class="pill">1 · Equipes</span>
+  </summary>
+
+  <div class="pad">
+    <div class="formgrid">
+      <label>Competição
+        <select id="teamCompetition" required>
+          <option value="">Selecione a competição</option>
+        </select>
+      </label>
+
+      <label>Nome da equipe
+        <input id="teamName" placeholder="Ex.: Português de Águas Belas">
+      </label>
+
+      <label>Sigla para o escudo
+        <input id="teamInitials" maxlength="5" placeholder="Ex.: PAB">
+      </label>
+
+      <label>Grupo da equipe (opcional)
+        <input id="teamGroup" placeholder="Ex.: A, B, C">
+      </label>
+
+      <label>Escudo da equipe (opcional)
+        <input accept="image/*" id="teamLogo" type="file">
+      </label>
+
+      <label>Vídeo da equipe (opcional)
+        <input accept="video/*" id="teamVideo" type="file">
+      </label>
+
+      <label>Patrocinadores da equipe
+        <input id="teamSponsors" placeholder="Ex.: RAMACOM, Soprano, Krona">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="gold" id="saveTeam">Cadastrar equipe</button>
+    </div>
+  </div>
+</details>
  
-<div class="panel"><div class="ph"><h3>Cadastrar atleta</h3><span class="pill">2 · Inscrições</span></div><div class="pad"><div class="formgrid"> <label>CPF (comece por aqui)<input id="athCpf" inputmode="numeric" maxlength="14" placeholder="Digite o CPF: 000.000.000-00" autocomplete="off"/></label><label>Competição<select id="athCompetition" required=""> <option value="">Selecione a competição</option> </select></label> <label>Equipe<select id="athTeam"></select></label><label>Tipo de cadastro<select id="athRole"><option value="jogador">Jogador</option><option value="diretor">Diretor</option><option value="musa">Musa</option><option value="treinador">Treinador</option><option value="auxiliar">Auxiliar</option><option value="massagista">Massagista</option></select></label><label>Nome completo<input id="athName" placeholder="Nome completo"/></label><label>Nome esportivo (opcional)<input id="athSportsName" placeholder="Nome esportivo"/></label><label>Data de nascimento<input id="athBirth" type="date"/></label><label>Naturalidade / Cidade do atleta<input id="athCity" placeholder="Ex.: Santana do Acaraú"/></label><label>Data da inscrição<input id="athReg" type="date"/></label><label>Foto do atleta (opcional)<input accept="image/*" id="athPhoto" type="file"/></label><label>Número BID (opcional)<input id="athBid" placeholder="Gerado automaticamente se vazio"/></label><label>Já atuou?<select id="athPlayed"><option value="false">Ainda não</option><option value="true">Sim, já atuou</option></select></label><label>Permitir transferência?<select id="athTransfer"><option value="auto">Automático conforme atuação</option><option value="true">Sim</option><option value="false">Não</option></select></label></div><p class="small muted" style="margin-top:10px">Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.</p><div class="actions"><button class="gold" id="saveAthlete">Cadastrar pessoa</button></div></div></div>
+<details class="panel">
+  <summary class="ph">
+    <h3>Cadastrar atleta</h3>
+    <span class="pill">2 · Inscrições</span>
+  </summary>
+
+  <div class="pad">
+    <div class="formgrid">
+      <label>CPF (comece por aqui)
+        <input id="athCpf" inputmode="numeric" maxlength="14"
+          placeholder="Digite o CPF: 000.000.000-00" autocomplete="off">
+      </label>
+
+      <label>Competição
+        <select id="athCompetition" required>
+          <option value="">Selecione a competição</option>
+        </select>
+      </label>
+
+      <label>Equipe
+        <select id="athTeam"></select>
+      </label>
+
+      <label>Tipo de cadastro
+        <select id="athRole">
+          <option value="jogador">Jogador</option>
+          <option value="diretor">Diretor</option>
+          <option value="musa">Musa</option>
+          <option value="treinador">Treinador</option>
+          <option value="auxiliar">Auxiliar</option>
+          <option value="massagista">Massagista</option>
+        </select>
+      </label>
+
+      <label>Nome completo
+        <input id="athName" placeholder="Nome completo">
+      </label>
+
+      <label>Nome esportivo (opcional)
+        <input id="athSportsName" placeholder="Nome esportivo">
+      </label>
+
+      <label>Data de nascimento
+        <input id="athBirth" type="date">
+      </label>
+
+      <label>Naturalidade / Cidade do atleta
+        <input id="athCity" placeholder="Ex.: Santana do Acaraú">
+      </label>
+
+      <label>Data da inscrição
+        <input id="athReg" type="date">
+      </label>
+
+      <label>Foto do atleta (opcional)
+        <input accept="image/*" id="athPhoto" type="file">
+      </label>
+
+      <label>Número BID (opcional)
+        <input id="athBid" placeholder="Gerado automaticamente se vazio">
+      </label>
+
+      <label>Já atuou?
+        <select id="athPlayed">
+          <option value="false">Ainda não</option>
+          <option value="true">Sim, já atuou</option>
+        </select>
+      </label>
+
+      <label>Permitir transferência?
+        <select id="athTransfer">
+          <option value="auto">Automático conforme atuação</option>
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </select>
+      </label>
+    </div>
+
+    <p class="small muted" style="margin-top:10px">
+      Limites por equipe: até 5 diretores e 1 musa. Escolha o tipo de cadastro acima; jogadores, diretores e musa recebem ficha individual para impressão.
+    </p>
+
+    <div class="actions">
+      <button class="gold" id="saveAthlete">Cadastrar pessoa</button>
+    </div>
+  </div>
+</details>
 
   <div class="panel"><div class="ph"><h3>Equipes e atletas cadastrados</h3><span class="pill">Gerenciar prévia</span></div><div class="pad" id="adminList"></div></div>
-<div class="panel" id="adminGamePromoPanel"><div class="ph"><h3>Divulgação de jogos</h3><span class="pill">Adicionar / remover artes</span></div><div class="pad"><p class="small">Envie uma ou várias artes promocionais. Elas serão exibidas no mural público em sequência e podem ser removidas depois que o jogo passar. Use imagens horizontais na proporção 7 × 4.</p><div class="formgrid"><label class="wide">Selecionar artes dos jogos<input accept="image/*" id="gamePromoUpload" multiple="" type="file"/></label></div><div class="actions"><button class="gold" id="uploadGamePromoBtn" type="button">Enviar artes para o mural</button><button class="secondary" id="refreshGamePromoBtn" type="button">Atualizar lista</button></div><p aria-live="polite" class="small" id="gamePromoAdminStatus" role="status">As artes serão carregadas do armazenamento do site quando disponível.</p><div class="game-promo-admin-list" id="gamePromoAdminList"></div></div></div>
+<details class="panel" id="adminGamePromoPanel">
+  <summary class="ph">
+    <h3>Divulgação de jogos</h3>
+    <span class="pill">Adicionar / remover artes</span>
+  </summary>
+
+  <div class="pad">
+    <p class="small">
+      Envie uma ou várias artes promocionais. Elas serão exibidas no mural público em sequência e podem ser removidas depois que o jogo passar. Use imagens horizontais na proporção 7 × 4.
+    </p>
+
+    <div class="formgrid">
+      <label class="wide">
+        Selecionar artes dos jogos
+        <input accept="image/*" id="gamePromoUpload" multiple type="file">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="gold" id="uploadGamePromoBtn" type="button">
+        Enviar artes para o mural
+      </button>
+
+      <button class="secondary" id="refreshGamePromoBtn" type="button">
+        Atualizar lista
+      </button>
+    </div>
+
+    <p aria-live="polite" class="small" id="gamePromoAdminStatus" role="status">
+      As artes serão carregadas do armazenamento do site quando disponível.
+    </p>
+
+    <div class="game-promo-admin-list" id="gamePromoAdminList"></div>
+  </div>
+</details>
  
-<div class="panel" id="adminSponsorsPanel">
-  <div class="ph">
+<details class="panel" id="adminSponsorsPanel">
+  <summary class="ph">
     <h3>Patrocinadores</h3>
     <span class="pill">Adicionar / remover fotos</span>
-  </div>
+  </summary>
+
   <div class="pad">
-    <p class="small">Selecione as fotos dos patrocinadores no computador. As imagens serão exibidas no site em sequência, no formato 7 × 4.</p>
+    <p class="small">
+      Selecione as fotos dos patrocinadores no computador. As imagens serão exibidas no site em sequência, no formato 7 × 4.
+    </p>
+
     <div class="formgrid">
-      <label class="wide">Selecionar fotos dos patrocinadores
+      <label class="wide">
+        Selecionar fotos dos patrocinadores
         <input accept="image/*" id="sponsorUpload" multiple type="file">
       </label>
     </div>
+
     <div class="actions">
-      <button class="gold" id="uploadSponsorBtn" type="button">Enviar patrocinadores</button>
-      <button class="secondary" id="refreshSponsorBtn" type="button">Atualizar lista</button>
+      <button class="gold" id="uploadSponsorBtn" type="button">
+        Enviar patrocinadores
+      </button>
+
+      <button class="secondary" id="refreshSponsorBtn" type="button">
+        Atualizar lista
+      </button>
     </div>
-    <p class="small" id="sponsorAdminStatus" role="status" aria-live="polite">As fotos serão carregadas do armazenamento do site.</p>
+
+    <p class="small" id="sponsorAdminStatus" role="status" aria-live="polite">
+      As fotos serão carregadas do armazenamento do site.
+    </p>
+
     <div class="game-promo-admin-list" id="sponsorAdminList"></div>
   </div>
-</div>
-<div class="panel"><div class="ph"><h3>Mídias e patrocínios</h3><span class="pill">Prévia local</span></div><div class="pad"><p class="small">Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.</p><div class="formgrid" id="mediaPreview"></div></div></div>
+</details>
+  <div class="panel"><div class="ph"><h3>Mídias e patrocínios</h3><span class="pill">Prévia local</span></div><div class="pad"><p class="small">Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.</p><div class="formgrid" id="mediaPreview"></div></div></div>
 
 <div class="panel" id="adminPhotoGalleryPanel">
   <div class="ph">
@@ -8765,7 +8943,20 @@ async function buscarJogosEquipeProfissional() {
   <div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
 </div></section>
 <section class="hidden" id="gameView">
-<div class="panel"><div class="ph"><h3>Mídias e patrocínios</h3><span class="pill">Prévia local</span></div><div class="pad"><p class="small">Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.</p><div class="formgrid" id="mediaPreview"></div></div></div><div class="note"><b>Fluxo rápido:</b> depois do jogo, escolha a partida, a equipe e o atleta; selecione “Participou”, “Gol”, “Amarelo” ou “Vermelho” e toque em Registrar. Os totais são atualizados automaticamente nesta prévia.</div>
+<details class="panel">
+  <summary class="ph">
+    <h3>Mídias e patrocínios</h3>
+    <span class="pill">Prévia local</span>
+  </summary>
+
+  <div class="pad">
+    <p class="small">
+      Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.
+    </p>
+
+    <div class="formgrid" id="mediaPreview"></div>
+  </div>
+</details>
 <div class="panel admin-only"><div class="ph"><h3>Registrar evento da partida</h3><span class="pill">3 · Súmula</span></div><div class="pad"><div class="formgrid"><label>Nome da partida
   <select id="gameName">
     <option value="">Selecione uma partida cadastrada</option>
@@ -8780,25 +8971,72 @@ async function buscarJogosEquipeProfissional() {
 </section>
 
 <section class="hidden" id="photosView">
-  <div class="panel">
-    <div class="ph">
-      <h3>GALERIA DE FOTOS</h3>
-      <span class="pill">Fotos das competições</span>
-    </div>
-    <div class="pad">
-      <label>Escolha a competição
-        <select id="publicPhotoCompetition">
-          <option value="">Selecione uma competição</option>
+<details class="panel" id="adminPhotoGalleryPanel">
+  <summary class="ph">
+    <h3>GALERIA DE FOTOS</h3>
+    <span class="pill">Adicionar / remover fotos</span>
+  </summary>
+
+  <div class="pad">
+    <p class="small">
+      Selecione a competição e envie várias fotos. Serão aceitas imagens verticais,
+      horizontais e quadradas, sem corte.
+    </p>
+
+    <div class="formgrid">
+      <label class="wide">
+        Competição
+        <select id="photoCompetitionSelect">
+          <option value="">Carregando competições...</option>
         </select>
       </label>
-      <div id="publicPhotoGallery" class="photo-gallery-grid">
-        <p class="empty">Escolha uma competição para visualizar as fotos.</p>
-      </div>
+
+      <label class="wide">
+        Selecionar fotos
+        <input accept="image/*" id="photoGalleryUpload" multiple type="file">
+      </label>
     </div>
+
+    <div class="actions">
+      <button class="gold" id="uploadGalleryPhotosBtn" type="button">
+        Enviar fotos
+      </button>
+
+      <button class="secondary" id="refreshGalleryPhotosBtn" type="button">
+        Atualizar galeria
+      </button>
+    </div>
+
+    <p class="small" id="photoGalleryAdminStatus" role="status" aria-live="polite">
+      Selecione uma competição para gerenciar suas fotos.
+    </p>
+
+    <div class="game-promo-admin-list" id="photoGalleryAdminList"></div>
   </div>
+</details>
 </section>
 </main>
+details.panel > summary.ph {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
+details.panel > summary.ph::-webkit-details-marker {
+  display: none;
+}
+
+details.panel > summary.ph::after {
+  content: "+";
+  font-size: 22px;
+  margin-left: auto;
+}
+
+details.panel[open] > summary.ph::after {
+  content: "−";
+}
 <style id="game-promo-style">
 #game-promo-panel{overflow:hidden}
 #game-promo-panel .game-promo-callout{text-align:center;font-weight:800;font-size:clamp(15px,2vw,21px);color:#f4d46a;margin:0 0 14px}
