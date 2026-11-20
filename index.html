@@ -19333,16 +19333,19 @@ document.addEventListener('DOMContentLoaded', function () {
   content: '－';
 }
 </style>
-  </style>
-  #adminProtected [data-admin-content][hidden] {
+
+<style>
+#adminProtected [data-admin-content][hidden] {
   display: none !important;
 }
+
 #adminProtected .admin-collapsible > .ph::after {
   content: '＋';
   float: right;
   font-size: 20px;
   margin-left: 10px;
 }
+
 #adminProtected .admin-collapsible > .ph[aria-expanded="true"]::after {
   content: '－';
 }
@@ -19479,7 +19482,8 @@ document.querySelectorAll('.panel').forEach(panel => {
  if (panel.tagName === 'DETAILS') return;
 
 if (!panel.classList.contains('admin-only') &&
-    !panel.closest('.admin-only')) return;
+    !panel.closest('.admin-only') &&
+    !panel.closest('#adminProtected')) return;
   
   const cabecalho = panel.querySelector(':scope > .ph');
   const conteudo = panel.querySelector(':scope > .pad');
