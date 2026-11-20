@@ -10703,7 +10703,7 @@ if(!t){
  const ps=t.players.filter(p=>(!q||(p.name+' '+p.id).toLowerCase().includes(q))&&(!f||(f==='free'?!p.played:p.played)));
  const NAO_ATLETAS=new Set(['BID-0020','BID-0021','BID-0022','BID-0023']);
 const adminVerificado = window.__BID_ADMIN_VERIFIED === true;
- $('rows').innerHTML=ps.map(p=>`<tr class="${['diretor','musa','treinador','auxiliar','massagista'].includes(String(p.role||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim())?'row-staff':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button>
+ $('rows').innerHTML=ps.map(p=>`<tr class="${['diretor','musa','treinador','auxiliar','massagista'].includes(String(p.role||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim())?'row-staff':''} ${String(p.role||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()==='musa'?'row-musa':''}"><td>${(p.photo||p.foto_url)?`<img class="roster-thumb" src="${p.photo||p.foto_url}" alt="Foto de ${esc(p.name)}">`:`<span class="roster-no-photo">SEM<br>FOTO</span>`}</td><td class="bid">${esc(p.id)}</td><td><b>${esc(p.name)}</b></td><td>${dateBR(p.birth)}</td><td>${esc(p.city||p.naturalidade||p.naturalidadeCidade||'—')}</td><td>${cpfMask(p.cpf)}</td><td><span class="status ${p.played?'info':'ok'}">${p.played?'Sim':'Não'}</span></td><td><span class="status ${p.played?'no':'ok'}">${transfer(p)}</span></td><td>${p.yellow||0}</td><td>${p.red||0}</td><td><b>${p.goals||0}</b></td><td><button class="secondary" data-profile="${esc(p.id)}">Ficha</button>
 ${adminVerificado ? `
 <button class="gold" data-edit-athlete="${esc(p.id)}">EDITAR</button>
 <button class="secondary" data-change-photo="${esc(p.id)}">MUDAR FOTO</button>
@@ -18680,6 +18680,20 @@ tbody tr.row-staff td{
 tbody tr.row-staff td.bid{
   background:#d6ad36!important;
   color:#171717!important;
+}
+  /* MUSA: IDENTIDADE VISUAL ROSA */
+tbody tr.row-musa,
+tbody tr.row-musa:nth-child(odd),
+tbody tr.row-musa:nth-child(even),
+tbody tr.row-musa td {
+  background: #f5a0c5 !important;
+  color: #24101a !important;
+  border-color: #e47eaa !important;
+}
+
+tbody tr.row-musa td.bid {
+  background: #d94f91 !important;
+  color: #fff !important;
 }
  <style id="finished-panel-taller">
  /* CORREÇÃO CONFIRMADA: PAINEL DE FINALIZADOS SEM CORTE */
