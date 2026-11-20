@@ -2050,14 +2050,22 @@ overflow: visible !important;
 /* AJUSTE DA PRIMEIRA FOLHA — SÚMULA A4 */
 @media print {
   #matchSheet .sheet-page-one {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
+    width: 196mm !important;
+    height: 283mm !important;
+    min-height: 283mm !important;
+    max-height: 283mm !important;
+    padding: 3mm !important;
+    margin: 0 !important;
     box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: block !important;
+    break-after: page !important;
+    page-break-after: always !important;
   }
 
   #matchSheet .sheet-page-one .sheet-heading {
-    padding: 1mm !important;
     margin: 0 0 1mm !important;
+    padding: 1mm !important;
   }
 
   #matchSheet .sheet-page-one .sheet-meta {
@@ -2065,16 +2073,10 @@ overflow: visible !important;
     padding: 1mm !important;
   }
 
-  #matchSheet .sheet-page-one,
-  #matchSheet .sheet-page-one * {
-    break-inside: auto !important;
-    page-break-inside: auto !important;
-  }
-
   #matchSheet .sheet-page-one .sheet-rosters {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 1.5mm !important;
+    gap: 1mm !important;
     width: 100% !important;
     margin: 1mm 0 !important;
     align-items: start !important;
@@ -2087,33 +2089,28 @@ overflow: visible !important;
     padding: 0 !important;
   }
 
-  #matchSheet .sheet-page-one .sheet-team h3 {
-    font-size: 6.5pt !important;
-    padding: 1mm !important;
-    margin: 0 !important;
-  }
-
   #matchSheet .sheet-page-one .sheet-team table {
     width: 100% !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
-    font-size: 5pt !important;
   }
 
   #matchSheet .sheet-page-one .sheet-team th,
   #matchSheet .sheet-page-one .sheet-team td {
-    height: 2.8mm !important;
-    padding: 0.1mm !important;
+    height: 3mm !important;
+    padding: 0.2mm !important;
     font-size: 5pt !important;
     line-height: 1 !important;
   }
 
-  #matchSheet .sheet-page-one .sheet-player-photo,
-  #matchSheet .sheet-page-one .sheet-player-photo-empty {
+  #matchSheet .sheet-page-one .sheet-player-photo img {
     width: 3.5mm !important;
     height: 3.5mm !important;
-    min-width: 3.5mm !important;
     object-fit: cover !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-sign-row {
+    display: none !important;
   }
 }
   </style>
