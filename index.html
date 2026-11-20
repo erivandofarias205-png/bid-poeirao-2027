@@ -13563,10 +13563,11 @@ const groupsHTML=orderedGroups.map(([g,list])=>{
   $('redCardsList').innerHTML=cardMarkup(discipline.red,'#ff7777');
   document.querySelectorAll('[data-open-games]').forEach(b=>b.onclick=()=>showTab('games'));
  }
+
 function renderMatchSheet(){
   const compSel = $('sheetCompetition');
   const matchSel = $('sheetMatch');
-  if(!compSel || !matchSel) return;
+  if (!compSel || !matchSel) return;
 
   const oldComp = compSel.value;
   const oldMatch = matchSel.value;
@@ -13584,15 +13585,13 @@ function renderMatchSheet(){
     String(c.id) === String(db.activeCompetitionId)
   );
 
-  if(selectedComp){
-    compSel.value = selectedComp.id;
-  }
+  if (selectedComp) compSel.value = selectedComp.id;
 
   const comp = competitions.find(c =>
     String(c.id) === String(compSel.value)
   );
 
-  if(!comp){
+  if (!comp) {
     matchSel.innerHTML =
       '<option value="">Selecione primeiro a competição</option>';
     return;
@@ -13610,9 +13609,7 @@ function renderMatchSheet(){
     ].filter(v => v !== undefined && v !== null && v !== '')
      .map(String);
 
-   if(matchComp.some(id => compIds.includes(id))){
-  return true;
-}
+    if (matchComp.some(id => compIds.includes(id))) return true;
 
     const home = findTeam(m.homeId) || {};
     const away = findTeam(m.awayId) || {};
@@ -13633,23 +13630,148 @@ function renderMatchSheet(){
     };
 
     return belongs(home) && belongs(away);
-  }).sort((a,b) =>
-    (a.date || '9999').localeCompare(b.date || '9999')
-  );
+  });
+
+  // Inclui confrontos salvos diretamente na configuração das fases.
+  const extras = [
+    ...(comp.knockoutTies || []).map(t => ({
+      ...t, round: t.round || 'Oitavas de final'
+    })),
+    ...(comp.quarterFinalTies || []).map(t => ({
+      ...t, round: 'Quartas de final'
+    })),
+    ...(comp.semiFinalTies || []).map(t => ({
+      ...t, round: 'Semifinais'
+    })),
+    ...(comp.thirdPlaceTie ? [{
+      ...comp.thirdPlaceTie,
+      round: 'Disputa de terceiro lugar'
+    }] : []),
+    ...(comp.finalMatchTie ? [{
+      ...comp.finalMatchTie,
+      round: 'Final'
+    }] : [])
+  ];
+
+  const equipesExtras = extras.map((t, i) => {
+    const home = (db.teams || []).find(x =>
+      String(x.id) === String(t.a) ||
+      String(x.dbId || '') === String(t.a)
+    ) || {};
+
+    const away = (db.teams || []).find(x =>
+      String(x.id) === String(t.b) ||
+      String(x.dbId || '') === String(t.b)
+    ) || {};
+
+    return {
+      id: `sheet-extra-${comp.id}-${i}`,
+      competitionId: comp.id,
+      homeId: home.id || t.a,
+      awayId: away.id || t.b,
+      homeName: home.name || home.nome || t.homeName || 'A definir',
+      awayName: away.name || away.nome || t.awayName || 'A definir',
+      homeScore: t.score1A ?? null,
+      awayScore: t.score1B ?? null,
+      penalties1A: t.penalties1A ?? '',
+      penalties1B: t.penalties1B ?? '',
+      status: t.status || 'Agendado',
+      date: t.date1 || t.date || '',
+      time: t.time1 || t.time || '',
+      round: t.round
+    };
+  }).filter(extra => extra.homeId && extra.awayId);
+
+  // Evita duplicar confrontos que já estejam cadastrados em db.matches.
+  equipesExtras.forEach(extra => {
+    const jaExiste = matches.some(m =>
+      String(m.homeId) === String(extra.homeId) &&
+      String(m.awayId) === String(extra.awayId) &&
+      String(m.round || '').toLowerCase() ===
+        String(extra.round || '').toLowerCase()
+    );
+
+    if (!jaExiste) matches.push(extra);
+  });
+
+  // Guarda também os jogos extras para a função que monta a súmula.
+  window.__sheetExtraMatches = equipesExtras;
+
+  const normalizar = texto => String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  const prioridadeFase = m => {
+    const fase = normalizar(m.round || m.phase || m.fase || '');
+
+    if (fase.includes('grupo') || fase.includes('rodada')) return 1;
+    if (fase.includes('16 avos')) return 2;
+    if (fase.includes('oitava')) return 3;
+    if (fase.includes('quarta')) return 4;
+    if (fase.includes('semi')) return 5;
+    if (fase.includes('terceiro')) return 6;
+    if (fase === 'final' || fase.includes('grande final')) return 7;
+
+    return 8;
+  };
+
+  const nomeFase = m => {
+    const p = prioridadeFase(m);
+    return ({
+      1: 'FASE DE GRUPOS',
+      2: '16 AVOS DE FINAL',
+      3: 'OITAVAS DE FINAL',
+      4: 'QUARTAS DE FINAL',
+      5: 'SEMIFINAIS',
+      6: 'DISPUTA DE 3º LUGAR',
+      7: 'GRANDE FINAL',
+      8: 'OUTRAS PARTIDAS'
+    })[p];
+  };
+
+  matches.sort((a, b) => {
+    const fase = prioridadeFase(a) - prioridadeFase(b);
+    if (fase !== 0) return fase;
+
+    const data = String(a.date || '9999').localeCompare(
+      String(b.date || '9999')
+    );
+    if (data !== 0) return data;
+
+    return String(a.homeName || '').localeCompare(
+      String(b.homeName || '')
+    );
+  });
+
+  const grupos = new Map();
+
+  matches.forEach(m => {
+    const fase = nomeFase(m);
+    if (!grupos.has(fase)) grupos.set(fase, []);
+    grupos.get(fase).push(m);
+  });
 
   matchSel.innerHTML =
-    '<option value="">Selecione um jogo cadastrado</option>' +
-    matches.map(m =>
-      `<option value="${esc(m.id)}">${dateBR(m.date)} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round ? ' · '+esc(m.round) : ''}</option>`
+    '<option value="">Selecione uma partida</option>' +
+    [...grupos.entries()].map(([fase, jogos]) =>
+      `<optgroup label="${fase}">` +
+      jogos.map(m =>
+        `<option value="${esc(m.id)}">${dateBR(m.date)} · ${esc(m.homeName)} × ${esc(m.awayName)}${m.round ? ' · '+esc(m.round) : ''}</option>`
+      ).join('') +
+      '</optgroup>'
     ).join('');
 
-  if(matches.some(m => String(m.id) === String(oldMatch))){
+  if (matches.some(m => String(m.id) === String(oldMatch))) {
     matchSel.value = oldMatch;
   }
 }
  function buildMatchSheet(){
   const id=$('sheetMatch')?.value;
-  const m=(db.matches||[]).find(x=>String(x.id)===String(id));
+  const m = [
+  ...(db.matches || []),
+  ...(window.__sheetExtraMatches || [])
+].find(x => String(x.id) === String(id));
   const out=$('matchSheet'); if(!out)return;
   if(!m){out.innerHTML='<p class="empty">Selecione um jogo cadastrado para puxar as equipes e os atletas.</p>';return;}
  const home=findTeam(m.homeId),away=findTeam(m.awayId);
