@@ -8903,13 +8903,27 @@ async function buscarJogosEquipeProfissional() {
     <div class="game-promo-admin-list" id="sponsorAdminList"></div>
   </div>
 </details>
-  <div class="panel"><div class="ph"><h3>Mídias e patrocínios</h3><span class="pill">Prévia local</span></div><div class="pad"><p class="small">Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste. Esta área ainda é uma prévia local. Para fotos e vídeos permanentes, precisamos concluir e testar o envio ao Supabase Storage; evite usar arquivos grandes nesta etapa.</p><div class="formgrid" id="mediaPreview"></div></div></div>
+ <details class="panel" id="adminMediaPreviewPanel">
+  <summary class="ph">
+    <h3>Mídias e patrocínios</h3>
+    <span class="pill">Prévia local</span>
+  </summary>
+  <div class="pad">
+    <p class="small">
+      Fotos, vídeo e patrocinadores escolhidos aparecem aqui durante o teste.
+      Esta área ainda é uma prévia local. Para fotos e vídeos permanentes,
+      precisamos concluir e testar o envio ao Supabase Storage;
+      evite usar arquivos grandes nesta etapa.
+    </p>
+    <div class="formgrid" id="mediaPreview"></div>
+  </div>
+</details>
 
-<div class="panel" id="adminPhotoGalleryPanel">
-  <div class="ph">
+<details class="panel" id="adminPhotoGalleryPanel">
+  <summary class="ph">
     <h3>GALERIA DE FOTOS</h3>
     <span class="pill">Adicionar / remover fotos</span>
-  </div>
+  </summary>
   <div class="pad">
     <p class="small">
       Selecione a competição e envie várias fotos. Serão aceitas imagens verticais,
@@ -8943,9 +8957,9 @@ async function buscarJogosEquipeProfissional() {
       Selecione uma competição para gerenciar suas fotos.
     </p>
 
-    <div class="game-promo-admin-list" id="photoGalleryAdminList"></div>
+       <div class="game-promo-admin-list" id="photoGalleryAdminList"></div>
   </div>
-</div>
+</details>
 
   <div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
 </div></section>
