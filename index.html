@@ -13953,7 +13953,6 @@ body+=`<tr>
   <div class="sheet-meta"><span><b>DATA:</b> ${safeDate}</span><span><b>HORÁRIO:</b> ${esc(m.time||'A definir')}</span><span><b>LOCAL:</b> ${esc(m.venue||'A definir')}</span></div>
   <div class="sheet-meta"><span><b>RODADA / FASE:</b> ${esc(m.round||'—')}</span><span><b>PLACAR:</b> ______ × ______</span></div></div>
   <div class="sheet-rosters two-rosters">${roster(home,'home',m.homeName)}${roster(away,'away',m.awayName)}</div>
-  <div class="sheet-sign-row"><span>Assinatura do representante mandante: __________________________</span><span>Assinatura do representante visitante: __________________________</span></div>
   </div>
    <div class="sheet-page sheet-page-two">
 <div class="sheet-page-title">${esc(comp?.name||db.competition||'COMPETIÇÃO')} — CONTROLE DA PARTIDA</div>
@@ -14066,9 +14065,7 @@ const person=r.second?matching[1]:matching[0];
 
 <!-- ASSINATURAS FINAIS -->
 <div class="sheet-sign-row">
-  <span>Árbitro principal: __________________________</span>
-  <span>Representante mandante: ____________________</span>
-  <span>Representante visitante: ___________________</span>
+  <span>Árbitro principal: __________________________________________________________________________</span>
 </div>
 
 <div class="sheet-page-footer">
