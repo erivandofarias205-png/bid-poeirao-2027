@@ -19912,6 +19912,7 @@ async function atualizarTodasProfissionais() {
 </script>
 
 
+
 <style id="sumula-impressao-duas-paginas">
 @media print {
   @page {
@@ -19940,106 +19941,138 @@ async function atualizarTodasProfissionais() {
     left: 0 !important;
     top: 0 !important;
     width: 210mm !important;
-    max-width: 210mm !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
   }
 
   #matchSheet .official-sheet {
-    display: block !important;
     width: 210mm !important;
-    max-width: 210mm !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    overflow: visible !important;
   }
 
   #matchSheet .sheet-page {
     display: block !important;
     position: relative !important;
+    box-sizing: border-box !important;
     width: 210mm !important;
     height: 297mm !important;
     min-height: 297mm !important;
     max-height: 297mm !important;
-    box-sizing: border-box !important;
     margin: 0 !important;
-    padding: 5mm 6mm !important;
+    padding: 3mm 5mm 5mm !important;
     overflow: hidden !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+
+  /* A PRIMEIRA FOLHA TERMINA NA SEGUNDA */
+  #matchSheet .sheet-page-one {
     break-after: page !important;
     page-break-after: always !important;
+    padding-top: 0 !important;
   }
 
-  #matchSheet .sheet-page:last-child {
+  /* A SEGUNDA FOLHA NÃO GERA UMA TERCEIRA */
+  #matchSheet .sheet-page-two {
+    break-before: auto !important;
+    page-break-before: auto !important;
     break-after: auto !important;
     page-break-after: auto !important;
+    font-size: 7pt !important;
   }
 
-  #matchSheet .sheet-page-one,
-  #matchSheet .sheet-page-two {
-    background: #fff !important;
-    color: #111 !important;
+  /* APROVEITAR O ESPAÇO SUPERIOR DA PRIMEIRA FOLHA */
+  #matchSheet .sheet-page-one .sheet-heading {
+    margin: 0 0 1mm !important;
+    padding: 0 !important;
   }
 
+  #matchSheet .sheet-page-one .sheet-competition-logo {
+    margin-top: 0 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-meta {
+    margin: 1mm 0 !important;
+    padding: 1mm !important;
+  }
+
+  /* PRESERVAR AS DUAS COLUNAS E NÃO CORTAR DIRETORES/MUSA */
   #matchSheet .sheet-page-one .sheet-rosters {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 2mm !important;
+    gap: 1mm !important;
     width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
+    margin: 1mm 0 !important;
+    align-items: start !important;
   }
 
   #matchSheet .sheet-page-one .sheet-team {
-    width: 100% !important;
     min-width: 0 !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
 
   #matchSheet .sheet-page-one .sheet-team table {
     width: 100% !important;
-    max-width: 100% !important;
-    table-layout: fixed !important;
-    border-collapse: collapse !important;
     font-size: 5.5pt !important;
   }
 
   #matchSheet .sheet-page-one .sheet-team th,
   #matchSheet .sheet-page-one .sheet-team td {
-    box-sizing: border-box !important;
-    padding: 0.3mm !important;
+    height: 3mm !important;
+    padding: 0.2mm 0.5mm !important;
     line-height: 1 !important;
-    overflow-wrap: anywhere !important;
   }
 
-  #matchSheet .sheet-page-two {
-    font-size: 7pt !important;
+  #matchSheet .sheet-player-photo,
+  #matchSheet .sheet-player-photo img {
+    object-fit: cover !important;
   }
 
+  /* RELATÓRIO COM LINHAS PARA ESCREVER */
   #matchSheet .sheet-page-two .sheet-report {
-    margin: 1mm 0 !important;
+    margin-top: 1mm !important;
   }
 
   #matchSheet .sheet-page-two .sheet-report .report-line {
-    height: 5mm !important;
-    min-height: 5mm !important;
-    border-bottom: 1px solid #555 !important;
-    box-sizing: border-box !important;
+    height: 8mm !important;
+    min-height: 8mm !important;
+    padding: 0 !important;
+    border-bottom: 1px solid #777 !important;
   }
 
+  /* RODAPÉ DA SEGUNDA FOLHA */
   #matchSheet .sheet-page-two .sheet-page-footer {
     position: absolute !important;
-    left: 6mm !important;
-    right: 6mm !important;
-    bottom: 3mm !important;
+    left: 5mm !important;
+    right: 5mm !important;
+    bottom: 2mm !important;
+    height: 13mm !important;
+    border-top: 1px solid #d6ad36 !important;
+    border-bottom: 1px solid #d6ad36 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.5mm !important;
+    padding: 1mm !important;
+    color: #333 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 7pt !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+    background: #fff !important;
   }
 
-  button,
-  .actions {
+  #matchSheet .sheet-page-two .sheet-page-footer strong {
+    font-size: 8pt !important;
+    font-weight: bold !important;
+  }
+
+  button, .actions {
     display: none !important;
   }
 }
