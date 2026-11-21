@@ -20150,5 +20150,79 @@ async function atualizarTodasProfissionais() {
   }
 }
 </style>
+    <style id="sumula-ajuste-final-pagina1-relatorio">
+@media print {
+
+  /* PRIMEIRA PÁGINA: aproveitar melhor a folha */
+  #matchSheet .sheet-page-one {
+    width: 200mm !important;
+    height: 287mm !important;
+    min-height: 287mm !important;
+    max-height: 287mm !important;
+    padding: 0 3mm 22mm !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-heading {
+    margin: -2mm 0 1mm !important;
+    padding: 0 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-competition-logo {
+    width: 30px !important;
+    height: 30px !important;
+    margin: 0 auto 1px !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-heading h2 {
+    margin: 1px 0 !important;
+    font-size: 13px !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-subtitle {
+    margin: 0 0 1mm !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-meta {
+    margin: 0.5mm 0 !important;
+    padding: 0.5mm !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-rosters {
+    margin: 0.5mm 0 !important;
+    gap: 1mm !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-team th,
+  #matchSheet .sheet-page-one .sheet-team td {
+    height: 2.7mm !important;
+    padding: 0.1mm 0.3mm !important;
+    font-size: 5pt !important;
+    line-height: 1 !important;
+  }
+
+  #matchSheet .sheet-page-one .sheet-player-photo,
+  #matchSheet .sheet-page-one .sheet-player-photo img {
+    width: 3mm !important;
+    height: 3mm !important;
+    min-height: 3mm !important;
+    object-fit: cover !important;
+  }
+
+  /* RELATÓRIO: cinco linhas uniformes para preenchimento */
+  #matchSheet .sheet-page-two .sheet-report .report-line {
+    display: block !important;
+    width: 100% !important;
+    height: 7mm !important;
+    min-height: 7mm !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #777 !important;
+  }
+}
+</style>
 </body>
 </html>
