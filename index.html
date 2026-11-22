@@ -12557,8 +12557,21 @@ $('saveMatch')?.addEventListener('click',async()=>{
  const comp=activeCompetition();
  if(!comp || !(comp.dbId||comp.id)){alert('Selecione uma competição cadastrada no Supabase antes de salvar o jogo.');return}
  if(!home.dbId||!away.dbId){alert('As duas equipes precisam estar cadastradas no Supabase. Atualize a página e tente novamente.');return}
- const oldId=button.dataset.editId||'';
- const old=(db.matches||[]).find(x=>String(x.id)===String(oldId));
+ const oldId = button.dataset.editId || '';
+const old = (db.matches || []).find(x =>
+  String(x.id) === String(oldId) ||
+  String(x.dbId) === String(oldId)
+);
+
+if (oldId && !old) {
+  alert('Não foi possível localizar a partida selecionada. Atualize a tabela antes de salvar.');
+  return;
+}
+
+if (oldId && !old.dbId) {
+  alert('Esta partida não possui ID do Supabase. Não será criada uma cópia.');
+  return;
+}
  const date=$('matchDate').value, time=$('matchTime').value;
  if(!date){alert('Informe a data da partida.');return}
  const localDateTime=new Date(`${date}T${time||'12:00'}:00`);
@@ -12584,7 +12597,7 @@ $('saveMatch')?.addEventListener('click',async()=>{
    if(adminError)throw adminError;
    if(adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return}
 let result;
-if(old?.dbId){
+if (oldId) {
   result=await supabaseClient
     .from('jogos')
     .update(payload)
@@ -12597,6 +12610,7 @@ else {
     .from('jogos')
     .insert(payload)
     .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
+    status')
     .single();
 }
     if(result.error)throw result.error;
