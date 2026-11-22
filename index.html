@@ -13524,208 +13524,183 @@ window.publicMatchDate = function(m) {
 
   return `📅 ${date}${time ? ' • ' + time : ''}`;
 };
-     const normalizePhase=m=>String(m.round||m.fase||m.publicRound||'')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')
-    .toLowerCase();
+const normalizePhase = m => String(
+  m.round || m.fase || m.publicRound || ''
+)
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .trim();
 
-  const savedTies=[
-    ...(comp.knockoutTies||[]).map(t=>({...t,round:t.round||'Oitavas de final'})),
-    ...(comp.quarterFinalTies||[]).map(t=>({...t,round:'Quartas de final'})),
-    ...(comp.semiFinalTies||[]).map(t=>({...t,round:'Semifinais'})),
-    ...(comp.thirdPlaceTie?[{...comp.thirdPlaceTie,round:'Disputa de terceiro lugar'}]:[]),
-    ...(comp.finalMatchTie?[{...comp.finalMatchTie,round:'Final'}]:[])
-  ];
-console.log('DADOS SALVOS DAS OITAVAS:', comp.knockoutTies);
-  const toGame=t=>{
-    const home=(db.teams||[]).find(x=>
-      String(x.id)===String(t.a)||String(x.dbId||'')===String(t.a))||{};
-    const away=(db.teams||[]).find(x=>
-      String(x.id)===String(t.b)||String(x.dbId||'')===String(t.b))||{};
-
-    return {
-      homeId:home.id||t.a,
-      homeName:home.name||home.nome||t.homeName||'A definir',
-      awayId:away.id||t.b,
-      awayName:away.name||away.nome||t.awayName||'A definir',
-      homeScore:t.score1A??null,
-awayScore:t.score1B??null,
-penalties1A:t.penalties1A??'',
-penalties1B:t.penalties1B??'',
-status:t.status||'Agendado',
-      date:t.date1||t.date||'',
-      time:t.time1||t.time||'',
-      round:t.round
-    };
-  };
-
- const phaseGroups = [
-  {title:'FINAL', keys:['final'], exclude:['terceiro']},
-  {title:'DISPUTA DE 3º E 4º LUGAR', keys:['terceiro']},
-  {title:'SEMIFINAIS', keys:['semi']},
-  {title:'QUARTAS DE FINAL', keys:['quart']},
-  {title:'OITAVAS DE FINAL', keys:['oitav']}
+const savedTies = [
+  ...(comp.knockoutTies || []).map(t => ({
+    ...t, round: t.round || 'Oitavas de final'
+  })),
+  ...(comp.quarterFinalTies || []).map(t => ({
+    ...t, round: 'Quartas de final'
+  })),
+  ...(comp.semiFinalTies || []).map(t => ({
+    ...t, round: 'Semifinais'
+  })),
+  ...(comp.thirdPlaceTie ? [{
+    ...comp.thirdPlaceTie, round: 'Disputa de terceiro lugar'
+  }] : []),
+  ...(comp.finalMatchTie ? [{
+    ...comp.finalMatchTie, round: 'Final'
+  }] : [])
 ];
 
- phaseHTML=phaseGroups.map(phase=>{
-let games = [];
+const toGame = t => {
+  const home = (db.teams || []).find(x =>
+    String(x.id) === String(t.a) ||
+    String(x.dbId || '') === String(t.a)
+  ) || {};
 
-if (phase.title === 'FINAL') {
-  games = allMatches.filter(m => {
-    const name = normalizePhase(m);
-    return name.includes('final') && !name.includes('terceiro');
-  });
+  const away = (db.teams || []).find(x =>
+    String(x.id) === String(t.b) ||
+    String(x.dbId || '') === String(t.b)
+  ) || {};
 
-  if (!games.length && comp.finalMatchTie) {
-    games.push(toGame({
-      ...comp.finalMatchTie,
-      round: 'Final'
-    }));
-  }
+  return {
+    homeId: home.id || t.a,
+    homeName: home.name || home.nome || t.homeName || 'A definir',
+    awayId: away.id || t.b,
+    awayName: away.name || away.nome || t.awayName || 'A definir',
+    homeScore: t.score1A ?? null,
+    awayScore: t.score1B ?? null,
+    penalties1A: t.penalties1A ?? '',
+    penalties1B: t.penalties1B ?? '',
+    status: t.status || 'Agendado',
+    date: t.date1 || t.date || '',
+    time: t.time1 || t.time || '',
+    round: t.round
+  };
+};
 
-} else if (phase.title === 'DISPUTA DE 3º E 4º LUGAR') {
-  games = allMatches.filter(m =>
-    normalizePhase(m).includes('terceiro')
+const phaseGroups = [
+  { title: 'FINAL', test: n => n === 'final' || n.startsWith('final ') },
+  { title: 'DISPUTA DE 3º E 4º LUGAR', test: n => n.includes('terceiro') },
+  { title: 'SEMIFINAIS', test: n => n.includes('semi') },
+  { title: 'QUARTAS DE FINAL', test: n => n.includes('quart') },
+  { title: 'OITAVAS DE FINAL', test: n => n.includes('oitav') || n.includes('16 avos') }
+];
+
+phaseHTML = phaseGroups.map(phase => {
+  let games = allMatches.filter(m => phase.test(normalizePhase(m)));
+
+  const saved = savedTies.filter(t =>
+    phase.test(normalizePhase(t))
   );
 
-  if (!games.length && comp.thirdPlaceTie) {
-    games.push(toGame({
-      ...comp.thirdPlaceTie,
-      round: 'Disputa de terceiro lugar'
-    }));
-  }
-
-} else {
-  games = allMatches.filter(m => {
-    const name = normalizePhase(m);
-
-    if (phase.exclude?.some(k => name.includes(k))) {
-      return false;
-    }
-
-    return phase.keys.some(k => name.includes(k));
-  });
-
-  savedTies.filter(t => {
-    const name = normalizePhase(t);
-
-   if (
-  name === 'final' ||
-  name.includes('terceiro')
-) {
-  return false;
-}
-
-    return phase.keys.some(k => name.includes(k));
-  }).forEach(t => {
+  saved.forEach(t => {
     const g = toGame(t);
 
-    const existingGame = games.find(m =>
-  (String(m.homeId) === String(g.homeId) &&
-   String(m.awayId) === String(g.awayId)) ||
-  (String(m.homeId) === String(g.awayId) &&
-   String(m.awayId) === String(g.homeId))
-);
-
-if (!existingGame) {
-  games.push(g);
-} else {
-  const sameOrder =
-    String(existingGame.homeId) === String(g.homeId);
-
-  const penaltyA = sameOrder ? g.penalties1A : g.penalties1B;
-  const penaltyB = sameOrder ? g.penalties1B : g.penalties1A;
-
-  if (penaltyA !== '' && penaltyA != null) {
-    existingGame.penalties1A = penaltyA;
-  }
-
-   if (penaltyB !== '' && penaltyB != null) {
-    existingGame.penalties1B = penaltyB;
-  }
-  }
-  });
-}
-
-if (phase.title === 'FINAL') {
-   const semis=allMatches.filter(m=>
-    normalizePhase(m).includes('semi')
-  );
-
-  const savedSemis=comp.semiFinalTies||[];
-
-  const isFinished=m=>
-    String(m.status||'').toLowerCase().includes('finaliz')&&
-    m.homeScore!==null&&m.homeScore!==undefined&&
-    m.awayScore!==null&&m.awayScore!==undefined&&
-    m.homeScore!==''&&m.awayScore!=='';
-
-  const isSavedFinished=t=>
-    String(t.status||'').toLowerCase().includes('finaliz')&&
-    t.score1A!==null&&t.score1A!==undefined&&
-    t.score1B!==null&&t.score1B!==undefined&&
-    t.score1A!==''&&t.score1B!=='';
-
-  const semisFinished=semis.length>0
-    ?semis.every(isFinished)
-    :savedSemis.length>0&&savedSemis.every(isSavedFinished);
-
-  if(!semisFinished)games=[];
-}
-   console.log('PÊNALTIS NA LISTA PÚBLICA:', phase.title, games.map(m=>({
-  mandante:m.homeName,
-  visitante:m.awayName,
-  placarA:m.homeScore,
-  placarB:m.awayScore,
-  penaltisA:m.penalties1A,
-  penaltisB:m.penalties1B
-}))); 
-   if(!games.length)return '';
-
-    games.sort((a,b)=>
-      String(a.date||'9999').localeCompare(String(b.date||'9999'))||
-      String(a.time||'').localeCompare(String(b.time||''))
+    const existing = games.find(m =>
+      (String(m.homeId) === String(g.homeId) &&
+       String(m.awayId) === String(g.awayId)) ||
+      (String(m.homeId) === String(g.awayId) &&
+       String(m.awayId) === String(g.homeId))
     );
 
-    return `<div class="classification-subtable">
-      <div class="classification-subtitle">${phase.title}</div>
-      <div class="knockout-games">${games.map(m=>{
-        const home=(db.teams||[]).find(t=>
-          String(t.id)===String(m.homeId)||String(t.dbId||'')===String(m.homeId))||{};
-        const away=(db.teams||[]).find(t=>
-          String(t.id)===String(m.awayId)||String(t.dbId||'')===String(m.awayId))||{};
-        const homeLogo=logoOf(home);
-        const awayLogo=logoOf(away);
-        const finished =
-  String(m.status || '').toLowerCase().includes('finaliz') &&
-  m.homeScore !== null && m.homeScore !== undefined &&
-  m.awayScore !== null && m.awayScore !== undefined &&
-  m.homeScore !== '' && m.awayScore !== '';
+    if (!existing) {
+      games.push(g);
+      return;
+    }
 
-const penalties =
-  m.penalties1A !== '' && m.penalties1A != null &&
-  m.penalties1B !== '' && m.penalties1B != null
-  ? `<small style="display:block;margin-top:4px;font-size:10px;font-weight:700;color:#f5c542;text-align:center;">PÊNALTIS: ${esc(m.penalties1A)} × ${esc(m.penalties1B)}</small>`
-    : '';  
-        
-        return `<div class="group-result-row">
-          <span>${esc(m.homeName||home.name||home.nome||'A definir')}</span>
-          ${homeLogo?`<img class="team-crest" src="${esc(homeLogo)}" alt="">`:''}
-               <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:75px;">
-  <b>${finished?`${esc(m.homeScore)} × ${esc(m.awayScore)}`:'×'}</b>
-  ${penalties}
-  ${window.publicMatchDate(m) ? `
-    <small style="display:block;margin-top:5px;font-size:10px;font-weight:800;color:#f5d45b;text-align:center;">
-      ${esc(window.publicMatchDate(m))}
-    </small>
-  ` : ''}
-</div>
-${awayLogo?`<img class="team-crest" src="${esc(awayLogo)}" alt="">`:''}
-          <span>${esc(m.awayName||away.name||away.nome||'A definir')}</span>
-        </div>`;
-      }).join('')}</div>
-    </div>`;
-  }).join('');
+    const sameOrder = String(existing.homeId) === String(g.homeId);
+
+    if (
+      (existing.homeScore === '' || existing.homeScore == null) &&
+      g.homeScore !== '' && g.homeScore != null
+    ) {
+      existing.homeScore = sameOrder ? g.homeScore : g.awayScore;
+      existing.awayScore = sameOrder ? g.awayScore : g.homeScore;
+    }
+
+    if (g.penalties1A !== '' && g.penalties1A != null) {
+      existing.penalties1A = sameOrder ? g.penalties1A : g.penalties1B;
+      existing.penalties1B = sameOrder ? g.penalties1B : g.penalties1A;
+    }
+
+    if (
+      String(g.status || '').toLowerCase().includes('finaliz')
+    ) {
+      existing.status = 'Finalizado';
+    }
+  });
+
+  if (phase.title === 'FINAL') {
+    const semis = allMatches.filter(m =>
+      normalizePhase(m).includes('semi')
+    );
+
+    const savedSemis = comp.semiFinalTies || [];
+
+    const done = m =>
+      String(m.status || '').toLowerCase().includes('finaliz') &&
+      m.homeScore !== '' && m.homeScore != null &&
+      m.awayScore !== '' && m.awayScore != null;
+
+    const semisFinished = semis.length
+      ? semis.every(done)
+      : savedSemis.length > 0 && savedSemis.every(t =>
+          String(t.status || '').toLowerCase().includes('finaliz') &&
+          t.score1A !== '' && t.score1A != null &&
+          t.score1B !== '' && t.score1B != null
+        );
+
+    if (!semisFinished) games = [];
+  }
+
+  if (!games.length) return '';
+
+  games.sort((a, b) =>
+    String(a.date || '9999').localeCompare(String(b.date || '9999')) ||
+    String(a.time || '').localeCompare(String(b.time || ''))
+  );
+
+  return `<div class="classification-subtable">
+    <div class="classification-subtitle">${phase.title}</div>
+    <div class="knockout-games">${games.map(m => {
+      const home = (db.teams || []).find(t =>
+        String(t.id) === String(m.homeId) ||
+        String(t.dbId || '') === String(m.homeId)
+      ) || {};
+
+      const away = (db.teams || []).find(t =>
+        String(t.id) === String(m.awayId) ||
+        String(t.dbId || '') === String(m.awayId)
+      ) || {};
+
+      const homeLogo = logoOf(home);
+      const awayLogo = logoOf(away);
+
+      const finished =
+        String(m.status || '').toLowerCase().includes('finaliz') &&
+        m.homeScore !== '' && m.homeScore != null &&
+        m.awayScore !== '' && m.awayScore != null;
+
+      const penalties =
+        m.penalties1A !== '' && m.penalties1A != null &&
+        m.penalties1B !== '' && m.penalties1B != null
+          ? `<small style="display:block;margin-top:4px;font-size:10px;font-weight:700;color:#f5c542;text-align:center;">PÊNALTIS: ${esc(m.penalties1A)} × ${esc(m.penalties1B)}</small>`
+          : '';
+
+      return `<div class="group-result-row">
+        <span>${esc(m.homeName || home.name || home.nome || 'A definir')}</span>
+        ${homeLogo ? `<img class="team-crest" src="${esc(homeLogo)}" alt="">` : ''}
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:75px;">
+          <b>${finished ? `${esc(m.homeScore)} × ${esc(m.awayScore)}` : '×'}</b>
+          ${penalties}
+          ${window.publicMatchDate(m) ? `<small style="display:block;margin-top:5px;font-size:10px;font-weight:800;color:#f5d45b;text-align:center;">${esc(window.publicMatchDate(m))}</small>` : ''}
+        </div>
+        ${awayLogo ? `<img class="team-crest" src="${esc(awayLogo)}" alt="">` : ''}
+        <span>${esc(m.awayName || away.name || away.nome || 'A definir')}</span>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}).join('');
+
 
   // HTML dos confrontos guardado para juntar com os grupos.
 }
