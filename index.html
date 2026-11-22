@@ -15540,8 +15540,15 @@ async function loadSupabaseMatches() {
         ? `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`
         : '';
 
-      const home = teams.find(t => String(t.dbId) === String(r.equipe_mandante_id));
-      const away = teams.find(t => String(t.dbId) === String(r.equipe_visitante_id));
+     const home = teams.find(t =>
+  String(t.dbId || '') === String(r.equipe_mandante_id) ||
+  String(t.id || '') === String(r.equipe_mandante_id)
+);
+
+const away = teams.find(t =>
+  String(t.dbId || '') === String(r.equipe_visitante_id) ||
+  String(t.id || '') === String(r.equipe_visitante_id)
+);
       const comp = (db.competitions || []).find(
         c => String(c.dbId || c.id) === String(r.competicao_id)
       );
