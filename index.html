@@ -12610,8 +12610,7 @@ else {
     .from('jogos')
     .insert(payload)
     .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
-    status')
-    .single();
+.single();
 }
     if(result.error)throw result.error;
    button.dataset.editId='';button.textContent='Adicionar jogo à tabela';
