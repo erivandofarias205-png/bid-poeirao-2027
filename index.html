@@ -12439,14 +12439,37 @@ function renderMatches(){
  }) : [];
 
  // Não mostrar duas vezes se o jogo já foi cadastrado no Supabase.
- const missingPhaseMatches = phaseMatches.filter(p =>
-   !officialMatches.some(m =>
-     String(m.homeId) === String(p.homeId) &&
-     String(m.awayId) === String(p.awayId) &&
-     String(m.round || '').toLowerCase() === p.round.toLowerCase()
-   )
- );
+const normalizeRound = value => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toUpperCase()
+  .replace(/[º°]/g, '')
+  .replace(/\s+/g, ' ')
+  .trim();
 
+const isThirdPlace = value => {
+  const phase = normalizeRound(value);
+  return phase.includes('TERCEIRO') || /3\s*E\s*4/.test(phase);
+};
+
+const missingPhaseMatches = phaseMatches.filter(p =>
+  !officialMatches.some(m => {
+    const sameTeams =
+      (String(m.homeId) === String(p.homeId) &&
+       String(m.awayId) === String(p.awayId)) ||
+      (String(m.homeId) === String(p.awayId) &&
+       String(m.awayId) === String(p.homeId));
+
+    const officialRound = normalizeRound(m.round);
+    const phaseRound = normalizeRound(p.round);
+
+    const samePhase = isThirdPlace(officialRound) && isThirdPlace(phaseRound)
+      ? true
+      : officialRound === phaseRound;
+
+    return sameTeams && samePhase;
+  })
+);
  const sorted = [
    ...officialMatches,
    ...missingPhaseMatches
