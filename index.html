@@ -13697,7 +13697,12 @@ const toGame = t => {
 
 const phaseGroups = [
   { title: 'FINAL', test: n => n === 'final' || n.startsWith('final ') },
-  { title: 'DISPUTA DE 3º E 4º LUGAR', test: n => n.includes('terceiro') },
+ { title: 'DISPUTA DE 3º E 4º LUGAR', test: n =>
+  n.includes('terceiro') ||
+  n.includes('3º') ||
+  n.includes('3o') ||
+  (n.includes('3') && n.includes('4'))
+},
   { title: 'SEMIFINAIS', test: n => n.includes('semi') },
   { title: 'QUARTAS DE FINAL', test: n => n.includes('quart') },
   { title: 'OITAVAS DE FINAL', test: n => n.includes('oitav') || n.includes('16 avos') }
