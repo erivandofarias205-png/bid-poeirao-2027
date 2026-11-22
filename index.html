@@ -14991,8 +14991,10 @@ renderMatchEventList();
  const originalRenderMatchesForEvents=renderMatches;
  renderMatches=function(){originalRenderMatchesForEvents();refreshMatchEventChoices();document.querySelectorAll('[data-match-events]').forEach(b=>b.onclick=()=>{const m=(db.matches||[]).find(x=>String(x.id)===String(b.dataset.matchEvents));if(!m)return;showTab('games');refreshMatchEventChoices(m.id);$('matchEventEditor').scrollIntoView({behavior:'smooth',block:'center'});});};
  renderAll();
- </script>
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
  <script>
  
  
@@ -18279,18 +18281,7 @@ async function sincronizarOitavasSupabase(c) {
       status
     };
 
-    await salvarPartida(
-  payloadJogo2,
-  `oitavas-${i + 1}-jogo-2`
-);
-
-} else {
-  await protegerSegundoJogo(
-    c,
-    `oitavas-${i + 1}-jogo-2`
-  );
-}
-
+   
     // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
     if (formato === 'ida_volta') {
       const payloadJogo2 = {
@@ -18316,17 +18307,7 @@ async function sincronizarOitavasSupabase(c) {
         status
       };
 
-     await salvarPartida(
-  payloadJogo2,
-  `oitavas-${i + 1}-jogo-2`
-);
-
-} else {
-  await protegerSegundoJogo(
-    c,
-    `oitavas-${i + 1}-jogo-2`
-  );
-}
+     
 // ===== SINCRONIZAR QUARTAS COM A TABELA GERAL DE JOGOS =====
 
 async function sincronizarQuartasSupabase(c) {
