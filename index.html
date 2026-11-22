@@ -10138,7 +10138,7 @@ async function renderAdminCommissionVoters(competitionId){
       votos:{}
     };
 
-    function mostrarEtapa(){
+    async function mostrarEtapa(){
 
       const etapa = etapasValidas[etapaAtual];
 
@@ -10153,7 +10153,28 @@ async function renderAdminCommissionVoters(competitionId){
       };
 
       window.__BID_COMMISSION_DRAFT.votos[etapa.key] = votos;
+// CONSULTAR VOTAÇÃO POPULAR DA CATEGORIA
+const {data:resultadoPublico,error:erroPublico} =
+  await supabaseClient.rpc('consultar_resultado_eleicao',{
+    p_competicao_id:competitionId,
+    p_categoria:etapa.key
+  });
 
+if(erroPublico) throw erroPublico;
+
+const mapaVotosPublico = new Map(
+  (resultadoPublico || []).map(item=>[
+    String(item.indicado_id),
+    Number(item.total_votos || 0)
+  ])
+);
+
+const maiorVotacaoPublica = Math.max(
+  0,
+  ...candidatos.map(person=>
+    mapaVotosPublico.get(String(person.id)) || 0
+  )
+);
       out.innerHTML = `
         <div style="margin:15px 0;padding:12px;border:1px solid #d4af37;border-radius:12px">
 
@@ -10180,10 +10201,24 @@ async function renderAdminCommissionVoters(competitionId){
                   ${esc(person.name)}
                 </strong>
 
-                <small style="display:block;margin-bottom:8px">
-                  ${esc(person.team)}
-                </small>
+                <small style="display:block;margin-bottom:5px">
+  ${esc(person.team)}
+</small>
 
+<div style="
+  font-size:10px;
+  font-weight:bold;
+  color:#e4bd43;
+  margin:4px 0 8px;
+">
+  ${
+    (mapaVotosPublico.get(String(person.id)) || 0) > 0 &&
+    (mapaVotosPublico.get(String(person.id)) || 0) === maiorVotacaoPublica
+      ? '✓ ESCOLHA DO PÚBLICO'
+      : ''
+  }
+  ${mapaVotosPublico.get(String(person.id)) || 0} voto(s) do público
+</div>
                 <button type="button"
                   class="gold"
                   data-commission-voter="elizanio"
