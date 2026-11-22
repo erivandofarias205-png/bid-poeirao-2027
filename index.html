@@ -10173,7 +10173,7 @@ async function renderAdminCommissionVoters(competitionId){
 
                 ${person.photo ? `
                   <img src="${esc(person.photo)}"
-                    style="width:100%;height:105px;object-fit:cover;border-radius:7px">
+                    style="width:100%;height:155px;object-fit:contain;object-position:center;background:#07152f;border-radius:7px"
                 ` : '<div style="font-size:35px">⚽</div>'}
 
                 <strong style="display:block;font-size:12px;margin:7px 0">
@@ -10263,7 +10263,91 @@ async function renderAdminCommissionVoters(competitionId){
     out.innerHTML = '<div class="empty">Erro ao carregar candidatos: '+esc(error.message)+'</div>';
   }
 }
-const saveAdminHighlights = $('saveAdminHighlights');
+// ============================================
+// SALVAR VOTOS DA COMISSÃO NO SUPABASE
+// ============================================
+
+const saveCommissionVotes = $('saveCommissionVotes');
+
+if(saveCommissionVotes){
+
+  saveCommissionVotes.addEventListener('click', async()=>{
+
+    const draft = window.__BID_COMMISSION_DRAFT;
+
+    if(!draft || !draft.completed){
+      alert('Finalize todas as categorias antes de salvar.');
+      return;
+    }
+
+    if(window.__BID_ADMIN_VERIFIED !== true){
+      alert('Acesso administrativo necessário.');
+      return;
+    }
+
+    try{
+
+      saveCommissionVotes.disabled = true;
+      saveCommissionVotes.textContent = 'SALVANDO VOTOS...';
+
+      const competitionId = draft.competitionId;
+
+      const {data:eleicaoAtual,error:erroLeitura} = await supabaseClient
+        .from('eleicao_indicados')
+        .select('dados')
+        .eq('competicao_id',competitionId)
+        .maybeSingle();
+
+      if(erroLeitura) throw erroLeitura;
+
+      const dadosAtuais = eleicaoAtual?.dados || {};
+
+      const dadosAtualizados = {
+        ...dadosAtuais,
+
+        votosComissao: {
+          ...(dadosAtuais.votosComissao || {}),
+          ...draft.votos,
+          concluida: true,
+          salvaEm: new Date().toISOString()
+        }
+      };
+
+      const {error} = await supabaseClient
+        .from('eleicao_indicados')
+        .upsert({
+          competicao_id: competitionId,
+          dados: dadosAtualizados,
+          atualizado_em: new Date().toISOString()
+        },{onConflict:'competicao_id'});
+
+      if(error) throw error;
+
+      alert('Votos da comissão salvos com sucesso!');
+
+      const status = $('adminCommissionStatus');
+
+      if(status){
+        status.textContent = 'VOTOS DA COMISSÃO SALVOS NO BANCO DE DADOS.';
+      }
+
+    }catch(error){
+
+      console.error('Erro ao salvar votos da comissão:',error);
+
+      alert('Não foi possível salvar os votos: '+error.message);
+
+    }finally{
+
+      saveCommissionVotes.disabled = false;
+      saveCommissionVotes.textContent = '💾 SALVAR VOTOS DA COMISSÃO';
+
+    }
+
+  });
+
+}
+  const saveAdminHighlights = $('saveAdminHighlights');
 
 if(saveAdminHighlights){
   saveAdminHighlights.addEventListener('click',async()=>{
