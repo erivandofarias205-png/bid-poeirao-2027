@@ -4101,7 +4101,26 @@ function voltarAoBIDPublico() {
 <label>Gols do visitante<input id="matchAwayScore" min="0" placeholder="—" type="number"/></label>
 <label>Status<select id="matchStatus"><option value="Agendado">Agendado</option><option value="Finalizado">Finalizado</option><option value="Adiado">Adiado</option><option value="Cancelado">Cancelado</option></select></label>
 <label>Horário<input id="matchTime" type="time"/></label>
-</div><div class="actions"><button class="gold" id="saveMatch">Adicionar jogo à tabela</button><button class="secondary" id="exportMatches">Baixar tabela (CSV)</button></div></div>
+</div><div class="actions">
+  <button class="gold" id="saveMatch">Adicionar jogo à tabela</button>
+
+  <button
+    type="button"
+    class="gold"
+    id="finalizeMatch"
+    onclick="
+      if (!$('matchHomeScore').value || !$('matchAwayScore').value) {
+        alert('Informe o placar das duas equipes antes de finalizar.');
+      } else {
+        $('matchStatus').value = 'Finalizado';
+        $('saveMatch').click();
+      }
+    ">
+    ✓ FINALIZAR PARTIDA
+  </button>
+
+  <button class="secondary" id="exportMatches">Baixar tabela (CSV)</button>
+</div>
 <div class="tablewrap"><table><thead><tr><th>Data</th><th>Rodada</th><th>Jogo</th><th>Placar</th><th>Local</th><th>Status</th><th>Ação</th></tr></thead><tbody id="matchRows"></tbody></table></div><div class="empty" id="noMatches">Nenhum jogo cadastrado ainda.</div>
 <div class="match-event-editor" id="matchEventEditor">
  <h4>⚽ REGISTRAR GOLS E CARTÕES DESTE JOGO</h4>
