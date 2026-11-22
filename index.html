@@ -13096,11 +13096,18 @@ return true;
       }] : [])
     ];
 
-    const findPhaseTeam = id =>
-      (db.teams || []).find(t =>
-        String(t.id) === String(id) ||
-        String(t.dbId || '') === String(id)
-      );
+   
+const normalizeTeamId = value =>
+  String(value ?? '').trim().replace(/^dbteam-/i, '');
+
+const findPhaseTeam = id =>
+  (db.teams || []).find(t =>
+    [t.id, t.dbId, t.db_id].some(teamId =>
+      teamId != null &&
+      normalizeTeamId(teamId) === normalizeTeamId(id)
+    )
+  );
+
 
     phaseTies.forEach(tie => {
       if (!tie) return;
