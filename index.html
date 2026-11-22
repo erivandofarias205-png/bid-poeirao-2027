@@ -9222,16 +9222,9 @@ function removeLargeInlineImages(value){
  return value;
 }
 function saveDb(){
- try{
-   localStorage.setItem(KEY,JSON.stringify(removeLargeInlineImages(db)));
- } catch(e) {
-   console.error('Falha ao salvar cópia local:',e);
-   alert('O armazenamento local está cheio. Os dados principais precisam ser salvos no Supabase. Evite cadastrar fotos grandes nesta versão.');
- }
-
- if (typeof window.renderAll === 'function') {
-   window.renderAll();
- }
+ try{localStorage.setItem(KEY,JSON.stringify(removeLargeInlineImages(db)));}
+ catch(e){console.error('Falha ao salvar cópia local:',e);alert('O armazenamento local está cheio. Os dados principais precisam ser salvos no Supabase. Evite cadastrar fotos grandes nesta versão.');}
+ renderAll();
 }
 const saveEverythingButton=document.getElementById('saveEverything');
 if(saveEverythingButton){saveEverythingButton.addEventListener('click',()=>{saveDb();const stamp=new Date().toLocaleString('pt-BR');saveEverythingButton.textContent='Salvo ✓';alert('Cópia local dos dados salva neste navegador em '+stamp+'. Os registros já enviados ao Supabase permanecem no banco. Para guardar uma cópia externa, use “Exportar cópia de segurança (JSON)”.');});}
@@ -13213,7 +13206,7 @@ fixtures.push({
   competitionName: publicComp.name || '',
   competitionLogo: publicComp.logo || ''
 });
-});
+
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
   const renderFixtureCard=(m)=>{
     const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';
@@ -14706,10 +14699,7 @@ function renderCompetitionManager(){
     saveDb();alert(extrasSaved?'Competição cadastrada com sucesso! Formato, quantidade de grupos, equipes por grupo e endereço do regulamento foram enviados ao Supabase.':'A competição foi cadastrada, mas os campos adicionais não foram salvos. Detalhe: '+(optionalError?.message||'erro desconhecido')+'. Confira as permissões e os nomes das colunas da tabela COMPETICOES.');
   }catch(e){console.error(e);alert('Não foi possível salvar a competição no Supabase. Detalhe: '+(e?.message||e));}
  });
- function renderAll()
-{renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();$('nTeams').textContent=activeCompetitionTeams().length;$('nPlayers').textContent=activeCompetitionTeams().reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).filter(matchBelongsToActiveCompetition).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
-  
-window.renderAll = renderAll;
+ function renderAll(){renderPublicCompetitions();renderCompetitionManager();renderTeams();renderRoster();updateSelects();renderAdminList();renderEvents();renderMatches();renderMatchSheet();renderFrontPage();$('nTeams').textContent=activeCompetitionTeams().length;$('nPlayers').textContent=activeCompetitionTeams().reduce((n,t)=>n+t.players.length,0);$('nMatches').textContent=(db.matches||[]).filter(matchBelongsToActiveCompetition).length;$('brandTitle').textContent='BID GERAL FUTEBOL AMADOR · TVFP ESPORTES';$('competitionSubtitle').textContent='BOLETIM INFORMATIVO DOS ATLETAS AMADORES · TEMPORADA 2026';if($('competitionName'))$('competitionName').value=db.competition||'TVFP Esportes'}
  $('q').addEventListener('input',renderRoster);$('filter').addEventListener('change',renderRoster);
  $('athCpf').addEventListener('input',e=>{let d=cpfDigits(e.target.value).slice(0,11);if(d.length>9)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);else if(d.length>6)d=d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);else if(d.length>3)d=d.slice(0,3)+'.'+d.slice(3);e.target.value=d;if(cpfDigits(d).length===11 && typeof lookupAthleteByCpf==='function')lookupAthleteByCpf()});
  $('export').addEventListener('click',()=>download('bid-poeirao-backup.json',JSON.stringify(db,null,2),'application/json'));
@@ -15001,10 +14991,8 @@ renderMatchEventList();
  const originalRenderMatchesForEvents=renderMatches;
  renderMatches=function(){originalRenderMatchesForEvents();refreshMatchEventChoices();document.querySelectorAll('[data-match-events]').forEach(b=>b.onclick=()=>{const m=(db.matches||[]).find(x=>String(x.id)===String(b.dataset.matchEvents));if(!m)return;showTab('games');refreshMatchEventChoices(m.id);$('matchEventEditor').scrollIntoView({behavior:'smooth',block:'center'});});};
  renderAll();
-
-}
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ </script>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
  <script>
  
  
@@ -16945,6 +16933,10 @@ document.addEventListener('click',function(e){
 });
 </script>
 
+
+
+
+
 <script id="phase-manager-script">
 (function(){
  const $p=id=>document.getElementById(id);
@@ -17558,6 +17550,84 @@ async function saveCompetitionPhaseConfig(c) {
   return true;
 }
 
+const matchLegs =
+  $p('newCompetitionMatchLegs').value || 'unico';
+
+const phaseOptions = {
+  ...(c.phaseOptions || {}),
+  totalTeams,
+  matchLegs
+};
+
+  if (c._remote && c.dbId && typeof supabaseClient !== 'undefined') {
+    const dados = {
+      nome: name,
+      temporada: Number(season) || new Date().getFullYear(),
+      formato: format,
+      quantidade_grupos: groupCount,
+      equipes_por_grupo: teamsPerGroup
+    };
+
+    let result = await supabaseClient
+      .from('COMPETICOES')
+      .update(dados)
+      .eq('id', c.dbId)
+      .select('id');
+
+    if (result.error) {
+      console.error('Erro ao atualizar COMPETICOES:', result.error);
+      alert(
+        'O Supabase não confirmou a alteração. Nada foi confirmado como salvo. Erro: ' +
+        result.error.message
+      );
+      return;
+    }
+
+    if (!result.data || result.data.length === 0) {
+      alert(
+        'Nenhuma competição foi atualizada. Confira o ID e as permissões UPDATE da tabela COMPETICOES.'
+      );
+      return;
+    }
+  } else {
+    alert(
+      'Esta competição não possui vínculo confirmado com o Supabase. A alteração não foi enviada ao banco.'
+    );
+    return;
+  }
+
+  c.name = name;
+  c.season = String(season);
+  c.format = format;
+  c.groupCount = groupCount;
+  c.teamsPerGroup = teamsPerGroup;
+  
+c.phaseOptions = {
+  ...(c.phaseOptions || {}),
+  ...phaseOptions
+};
+
+try {
+  await saveCompetitionPhaseConfig(c);
+} catch (error) {
+  console.error('Erro ao salvar opções da competição:', error);
+  alert(
+    'As opções básicas foram atualizadas, mas não foi possível confirmar o salvamento das configurações extras. Erro: ' +
+    (error.message || error)
+  );
+  return;
+}
+
+  editCompId = null;
+  add.style.display = '';
+  saveEdit.style.display = 'none';
+
+  save();
+  refreshCompetitionSelect();
+  renderPhase();
+
+  alert('Competição atualizada e confirmada pelo Supabase!');
+});
  $p('phaseCompetitionSelect')?.addEventListener('change',()=>{
   db.activeCompetitionId=$p('phaseCompetitionSelect').value;
   const c=comp();
@@ -18287,13 +18357,349 @@ async function sincronizarOitavasSupabase(c) {
       status
     };
 
-   
-     // SALVAR O PRIMEIRO JOGO
     await salvarPartida(
-      payloadJogo1,
-      `semifinal-${i + 1}-jogo-1`
-    );
+  payloadJogo2,
+  `oitavas-${i + 1}-jogo-2`
+);
 
+} else {
+  await protegerSegundoJogo(
+    c,
+    `oitavas-${i + 1}-jogo-2`
+  );
+}
+
+    // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
+    if (formato === 'ida_volta') {
+      const payloadJogo2 = {
+        competicao_id: c.dbId,
+        chave_fase: `oitavas-${i + 1}-jogo-2`,
+        equipe_mandante_id: Number(idB),
+        equipe_visitante_id: Number(idA),
+        fase: 'Oitavas de final',
+        rodada: null,
+        formato: 'ida_volta',
+        data_hora: dataHora(m.date2, m.time2),
+        local_jogo: m.venue2 || null,
+
+        // No segundo jogo, a equipe B é mandante.
+        gols_mandante:
+          m.score2B === '' || m.score2B == null
+            ? null : Number(m.score2B),
+
+        gols_visitante:
+          m.score2A === '' || m.score2A == null
+            ? null : Number(m.score2A),
+
+        status
+      };
+
+     await salvarPartida(
+  payloadJogo2,
+  `oitavas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `oitavas-${i + 1}-jogo-2`
+  );
+}
+// ===== SINCRONIZAR QUARTAS COM A TABELA GERAL DE JOGOS =====
+
+async function sincronizarQuartasSupabase(c) {
+  if (!c?.dbId) {
+    throw new Error('A competição precisa estar cadastrada no Supabase.');
+  }
+
+  const confrontos = c.quarterFinalTies || [];
+  const equipes = teams(c);
+
+  const obterEquipe = id => {
+    const original = String(id || '');
+    const limpo = original.replace(/^dbteam-/, '');
+
+    return equipes.find(t =>
+      String(t.id) === original ||
+      String(t.dbId) === original ||
+      String(t.id) === limpo ||
+      String(t.dbId) === limpo
+    );
+  };
+
+  const dataHora = (data, hora) => {
+    if (!data) return null;
+
+    const dt = new Date(`${data}T${hora || '12:00'}:00`);
+
+    if (Number.isNaN(dt.getTime())) {
+      throw new Error('Confira a data e o horário de uma partida das quartas.');
+    }
+
+    return dt.toISOString();
+  };
+
+  const salvarPartida = async (payload, chave) => {
+    const { data: existentes, error: buscaErro } =
+      await supabaseClient
+        .from('jogos')
+        .select('id')
+        .eq('competicao_id', c.dbId)
+        .eq('chave_fase', chave);
+
+    if (buscaErro) throw buscaErro;
+
+    if (existentes?.length > 1) {
+      throw new Error(`Existem partidas duplicadas na chave ${chave}.`);
+    }
+
+    if (existentes?.length === 1) {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .update(payload)
+        .eq('id', existentes[0].id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .insert(payload);
+
+      if (error) throw error;
+    }
+  };
+
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
+
+    if (!m?.a || !m?.b) continue;
+
+    const equipeA = obterEquipe(m.a);
+    const equipeB = obterEquipe(m.b);
+
+    const idA = equipeA?.dbId ||
+      String(equipeA?.id || '').replace(/^dbteam-/, '');
+
+    const idB = equipeB?.dbId ||
+      String(equipeB?.id || '').replace(/^dbteam-/, '');
+
+    if (
+      !idA || !idB ||
+      !/^\d+$/.test(String(idA)) ||
+      !/^\d+$/.test(String(idB))
+    ) {
+      throw new Error(
+        `Não foi possível identificar os IDs reais das equipes do confronto ${i + 1}.`
+      );
+    }
+
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+    const formato = m.format === 'ida_volta'
+      ? 'ida_volta'
+      : 'unico';
+
+    // JOGO 1 — EQUIPE A COMO MANDANTE
+    const payloadJogo1 = {
+      competicao_id: c.dbId,
+      chave_fase: `quartas-${i + 1}-jogo-1`,
+      equipe_mandante_id: Number(idA),
+      equipe_visitante_id: Number(idB),
+      fase: 'Quartas de final',
+      rodada: null,
+      formato,
+      data_hora: dataHora(m.date1, m.time1),
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null
+          ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null
+          ? null : Number(m.score1B),
+      status
+    };
+
+    await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
+}
+
+    // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
+    if (formato === 'ida_volta') {
+      const payloadJogo2 = {
+        competicao_id: c.dbId,
+        chave_fase: `quartas-${i + 1}-jogo-2`,
+        equipe_mandante_id: Number(idB),
+        equipe_visitante_id: Number(idA),
+        fase: 'Quartas de final',
+        rodada: null,
+        formato: 'ida_volta',
+        data_hora: dataHora(m.date2, m.time2),
+        local_jogo: m.venue2 || null,
+
+        // No segundo jogo, a equipe B é mandante.
+        gols_mandante:
+          m.score2B === '' || m.score2B == null
+            ? null : Number(m.score2B),
+
+        gols_visitante:
+          m.score2A === '' || m.score2A == null
+            ? null : Number(m.score2A),
+
+        status
+      };
+
+     await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
+}
+
+
+async function sincronizarSemifinaisSupabase(c) {
+  if (!c?.dbId) {
+    throw new Error('Competição sem vínculo com o Supabase.');
+  }
+
+  const confrontos = c.semiFinalTies || [];
+  const equipes = teams(c);
+
+  const obterEquipe = id => {
+    const original = String(id || '');
+    const limpo = original.replace(/^dbteam-/, '');
+
+    return equipes.find(t =>
+      String(t.id) === original ||
+      String(t.dbId) === original ||
+      String(t.id) === limpo ||
+      String(t.dbId) === limpo
+    );
+  };
+
+  const dataHora = (data, hora) => {
+    if (!data) return null;
+
+    const dt = new Date(`${data}T${hora || '12:00'}:00`);
+
+    if (Number.isNaN(dt.getTime())) {
+      throw new Error('Confira a data e o horário de uma partida da semifinal.');
+    }
+
+    return dt.toISOString();
+  };
+
+  const salvarPartida = async (payload, chave) => {
+    const { data: existentes, error: buscaErro } =
+      await supabaseClient
+        .from('jogos')
+        .select('id')
+        .eq('competicao_id', c.dbId)
+        .eq('chave_fase', chave);
+
+    if (buscaErro) throw buscaErro;
+
+    if (existentes?.length > 1) {
+      throw new Error(`Existem partidas duplicadas na chave ${chave}.`);
+    }
+
+    if (existentes?.length === 1) {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .update(payload)
+        .eq('id', existentes[0].id);
+
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from('jogos')
+        .insert(payload);
+
+      if (error) throw error;
+    }
+  };
+
+  for (let i = 0; i < confrontos.length; i++) {
+    const m = confrontos[i];
+
+    if (!m?.a || !m?.b) continue;
+
+    const equipeA = obterEquipe(m.a);
+    const equipeB = obterEquipe(m.b);
+
+    const idA = equipeA?.dbId ||
+      String(equipeA?.id || '').replace(/^dbteam-/, '');
+
+    const idB = equipeB?.dbId ||
+      String(equipeB?.id || '').replace(/^dbteam-/, '');
+
+    if (
+      !idA || !idB ||
+      !/^\d+$/.test(String(idA)) ||
+      !/^\d+$/.test(String(idB))
+    ) {
+      throw new Error(
+        `Não foi possível identificar os IDs reais das equipes da semifinal ${i + 1}.`
+      );
+    }
+
+    const status = {
+      agendado: 'Agendado',
+      em_andamento: 'Em andamento',
+      finalizado: 'Finalizado'
+    }[String(m.status || 'agendado').toLowerCase()] || 'Agendado';
+
+    const formato = m.format === 'ida_volta'
+      ? 'ida_volta'
+      : 'unico';
+
+    // JOGO 1 — EQUIPE A COMO MANDANTE
+    const payloadJogo1 = {
+      competicao_id: c.dbId,
+      chave_fase: `semifinal-${i + 1}-jogo-1`,
+      equipe_mandante_id: Number(idA),
+      equipe_visitante_id: Number(idB),
+      fase: 'Semifinais',
+      rodada: null,
+      formato,
+      data_hora: dataHora(m.date1, m.time1),
+      local_jogo: m.venue1 || null,
+      gols_mandante:
+        m.score1A === '' || m.score1A == null
+          ? null : Number(m.score1A),
+      gols_visitante:
+        m.score1B === '' || m.score1B == null
+          ? null : Number(m.score1B),
+      status
+    };
+
+   await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
+}
     // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
     if (formato === 'ida_volta') {
       const payloadJogo2 = {
@@ -18306,16 +18712,31 @@ async function sincronizarOitavasSupabase(c) {
         formato: 'ida_volta',
         data_hora: dataHora(m.date2, m.time2),
         local_jogo: m.venue2 || null,
+
+        // No segundo jogo, a equipe B é mandante.
         gols_mandante:
           m.score2B === '' || m.score2B == null
             ? null : Number(m.score2B),
+
         gols_visitante:
           m.score2A === '' || m.score2A == null
             ? null : Number(m.score2A),
+
         status
       };
-};
-     // ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
+
+      await salvarPartida(
+  payloadJogo2,
+  `quartas-${i + 1}-jogo-2`
+);
+
+} else {
+  await protegerSegundoJogo(
+    c,
+    `quartas-${i + 1}-jogo-2`
+  );
+}
+  // ===== QUARTAS DE FINAL — PAINEL INDEPENDENTE =====
 
    panel.querySelectorAll('.quarter-tie-card').forEach(card => {
      const a = card.querySelector('[data-quarter-field="score1A"]');
@@ -18886,6 +19307,7 @@ setTimeout(() => {
 }, 300);
 })();
 </script>
+
 
 <style id="finished-panel-layout-fix">
 #gamesView .finished-match-panel{display:block!important;margin-top:14px!important;clear:both}
