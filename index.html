@@ -12629,6 +12629,23 @@ if (oldId) {
 }
     if(result.error)throw result.error;
    button.dataset.editId='';button.textContent='Adicionar jogo à tabela';
+      // Mantém a configuração de fases igual ao jogo salvo (Final e 3º lugar)
+   try{
+     const faseTxt=String(payload.fase||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+     const chaveFase=(faseTxt.includes('terceiro')||/3\D*e\D*4/.test(faseTxt))?'thirdPlaceTie'
+                    :(faseTxt==='final'||faseTxt.startsWith('final '))?'finalMatchTie':null;
+     const cfgComp=activeCompetition();
+     const tie=chaveFase&&cfgComp?cfgComp[chaveFase]:null;
+     if(tie){
+       const mesmoLado=String(tie.a).replace(/^dbteam-/,'')===String(home.dbId||home.id).replace(/^dbteam-/,'');
+       tie.score1A=mesmoLado?(hs===''?'':Number(hs)):(as===''?'':Number(as));
+       tie.score1B=mesmoLado?(as===''?'':Number(as)):(hs===''?'':Number(hs));
+       tie.status=status.toLowerCase();
+       tie.date1=date; tie.time1=time||'';
+       tie.venue1=$('matchVenue').value.trim();
+       if(typeof saveCompetitionPhaseConfig==='function') await saveCompetitionPhaseConfig(cfgComp);
+     }
+   }catch(e){console.warn('Não foi possível atualizar a configuração da fase:',e)}
    await loadSupabaseMatches();showTab('admin');
    alert(old?.dbId?'Partida atualizada no Supabase e disponível nos dispositivos.':'Partida salva no Supabase e disponível nos dispositivos.');
  }catch(error){console.error('Falha ao salvar partida no Supabase:',error);alert('Não foi possível salvar a partida no Supabase. Nenhuma confirmação foi dada. Detalhe: '+(error?.message||error));}
