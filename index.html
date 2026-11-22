@@ -18461,20 +18461,7 @@ async function sincronizarQuartasSupabase(c) {
         status
       };
 
-     await salvarPartida(
-  payloadJogo2,
-  `quartas-${i + 1}-jogo-2`
-);
-
-} else {
-  await protegerSegundoJogo(
-    c,
-    `quartas-${i + 1}-jogo-2`
-  );
-}
-
-
-async function sincronizarSemifinaisSupabase(c) {
+    async function sincronizarSemifinaisSupabase(c) {
   if (!c?.dbId) {
     throw new Error('Competição sem vínculo com o Supabase.');
   }
