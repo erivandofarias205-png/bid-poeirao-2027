@@ -15803,9 +15803,9 @@ async function loadSupabaseCompetitions() {
         const msg = queryResult.error.message || '';
 
         if (/configuracao_fases|regulamento_url|quantidade_grupos|equipes_por_grupo|column .* does not exist|schema cache|could not find/i.test(msg)) {
-          queryResult = await supabaseClient
+         queryResult = await supabaseClient
   .from(tableName)
-  .select('id,nome,temporada,formato,logo_url,status,regulamento_url,quantidade_grupos,equipes_por_grupo')
+  .select('id,nome,temporada,formato,logo_url,status')
   .order('temporada', { ascending: false });
         }
       }
