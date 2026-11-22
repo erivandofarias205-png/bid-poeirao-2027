@@ -14586,18 +14586,31 @@ function getCompetitionPhaseStatus(comp) {
   const finalStage = stages.find(s => s.round === 'final');
   const thirdStage = stages.find(s => s.round === 'terceiro');
 
-  const finalDone =
-    finalStage.ties.length > 0 &&
-   finalStage.ties.every(tie => tieDone(tie, 'final'));
+  const finalGames = games.filter(m => {
+  const round = normalize(m.round || m.fase || '');
+  return round === 'final' || round.startsWith('final ');
+});
 
-  const thirdDone =
-    thirdStage.ties.length === 0 ||
-   thirdStage.ties.every(tie => tieDone(tie, 'terceiro'));
+const thirdGames = games.filter(m => {
+  const round = normalize(m.round || m.fase || '');
+  return round.includes('terceiro') ||
+         round.includes('3º') ||
+         round.includes('3o');
+});
 
-  if (finalDone && thirdDone) {
-    return 'FINALIZADA';
-  }
+const finalDone = finalGames.length
+  ? finalGames.every(gameDone)
+  : finalStage.ties.length > 0 &&
+    finalStage.ties.every(tie => tieDone(tie, 'final'));
 
+const thirdDone = thirdGames.length
+  ? thirdGames.every(gameDone)
+  : thirdStage.ties.length === 0 ||
+    thirdStage.ties.every(tie => tieDone(tie, 'terceiro'));
+
+if (finalDone && thirdDone) {
+  return 'FINALIZADA';
+}
   const availableStages = stages.filter(s => s.ties.length);
 
   const current = availableStages.find(s =>
