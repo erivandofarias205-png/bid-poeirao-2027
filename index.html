@@ -14093,67 +14093,239 @@ const person=r.second?matching[1]:matching[0];
  $('printSheet')?.addEventListener('click',()=>{if(!$('sheetMatch')?.value){alert('Selecione um jogo primeiro.');return;}if(!$('matchSheet')?.querySelector('.sheet-heading'))buildMatchSheet();window.print();});
  
  
- 
- 
- 
- 
- 
- 
- function renderPublicCompetitions(){
-  const list=$('publicCompetitionList'); if(!list)return;
-  const comps=db.competitions||[];
-  if(!comps.length){
-    list.innerHTML='<p class="empty">Nenhuma competição cadastrada. As competições disponíveis aparecerão aqui quando forem cadastradas.</p>';
+
+function getCompetitionPhaseStatus(comp) {
+  if (!comp) return 'FASE DE GRUPOS';
+
+  const compIds = [comp.id, comp.dbId, comp.db_id]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
+
+  const games = (db.matches || []).filter(m => {
+    const ids = [
+      m.competitionId,
+      m.competicao_id,
+      m.competitionDbId
+    ].filter(v => v !== undefined && v !== null && v !== '')
+      .map(String);
+
+    if (ids.length) return ids.some(id => compIds.includes(id));
+
+    if (String(m.competition || '') === String(comp.name || '')) {
+      return true;
+    }
+
+    return false;
+  });
+
+  const normalize = value => String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  const gameDone = m =>
+    normalize(m.status).includes('finaliz') &&
+    m.homeScore !== '' &&
+    m.awayScore !== '' &&
+    m.homeScore !== null &&
+    m.awayScore !== null &&
+    m.homeScore !== undefined &&
+    m.awayScore !== undefined;
+
+  const tieDone = t =>
+    !!t &&
+    normalize(t.status).includes('finaliz') &&
+    t.score1A !== '' &&
+    t.score1B !== '' &&
+    t.score1A !== null &&
+    t.score1B !== null &&
+    t.score1A !== undefined &&
+    t.score1B !== undefined;
+
+  const groupGames = games.filter(m => {
+    const round = normalize(m.round || m.fase || '');
+
+    return ![
+      'oitava',
+      'quarta',
+      'semifinal',
+      'final',
+      'terceiro',
+      '16 avos',
+      'dezesseis'
+    ].some(term => round.includes(term));
+  });
+
+  const stages = [
+    {
+      label: 'OITAVAS DE FINAL',
+      ties: comp.knockoutTies || [],
+      round: 'oitava'
+    },
+    {
+      label: 'QUARTAS DE FINAL',
+      ties: comp.quarterFinalTies || [],
+      round: 'quarta'
+    },
+    {
+      label: 'SEMIFINAIS',
+      ties: comp.semiFinalTies || [],
+      round: 'semifinal'
+    },
+    {
+      label: 'FINAIS',
+      ties: comp.finalMatchTie ? [comp.finalMatchTie] : [],
+      round: 'final'
+    }
+  ];
+
+  // Se existem jogos de grupos, aguarda todos terminarem.
+  if (groupGames.length) {
+    if (!groupGames.every(gameDone)) {
+      return 'FASE DE GRUPOS';
+    }
+  }
+
+  // Localiza as fases eliminatórias também na tabela de jogos.
+  stages.forEach(stage => {
+    if (stage.ties.length) return;
+
+    stage.ties = games.filter(m =>
+      normalize(m.round || m.fase || '').includes(stage.round)
+    );
+  });
+
+  // A competição só termina depois do resultado da final.
+  const finalStage = stages.find(s => s.round === 'final');
+
+  if (finalStage.ties.length &&
+      finalStage.ties.every(tieDone)) {
+    return 'FINALIZADA';
+  }
+
+  // Avança para a primeira fase cadastrada que ainda não terminou.
+  const availableStages = stages.filter(s => s.ties.length);
+
+  if (availableStages.length) {
+    const current = availableStages.find(s =>
+      !s.ties.every(tieDone)
+    );
+
+    if (current) return current.label;
+
+    return 'FASES ELIMINATÓRIAS CONCLUÍDAS';
+  }
+
+  if (groupGames.length) {
+    return 'FASE DE GRUPOS CONCLUÍDA';
+  }
+
+  return 'FASE DE GRUPOS';
+}
+
+
+function renderPublicCompetitions(){
+  const list = $('publicCompetitionList');
+  if (!list) return;
+
+  const comps = db.competitions || [];
+
+  if (!comps.length) {
+    list.innerHTML =
+      '<p class="empty">Nenhuma competição cadastrada. As competições disponíveis aparecerão aqui quando forem cadastradas.</p>';
     return;
   }
-  list.innerHTML=comps.map(c=>`<div class="competition-choice" style="${c.id===db.activeCompetitionId?'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36':''}">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}</div></div><button class="${c.id===db.activeCompetitionId?'gold':'secondary'}" data-public-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Competição selecionada':'Consultar competição'}</button></div></div>`).join('');
-  document.querySelectorAll('[data-public-regulation]').forEach(b=>b.onclick=()=>{
-    const c=comps.find(x=>String(x.id)===String(b.dataset.publicRegulation)||String(x.dbId||'')===String(b.dataset.publicRegulation));
-    if(c&&c.regulationUrl)window.openCompetitionRegulation(c.regulationUrl,c.name);
-    else alert('O regulamento ainda não foi cadastrado para esta competição.');
-  });
-  document.querySelectorAll('[data-public-activate-comp]').forEach(b=>b.onclick=()=>{
-    db.activeCompetitionId=b.dataset.publicActivateComp;
-    const c=comps.find(x=>String(x.id)===String(db.activeCompetitionId)||String(x.dbId||'')===String(db.activeCompetitionId));
-    if(c)db.competition=c.name;
-    if(!teamBelongsToActiveCompetition(findTeam(selectedTeam)||{}))selectedTeam=activeCompetitionTeams()[0]?.id||'';
-    saveDb();renderAll();
-  });
- }
- function renderCompetitionManager(){
-  const list=$('competitionList');if(!list)return;
-  const comps=db.competitions||[];
-  list.innerHTML=comps.length?comps.map(c=>`<div class="competition-choice">${c.logo?`<img src="${c.logo}" alt="Símbolo da competição">`:`<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}<div class="grow"><b>${esc(c.name)}</b><div class="small muted">Temporada ${esc(c.season||'—')} · ${esc(c.format||'Formato não definido')}${c.groupCount?` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup||'—')} equipe(s)`:''}${c.regulationUrl?` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`:''}</div></div><button class="secondary" data-activate-comp="${esc(c.id)}">${c.id===db.activeCompetitionId?'Selecionada':'Usar'}</button><button class="secondary" data-edit-comp="${esc(c.id)}">Editar</button><button class="danger" data-delete-comp="${esc(c.id)}">Excluir</button></div>`).join(''):'<p class="muted">Nenhuma competição cadastrada ainda.</p>';
-  document.querySelectorAll('[data-activate-comp]').forEach(b=>b.onclick=()=>{db.activeCompetitionId=b.dataset.activateComp;const c=comps.find(x=>String(x.id)===String(db.activeCompetitionId)||String(x.dbId||'')===String(db.activeCompetitionId));if(c){db.competition=c.name;if($('competitionName'))$('competitionName').value=c.name}if(!teamBelongsToActiveCompetition(findTeam(selectedTeam)||{}))selectedTeam=activeCompetitionTeams()[0]?.id||'';saveDb();});
-  document.querySelectorAll('[data-delete-comp]').forEach(b=>b.onclick=async()=>{
-    const c=(db.competitions||[]).find(x=>String(x.id)===String(b.dataset.deleteComp));
-    if(!c)return;
-    if(!confirm('Excluir a competição '+c.name+'? Serão removidos somente os vínculos desta competição. O cadastro geral das equipes e dos atletas será preservado.'))return;
-    b.disabled=true;
-    try{
-      if(c._remote && c.dbId!==undefined && typeof supabaseClient!=='undefined'){
-        const {data:sessionData,error:sessionError}=await supabaseClient.auth.getSession();
-        if(sessionError)throw sessionError;
-        if(!sessionData?.session){alert('Entre como administrador antes de excluir uma competição.');return;}
-        const {data:adminCheck,error:adminError}=await supabaseClient.rpc('is_admin');
-        if(adminError||adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return;}
-        // A função SQL faz a exclusão em transação e preserva equipes/atletas
-        // que ainda tenham vínculo com outras competições.
-        const {data:deleteData,error:deleteError}=await supabaseClient.rpc('bid_excluir_competicao',{p_competicao_id:c.dbId});
-        if(deleteError)throw deleteError;
-        if(!deleteData || deleteData.ok!==true)throw new Error('O Supabase não confirmou a exclusão da competição.');
+
+  list.innerHTML = comps.map(c => {
+    const selected =
+      String(c.id) === String(db.activeCompetitionId);
+
+    const phase = getCompetitionPhaseStatus(c);
+
+    const finished = phase === 'FINALIZADA';
+
+    return `
+      <div class="competition-choice"
+        style="${selected
+          ? 'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36'
+          : ''}">
+
+        ${c.logo
+          ? `<img src="${c.logo}" alt="Símbolo da competição">`
+          : `<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`}
+
+        <div class="grow">
+          <b>${esc(c.name)}</b>
+
+          <div class="small muted">
+            Temporada ${esc(c.season || '—')} ·
+            ${esc(c.format || 'Formato não definido')}
+          </div>
+
+          <div style="
+            display:inline-flex;
+            align-items:center;
+            margin-top:7px;
+            padding:5px 11px;
+            border-radius:20px;
+            background:${finished ? '#174c35' : '#332a12'};
+            border:1px solid ${finished ? '#299763' : '#d6ad36'};
+            color:${finished ? '#8ff0b5' : '#f3cf61'};
+            font-size:10px;
+            font-weight:900;
+            letter-spacing:.5px;
+          ">
+            ${finished ? '✓ ' : '⚽ '}
+            ${esc(phase)}
+          </div>
+        </div>
+
+        <button
+          class="${selected ? 'gold' : 'secondary'}"
+          data-public-activate-comp="${esc(c.id)}">
+
+          ${selected
+            ? 'Competição selecionada'
+            : 'Consultar competição'}
+
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  document.querySelectorAll('[data-public-regulation]')
+    .forEach(b => b.onclick = () => {
+      const c = comps.find(x =>
+        String(x.id) === String(b.dataset.publicRegulation) ||
+        String(x.dbId || '') === String(b.dataset.publicRegulation)
+      );
+
+      if (c && c.regulationUrl) {
+        window.openCompetitionRegulation(c.regulationUrl, c.name);
+      } else {
+        alert('O regulamento ainda não foi cadastrado para esta competição.');
       }
-      db.competitions=(db.competitions||[]).filter(x=>String(x.id)!==String(c.id));
-      if(String(db.activeCompetitionId)===String(c.id))db.activeCompetitionId=db.competitions[0]?.id||'';
-      if(db.competitions[0])db.competition=db.competitions[0].name;
+    });
+
+  document.querySelectorAll('[data-public-activate-comp]')
+    .forEach(b => b.onclick = () => {
+      db.activeCompetitionId = b.dataset.publicActivateComp;
+
+      const c = comps.find(x =>
+        String(x.id) === String(db.activeCompetitionId) ||
+        String(x.dbId || '') === String(db.activeCompetitionId)
+      );
+
+      if (c) db.competition = c.name;
+
+      if (!teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
+        selectedTeam = activeCompetitionTeams()[0]?.id || '';
+      }
+
       saveDb();
-      alert('Competição excluída. Equipes e atletas que ainda participam de outras competições foram preservados.');
-    }catch(error){
-      console.error('Erro ao excluir competição:',error);
-      alert('Não foi possível excluir a competição no Supabase. Execute primeiro o SQL de correção e confira as permissões DELETE. Detalhe: '+(error?.message||error));
-    }finally{b.disabled=false;}
-  });
- }
+      renderAll();
+    });
+}
  function updateCompetitionFormatFields(){
   const format=$('newCompetitionFormat')?.value||'grupos';
   const showGroups=['grupos','mista'].includes(format);
