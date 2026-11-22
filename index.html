@@ -12369,8 +12369,65 @@ $('adminList').innerHTML=activeCompetitionTeams().map(t=>`<div style="padding:12
    saveDb();
  });
 }
+
 function renderMatches(){
- const sorted=[...(db.matches||[])].filter(matchBelongsToActiveCompetition).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+ const comp = activeCompetition();
+
+ // Jogos oficiais já cadastrados no Supabase.
+ const officialMatches = [...(db.matches || [])];
+
+ // Recupera a final e o terceiro lugar salvos no gerenciador de fases.
+ const phaseMatches = comp ? [
+   ...(comp.finalMatchTie ? [{
+     ...comp.finalMatchTie,
+     round: 'Final',
+     adminPhaseKey: 'finalMatchTie'
+   }] : []),
+   ...(comp.thirdPlaceTie ? [{
+     ...comp.thirdPlaceTie,
+     round: 'Disputa de terceiro lugar',
+     adminPhaseKey: 'thirdPlaceTie'
+   }] : [])
+ ].map((t, i) => {
+   const home = findTeam(t.a) || {};
+   const away = findTeam(t.b) || {};
+
+   return {
+     id: `phase-admin-${t.adminPhaseKey}-${comp.id}`,
+     homeId: home.id || t.a,
+     homeName: home.name || home.nome || 'A definir',
+     awayId: away.id || t.b,
+     awayName: away.name || away.nome || 'A definir',
+     homeScore: t.score1A ?? null,
+     awayScore: t.score1B ?? null,
+     date: t.date1 || t.date || '',
+     time: t.time1 || t.time || '',
+     venue: t.venue1 || t.venue || '',
+     round: t.round,
+     status: t.status || 'Agendado',
+     competitionId: comp.id,
+     competitionDbId: comp.dbId,
+     _phaseDraft: true
+   };
+ }) : [];
+
+ // Não mostrar duas vezes se o jogo já foi cadastrado no Supabase.
+ const missingPhaseMatches = phaseMatches.filter(p =>
+   !officialMatches.some(m =>
+     String(m.homeId) === String(p.homeId) &&
+     String(m.awayId) === String(p.awayId) &&
+     String(m.round || '').toLowerCase() === p.round.toLowerCase()
+   )
+ );
+
+ const sorted = [
+   ...officialMatches,
+   ...missingPhaseMatches
+ ].filter(matchBelongsToActiveCompetition)
+  .sort((a,b) =>
+    (a.date || '9999').localeCompare(b.date || '9999')
+  );
+
  $('matchRows').innerHTML=sorted.map(m=>`<tr><td>${dateBR(m.date)}${m.time?' · '+esc(m.time):''}</td><td>${esc(m.round||'—')}</td><td><b>${esc(m.homeName)} × ${esc(m.awayName)}</b></td><td><b>${m.homeScore===null||m.homeScore===undefined?'—':m.homeScore} : ${m.awayScore===null||m.awayScore===undefined?'—':m.awayScore}</b></td><td>${esc(m.venue||'—')}</td><td><span class="status ${m.status==='Finalizado'?'ok':'info'}">${esc(m.status)}</span></td><td><button class="secondary" data-edit-match="${m.id}">Editar</button> <button class="gold" data-match-events="${m.id}">Gols/cartões</button> <button class="danger" data-delete-match="${m.id}">Excluir</button></td></tr>`).join('');
  $('noMatches').classList.toggle('hidden',sorted.length>0);
  document.querySelectorAll('[data-delete-match]').forEach(b=>b.onclick=async()=>{
@@ -12401,7 +12458,7 @@ function renderMatches(){
    }catch(error){console.error('Erro ao excluir partida:',error);alert('Não foi possível excluir a partida. Ela foi mantida. Detalhe: '+(error?.message||error));}
    finally{b.disabled=false}
  });
- document.querySelectorAll('[data-edit-match]').forEach(b=>b.onclick=()=>{const m=db.matches.find(x=>String(x.id)===b.dataset.editMatch);if(!m)return;$('matchDate').value=m.date||'';$('matchRound').value=m.round||'';$('matchFormat').value=m.formato||'unico';$('matchVenue').value=m.venue||'';$('matchHome').value=m.homeId||'';$('matchAway').value=m.awayId||'';$('matchHomeScore').value=m.homeScore??'';$('matchAwayScore').value=m.awayScore??'';$('matchStatus').value=m.status||'Agendado';$('matchTime').value=m.time||'';$('saveMatch').dataset.editId=m.id;$('saveMatch').textContent='Salvar alterações do jogo';showTab('admin')});
+ document.querySelectorAll('[data-edit-match]').forEach(b=>b.onclick=()=>{const m=sorted.find(x=>String(x.id)===b.dataset.editMatch);if(!m)return;$('matchDate').value=m.date||'';$('matchRound').value=m.round||'';$('matchFormat').value=m.formato||'unico';$('matchVenue').value=m.venue||'';$('matchHome').value=m.homeId||'';$('matchAway').value=m.awayId||'';$('matchHomeScore').value=m.homeScore??'';$('matchAwayScore').value=m.awayScore??'';$('matchStatus').value=m.status||'Agendado';$('matchTime').value=m.time||'';$('saveMatch').dataset.editId=m.id;$('saveMatch').textContent='Salvar alterações do jogo';showTab('admin')});
  const stats={};activeCompetitionTeams().forEach(t=>stats[t.id]={team:t,j:0,v:0,e:0,d:0,gp:0,gc:0,pts:0});
  (db.matches||[]).filter(matchBelongsToActiveCompetition).filter(m=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&m.homeScore!==''&&m.awayScore!==''&&stats[m.homeId]&&stats[m.awayId]).forEach(m=>{
   const h=stats[m.homeId],a=stats[m.awayId],hs=Number(m.homeScore),as=Number(m.awayScore);
