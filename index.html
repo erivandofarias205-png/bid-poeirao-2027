@@ -14553,15 +14553,21 @@ function getCompetitionPhaseStatus(comp) {
       t.score1B !== '' && t.score1B != null;
   };
 
-  const groupGames = games.filter(m => {
-    const round = normalize(m.round || m.fase || '');
+const groupGames = games.filter(m => {
+  const round = normalize(m.round || m.fase || '');
 
-    return ![
-      'oitava', 'quarta', 'semifinal',
-      'final', 'terceiro', '16 avos', 'dezesseis'
-    ].some(term => round.includes(term));
-  });
-
+  return ![
+    'oitava',
+    'quarta',
+    'semifinal',
+    'final',
+    'terceiro',
+    '3º',
+    '3o',
+    '16 avos',
+    'dezesseis'
+  ].some(term => round.includes(term));
+});
   const stages = [
     {
       label: 'OITAVAS DE FINAL',
