@@ -14607,7 +14607,20 @@ const thirdDone = thirdGames.length
   ? thirdGames.every(gameDone)
   : thirdStage.ties.length === 0 ||
     thirdStage.ties.every(tie => tieDone(tie, 'terceiro'));
-
+console.log('DIAGNÓSTICO STATUS COMPETIÇÃO:', {
+  competencia: comp.name,
+  totalJogos: games.length,
+  jogosFaseGrupos: groupGames.length,
+  gruposPendentes: groupGames.filter(m => !gameDone(m)).map(m => ({
+    fase: m.round,
+    status: m.status,
+    placar: `${m.homeScore} x ${m.awayScore}`
+  })),
+  finaisEncontradas: finalGames.length,
+  finaisConcluidas: finalDone,
+  terceirosEncontrados: thirdGames.length,
+  terceirosConcluidos: thirdDone
+});
 if (finalDone && thirdDone) {
   return 'FINALIZADA';
 }
