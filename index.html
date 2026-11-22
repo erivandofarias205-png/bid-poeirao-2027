@@ -12617,8 +12617,8 @@ if (oldId) {
 
   if (result.error) throw result.error;
 
-  if (!result.data || result.data.status !== 'Finalizado') {
-    throw new Error('O Supabase não confirmou a finalização da partida.');
+    if (!result.data || result.data.status !== status) {
+    throw new Error('O Supabase não confirmou a atualização da partida.');
   }
 } else {
   result = await supabaseClient
@@ -13466,18 +13466,22 @@ if (publicComp?.thirdPlaceTie) {
 
   const sameOrder = normId(thirdMatch.homeId) === idA;
 
-  thirdMatch.round = 'Disputa de 3º e 4º lugar';
-  thirdMatch.homeScore = sameOrder
-    ? tie.score1A ?? thirdMatch.homeScore
-    : tie.score1B ?? thirdMatch.homeScore;
-  thirdMatch.awayScore = sameOrder
-    ? tie.score1B ?? thirdMatch.awayScore
-    : tie.score1A ?? thirdMatch.awayScore;
+    thirdMatch.round = 'Disputa de 3º e 4º lugar';
 
-  thirdMatch.status = tie.status || thirdMatch.status || 'Agendado';
-  thirdMatch.date = tie.date1 || tie.date || thirdMatch.date || '';
-  thirdMatch.time = tie.time1 || tie.time || thirdMatch.time || '';
-  thirdMatch.venue = tie.venue1 || tie.venue || thirdMatch.venue || '';
+  // Se o jogo já existe no Supabase (tem dbId), os dados do banco mandam.
+  // A configuração de fases só preenche jogos que ainda são rascunho.
+  if (!thirdMatch.dbId) {
+    const vazio = v => v === '' || v === null || v === undefined;
+    const sA = sameOrder ? tie.score1A : tie.score1B;
+    const sB = sameOrder ? tie.score1B : tie.score1A;
+    if (!vazio(sA)) thirdMatch.homeScore = sA;
+    if (!vazio(sB)) thirdMatch.awayScore = sB;
+
+    thirdMatch.status = tie.status || thirdMatch.status || 'Agendado';
+    thirdMatch.date = tie.date1 || tie.date || thirdMatch.date || '';
+    thirdMatch.time = tie.time1 || tie.time || thirdMatch.time || '';
+    thirdMatch.venue = tie.venue1 || tie.venue || thirdMatch.venue || '';
+  }
 }
 
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
