@@ -13460,12 +13460,9 @@ const renderGroupedFixtures = list => {
     { nome: 'PRIMEIRA FASE — FASE DE GRUPOS', prioridade: 6, vazio: 'Partidas da primeira fase a definir.' }
   ];
 
-  if (!ordered.length) {
-    return fasesObrigatorias.map(f =>
-      `<div class="fixture-phase-heading">${f.nome}</div>
-       <div class="empty">${f.vazio}</div>`
-    ).join('');
-  }
+ if (!ordered.length) {
+  return '<div class="empty">Nenhuma próxima partida cadastrada.</div>';
+}
 
   return html;
 };
