@@ -10382,6 +10382,75 @@ if(saveCommissionVotes){
   });
 
 }
+  
+// ============================================
+// ENCERRAR ELEIÇÃO GERAL
+// ============================================
+
+const closeElectionGeneral = $('closeElectionGeneral');
+
+if(closeElectionGeneral){
+  closeElectionGeneral.addEventListener('click', async()=>{
+
+    if(window.__BID_ADMIN_VERIFIED !== true){
+      alert('Acesso administrativo necessário.');
+      return;
+    }
+
+    const competitionId = adminHighlightsSelect?.value;
+
+    if(!competitionId){
+      alert('Selecione a competição da eleição.');
+      return;
+    }
+
+    if(!confirm('Tem certeza que deseja ENCERRAR a eleição geral? Esta ação bloqueará novas votações quando o site estiver configurado para respeitar esse encerramento.')){
+      return;
+    }
+
+    try{
+      closeElectionGeneral.disabled = true;
+      closeElectionGeneral.textContent = 'ENCERRANDO ELEIÇÃO...';
+
+      const {data:eleicaoAtual,error:erroLeitura} = await supabaseClient
+        .from('eleicao_indicados')
+        .select('dados')
+        .eq('competicao_id',competitionId)
+        .maybeSingle();
+
+      if(erroLeitura) throw erroLeitura;
+
+      const dadosAtuais = eleicaoAtual?.dados || {};
+
+      const dadosAtualizados = {
+        ...dadosAtuais,
+        eleicaoEncerrada: true,
+        eleicaoEncerradaEm: new Date().toISOString()
+      };
+
+      const {error} = await supabaseClient
+        .from('eleicao_indicados')
+        .upsert({
+          competicao_id: competitionId,
+          dados: dadosAtualizados,
+          atualizado_em: new Date().toISOString()
+        },{onConflict:'competicao_id'});
+
+      if(error) throw error;
+
+      closeElectionGeneral.textContent = '✓ ELEIÇÃO ENCERRADA';
+      alert('Eleição geral encerrada e registrada no banco de dados.');
+
+    }catch(error){
+      console.error('Erro ao encerrar eleição:',error);
+      alert('Erro ao encerrar eleição: '+error.message);
+      closeElectionGeneral.disabled = false;
+      closeElectionGeneral.textContent = '🏆 ENCERRAR ELEIÇÃO GERAL';
+    }
+
+  });
+}
+
   const saveAdminHighlights = $('saveAdminHighlights');
 
 if(saveAdminHighlights){
