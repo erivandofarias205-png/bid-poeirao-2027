@@ -13206,7 +13206,7 @@ fixtures.push({
   competitionName: publicComp.name || '',
   competitionLogo: publicComp.logo || ''
 });
-
+});
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
   const renderFixtureCard=(m)=>{
     const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';
