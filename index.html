@@ -13402,9 +13402,19 @@ const renderGroupedFixtures = list => {
       return { priority: 4, name: 'OITAVAS DE FINAL' };
     }
 
-    if (text.includes('TERCEIRO')) {
-      return { priority: 5, name: 'DISPUTA DE TERCEIRO LUGAR' };
-    }
+  
+if (
+  text.includes('TERCEIRO') ||
+  text.includes('3º') ||
+  text.includes('3O') ||
+  text.includes('3 E 4')
+) {
+  return {
+    priority: 5,
+    name: 'DISPUTA DE TERCEIRO LUGAR'
+  };
+}
+
 
     if (text.includes('FINAL') && !text.includes('GRUPO')) {
       return { priority: 1, name: 'FINAL' };
