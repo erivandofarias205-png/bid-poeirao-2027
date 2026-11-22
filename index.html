@@ -13352,7 +13352,21 @@ const c = (db.competitions || []).find(x =>
     const dbb=String(b.date||'')+' '+String(b.time||'');
     return dbb.localeCompare(da);
   });
-  
+  const finishedFixtures=fixtures.filter(isFinished).slice().sort((a,b)=>{
+  const da=String(a.date||'')+' '+String(a.time||'');
+  const dbb=String(b.date||'')+' '+String(b.time||'');
+  return dbb.localeCompare(da);
+});
+
+console.log('DIAGNÓSTICO DAS PARTIDAS:', fixtures.map(m => ({
+  mandante: m.homeName,
+  visitante: m.awayName,
+  fase: m.round,
+  status: m.status,
+  placar: `${m.homeScore} x ${m.awayScore}`,
+  finalizado: isFinished(m)
+})));
+   
   const phasePriority = m => {
     const r = String(m.round || '').toLowerCase();
 
