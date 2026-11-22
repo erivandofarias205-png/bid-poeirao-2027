@@ -13119,44 +13119,58 @@ const c = (db.competitions || []).find(x =>
           String(m.date || '') === String(date || '');
       });
 
+ 
       if (alreadyExists) {
-  const existingFixture = fixtures.find(m => {
-    const sameOrder =
-      String(m.homeId) === String(home?.id || tie.a) &&
-      String(m.awayId) === String(away?.id || tie.b);
+        const existingFixture = fixtures.find(m => {
+          const sameOrder =
+            String(m.homeId) === String(home?.id || tie.a) &&
+            String(m.awayId) === String(away?.id || tie.b);
 
-    const reverseOrder =
-      String(m.homeId) === String(away?.id || tie.b) &&
-      String(m.awayId) === String(home?.id || tie.a);
+          const reverseOrder =
+            String(m.homeId) === String(away?.id || tie.b) &&
+            String(m.awayId) === String(home?.id || tie.a);
 
-    return (sameOrder || reverseOrder) &&
-      String(m.round || '').toLowerCase() === round.toLowerCase() &&
-      String(m.date || '') === String(date || '');
-  });
+          return (sameOrder || reverseOrder) &&
+            String(m.round || '').toLowerCase() === round.toLowerCase() &&
+            String(m.date || '') === String(date || '');
+        });
 
-  if (existingFixture) {
-    const sameOrder =
-      String(existingFixture.homeId) === String(home?.id || tie.a);
+        if (existingFixture) {
+          const sameOrder =
+            String(existingFixture.homeId) === String(home?.id || tie.a);
 
-   const penaltyA = sameOrder
-  ? tie.penalties1A
-  : tie.penalties1B;
+          const scoreA = tie.score1A;
+          const scoreB = tie.score1B;
 
-const penaltyB = sameOrder
-  ? tie.penalties1B
-  : tie.penalties1A;
+          if (scoreA !== '' && scoreA != null &&
+              scoreB !== '' && scoreB != null) {
+            existingFixture.homeScore = sameOrder ? scoreA : scoreB;
+            existingFixture.awayScore = sameOrder ? scoreB : scoreA;
+          }
 
-if (penaltyA !== '' && penaltyA != null) {
-  existingFixture.penalties1A = penaltyA;
-}
+          const penaltyA = sameOrder ? tie.penalties1A : tie.penalties1B;
+          const penaltyB = sameOrder ? tie.penalties1B : tie.penalties1A;
 
-if (penaltyB !== '' && penaltyB != null) {
-  existingFixture.penalties1B = penaltyB;
-  }
+          if (penaltyA !== '' && penaltyA != null) {
+            existingFixture.penalties1A = penaltyA;
+          }
 
-  return;
-}
-}
+          if (penaltyB !== '' && penaltyB != null) {
+            existingFixture.penalties1B = penaltyB;
+          }
+
+          if (tie.status) {
+            existingFixture.status = tie.status;
+          }
+
+          existingFixture.date = date || existingFixture.date;
+          existingFixture.time = time || existingFixture.time;
+          existingFixture.venue = venue || existingFixture.venue;
+        }
+
+        return;
+      }
+
 
       fixtures.push({
         id: `phase-${round}-${tie.a}-${tie.b}`,
@@ -14151,12 +14165,19 @@ const person=r.second?matching[1]:matching[0];
  
  
 
+
 function getCompetitionPhaseStatus(comp) {
   if (!comp) return 'FASE DE GRUPOS';
 
   const compIds = [comp.id, comp.dbId, comp.db_id]
     .filter(v => v !== undefined && v !== null && v !== '')
     .map(String);
+
+  const normalize = value => String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
 
   const games = (db.matches || []).filter(m => {
     const ids = [
@@ -14168,48 +14189,26 @@ function getCompetitionPhaseStatus(comp) {
 
     if (ids.length) return ids.some(id => compIds.includes(id));
 
-    if (String(m.competition || '') === String(comp.name || '')) {
-      return true;
-    }
-
-    return false;
+    return String(m.competition || '') === String(comp.name || '');
   });
-
-  const normalize = value => String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
 
   const gameDone = m =>
     normalize(m.status).includes('finaliz') &&
-    m.homeScore !== '' &&
-    m.awayScore !== '' &&
-    m.homeScore !== null &&
-    m.awayScore !== null &&
-    m.homeScore !== undefined &&
-    m.awayScore !== undefined;
+    m.homeScore !== '' && m.homeScore != null &&
+    m.awayScore !== '' && m.awayScore != null;
 
   const tieDone = t =>
     !!t &&
     normalize(t.status).includes('finaliz') &&
-    t.score1A !== '' &&
-    t.score1B !== '' &&
-    t.score1A !== null &&
-    t.score1B !== null &&
-    t.score1A !== undefined &&
-    t.score1B !== undefined;
+    t.score1A !== '' && t.score1A != null &&
+    t.score1B !== '' && t.score1B != null;
 
   const groupGames = games.filter(m => {
     const round = normalize(m.round || m.fase || '');
 
     return ![
-      'oitava',
-      'quarta',
-      'semifinal',
-      'final',
-      'terceiro',
-      '16 avos',
-      'dezesseis'
+      'oitava', 'quarta', 'semifinal',
+      'final', 'terceiro', '16 avos', 'dezesseis'
     ].some(term => round.includes(term));
   });
 
@@ -14230,20 +14229,21 @@ function getCompetitionPhaseStatus(comp) {
       round: 'semifinal'
     },
     {
-      label: 'FINAIS',
+      label: 'DISPUTA DE TERCEIRO LUGAR',
+      ties: comp.thirdPlaceTie ? [comp.thirdPlaceTie] : [],
+      round: 'terceiro'
+    },
+    {
+      label: 'FINAL',
       ties: comp.finalMatchTie ? [comp.finalMatchTie] : [],
       round: 'final'
     }
   ];
 
-  // Se existem jogos de grupos, aguarda todos terminarem.
-  if (groupGames.length) {
-    if (!groupGames.every(gameDone)) {
-      return 'FASE DE GRUPOS';
-    }
+  if (groupGames.length && !groupGames.every(gameDone)) {
+    return 'FASE DE GRUPOS';
   }
 
-  // Localiza as fases eliminatórias também na tabela de jogos.
   stages.forEach(stage => {
     if (stage.ties.length) return;
 
@@ -14252,33 +14252,38 @@ function getCompetitionPhaseStatus(comp) {
     );
   });
 
-  // A competição só termina depois do resultado da final.
   const finalStage = stages.find(s => s.round === 'final');
+  const thirdStage = stages.find(s => s.round === 'terceiro');
 
-  if (finalStage.ties.length &&
-      finalStage.ties.every(tieDone)) {
+  const finalDone =
+    finalStage.ties.length > 0 &&
+    finalStage.ties.every(tieDone);
+
+  const thirdDone =
+    thirdStage.ties.length === 0 ||
+    thirdStage.ties.every(tieDone);
+
+  if (finalDone && thirdDone) {
     return 'FINALIZADA';
   }
 
-  // Avança para a primeira fase cadastrada que ainda não terminou.
   const availableStages = stages.filter(s => s.ties.length);
 
+  const current = availableStages.find(s =>
+    !s.ties.every(tieDone)
+  );
+
+  if (current) return current.label;
+
   if (availableStages.length) {
-    const current = availableStages.find(s =>
-      !s.ties.every(tieDone)
-    );
-
-    if (current) return current.label;
-
     return 'FASES ELIMINATÓRIAS CONCLUÍDAS';
   }
 
-  if (groupGames.length) {
-    return 'FASE DE GRUPOS CONCLUÍDA';
-  }
+  if (groupGames.length) return 'FASE DE GRUPOS CONCLUÍDA';
 
   return 'FASE DE GRUPOS';
 }
+
 
 
 function renderPublicCompetitions(){
