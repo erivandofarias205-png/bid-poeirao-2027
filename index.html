@@ -14779,19 +14779,94 @@ function renderPublicCompetitions(){
     return;
   }
 
+  
   list.innerHTML = comps.map(c => {
     const selected =
       String(c.id) === String(db.activeCompetitionId);
 
     const phase = getCompetitionPhaseStatus(c);
-
     const finished = phase === 'FINALIZADA';
+
+    const compIds = [c.id, c.dbId, c.db_id]
+      .filter(v => v !== undefined && v !== null && v !== '')
+      .map(String);
+
+    const normalize = value => String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+    const finalGame = (db.matches || []).find(m => {
+      const ids = [
+        m.competitionId,
+        m.competicao_id,
+        m.competitionDbId
+      ].filter(v => v !== undefined && v !== null && v !== '')
+        .map(String);
+
+      const round = normalize(m.round || m.fase || '');
+      const isFinal =
+        round === 'final' ||
+        round.startsWith('final ') ||
+        round.startsWith('grande final');
+
+      const belongs = ids.length
+        ? ids.some(id => compIds.includes(id))
+        : String(m.competition || '') === String(c.name || '');
+
+      return belongs &&
+        isFinal &&
+        normalize(m.status).includes('finaliz') &&
+        m.homeScore !== '' && m.homeScore != null &&
+        m.awayScore !== '' && m.awayScore != null;
+    });
+
+    let champion = null;
+    let championTeam = null;
+
+    if (finished && finalGame) {
+      const homeScore = Number(finalGame.homeScore);
+      const awayScore = Number(finalGame.awayScore);
+
+      if (homeScore > awayScore) {
+        champion = finalGame.homeName;
+        championTeam = findTeam(finalGame.homeId);
+      } else if (awayScore > homeScore) {
+        champion = finalGame.awayName;
+        championTeam = findTeam(finalGame.awayId);
+      } else {
+        const p1 = Number(finalGame.penalties1A);
+        const p2 = Number(finalGame.penalties1B);
+
+        if (finalGame.penalties1A !== '' &&
+            finalGame.penalties1A != null &&
+            finalGame.penalties1B !== '' &&
+            finalGame.penalties1B != null) {
+          if (p1 > p2) {
+            champion = finalGame.homeName;
+            championTeam = findTeam(finalGame.homeId);
+          } else if (p2 > p1) {
+            champion = finalGame.awayName;
+            championTeam = findTeam(finalGame.awayId);
+          }
+        }
+      }
+    }
+
+    const championLogo = championTeam
+      ? championTeam.logo || championTeam.escudo_url || ''
+      : '';
 
     return `
       <div class="competition-choice"
-        style="${selected
-          ? 'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36'
-          : ''}">
+        style="
+          ${finished
+            ? 'background:linear-gradient(135deg,#650b12,#a51220);border:2px solid #ff4655;box-shadow:0 0 15px rgba(255,40,55,.35);'
+            : selected
+              ? 'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36;'
+              : ''}
+        ">
 
         ${c.logo
           ? `<img src="${c.logo}" alt="Símbolo da competição">`
@@ -14821,6 +14896,29 @@ function renderPublicCompetitions(){
             ${finished ? '✓ ' : '⚽ '}
             ${esc(phase)}
           </div>
+
+          ${finished && champion ? `
+            <div style="
+              display:flex;
+              align-items:center;
+              gap:12px;
+              margin-top:13px;
+              padding:10px 13px;
+              background:#43070d;
+              border:1px solid #ff6670;
+              border-radius:10px;
+              color:#fff;
+              font-weight:900;
+              font-size:14px;
+            ">
+              ${championLogo
+                ? `<img src="${esc(championLogo)}"
+                    alt="Escudo do campeão"
+                    style="width:48px;height:48px;object-fit:contain;background:#fff;border-radius:8px;padding:3px">`
+                : ''}
+              <span>🏆 ${esc(champion)} — CAMPEÃO</span>
+            </div>
+          ` : ''}
         </div>
 
         <button
