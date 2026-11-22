@@ -18436,18 +18436,6 @@ async function sincronizarQuartasSupabase(c) {
       status
     };
 
-    await salvarPartida(
-  payloadJogo2,
-  `quartas-${i + 1}-jogo-2`
-);
-
-} else {
-  await protegerSegundoJogo(
-    c,
-    `quartas-${i + 1}-jogo-2`
-  );
-}
-
     // JOGO 2 — SOMENTE QUANDO FOR IDA E VOLTA
     if (formato === 'ida_volta') {
       const payloadJogo2 = {
