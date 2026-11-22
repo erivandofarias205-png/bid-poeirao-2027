@@ -14861,11 +14861,11 @@ function renderPublicCompetitions(){
     return `
       <div class="competition-choice"
         style="
-          ${finished
-            ? 'background:linear-gradient(135deg,#650b12,#a51220);border:2px solid #ff4655;box-shadow:0 0 15px rgba(255,40,55,.35);'
-            : selected
-              ? 'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36;'
-              : ''}
+         ${finished
+  ? 'background:#8b101a !important;border:2px solid #d6ad36 !important;box-shadow:0 0 15px rgba(214,173,54,.35);'
+  : selected
+    ? 'border-color:#d6ad36;box-shadow:0 0 0 1px #d6ad36;'
+    : ''}
         ">
 
         ${c.logo
@@ -14904,9 +14904,9 @@ function renderPublicCompetitions(){
               gap:12px;
               margin-top:13px;
               padding:10px 13px;
-              background:#43070d;
-              border:1px solid #ff6670;
-              border-radius:10px;
+             background:transparent;
+border:0;
+border-radius:0;
               color:#fff;
               font-weight:900;
               font-size:14px;
