@@ -14326,6 +14326,166 @@ function renderPublicCompetitions(){
       renderAll();
     });
 }
+  
+function renderCompetitionManager(){
+  const list = $('competitionList');
+  if (!list) return;
+
+  const comps = db.competitions || [];
+
+  list.innerHTML = comps.length
+    ? comps.map(c => `
+      <div class="competition-choice">
+        ${c.logo
+          ? `<img src="${c.logo}" alt="Símbolo da competição">`
+          : `<div style="width:42px;height:42px;display:grid;place-items:center;background:#222;border-radius:5px">⚽</div>`
+        }
+
+        <div class="grow">
+          <b>${esc(c.name)}</b>
+
+          <div class="small muted">
+            Temporada ${esc(c.season || '—')} ·
+            ${esc(c.format || 'Formato não definido')}
+            ${c.groupCount
+              ? ` · ${esc(c.groupCount)} grupo(s) × ${esc(c.teamsPerGroup || '—')} equipe(s)`
+              : ''
+            }
+            ${c.regulationUrl
+              ? ` · <a href="${esc(c.regulationUrl)}" target="_blank" rel="noopener">Ver regulamento</a>`
+              : ''
+            }
+          </div>
+        </div>
+
+        <button class="secondary"
+          data-activate-comp="${esc(c.id)}">
+          ${String(c.id) === String(db.activeCompetitionId)
+            ? 'Selecionada' : 'Usar'}
+        </button>
+
+        <button class="secondary"
+          data-edit-comp="${esc(c.id)}">Editar</button>
+
+        <button class="danger"
+          data-delete-comp="${esc(c.id)}">Excluir</button>
+      </div>
+    `).join('')
+    : '<p class="muted">Nenhuma competição cadastrada ainda.</p>';
+
+  document.querySelectorAll('[data-activate-comp]').forEach(b => {
+    b.onclick = () => {
+      db.activeCompetitionId = b.dataset.activateComp;
+
+      const c = comps.find(x =>
+        String(x.id) === String(db.activeCompetitionId) ||
+        String(x.dbId || '') === String(db.activeCompetitionId)
+      );
+
+      if (c) {
+        db.competition = c.name;
+        if ($('competitionName')) {
+          $('competitionName').value = c.name;
+        }
+      }
+
+      if (!teamBelongsToActiveCompetition(findTeam(selectedTeam) || {})) {
+        selectedTeam = activeCompetitionTeams()[0]?.id || '';
+      }
+
+      saveDb();
+      renderAll();
+    };
+  });
+
+  document.querySelectorAll('[data-delete-comp]').forEach(b => {
+    b.onclick = async () => {
+      const c = (db.competitions || []).find(x =>
+        String(x.id) === String(b.dataset.deleteComp)
+      );
+
+      if (!c) return;
+
+      if (!confirm(
+        'Excluir a competição ' + c.name +
+        '? Serão removidos somente os vínculos desta competição. ' +
+        'O cadastro geral das equipes e dos atletas será preservado.'
+      )) return;
+
+      b.disabled = true;
+
+      try {
+        if (c._remote && c.dbId !== undefined &&
+            typeof supabaseClient !== 'undefined') {
+
+          const {data: sessionData, error: sessionError} =
+            await supabaseClient.auth.getSession();
+
+          if (sessionError) throw sessionError;
+
+          if (!sessionData?.session) {
+            alert('Entre como administrador antes de excluir uma competição.');
+            return;
+          }
+
+          const {data: adminCheck, error: adminError} =
+            await supabaseClient.rpc('is_admin');
+
+          if (adminError || adminCheck !== true) {
+            alert('Sua conta não foi reconhecida como administradora.');
+            return;
+          }
+
+          const {data: deleteData, error: deleteError} =
+            await supabaseClient.rpc(
+              'bid_excluir_competicao',
+              {p_competicao_id: c.dbId}
+            );
+
+          if (deleteError) throw deleteError;
+
+          if (!deleteData || deleteData.ok !== true) {
+            throw new Error(
+              'O Supabase não confirmou a exclusão da competição.'
+            );
+          }
+        }
+
+        db.competitions = (db.competitions || []).filter(x =>
+          String(x.id) !== String(c.id)
+        );
+
+        if (String(db.activeCompetitionId) === String(c.id)) {
+          db.activeCompetitionId = db.competitions[0]?.id || '';
+        }
+
+        if (db.competitions[0]) {
+          db.competition = db.competitions[0].name;
+        }
+
+        saveDb();
+        renderAll();
+
+        alert(
+          'Competição excluída. Equipes e atletas que ainda participam ' +
+          'de outras competições foram preservados.'
+        );
+
+      } catch (error) {
+        console.error('Erro ao excluir competição:', error);
+
+        alert(
+          'Não foi possível excluir a competição. Detalhe: ' +
+          (error?.message || error)
+        );
+
+      } finally {
+        b.disabled = false;
+      }
+    };
+  });
+}
+
  function updateCompetitionFormatFields(){
   const format=$('newCompetitionFormat')?.value||'grupos';
   const showGroups=['grupos','mista'].includes(format);
