@@ -8255,7 +8255,36 @@ async function buscarJogosEquipeProfissional() {
     💾 SALVAR ELEIÇÃO
   </button>
 </div>
-    
+ <hr style="border-color:#d4af37;margin:25px 0">
+
+<div id="adminCommissionElection"
+     class="panel"
+     style="margin-top:20px;border:1px solid #d4af37">
+
+  <h3 style="color:#d4af37">🗳️ VOTAÇÃO DA COMISSÃO</h3>
+
+  <p>Escolha os vencedores de cada categoria e posição.</p>
+
+  <div id="adminCommissionVoters"></div>
+
+  <div class="actions" style="margin-top:20px">
+    <button type="button" class="gold" id="saveCommissionVotes">
+      💾 SALVAR VOTOS DA COMISSÃO
+    </button>
+  </div>
+
+  <div id="adminCommissionStatus" class="empty"
+       style="margin-top:12px">
+    Aguardando configuração dos votos.
+  </div>
+
+  <hr style="border-color:#555;margin:20px 0">
+
+  <button type="button" class="gold" id="closeElectionGeneral"
+          style="width:100%">
+    🏆 ENCERRAR ELEIÇÃO GERAL
+  </button>
+</div>   
   </div>
 </div>
   </div>
@@ -10076,15 +10105,31 @@ const positions = [
       });
     });
 
+   
     try{
       saveAdminHighlights.disabled = true;
       saveAdminHighlights.textContent = 'SALVANDO...';
+
+      // Recupera os dados já existentes da eleição
+      const {data:eleicaoAtual,error:erroLeitura} = await supabaseClient
+        .from('eleicao_indicados')
+        .select('dados')
+        .eq('competicao_id',competitionId)
+        .maybeSingle();
+
+      if(erroLeitura) throw erroLeitura;
+
+      // Preserva comissão, votos e demais informações existentes
+      const dadosParaSalvar = {
+        ...(eleicaoAtual?.dados || {}),
+        ...dados
+      };
 
       const {error} = await supabaseClient
         .from('eleicao_indicados')
         .upsert({
           competicao_id:competitionId,
-          dados:dados,
+          dados:dadosParaSalvar,
           atualizado_em:new Date().toISOString()
         },{
           onConflict:'competicao_id'
