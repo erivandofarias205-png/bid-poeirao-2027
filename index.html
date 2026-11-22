@@ -10228,27 +10228,32 @@ async function renderAdminCommissionVoters(competitionId){
       });
 
       $('nextCommissionCategory')?.addEventListener('click',()=>{
-        if(!votos.elizanio || !votos.erivando){
-          alert('Escolha um candidato para cada responsável.');
-          return;
-        }
 
-        if(etapaAtual < etapasValidas.length-1){
-          etapaAtual++;
-          mostrarEtapa();
-        }else{
-                  }else{
-          window.__BID_COMMISSION_DRAFT.completed = true;
+  if(!votos.elizanio || !votos.erivando){
+    alert('Escolha um candidato para cada responsável.');
+    return;
+  }
 
-          if(status){
-            status.textContent =
-              'TODAS AS CATEGORIAS VOTADAS. CLIQUE EM SALVAR VOTOS DA COMISSÃO.';
-          }
+  if(etapaAtual < etapasValidas.length - 1){
 
-          alert('Votação da comissão concluída! Agora clique em SALVAR VOTOS DA COMISSÃO.');
-        }
-        }
+    etapaAtual++;
+    mostrarEtapa();
+
+  }else{
+
+    window.__BID_COMMISSION_DRAFT.completed = true;
+
+    if(status){
+      status.textContent =
+        'TODAS AS CATEGORIAS VOTADAS. CLIQUE EM SALVAR VOTOS DA COMISSÃO.';
+    }
+
+    alert('Votação da comissão concluída!');
+
+  }
+
       });
+
     }
 
     mostrarEtapa();
