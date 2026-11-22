@@ -9234,11 +9234,18 @@ function dateBR(s){if(!s)return '—';let p=s.split('-');return p.length===3?`${
 function cpfDigits(s){return String(s||'').replace(/\D/g,'')}
 function cpfMask(s){const raw=String(s||'').trim();if(/^XXX[.\s-]*\d{3}[.\s-]*\d{3}[-.\s]*\d{2}$/i.test(raw)){const d=raw.replace(/\D/g,'');return 'XXX.'+d.slice(-8,-5)+'.'+d.slice(-5,-2)+'-'+d.slice(-2)}const d=cpfDigits(raw);if(d.length===11)return 'XXX.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9,11);if(d.length===8)return 'XXX.'+d.slice(0,3)+'.'+d.slice(3,6)+'-'+d.slice(6,8);return 'XXX.***.***-**'}
 function findTeam(id){return db.teams.find(t=>String(t.id)===String(id)||String(t.dbId||'')===String(id))}
-function activeCompetition(){return (db.competitions||[]).find(c=>String(c.id)===String(db.activeCompetitionId)||String(c.dbId||'')===String(db.activeCompetitionId))||null}
+function activeCompetition(){
+  return (db.competitions || []).find(c =>
+    [c.id, c.dbId, c.db_id]
+      .filter(v => v !== undefined && v !== null && v !== '')
+      .some(id => String(id) === String(db.activeCompetitionId))
+  ) || null;
+}
 function teamBelongsToActiveCompetition(t){
   const comp = (db.competitions || []).find(c =>
-  String(c.id) === String(db.activeCompetitionId) ||
-  String(c.dbId || '') === String(db.activeCompetitionId)
+  [c.id, c.dbId, c.db_id]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .some(id => String(id) === String(db.activeCompetitionId))
 ) || null;
   if(!comp) return !(db.competitions || []).length;
 
@@ -9277,10 +9284,11 @@ function activeCompetitionTeams(){return (db.teams||[]).filter(teamBelongsToActi
   return activeCompetitionTeams().filter(t => !t._virtual);
 }
 function matchBelongsToActiveCompetition(m){
-const comp=(db.competitions||[]).find(c=>
-  String(c.id)===String(db.activeCompetitionId)||
-  String(c.dbId||'')===String(db.activeCompetitionId)
-)||null;
+const comp = (db.competitions || []).find(c =>
+  [c.id, c.dbId, c.db_id]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .some(id => String(id) === String(db.activeCompetitionId))
+) || null;
 
 if(!comp)return !(db.competitions||[]).length;
  const matchComp=[m.competitionId,m.competicao_id,m.competitionDbId].filter(v=>v!==undefined&&v!==null&&v!=='').map(String);
@@ -13135,62 +13143,180 @@ const c = (db.competitions || []).find(x =>
             String(m.date || '') === String(date || '');
         });
 
-        if (existingFixture) {
+                if (existingFixture) {
+          // Busca a partida oficial, onde o placar foi registrado.
+          const officialMatch = getOfficialPhaseMatch(
+            publicComp,
+            tie,
+            round
+          );
+
+          const fixtureHomeId = String(existingFixture.homeId);
+
+          let scoreHome = '';
+          let scoreAway = '';
+          let penaltyHome = '';
+          let penaltyAway = '';
+          let resultStatus = '';
+
+          // Prioridade 1: resultado da partida oficial.
+          if (officialMatch) {
+            const officialSameOrder =
+              fixtureHomeId === String(officialMatch.homeId);
+
+            if (
+              officialMatch.homeScore !== '' &&
+              officialMatch.homeScore != null &&
+              officialMatch.awayScore !== '' &&
+              officialMatch.awayScore != null
+            ) {
+              scoreHome = officialSameOrder
+                ? officialMatch.homeScore
+                : officialMatch.awayScore;
+
+              scoreAway = officialSameOrder
+                ? officialMatch.awayScore
+                : officialMatch.homeScore;
+            }
+
+            resultStatus = officialMatch.status || '';
+
+            if (
+              officialMatch.penalties1A !== '' &&
+              officialMatch.penalties1A != null &&
+              officialMatch.penalties1B !== '' &&
+              officialMatch.penalties1B != null
+            ) {
+              penaltyHome = officialSameOrder
+                ? officialMatch.penalties1A
+                : officialMatch.penalties1B;
+
+              penaltyAway = officialSameOrder
+                ? officialMatch.penalties1B
+                : officialMatch.penalties1A;
+            }
+          }
+
+          // Prioridade 2: resultado registrado diretamente na chave.
           const sameOrder =
-            String(existingFixture.homeId) === String(home?.id || tie.a);
+            fixtureHomeId === String(home?.id || tie.a);
 
-          const scoreA = tie.score1A;
-          const scoreB = tie.score1B;
-
-          if (scoreA !== '' && scoreA != null &&
-              scoreB !== '' && scoreB != null) {
-            existingFixture.homeScore = sameOrder ? scoreA : scoreB;
-            existingFixture.awayScore = sameOrder ? scoreB : scoreA;
+          if (scoreHome === '' &&
+              tie.score1A !== '' && tie.score1A != null &&
+              tie.score1B !== '' && tie.score1B != null) {
+            scoreHome = sameOrder ? tie.score1A : tie.score1B;
+            scoreAway = sameOrder ? tie.score1B : tie.score1A;
           }
 
-          const penaltyA = sameOrder ? tie.penalties1A : tie.penalties1B;
-          const penaltyB = sameOrder ? tie.penalties1B : tie.penalties1A;
+          if (penaltyHome === '' &&
+              tie.penalties1A !== '' && tie.penalties1A != null &&
+              tie.penalties1B !== '' && tie.penalties1B != null) {
+            penaltyHome = sameOrder
+              ? tie.penalties1A
+              : tie.penalties1B;
 
-          if (penaltyA !== '' && penaltyA != null) {
-            existingFixture.penalties1A = penaltyA;
+            penaltyAway = sameOrder
+              ? tie.penalties1B
+              : tie.penalties1A;
           }
 
-          if (penaltyB !== '' && penaltyB != null) {
-            existingFixture.penalties1B = penaltyB;
+          // Atualiza somente quando existe resultado válido.
+          if (scoreHome !== '' && scoreAway !== '') {
+            existingFixture.homeScore = scoreHome;
+            existingFixture.awayScore = scoreAway;
           }
 
-          if (tie.status) {
-            existingFixture.status = tie.status;
+          if (penaltyHome !== '' && penaltyAway !== '') {
+            existingFixture.penalties1A = penaltyHome;
+            existingFixture.penalties1B = penaltyAway;
+          }
+
+          const finalStatus = resultStatus || tie.status;
+
+          if (finalStatus) {
+            existingFixture.status =
+              String(finalStatus).toLowerCase().includes('finaliz')
+                ? 'Finalizado'
+                : finalStatus;
           }
 
           existingFixture.date = date || existingFixture.date;
           existingFixture.time = time || existingFixture.time;
           existingFixture.venue = venue || existingFixture.venue;
         }
-
+        
         return;
       }
 
+           // Buscar o resultado da partida oficial no banco de jogos.
+      const officialMatch = getOfficialPhaseMatch(
+        publicComp,
+        tie,
+        round
+      );
+
+      // A partida pública usa a ordem das equipes da chave.
+      const officialSameOrder = officialMatch
+        ? String(officialMatch.homeId) === String(home?.id || tie.a)
+        : true;
+
+      const officialHasScore = officialMatch &&
+        officialMatch.homeScore !== '' &&
+        officialMatch.homeScore != null &&
+        officialMatch.awayScore !== '' &&
+        officialMatch.awayScore != null;
+
+      const homeScore = officialHasScore
+        ? (officialSameOrder
+            ? officialMatch.homeScore
+            : officialMatch.awayScore)
+        : (tie.score1A ?? null);
+
+      const awayScore = officialHasScore
+        ? (officialSameOrder
+            ? officialMatch.awayScore
+            : officialMatch.homeScore)
+        : (tie.score1B ?? null);
+
+      const officialHasPenalties = officialMatch &&
+        officialMatch.penalties1A !== '' &&
+        officialMatch.penalties1A != null &&
+        officialMatch.penalties1B !== '' &&
+        officialMatch.penalties1B != null;
+
+      const penalties1A = officialHasPenalties
+        ? (officialSameOrder
+            ? officialMatch.penalties1A
+            : officialMatch.penalties1B)
+        : (tie.penalties1A ?? '');
+
+      const penalties1B = officialHasPenalties
+        ? (officialSameOrder
+            ? officialMatch.penalties1B
+            : officialMatch.penalties1A)
+        : (tie.penalties1B ?? '');
+
+      const matchStatus = officialMatch?.status || tie.status || 'Agendado';
 
       fixtures.push({
         id: `phase-${round}-${tie.a}-${tie.b}`,
         homeId: home?.id || tie.a,
-       homeName: home?.name || home?.nome || 'A definir',
+        homeName: home?.name || home?.nome || 'A definir',
         awayId: away?.id || tie.b,
         awayName: away?.name || away?.nome || 'A definir',
         date,
         time,
         venue,
         round,
-        homeScore: tie.score1A ?? null,
-awayScore: tie.score1B ?? null,
-penalties1A: tie.penalties1A ?? '',
-penalties1B: tie.penalties1B ?? '',
-        status: String(tie.status || 'Agendado')
+        homeScore,
+        awayScore,
+        penalties1A,
+        penalties1B,
+        status: String(matchStatus)
           .toLowerCase()
           .includes('finaliz')
             ? 'Finalizado'
-            : 'Agendado',
+            : matchStatus,
         competitionId: String(publicComp.id),
         competitionDbId: publicComp.dbId,
         competitionName: publicComp.name || '',
