@@ -12452,25 +12452,52 @@ const isThirdPlace = value => {
   return phase.includes('TERCEIRO') || /3\s*E\s*4/.test(phase);
 };
 
-const missingPhaseMatches = phaseMatches.filter(p =>
-  !officialMatches.some(m => {
-    const sameTeams =
-      (String(m.homeId) === String(p.homeId) &&
-       String(m.awayId) === String(p.awayId)) ||
-      (String(m.homeId) === String(p.awayId) &&
-       String(m.awayId) === String(p.homeId));
+const normalizePhaseName = value =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 
-    const officialRound = normalizeRound(m.round);
-    const phaseRound = normalizeRound(p.round);
+const getPhaseKey = value => {
+  const name = normalizePhaseName(value);
 
-    const samePhase = isThirdPlace(officialRound) && isThirdPlace(phaseRound)
-      ? true
-      : officialRound === phaseRound;
+  if (
+    name.includes('terceiro') ||
+    (name.includes('3') && name.includes('lugar'))
+  ) {
+    return 'terceiro';
+  }
 
-    return sameTeams && samePhase;
-  })
-);
- const sorted = [
+  if (name === 'final' || name.startsWith('final ')) {
+    return 'final';
+  }
+
+  return name;
+};
+
+const missingPhaseMatches = phaseMatches.filter(p => {
+  const phaseKey = getPhaseKey(p.round);
+
+  return !officialMatches
+    .filter(matchBelongsToActiveCompetition)
+    .some(m => {
+      const sameTeams =
+        (
+          String(m.homeId) === String(p.homeId) &&
+          String(m.awayId) === String(p.awayId)
+        ) ||
+        (
+          String(m.homeId) === String(p.awayId) &&
+          String(m.awayId) === String(p.homeId)
+        );
+
+      const samePhase = getPhaseKey(m.round) === phaseKey;
+
+      return sameTeams && samePhase;
+    });
+});
+  const sorted = [
    ...officialMatches,
    ...missingPhaseMatches
  ].filter(matchBelongsToActiveCompetition)
