@@ -13482,72 +13482,61 @@ console.log('DIAGNÓSTICO DAS PARTIDAS:', fixtures.map(m => ({
 const renderGroupedFixtures = list => {
 const phaseInfo = m => {
   const raw = String(m.round || m.fase || '').trim();
+
   const text = raw.normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase();
 
+  // 1º FINAL
   if (
-    text.includes('OITAV') ||
-    text.includes('16 AVOS')
+    text === 'FINAL' ||
+    text.startsWith('FINAL ')
   ) {
-    return { priority: 1, name: 'OITAVAS DE FINAL' };
+    return { priority: 1, name: 'FINAL' };
   }
 
-  if (text.includes('QUART')) {
-    return { priority: 2, name: 'QUARTAS DE FINAL' };
+  // 2º DISPUTA DE TERCEIRO LUGAR
+  if (
+    text.includes('TERCEIRO') ||
+    text.includes('3º') ||
+    text.includes('3O') ||
+    text.includes('3 E 4')
+  ) {
+    return { priority: 2, name: 'DISPUTA DE 3º E 4º LUGAR' };
   }
 
+  // 3º SEMIFINAIS
   if (text.includes('SEMI')) {
     return { priority: 3, name: 'SEMIFINAIS' };
   }
 
-      // 1 — FINAL
-    if (text.includes('FINAL') && !text.includes('GRUPO')) {
-      return { priority: 1, name: 'FINAL' };
-    }
+  // 4º QUARTAS DE FINAL
+  if (text.includes('QUART')) {
+    return { priority: 4, name: 'QUARTAS DE FINAL' };
+  }
 
-    // 2 — DISPUTA DE TERCEIRO LUGAR
-    if (
-      text.includes('TERCEIRO') ||
-      text.includes('3º') ||
-      text.includes('3O') ||
-      text.includes('3 E 4')
-    ) {
-      return { priority: 2, name: 'DISPUTA DE 3º E 4º LUGAR' };
-    }
+  // 5º OITAVAS DE FINAL
+  if (text.includes('OITAV') || text.includes('16 AVOS')) {
+    return { priority: 5, name: 'OITAVAS DE FINAL' };
+  }
 
-    // 3 — SEMIFINAIS
-    if (text.includes('SEMI')) {
-      return { priority: 3, name: 'SEMIFINAIS' };
-    }
-
-    // 4 — QUARTAS DE FINAL
-    if (text.includes('QUART')) {
-      return { priority: 4, name: 'QUARTAS DE FINAL' };
-    }
-
-    // 5 — OITAVAS DE FINAL
-    if (text.includes('OITAV') || text.includes('16 AVOS')) {
-      return { priority: 5, name: 'OITAVAS DE FINAL' };
-    }
-
-    // 6 — FASE DE GRUPOS
-    if (
-      text.includes('GRUPO') ||
-      text.includes('RODADA') ||
-      text.includes('FASE DE GRUPOS')
-    ) {
-      return {
-        priority: 6,
-        name: 'PRIMEIRA FASE — FASE DE GRUPOS'
-      };
-    }
-
+  // 6º FASE DE GRUPOS
+  if (
+    text.includes('GRUPO') ||
+    text.includes('RODADA') ||
+    text.includes('FASE DE GRUPOS')
+  ) {
     return {
-      priority: 7,
-      name: raw || 'OUTRAS PARTIDAS'
+      priority: 6,
+      name: 'PRIMEIRA FASE — FASE DE GRUPOS'
     };
-    }
+  }
+
+  return {
+    priority: 7,
+    name: raw || 'OUTRAS PARTIDAS'
+  };
+};
   
   const ordered = [...list].sort((a, b) => {
     const pa = phaseInfo(a).priority;
