@@ -13158,54 +13158,32 @@ if (penaltyB !== '' && penaltyB != null) {
 }
 }
 
-      
-const official = getOfficialPhaseMatch(
-  publicComp,
-  tie,
-  round
-);
-
-const sameOrder = official?.sameOrder !== false;
-
-fixtures.push({
-  id: official?.id ||
-    `phase-${round}-${tie.a}-${tie.b}`,
-
-  homeId: home?.id || tie.a,
-  homeName: home?.name || home?.nome || 'A definir',
-
-  awayId: away?.id || tie.b,
-  awayName: away?.name || away?.nome || 'A definir',
-
-  date: official?.date || date,
-  time: official?.time || time,
-  venue: official?.venue || venue,
-
-  round,
-
-  homeScore: official
-    ? (sameOrder ? official.homeScore : official.awayScore)
-    : (tie.score1A ?? null),
-
-  awayScore: official
-    ? (sameOrder ? official.awayScore : official.homeScore)
-    : (tie.score1B ?? null),
-
-  penalties1A: official
-    ? (sameOrder ? official.penalties1A : official.penalties1B)
-    : (tie.penalties1A ?? ''),
-
-  penalties1B: official
-    ? (sameOrder ? official.penalties1B : official.penalties1A)
-    : (tie.penalties1B ?? ''),
-
-  status: official?.status || tie.status || 'Agendado',
-
-  competitionId: String(publicComp.id),
-  competitionDbId: publicComp.dbId,
-  competitionName: publicComp.name || '',
-  competitionLogo: publicComp.logo || ''
-});
+      fixtures.push({
+        id: `phase-${round}-${tie.a}-${tie.b}`,
+        homeId: home?.id || tie.a,
+       homeName: home?.name || home?.nome || 'A definir',
+        awayId: away?.id || tie.b,
+        awayName: away?.name || away?.nome || 'A definir',
+        date,
+        time,
+        venue,
+        round,
+        homeScore: tie.score1A ?? null,
+awayScore: tie.score1B ?? null,
+penalties1A: tie.penalties1A ?? '',
+penalties1B: tie.penalties1B ?? '',
+        status: String(tie.status || 'Agendado')
+          .toLowerCase()
+          .includes('finaliz')
+            ? 'Finalizado'
+            : 'Agendado',
+        competitionId: String(publicComp.id),
+        competitionDbId: publicComp.dbId,
+        competitionName: publicComp.name || '',
+        competitionLogo: publicComp.logo || ''
+      });
+        });
+  }
 
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
   const renderFixtureCard=(m)=>{
@@ -14172,131 +14150,57 @@ const person=r.second?matching[1]:matching[0];
  $('printSheet')?.addEventListener('click',()=>{if(!$('sheetMatch')?.value){alert('Selecione um jogo primeiro.');return;}if(!$('matchSheet')?.querySelector('.sheet-heading'))buildMatchSheet();window.print();});
  
  
-function getOfficialPhaseMatch(comp, tie, round) {
-  if (!comp || !tie) return null;
-
-  const findTeam = id => (db.teams || []).find(t =>
-    String(t.id) === String(id) ||
-    String(t.dbId || '') === String(id)
-  );
-
-  const teamA = findTeam(tie.a);
-  const teamB = findTeam(tie.b);
-
-  const idsA = new Set(
-    [tie.a, teamA?.id, teamA?.dbId]
-      .filter(v => v != null && v !== '')
-      .map(String)
-  );
-
-  const idsB = new Set(
-    [tie.b, teamB?.id, teamB?.dbId]
-      .filter(v => v != null && v !== '')
-      .map(String)
-  );
-
-  const norm = value => String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-
-  const target = norm(round);
-
-  const match = (db.matches || []).find(m => {
-    const compIds = [
-      comp.id, comp.dbId, comp.db_id
-    ].filter(v => v != null && v !== '').map(String);
-
-    const matchIds = [
-      m.competitionId,
-      m.competicao_id,
-      m.competitionDbId
-    ].filter(v => v != null && v !== '').map(String);
-
-    if (matchIds.length && !matchIds.some(id => compIds.includes(id))) {
-      return false;
-    }
-
-    const matchRound = norm(m.round || m.fase || '');
-
-    if (target.includes('terceiro')) {
-      if (!matchRound.includes('terceiro')) return false;
-    } else if (target.includes('final')) {
-      if (!matchRound.includes('final') ||
-          matchRound.includes('terceiro')) return false;
-    } else {
-      return false;
-    }
-
-    const home = String(m.homeId ?? '');
-    const away = String(m.awayId ?? '');
-
-    return (
-      (idsA.has(home) && idsB.has(away)) ||
-      (idsA.has(away) && idsB.has(home))
-    );
-  });
-
-  if (!match) return null;
-
-  const sameOrder =
-    idsA.has(String(match.homeId));
-
-  return {
-    ...match,
-    sameOrder
-  };
-}
-
 
 function getCompetitionPhaseStatus(comp) {
   if (!comp) return 'FASE DE GRUPOS';
 
-  const compIds = [
-    comp.id, comp.dbId, comp.db_id
-  ].filter(v => v != null && v !== '').map(String);
+  const compIds = [comp.id, comp.dbId, comp.db_id]
+    .filter(v => v !== undefined && v !== null && v !== '')
+    .map(String);
 
   const games = (db.matches || []).filter(m => {
     const ids = [
       m.competitionId,
       m.competicao_id,
       m.competitionDbId
-    ].filter(v => v != null && v !== '').map(String);
+    ].filter(v => v !== undefined && v !== null && v !== '')
+      .map(String);
 
-    return ids.length
-      ? ids.some(id => compIds.includes(id))
-      : true;
+    if (ids.length) return ids.some(id => compIds.includes(id));
+
+    if (String(m.competition || '') === String(comp.name || '')) {
+      return true;
+    }
+
+    return false;
   });
 
-  const norm = value => String(value || '')
+  const normalize = value => String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
   const gameDone = m =>
-    norm(m.status).includes('finaliz') &&
+    normalize(m.status).includes('finaliz') &&
+    m.homeScore !== '' &&
+    m.awayScore !== '' &&
     m.homeScore !== null &&
     m.awayScore !== null &&
-    m.homeScore !== '' &&
-    m.awayScore !== '';
+    m.homeScore !== undefined &&
+    m.awayScore !== undefined;
 
-  const tieDone = (tie, round) => {
-    const official = getOfficialPhaseMatch(comp, tie, round);
-
-    if (official) return gameDone(official);
-
-    return !!tie &&
-      norm(tie.status).includes('finaliz') &&
-      tie.score1A !== null &&
-      tie.score1B !== null &&
-      tie.score1A !== undefined &&
-      tie.score1B !== undefined &&
-      tie.score1A !== '' &&
-      tie.score1B !== '';
-  };
+  const tieDone = t =>
+    !!t &&
+    normalize(t.status).includes('finaliz') &&
+    t.score1A !== '' &&
+    t.score1B !== '' &&
+    t.score1A !== null &&
+    t.score1B !== null &&
+    t.score1A !== undefined &&
+    t.score1B !== undefined;
 
   const groupGames = games.filter(m => {
-    const round = norm(m.round || m.fase || '');
+    const round = normalize(m.round || m.fase || '');
 
     return ![
       'oitava',
@@ -14304,60 +14208,78 @@ function getCompetitionPhaseStatus(comp) {
       'semifinal',
       'final',
       'terceiro',
+      '16 avos',
       'dezesseis'
     ].some(term => round.includes(term));
   });
-
-  if (groupGames.length && !groupGames.every(gameDone)) {
-    return 'FASE DE GRUPOS';
-  }
 
   const stages = [
     {
       label: 'OITAVAS DE FINAL',
       ties: comp.knockoutTies || [],
-      round: 'Oitavas de final'
+      round: 'oitava'
     },
     {
       label: 'QUARTAS DE FINAL',
       ties: comp.quarterFinalTies || [],
-      round: 'Quartas de final'
+      round: 'quarta'
     },
     {
       label: 'SEMIFINAIS',
       ties: comp.semiFinalTies || [],
-      round: 'Semifinais'
+      round: 'semifinal'
     },
     {
       label: 'FINAIS',
       ties: comp.finalMatchTie ? [comp.finalMatchTie] : [],
-      round: 'Final'
+      round: 'final'
     }
   ];
 
-  const finalStage = stages[3];
+  // Se existem jogos de grupos, aguarda todos terminarem.
+  if (groupGames.length) {
+    if (!groupGames.every(gameDone)) {
+      return 'FASE DE GRUPOS';
+    }
+  }
 
-  if (
-    finalStage.ties.length &&
-    finalStage.ties.every(t => tieDone(t, 'Final'))
-  ) {
+  // Localiza as fases eliminatórias também na tabela de jogos.
+  stages.forEach(stage => {
+    if (stage.ties.length) return;
+
+    stage.ties = games.filter(m =>
+      normalize(m.round || m.fase || '').includes(stage.round)
+    );
+  });
+
+  // A competição só termina depois do resultado da final.
+  const finalStage = stages.find(s => s.round === 'final');
+
+  if (finalStage.ties.length &&
+      finalStage.ties.every(tieDone)) {
     return 'FINALIZADA';
   }
 
-  for (const stage of stages) {
-    if (!stage.ties.length) continue;
+  // Avança para a primeira fase cadastrada que ainda não terminou.
+  const availableStages = stages.filter(s => s.ties.length);
 
-    const completed = stage.ties.every(t =>
-      tieDone(t, stage.round)
+  if (availableStages.length) {
+    const current = availableStages.find(s =>
+      !s.ties.every(tieDone)
     );
 
-    if (!completed) return stage.label;
+    if (current) return current.label;
+
+    return 'FASES ELIMINATÓRIAS CONCLUÍDAS';
   }
 
-  if (groupGames.length) return 'FASES CONCLUÍDAS';
+  if (groupGames.length) {
+    return 'FASE DE GRUPOS CONCLUÍDA';
+  }
 
   return 'FASE DE GRUPOS';
 }
+
 
 function renderPublicCompetitions(){
   const list = $('publicCompetitionList');
