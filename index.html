@@ -13794,11 +13794,11 @@ const toGame = t => {
 };
 
 const phaseGroups = [
-  { title: 'OITAVAS DE FINAL', test: n => n.includes('oitav') || n.includes('16 avos') },
-  { title: 'QUARTAS DE FINAL', test: n => n.includes('quart') },
-  { title: 'SEMIFINAIS', test: n => n.includes('semi') },
+  { title: 'FINAL', test: n => n === 'final' || n.startsWith('final ') },
   { title: 'DISPUTA DE 3º E 4º LUGAR', test: n => n.includes('terceiro') },
-  { title: 'FINAL', test: n => n === 'final' || n.startsWith('final ') }
+  { title: 'SEMIFINAIS', test: n => n.includes('semi') },
+  { title: 'QUARTAS DE FINAL', test: n => n.includes('quart') },
+  { title: 'OITAVAS DE FINAL', test: n => n.includes('oitav') || n.includes('16 avos') }
 ];
 
 phaseHTML = phaseGroups.map(phase => {
