@@ -13452,7 +13452,7 @@ const upcomingFixtures=uniqueFixtures.filter(m=>!isFinished(m)).slice().sort((a,
   const finishedFixtures=fixtures.filter(isFinished).slice().sort((a,b)=>{
     const da=String(a.date||'')+' '+String(a.time||'');
     const dbb=String(b.date||'')+' '+String(b.time||'');
-    return dbb.localeCompare(da);
+    return da.localeCompare(dbb);
   });
   
 console.log('DIAGNÓSTICO DAS PARTIDAS:', fixtures.map(m => ({
