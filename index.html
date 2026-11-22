@@ -13331,61 +13331,57 @@ const findPhaseTeam = id =>
         });
   }
 
-// Garantir que a disputa de 3º lugar entre no painel público.
+
 if (publicComp?.thirdPlaceTie) {
   const tie = publicComp.thirdPlaceTie;
 
   const normId = value =>
     String(value ?? '').trim().replace(/^dbteam-/i, '');
 
+  const idA = normId(tie.a);
+  const idB = normId(tie.b);
+
   const teamA = (db.teams || []).find(t =>
-    [t.id, t.dbId, t.db_id].some(id =>
-      id != null && normId(id) === normId(tie.a)
-    )
+    [t.id, t.dbId, t.db_id].some(id => normId(id) === idA)
   );
 
   const teamB = (db.teams || []).find(t =>
-    [t.id, t.dbId, t.db_id].some(id =>
-      id != null && normId(id) === normId(tie.b)
-    )
+    [t.id, t.dbId, t.db_id].some(id => normId(id) === idB)
   );
 
-  const idA = normId(teamA?.id || tie.a);
-  const idB = normId(teamB?.id || tie.b);
+  let thirdMatch = fixtures.find(m => {
+    const h = normId(m.homeId);
+    const a = normId(m.awayId);
+    return (h === idA && a === idB) || (h === idB && a === idA);
+  });
 
-  const thirdMatch = fixtures.find(m =>
-    (
-      normId(m.homeId) === idA && normId(m.awayId) === idB
-    ) || (
-      normId(m.homeId) === idB && normId(m.awayId) === idA
-    )
-  );
-
-  if (thirdMatch) {
-    thirdMatch.round = 'Disputa de 3º e 4º lugar';
-  } else {
-    const sameOrder =
-      normId(tie.a) === idA;
-
-    fixtures.push({
+  if (!thirdMatch) {
+    thirdMatch = {
       id: `phase-terceiro-${publicComp.id}`,
       homeId: teamA?.id || tie.a,
       homeName: teamA?.name || teamA?.nome || 'A definir',
       awayId: teamB?.id || tie.b,
       awayName: teamB?.name || teamB?.nome || 'A definir',
-      homeScore: tie.score1A ?? null,
-      awayScore: tie.score1B ?? null,
-      date: tie.date1 || tie.date || '',
-      time: tie.time1 || tie.time || '',
-      venue: tie.venue1 || tie.venue || '',
-      round: 'Disputa de 3º e 4º lugar',
-      status: tie.status || 'Agendado',
       competitionId: String(publicComp.id),
-      competitionDbId: publicComp.dbId,
-      competitionName: publicComp.name || '',
-      competitionLogo: publicComp.logo || ''
-    });
+      competitionDbId: publicComp.dbId
+    };
+    fixtures.push(thirdMatch);
   }
+
+  const sameOrder = normId(thirdMatch.homeId) === idA;
+
+  thirdMatch.round = 'Disputa de 3º e 4º lugar';
+  thirdMatch.homeScore = sameOrder
+    ? tie.score1A ?? thirdMatch.homeScore
+    : tie.score1B ?? thirdMatch.homeScore;
+  thirdMatch.awayScore = sameOrder
+    ? tie.score1B ?? thirdMatch.awayScore
+    : tie.score1A ?? thirdMatch.awayScore;
+
+  thirdMatch.status = tie.status || thirdMatch.status || 'Agendado';
+  thirdMatch.date = tie.date1 || tie.date || thirdMatch.date || '';
+  thirdMatch.time = tie.time1 || tie.time || thirdMatch.time || '';
+  thirdMatch.venue = tie.venue1 || tie.venue || thirdMatch.venue || '';
 }
 
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
@@ -13446,7 +13442,15 @@ const renderGroupedFixtures = list => {
     const text = raw.normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toUpperCase();
-
+if (
+  text.includes('TERCEIRO') ||
+  text.includes('3º') ||
+  text.includes('3O') ||
+  text.includes('3 E 4')
+) {
+  return { priority: 1, name: 'DISPUTA DE 3º E 4º LUGAR' };
+}
+    
     if (text.includes('SEMI')) {
       return { priority: 2, name: 'SEMIFINAIS' };
     }
