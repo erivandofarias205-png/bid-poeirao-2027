@@ -8572,6 +8572,14 @@ async function buscarJogosEquipeProfissional() {
 }
 </style>
  
+<style id="ocultar-paineis-fases-antigos">
+  #semiFinalsPanel,
+  #finalMatchPanel,
+  #thirdPlacePanel {
+    display: none !important;
+  }
+</style>
+
 <!-- PAINEL DAS SEMIFINAIS -->
 <details class="panel" id="semiFinalsPanel">
   <summary class="ph">
@@ -20181,5 +20189,65 @@ async function atualizarTodasProfissionais() {
   }
 }
 </style>
+    <script id="unificar-paineis-das-fases">
+document.addEventListener('DOMContentLoaded', function () {
+  const gerente = document.getElementById('competitionPhaseManager');
+  if (!gerente || gerente.dataset.fasesUnificadas === 'sim') return;
+
+  gerente.dataset.fasesUnificadas = 'sim';
+
+  const fases = [
+    {
+      id: 'semiFinalsPanel',
+      titulo: 'SEMIFINAIS'
+    },
+    {
+      id: 'thirdPlacePanel',
+      titulo: 'DISPUTA DE 3º E 4º LUGAR'
+    },
+    {
+      id: 'finalMatchPanel',
+      titulo: 'GRANDE FINAL'
+    }
+  ];
+
+  const area = document.createElement('div');
+  area.id = 'competitionKnockoutStages';
+
+  area.innerHTML = `
+    <h4 style="margin-top:24px">4. FASES ELIMINATÓRIAS</h4>
+    <p class="small muted">
+      Gerencie semifinais, disputa de terceiro lugar e final nesta mesma área.
+      Os dados e comandos originais serão preservados.
+    </p>
+  `;
+
+  fases.forEach(function (fase) {
+    const painel = document.getElementById(fase.id);
+    if (!painel) return;
+
+    const detalhes = document.createElement('details');
+    detalhes.className = 'phase-stage-accordion';
+    detalhes.style.cssText =
+      'margin:12px 0;border:1px solid #b68a36;border-radius:10px;background:#111;color:#fff;overflow:hidden;';
+
+    const resumo = document.createElement('summary');
+    resumo.textContent = fase.titulo;
+    resumo.style.cssText =
+      'padding:14px;color:#e4bd62;font-weight:800;cursor:pointer;';
+
+    detalhes.appendChild(resumo);
+
+    painel.style.setProperty('display', 'block', 'important');
+    painel.style.setProperty('margin', '0', 'important');
+    painel.style.setProperty('border', '0', 'important');
+
+    detalhes.appendChild(painel);
+    area.appendChild(detalhes);
+  });
+
+  gerente.appendChild(area);
+});
+    </script>
 </body>
 </html>
