@@ -12599,12 +12599,22 @@ if (oldId && !old.dbId) {
 let result;
 
 if (oldId) {
+  if (!old || !old.dbId) {
+    throw new Error('Partida existente sem ID válido do Supabase. A atualização foi cancelada.');
+  }
+
   result = await supabaseClient
     .from('jogos')
     .update(payload)
     .eq('id', old.dbId)
-    .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
+    .select('id,status,gols_mandante,gols_visitante')
     .single();
+
+  if (result.error) throw result.error;
+
+  if (!result.data || result.data.status !== 'Finalizado') {
+    throw new Error('O Supabase não confirmou a finalização da partida.');
+  }
 } else {
   result = await supabaseClient
     .from('jogos')
