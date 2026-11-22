@@ -12597,20 +12597,20 @@ if (oldId && !old.dbId) {
    if(adminError)throw adminError;
    if(adminCheck!==true){alert('Sua conta não foi reconhecida como administradora.');return}
 let result;
+
 if (oldId) {
-  result=await supabaseClient
+  result = await supabaseClient
     .from('jogos')
     .update(payload)
-    .eq('id',old.dbId)
+    .eq('id', old.dbId)
     .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
     .single();
-}
-else {
-  result=await supabaseClient
+} else {
+  result = await supabaseClient
     .from('jogos')
     .insert(payload)
     .select('id,competicao_id,equipe_mandante_id,equipe_visitante_id,rodada,fase,formato,data_hora,local_jogo,gols_mandante,gols_visitante,status')
-.single();
+    .single();
 }
     if(result.error)throw result.error;
    button.dataset.editId='';button.textContent='Adicionar jogo à tabela';
