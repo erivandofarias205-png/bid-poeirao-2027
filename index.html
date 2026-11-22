@@ -9222,9 +9222,16 @@ function removeLargeInlineImages(value){
  return value;
 }
 function saveDb(){
- try{localStorage.setItem(KEY,JSON.stringify(removeLargeInlineImages(db)));}
- catch(e){console.error('Falha ao salvar cópia local:',e);alert('O armazenamento local está cheio. Os dados principais precisam ser salvos no Supabase. Evite cadastrar fotos grandes nesta versão.');}
- renderAll();
+ try{
+   localStorage.setItem(KEY,JSON.stringify(removeLargeInlineImages(db)));
+ } catch(e) {
+   console.error('Falha ao salvar cópia local:',e);
+   alert('O armazenamento local está cheio. Os dados principais precisam ser salvos no Supabase. Evite cadastrar fotos grandes nesta versão.');
+ }
+
+ if (typeof window.renderAll === 'function') {
+   window.renderAll();
+ }
 }
 const saveEverythingButton=document.getElementById('saveEverything');
 if(saveEverythingButton){saveEverythingButton.addEventListener('click',()=>{saveDb();const stamp=new Date().toLocaleString('pt-BR');saveEverythingButton.textContent='Salvo ✓';alert('Cópia local dos dados salva neste navegador em '+stamp+'. Os registros já enviados ao Supabase permanecem no banco. Para guardar uma cópia externa, use “Exportar cópia de segurança (JSON)”.');});}
