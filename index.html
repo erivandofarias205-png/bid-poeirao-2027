@@ -13563,19 +13563,30 @@ status:t.status||'Agendado',
 let games = [];
 
 if (phase.title === 'FINAL') {
-  if (comp.finalMatchTie) {
+  games = allMatches.filter(m => {
+    const name = normalizePhase(m);
+    return name.includes('final') && !name.includes('terceiro');
+  });
+
+  if (!games.length && comp.finalMatchTie) {
     games.push(toGame({
       ...comp.finalMatchTie,
       round: 'Final'
     }));
   }
+
 } else if (phase.title === 'DISPUTA DE 3º E 4º LUGAR') {
-  if (comp.thirdPlaceTie) {
+  games = allMatches.filter(m =>
+    normalizePhase(m).includes('terceiro')
+  );
+
+  if (!games.length && comp.thirdPlaceTie) {
     games.push(toGame({
       ...comp.thirdPlaceTie,
       round: 'Disputa de terceiro lugar'
     }));
   }
+
 } else {
   games = allMatches.filter(m => {
     const name = normalizePhase(m);
