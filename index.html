@@ -15914,17 +15914,29 @@ async function loadSupabaseTeams() {
 
 
     let associationRows = [];
-    const assoc = await supabaseClient.from('competicao_equipes').select('competicao_id,equipe_id,grupo,status');
-    if (assoc.error) throw new Error('Não foi possível ler competicao_equipes: ' + assoc.error.message);
-    associationRows = assoc.data || [];
+  const assoc = await supabaseClient
+  .from('competicao_equipes')
+  .select('competicao_id,equipe_id,grupo,status');
 
+if (assoc.error) {
+  console.error('Erro ao carregar vínculos das equipes:', assoc.error);
+  associationRows = [];
+} else {
+  associationRows = assoc.data || [];
+}
 
+let athleteCompetitionRows = [];
 
+const athleteAssoc = await supabaseClient
+  .from('competicao_atletas')
+  .select('competicao_id,atleta_id,equipe_id,status,numero_camisa');
 
-    let athleteCompetitionRows = [];
-    const athleteAssoc = await supabaseClient.from('competicao_atletas').select('competicao_id,atleta_id,equipe_id,status,numero_camisa');
-    if (athleteAssoc.error) throw new Error('Não foi possível ler competicao_atletas: ' + athleteAssoc.error.message);
-    athleteCompetitionRows = athleteAssoc.data || [];
+if (athleteAssoc.error) {
+  console.error('Erro ao carregar vínculos dos atletas:', athleteAssoc.error);
+  athleteCompetitionRows = [];
+} else {
+  athleteCompetitionRows = athleteAssoc.data || [];
+}
 
 
 
