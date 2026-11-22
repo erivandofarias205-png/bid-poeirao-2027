@@ -12479,23 +12479,28 @@ const getPhaseKey = value => {
 const missingPhaseMatches = phaseMatches.filter(p => {
   const phaseKey = getPhaseKey(p.round);
 
-  return !officialMatches
-    .filter(matchBelongsToActiveCompetition)
-    .some(m => {
-      const sameTeams =
-        (
-          String(m.homeId) === String(p.homeId) &&
-          String(m.awayId) === String(p.awayId)
-        ) ||
-        (
-          String(m.homeId) === String(p.awayId) &&
-          String(m.awayId) === String(p.homeId)
-        );
+  const sameOfficialMatch = officialMatches.some(m => {
+    if (!matchBelongsToActiveCompetition(m)) return false;
 
-      const samePhase = getPhaseKey(m.round) === phaseKey;
+    const sameTeams =
+      (
+        String(m.homeId) === String(p.homeId) &&
+        String(m.awayId) === String(p.awayId)
+      ) ||
+      (
+        String(m.homeId) === String(p.awayId) &&
+        String(m.awayId) === String(p.homeId)
+      );
 
-      return sameTeams && samePhase;
-    });
+    if (!sameTeams) return false;
+
+    const officialPhase = getPhaseKey(m.round || m.fase);
+
+    return officialPhase === phaseKey;
+  });
+
+  return !sameOfficialMatch;
+});
 });
   const sorted = [
    ...officialMatches,
