@@ -13331,6 +13331,63 @@ const findPhaseTeam = id =>
         });
   }
 
+// Garantir que a disputa de 3º lugar entre no painel público.
+if (publicComp?.thirdPlaceTie) {
+  const tie = publicComp.thirdPlaceTie;
+
+  const normId = value =>
+    String(value ?? '').trim().replace(/^dbteam-/i, '');
+
+  const teamA = (db.teams || []).find(t =>
+    [t.id, t.dbId, t.db_id].some(id =>
+      id != null && normId(id) === normId(tie.a)
+    )
+  );
+
+  const teamB = (db.teams || []).find(t =>
+    [t.id, t.dbId, t.db_id].some(id =>
+      id != null && normId(id) === normId(tie.b)
+    )
+  );
+
+  const idA = normId(teamA?.id || tie.a);
+  const idB = normId(teamB?.id || tie.b);
+
+  const thirdMatch = fixtures.find(m =>
+    (
+      normId(m.homeId) === idA && normId(m.awayId) === idB
+    ) || (
+      normId(m.homeId) === idB && normId(m.awayId) === idA
+    )
+  );
+
+  if (thirdMatch) {
+    thirdMatch.round = 'Disputa de 3º e 4º lugar';
+  } else {
+    const sameOrder =
+      normId(tie.a) === idA;
+
+    fixtures.push({
+      id: `phase-terceiro-${publicComp.id}`,
+      homeId: teamA?.id || tie.a,
+      homeName: teamA?.name || teamA?.nome || 'A definir',
+      awayId: teamB?.id || tie.b,
+      awayName: teamB?.name || teamB?.nome || 'A definir',
+      homeScore: tie.score1A ?? null,
+      awayScore: tie.score1B ?? null,
+      date: tie.date1 || tie.date || '',
+      time: tie.time1 || tie.time || '',
+      venue: tie.venue1 || tie.venue || '',
+      round: 'Disputa de 3º e 4º lugar',
+      status: tie.status || 'Agendado',
+      competitionId: String(publicComp.id),
+      competitionDbId: publicComp.dbId,
+      competitionName: publicComp.name || '',
+      competitionLogo: publicComp.logo || ''
+    });
+  }
+}
+
   const isFinished=(m)=>String(m.status||'').trim().toLocaleLowerCase('pt-BR').includes('finaliz')&&m.homeScore!==null&&m.awayScore!==null&&String(m.homeScore)!==''&&String(m.awayScore)!=='';
   const renderFixtureCard=(m)=>{
     const date=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('pt-BR'):'Data a definir';
