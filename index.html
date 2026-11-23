@@ -7581,6 +7581,14 @@ area.style.boxSizing = 'border-box';
     nome: 'SUL-AMERICANA',
     aliases: ['CONMEBOL SUDAMERICANA', 'COPA SUDAMERICANA', 'SUL-AMERICANA', 'SUDAMERICANA']
   }
+{
+  nome: 'PREMIER LEAGUE',
+  aliases: ['PREMIER LEAGUE', 'ENGLISH PREMIER LEAGUE']
+},
+{
+  nome: 'LA LIGA',
+  aliases: ['LA LIGA', 'LALIGA', 'SPANISH LA LIGA']
+},
 ];
   
   const normalizar = texto => String(texto || '')
@@ -7707,16 +7715,8 @@ const jogosDaData = jogosUnicos.filter(jogo => {
 
 jogos = jogosDaData;
 
-// Monta a lista de equipes das 14 competições
-const jogosPermitidos = jogos.filter(jogo => {
-  const nomeAPI = normalizar(jogo.competition);
-
-  return competicoesPermitidas.some(competicao =>
-    competicao.aliases.some(alias =>
-      nomeAPI === normalizar(alias)
-    )
-  );
-});
+// ACEITAR TODAS AS COMPETIÇÕES RETORNADAS PELO GE
+const jogosPermitidos = jogos;
 
 const equipesUnicas = new Map();
 
@@ -7744,16 +7744,17 @@ if (listaEquipes) {
 }
 
 
-const grupos = competicoesPermitidas
-  .map(competicao => ({
-    nome: competicao.nome,
-    jogos: jogosPermitidos.filter(jogo => {
-      const nomeAPI = normalizar(jogo.competition);
-
-      return competicao.aliases.some(alias =>
-        nomeAPI === normalizar(alias)
-      );
-    })
+// AGRUPAR AUTOMATICAMENTE PELO NOME DA COMPETIÇÃO
+const grupos = [...new Set(
+  jogosPermitidos.map(jogo => jogo.competition)
+)]
+  .filter(Boolean)
+  .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  .map(nome => ({
+    nome,
+    jogos: jogosPermitidos.filter(
+      jogo => jogo.competition === nome
+    )
   }))
   .filter(grupo => grupo.jogos.length > 0);
 
@@ -7825,7 +7826,7 @@ function desenharGrupo(grupo, titulo, partidas) {
         : '';
 
       return `
-        <div style="padding:10px 5px;border-bottom:1px solid #ddd;color:#111">
+        <div style="padding:10px 5px;border-bottom:1px solid #ddd;color:#111;background:#fff">
           <div style="display:grid;grid-template-columns:1fr 65px 1fr;align-items:center;gap:6px">
             <div style="display:flex;align-items:center;gap:5px">
               ${escudoMandante}
@@ -7851,7 +7852,7 @@ function desenharGrupo(grupo, titulo, partidas) {
 
   return `
     <div style="margin-bottom:14px">
-      <h4 style="color:#111;border-bottom:2px solid #d4af37;padding:8px 5px;margin:0">
+      <h4 style="color:#9b7415;border-bottom:2px solid #d4af37;padding:10px 5px;margin:0;font-size:15px;font-weight:900;background:#fff">
         ${titulo} · ${grupo.nome}
       </h4>
       ${linhas}
