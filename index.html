@@ -10793,7 +10793,10 @@ async function renderHighlightsSelection(){
 
     if(error) throw error;
 
-    const selection = data?.dados?.selection || [];
+// CARREGAR DADOS DA ELEIÇÃO E VOTOS DA COMISSÃO
+window.__BID_DADOS_ELEICAO = data?.dados || {};
+
+const selection = data?.dados?.selection || [];
     const electionClosed = data?.dados?.eleicaoEncerrada === true;
 
     if(!selection.length){
@@ -10939,86 +10942,137 @@ async function renderHighlightsSelection(){
       `);
     }
 
-    async function showResults(index){
-      const categoria = `selection_${index}`;
 
-      const {data,error} = await supabaseClient.rpc(
-        'consultar_resultado_eleicao',
-        {
-          p_competicao_id:competitionId,
-          p_categoria:categoria
-        }
-      );
+async function showResults(index){
+  const categoria = `selection_${index}`;
 
-      if(error) throw error;
-
-      const results = data || [];
-      const total = results.reduce(
-        (sum,item) => sum + Number(item.total_votos || 0),0
-      );
-
-            const maiorVotacao = Math.max(
-        0,
-        ...results.map(item => Number(item.total_votos || 0))
-      );
-
-      const lideres = results.filter(
-        item => Number(item.total_votos || 0) === maiorVotacao
-      );
-
-      const temVencedor =
-        electionClosed &&
-        maiorVotacao > 0 &&
-        lideres.length === 1;
-
-      results.forEach(item => {
-        const el = $(`vote_result_${index}_${item.indicado_id}`);
-        if(!el) return;
-
-        const vencedor =
-          temVencedor &&
-          String(item.indicado_id) === String(lideres[0].indicado_id);
-
-        el.innerHTML = `
-          <div style="
-            margin-top:10px;
-            font-weight:bold;
-            font-size:20px;
-            color:${vencedor ? '#ff3333' : '#e4bd43'};
-            ${vencedor ? 'background:#300;padding:8px;border:1px solid #ff3333;border-radius:8px;' : ''}
-          ">
-            ${Number(item.percentual || 0).toFixed(1)}%
-          </div>
-
-          <div style="
-            font-size:14px;
-            font-weight:bold;
-            color:${vencedor ? '#ff3333' : '#fff'};
-            margin-top:4px;
-          ">
-            ${Number(item.total_votos || 0)} voto(s)
-          </div>
-
-          ${vencedor ? `
-            <div style="color:#ff3333;font-weight:900;margin-top:6px">
-              🏆 VENCEDOR
-            </div>
-          ` : ''}
-        `;
-      });
-
-      out.querySelectorAll(`[data-vote-index="${index}"]`)
-        .forEach(btn => {
-         btn.disabled = true;
-btn.textContent = electionClosed
-  ? 'ELEIÇÃO ENCERRADA'
-  : 'VOTO REGISTRADO';
-btn.style.background = '#555';
-btn.style.cursor = 'not-allowed';
-        });
-
-      return total;
+  const {data,error} = await supabaseClient.rpc(
+    'consultar_resultado_eleicao',
+    {
+      p_competicao_id:competitionId,
+      p_categoria:categoria
     }
+  );
+
+  if(error) throw error;
+
+  const results = data || [];
+  const idsCandidatos = (selection[index]?.candidates || [])
+    .filter(id=>id !== null && id !== undefined && id !== '')
+    .map(String);
+
+  const mapaPublico = new Map(
+    results.map(item=>[
+      String(item.indicado_id),
+      Number(item.total_votos || 0)
+    ])
+  );
+
+  const maiorVotacaoPublica = Math.max(
+    0,
+    ...idsCandidatos.map(id=>mapaPublico.get(id) || 0)
+  );
+
+ const votosComissao =
+    window.__BID_DADOS_ELEICAO?.votosComissao?.[categoria] || {};
+
+  const pontos = new Map(
+    idsCandidatos.map(id=>[id,0])
+  );
+
+  // PÚBLICO: VALE 1 PONTO
+  if(maiorVotacaoPublica > 0){
+    idsCandidatos.forEach(id=>{
+      if((mapaPublico.get(id) || 0) === maiorVotacaoPublica){
+        pontos.set(id,(pontos.get(id) || 0) + 1);
+      }
+    });
+  }
+
+  // ELIZÂNIO E ERIVANDO
+  [votosComissao.elizanio,votosComissao.erivando].forEach(id=>{
+    if(id && pontos.has(String(id))){
+      const chave = String(id);
+      pontos.set(chave,(pontos.get(chave) || 0) + 1);
+    }
+  });
+
+  // BENARTE: SOMENTE NO DESEMPATE
+  if(votosComissao.benarte && pontos.has(String(votosComissao.benarte))){
+    const chave = String(votosComissao.benarte);
+    pontos.set(chave,(pontos.get(chave) || 0) + 1);
+  }
+
+  const maiorPontuacao = Math.max(0,...pontos.values());
+
+  const lideres = [...pontos.entries()].filter(
+    ([id,total])=>total === maiorPontuacao && total > 0
+  );
+
+  const temVencedor =
+    electionClosed &&
+    lideres.length === 1;
+
+  const totalPontosPossiveis = votosComissao.benarte ? 4 : 3;
+
+  idsCandidatos.forEach(id=>{
+    const el = $(`vote_result_${index}_${id}`);
+    if(!el) return;
+
+    const votosPublico = mapaPublico.get(id) || 0;
+
+    const votosComissaoAtleta = [
+      votosComissao.elizanio,
+      votosComissao.erivando,
+      votosComissao.benarte
+    ].filter(voto=>voto && String(voto) === id).length;
+
+    const pontuacao = pontos.get(id) || 0;
+
+    const vencedor =
+      temVencedor &&
+      String(lideres[0][0]) === id;
+
+    el.innerHTML = `
+      <div style="font-size:13px;font-weight:bold;color:#fff;margin-top:10px">
+        PÚBLICO: ${votosPublico} voto(s)
+      </div>
+
+      <div style="font-size:13px;font-weight:bold;color:#fff;margin-top:4px">
+        COMISSÃO: ${votosComissaoAtleta} voto(s)
+      </div>
+
+      <div style="
+        margin-top:8px;
+        font-size:20px;
+        font-weight:900;
+        color:${vencedor ? '#ff3333' : '#e4bd43'};
+        ${vencedor ? 'background:#300;padding:8px;border:1px solid #ff3333;border-radius:8px;' : ''}
+      ">
+        ${pontuacao} DE ${totalPontosPossiveis} PONTOS
+      </div>
+
+      ${vencedor ? `
+        <div style="color:#ff3333;font-weight:900;margin-top:6px">
+          🏆 VENCEDOR
+        </div>
+      ` : ''}
+    `;
+  });
+
+  out.querySelectorAll(`[data-vote-index="${index}"]`)
+    .forEach(btn=>{
+      btn.disabled = true;
+      btn.textContent = 'ELEIÇÃO ENCERRADA';
+      btn.style.background = '#555';
+      btn.style.cursor = 'not-allowed';
+    });
+
+  return results.reduce(
+    (sum,item)=>sum + Number(item.total_votos || 0),0
+  );
+}
+
 
     for(let i=0;i<positions.length;i++){
   if(electionClosed || localStorage.getItem(
@@ -11216,83 +11270,151 @@ const electionClosed = dados.eleicaoEncerrada === true;
         </div>
       `;
 
-      async function showResults(){
-        const {data,error} = await supabaseClient.rpc(
-          'consultar_resultado_eleicao',
-          {
-            p_competicao_id:competitionId,
-            p_categoria:category.key
-          }
-        );
-
-        if(error) throw error;
-
-        const resultados = data || [];
-
-const maiorVotacao = Math.max(
-  0,
-  ...resultados.map(item => Number(item.total_votos || 0))
-);
-
-const lideres = resultados.filter(
-  item => Number(item.total_votos || 0) === maiorVotacao
-);
-
-const temVencedor =
-  electionClosed &&
-  maiorVotacao > 0 &&
-  lideres.length === 1;
-
-resultados.forEach(item=>{
-  const el = document.getElementById(
-    `vote_result_${category.key}_${item.indicado_id}`
+      
+async function showResults(){
+  const {data,error} = await supabaseClient.rpc(
+    'consultar_resultado_eleicao',
+    {
+      p_competicao_id:competitionId,
+      p_categoria:category.key
+    }
   );
 
-  if(!el) return;
+  if(error) throw error;
 
-  const vencedor =
-    temVencedor &&
-    String(item.indicado_id) === String(lideres[0].indicado_id);
+  const resultados = data || [];
 
-  el.innerHTML = `
-    <div style="
-      margin-top:10px;
-      font-weight:bold;
-      font-size:20px;
-      color:${vencedor ? '#ff3333' : '#e4bd43'};
-      ${vencedor ? 'background:#300;padding:8px;border:1px solid #ff3333;border-radius:8px;' : ''}
-    ">
-      ${Number(item.percentual || 0).toFixed(1)}%
-    </div>
+  const mapaPublico = new Map(
+    resultados.map(item=>[
+      String(item.indicado_id),
+      Number(item.total_votos || 0)
+    ])
+  );
 
-    <div style="
-      font-size:14px;
-      font-weight:bold;
-      color:${vencedor ? '#ff3333' : '#fff'};
-      margin-top:4px;
-    ">
-      ${Number(item.total_votos || 0)} voto(s)
-    </div>
+  const maiorVotacaoPublica = Math.max(
+    0,
+    ...candidates.map(item=>
+      mapaPublico.get(String(item.athleteId)) || 0
+    )
+  );
 
-    ${vencedor ? `
-      <div style="color:#ff3333;font-weight:900;margin-top:6px">
-        🏆 VENCEDOR
-      </div>
-    ` : ''}
-  `;
-});
+  const votosComissao =
+    dados.votosComissao?.[category.key] || {};
 
-       out.querySelectorAll(
-  `[data-highlight-category="${category.key}"]`
-).forEach(btn=>{
-  btn.disabled = true;
-  btn.textContent = electionClosed
-    ? 'ELEIÇÃO ENCERRADA'
-    : 'VOTO REGISTRADO';
-  btn.style.background = '#555';
-  btn.style.cursor = 'not-allowed';
-});
+  const pontos = new Map(
+    candidates.map(item=>[
+      String(item.athleteId),
+      0
+    ])
+  );
+
+  // PÚBLICO: A VOTAÇÃO POPULAR VALE APENAS 1 PONTO
+  if(maiorVotacaoPublica > 0){
+    candidates.forEach(item=>{
+      const id = String(item.athleteId);
+
+      if((mapaPublico.get(id) || 0) === maiorVotacaoPublica){
+        pontos.set(id,(pontos.get(id) || 0) + 1);
       }
+    });
+  }
+
+  // ELIZÂNIO E ERIVANDO: 1 PONTO CADA
+  [votosComissao.elizanio,votosComissao.erivando].forEach(id=>{
+    if(id && pontos.has(String(id))){
+      const chave = String(id);
+      pontos.set(chave,(pontos.get(chave) || 0) + 1);
+    }
+  });
+
+  // BENARTE: SÓ CONTA QUANDO HOUVER VOTO DE DESEMPATE
+  if(votosComissao.benarte && pontos.has(String(votosComissao.benarte))){
+    const chave = String(votosComissao.benarte);
+    pontos.set(chave,(pontos.get(chave) || 0) + 1);
+  }
+
+  const maiorPontuacao = Math.max(0,...pontos.values());
+
+  const lideres = [...pontos.entries()].filter(
+    ([id,total])=>total === maiorPontuacao && total > 0
+  );
+
+  const temVencedor =
+    electionClosed &&
+    lideres.length === 1;
+
+  const totalPontosPossiveis = votosComissao.benarte ? 4 : 3;
+
+  candidates.forEach(item=>{
+    const id = String(item.athleteId);
+    const el = document.getElementById(
+      `vote_result_${category.key}_${id}`
+    );
+
+    if(!el) return;
+
+    const votosPublico = mapaPublico.get(id) || 0;
+
+    const votosComissaoAtleta = [
+      votosComissao.elizanio,
+      votosComissao.erivando,
+      votosComissao.benarte
+    ].filter(voto=>voto && String(voto) === id).length;
+
+    const pontuacao = pontos.get(id) || 0;
+
+    const vencedor =
+      temVencedor &&
+      String(lideres[0][0]) === id;
+
+    el.innerHTML = `
+      <div style="
+        margin-top:10px;
+        font-size:13px;
+        font-weight:bold;
+        color:#fff;
+      ">
+        PÚBLICO: ${votosPublico} voto(s)
+      </div>
+
+      <div style="
+        font-size:13px;
+        font-weight:bold;
+        color:#fff;
+        margin-top:4px;
+      ">
+        COMISSÃO: ${votosComissaoAtleta} voto(s)
+      </div>
+
+      <div style="
+        margin-top:8px;
+        font-size:20px;
+        font-weight:900;
+        color:${vencedor ? '#ff3333' : '#e4bd43'};
+        ${vencedor ? 'background:#300;padding:8px;border:1px solid #ff3333;border-radius:8px;' : ''}
+      ">
+        ${pontuacao} DE ${totalPontosPossiveis} PONTOS
+      </div>
+
+      ${vencedor ? `
+        <div style="color:#ff3333;font-weight:900;margin-top:6px">
+          🏆 VENCEDOR
+        </div>
+      ` : ''}
+    `;
+  });
+
+  out.querySelectorAll(
+    `[data-highlight-category="${category.key}"]`
+  ).forEach(btn=>{
+    btn.disabled = true;
+    btn.textContent = electionClosed
+      ? 'ELEIÇÃO ENCERRADA'
+      : 'VOTO REGISTRADO';
+    btn.style.background = '#555';
+    btn.style.cursor = 'not-allowed';
+  });
+}
 
       if(voted || electionClosed){
   showResults().catch(error=>{
