@@ -7524,25 +7524,10 @@ window.abrirPainelJogosHoje = function() {
   const painel = document.getElementById('profissionalJogosHoje');
   const detalhes = document.getElementById('profissionalDetalhes');
 
-  if (!painel) return;
-
-  if (detalhes) detalhes.hidden = true;
-
-  painel.hidden = false;
-const cabecalho = document.getElementById('centralJogosCabecalho');
-if (cabecalho) cabecalho.hidden = false;
-  
-  carregarJogosHojeProfissional();
-
-  painel.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start'
-  });
-window.abrirPainelJogosHoje = function() {
-  const painel = document.getElementById('profissionalJogosHoje');
-  const detalhes = document.getElementById('profissionalDetalhes');
-
-  if (!painel) return;
+  if (!painel) {
+    console.error('Painel de jogos de hoje não encontrado.');
+    return;
+  }
 
   if (detalhes) detalhes.hidden = true;
 
