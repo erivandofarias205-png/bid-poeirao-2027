@@ -9371,6 +9371,7 @@ if(!comp)return !(db.competitions||[]).length;
 }
   document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
  
+
 async function renderHighlightsAdminResults(){
   const out = $('highlightsResults');
   const competitionId = $('highlightsCompetitionSelect')?.value;
@@ -9395,18 +9396,11 @@ async function renderHighlightsAdminResults(){
   ];
 
   const positions = [
-    'Goleiro',
-    'Lateral-direito',
-    'Primeiro zagueiro',
-    'Segundo zagueiro',
-    'Lateral-esquerdo',
-    'Primeiro volante',
-    'Segundo volante',
-    'Meia-esquerdo',
-    'Meia-direito',
-    'Atacante',
-    'Atacante',
-    'Treinador'
+    'Goleiro','Lateral-direito','Primeiro zagueiro',
+    'Segundo zagueiro','Lateral-esquerdo',
+    'Primeiro volante','Segundo volante',
+    'Meia-esquerdo','Meia-direito',
+    'Atacante','Atacante','Treinador'
   ];
 
   function findAthlete(id){
@@ -9417,17 +9411,12 @@ async function renderHighlightsAdminResults(){
 
       if(person){
         return {
-          name: person.sportsName ||
-                person.nome_esportivo ||
-                person.sports_name ||
-                person.name ||
-                person.nome ||
-                'Atleta',
-          team: team.name || team.nome || ''
+          name:person.sportsName || person.nome_esportivo ||
+            person.sports_name || person.name || person.nome || 'Atleta',
+          team:team.name || team.nome || ''
         };
       }
     }
-
     return {name:'Cadastro não encontrado',team:''};
   }
 
@@ -9441,7 +9430,6 @@ async function renderHighlightsAdminResults(){
     );
 
     if(error) throw error;
-
     return data || [];
   }
 
@@ -9458,7 +9446,73 @@ async function renderHighlightsAdminResults(){
 
     const dados = data?.dados || {};
     const electionClosed = dados.eleicaoEncerrada === true;
+
     let html = '';
+
+    if(electionClosed){
+      html += `
+        <div style="
+          background:#8b1111;
+          color:white;
+          padding:14px;
+          border-radius:10px;
+          text-align:center;
+          font-weight:bold;
+          margin-bottom:15px">
+          🏆 ELEIÇÃO ENCERRADA — RESULTADO OFICIAL
+        </div>
+      `;
+    }
+
+    function renderRows(rows){
+      const maior = rows.length
+        ? Math.max(...rows.map(item=>item.votes))
+        : 0;
+
+      const empatados = rows.filter(item=>
+        item.votes === maior
+      );
+
+      const temVencedor =
+        electionClosed &&
+        maior > 0 &&
+        empatados.length === 1;
+
+      return rows.length
+        ? rows.map(item=>{
+            const vencedor = temVencedor &&
+              item.votes === maior;
+
+            return `
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:10px;
+                padding:12px;
+                margin:6px 0;
+                border-radius:9px;
+                border:1px solid ${vencedor?'#ff3333':'#33496d'};
+                background:${vencedor?'#701515':'transparent'}">
+
+                <div>
+                  <b>${esc(item.name)}</b>
+                  ${vencedor?'<br><small style="color:#ff7777;font-weight:bold">🏆 VENCEDOR</small>':''}
+                  <br><small>${esc(item.team)}</small>
+                </div>
+
+                <div style="text-align:right;white-space:nowrap">
+                  <b style="color:${vencedor?'#ffffff':'#e4bd43'}">
+                    ${item.percentage.toFixed(1)}%
+                  </b>
+                  <br>
+                  <small>${item.votes} voto(s)</small>
+                </div>
+              </div>
+            `;
+          }).join('')
+        : '<div class="empty">Nenhum indicado cadastrado.</div>';
+    }
 
     for(const category of categories){
       const candidates = dados[category.key] || [];
@@ -9466,8 +9520,7 @@ async function renderHighlightsAdminResults(){
 
       const resultMap = new Map(
         results.map(item=>[
-          String(item.indicado_id),
-          item
+          String(item.indicado_id),item
         ])
       );
 
@@ -9490,26 +9543,7 @@ async function renderHighlightsAdminResults(){
       html += `
         <div class="panel" style="margin:12px 0;padding:12px">
           <h3>${category.title}</h3>
-          ${
-            rows.length
-              ? rows.map(item=>`
-                <div style="display:flex;justify-content:space-between;
-                  align-items:center;gap:10px;padding:10px;
-                  border-bottom:1px solid #33496d">
-                  <div>
-                    <b>${esc(item.name)}</b>
-                    <br><small>${esc(item.team)}</small>
-                  </div>
-                  <div style="text-align:right;white-space:nowrap">
-                    <b style="color:#e4bd43">
-                      ${item.percentage.toFixed(1)}%
-                    </b>
-                    <br><small>${item.votes} voto(s)</small>
-                  </div>
-                </div>
-              `).join('')
-              : '<div class="empty">Nenhum indicado cadastrado.</div>'
-          }
+          ${renderRows(rows)}
         </div>
       `;
     }
@@ -9522,13 +9556,12 @@ async function renderHighlightsAdminResults(){
 
       const resultMap = new Map(
         results.map(item=>[
-          String(item.indicado_id),
-          item
+          String(item.indicado_id),item
         ])
       );
 
       const rows = candidates
-        .filter(id=>id !== null && id !== undefined && id !== '')
+        .filter(id=>id!==null && id!==undefined && id!=='')
         .map(id=>{
           const person = findAthlete(id);
           const result = resultMap.get(String(id));
@@ -9545,26 +9578,7 @@ async function renderHighlightsAdminResults(){
       html += `
         <div class="panel" style="margin:12px 0;padding:12px">
           <h3>SELEÇÃO — ${esc(positions[i])}</h3>
-          ${
-            rows.length
-              ? rows.map(item=>`
-                <div style="display:flex;justify-content:space-between;
-                  align-items:center;gap:10px;padding:10px;
-                  border-bottom:1px solid #33496d">
-                  <div>
-                    <b>${esc(item.name)}</b>
-                    <br><small>${esc(item.team)}</small>
-                  </div>
-                  <div style="text-align:right;white-space:nowrap">
-                    <b style="color:#e4bd43">
-                      ${item.percentage.toFixed(1)}%
-                    </b>
-                    <br><small>${item.votes} voto(s)</small>
-                  </div>
-                </div>
-              `).join('')
-              : '<div class="empty">Nenhum indicado cadastrado.</div>'
-          }
+          ${renderRows(rows)}
         </div>
       `;
     }
@@ -9580,6 +9594,7 @@ async function renderHighlightsAdminResults(){
       esc(error.message)+'</div>';
   }
 }
+
 
     
 async function renderAdminDashboard(){
@@ -10906,7 +10921,23 @@ async function renderHighlightsSelection(){
     ${cards || '<div class="empty">Nenhum indicado encontrado nesta posição.</div>'}
   </div>
 </div>      `;
-    }).join('');
+       }).join('');
+
+    if(electionClosed){
+      out.insertAdjacentHTML('afterbegin', `
+        <div style="
+          background:#8b1111;
+          color:#fff;
+          padding:14px;
+          border-radius:10px;
+          text-align:center;
+          font-weight:bold;
+          margin-bottom:15px;
+        ">
+          🏆 ELEIÇÃO ENCERRADA — RESULTADO OFICIAL
+        </div>
+      `);
+    }
 
     async function showResults(index){
       const categoria = `selection_${index}`;
@@ -10926,16 +10957,54 @@ async function renderHighlightsSelection(){
         (sum,item) => sum + Number(item.total_votos || 0),0
       );
 
+            const maiorVotacao = Math.max(
+        0,
+        ...results.map(item => Number(item.total_votos || 0))
+      );
+
+      const lideres = results.filter(
+        item => Number(item.total_votos || 0) === maiorVotacao
+      );
+
+      const temVencedor =
+        electionClosed &&
+        maiorVotacao > 0 &&
+        lideres.length === 1;
+
       results.forEach(item => {
         const el = $(`vote_result_${index}_${item.indicado_id}`);
-        if(el){
-          el.innerHTML = `
-            <div style="margin-top:10px;font-weight:bold;color:#e4bd43">
-              ${Number(item.percentual || 0).toFixed(1)}%
+        if(!el) return;
+
+        const vencedor =
+          temVencedor &&
+          String(item.indicado_id) === String(lideres[0].indicado_id);
+
+        el.innerHTML = `
+          <div style="
+            margin-top:10px;
+            font-weight:bold;
+            font-size:20px;
+            color:${vencedor ? '#ff3333' : '#e4bd43'};
+            ${vencedor ? 'background:#300;padding:8px;border:1px solid #ff3333;border-radius:8px;' : ''}
+          ">
+            ${Number(item.percentual || 0).toFixed(1)}%
+          </div>
+
+          <div style="
+            font-size:14px;
+            font-weight:bold;
+            color:${vencedor ? '#ff3333' : '#fff'};
+            margin-top:4px;
+          ">
+            ${Number(item.total_votos || 0)} voto(s)
+          </div>
+
+          ${vencedor ? `
+            <div style="color:#ff3333;font-weight:900;margin-top:6px">
+              🏆 VENCEDOR
             </div>
-            <small>${item.total_votos} voto(s)</small>
-          `;
-        }
+          ` : ''}
+        `;
       });
 
       out.querySelectorAll(`[data-vote-index="${index}"]`)
@@ -11036,7 +11105,7 @@ async function renderHighlightsCategories(){
 
     if(error) throw error;
 
-    const dados = data?.dados || {};
+    const electionClosed = dados.eleicaoEncerrada === true;
 
     const tokenKey = 'bid_eleicao_eleitor_token';
     let eleitorToken = localStorage.getItem(tokenKey);
@@ -11121,10 +11190,10 @@ async function renderHighlightsCategories(){
                   class="gold"
                   data-highlight-category="${category.key}"
                   data-highlight-candidate="${esc(athleteId)}"
-                  ${voted ? 'disabled' : ''}
+                  ${(voted || electionClosed) ? 'disabled' : ''}
                   style="display:block;width:100%;margin-top:12px;
                     ${(voted || electionClosed) ? 'background:#555;cursor:not-allowed' : ''}">
-                  ${voted ? 'VOTO REGISTRADO' : 'VOTAR'}
+                 ${electionClosed ? 'ELEIÇÃO ENCERRADA' : (voted ? 'VOTO REGISTRADO' : 'VOTAR')}
                 </button>
               </div>
             `;
@@ -11143,20 +11212,60 @@ async function renderHighlightsCategories(){
 
         if(error) throw error;
 
-        (data || []).forEach(item=>{
-          const el = document.getElementById(
-            `vote_result_${category.key}_${item.indicado_id}`
-          );
+        const resultados = data || [];
 
-          if(el){
-            el.innerHTML = `
-              <div style="margin-top:10px;font-weight:bold;color:#e4bd43">
-                ${Number(item.percentual || 0).toFixed(1)}%
-              </div>
-              <small>${item.total_votos} voto(s)</small>
-            `;
-          }
-        });
+const maiorVotacao = Math.max(
+  0,
+  ...resultados.map(item => Number(item.total_votos || 0))
+);
+
+const lideres = resultados.filter(
+  item => Number(item.total_votos || 0) === maiorVotacao
+);
+
+const temVencedor =
+  electionClosed &&
+  maiorVotacao > 0 &&
+  lideres.length === 1;
+
+resultados.forEach(item=>{
+  const el = document.getElementById(
+    `vote_result_${category.key}_${item.indicado_id}`
+  );
+
+  if(!el) return;
+
+  const vencedor =
+    temVencedor &&
+    String(item.indicado_id) === String(lideres[0].indicado_id);
+
+  el.innerHTML = `
+    <div style="
+      margin-top:10px;
+      font-weight:bold;
+      font-size:20px;
+      color:${vencedor ? '#ff3333' : '#e4bd43'};
+      ${vencedor ? 'background:#300;padding:8px;border:1px solid #ff3333;border-radius:8px;' : ''}
+    ">
+      ${Number(item.percentual || 0).toFixed(1)}%
+    </div>
+
+    <div style="
+      font-size:14px;
+      font-weight:bold;
+      color:${vencedor ? '#ff3333' : '#fff'};
+      margin-top:4px;
+    ">
+      ${Number(item.total_votos || 0)} voto(s)
+    </div>
+
+    ${vencedor ? `
+      <div style="color:#ff3333;font-weight:900;margin-top:6px">
+        🏆 VENCEDOR
+      </div>
+    ` : ''}
+  `;
+});
 
        out.querySelectorAll(
   `[data-highlight-category="${category.key}"]`
