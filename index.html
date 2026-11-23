@@ -9457,6 +9457,7 @@ async function renderHighlightsAdminResults(){
     if(error) throw error;
 
     const dados = data?.dados || {};
+    const electionClosed = dados.eleicaoEncerrada === true;
     let html = '';
 
     for(const category of categories){
@@ -10147,10 +10148,12 @@ async function renderAdminCommissionVoters(competitionId){
         .map(item=>localizar(item.athleteId))
         .filter(Boolean);
 
-      const votos = window.__BID_COMMISSION_DRAFT.votos[etapa.key] || {
-        elizanio:'',
-        erivando:''
-      };
+     const votos = window.__BID_COMMISSION_DRAFT.votos[etapa.key] || {
+  elizanio:'',
+  erivando:'',
+  benarte:''
+}
+if(!('benarte' in votos)) votos.benarte = '';
 
       window.__BID_COMMISSION_DRAFT.votos[etapa.key] = votos;
 // CONSULTAR VOTAÇÃO POPULAR DA CATEGORIA
@@ -10175,7 +10178,50 @@ const maiorVotacaoPublica = Math.max(
     mapaVotosPublico.get(String(person.id)) || 0
   )
 );
-      out.innerHTML = `
+// CADA VOTO VALE 1 PONTO
+const pontos = new Map(
+  candidatos.map(person=>[String(person.id),0])
+);
+
+// VOTO DO PÚBLICO
+if(maiorVotacaoPublica > 0){
+  candidatos.forEach(person=>{
+    const id = String(person.id);
+
+    if((mapaVotosPublico.get(id) || 0) === maiorVotacaoPublica){
+      pontos.set(id,(pontos.get(id) || 0) + 1);
+    }
+  });
+}
+
+// VOTOS DE ELIZÂNIO E ERIVANDO
+[votos.elizanio,votos.erivando].forEach(id=>{
+  if(id && pontos.has(String(id))){
+    pontos.set(String(id),(pontos.get(String(id)) || 0) + 1);
+  }
+});
+
+// IDENTIFICAR EMPATE
+const maiorPontuacao = Math.max(0,...pontos.values());
+
+const empatados = maiorPontuacao > 0
+  ? candidatos.filter(person=>
+      (pontos.get(String(person.id)) || 0) === maiorPontuacao
+    )
+  : [];
+
+const precisaBenarte = empatados.length > 1;
+
+const idsEmpatados = new Set(
+  empatados.map(person=>String(person.id))
+);
+
+// LIMPAR DESEMPATE ANTIGO SE NÃO HOUVER MAIS EMPATE
+if(!precisaBenarte || !idsEmpatados.has(String(votos.benarte))){
+  votos.benarte = '';
+}
+
+out.innerHTML = `
         <div style="margin:15px 0;padding:12px;border:1px solid #d4af37;border-radius:12px">
 
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -10194,7 +10240,7 @@ const maiorVotacaoPublica = Math.max(
 
                 ${person.photo ? `
                   <img src="${esc(person.photo)}"
-                    style="width:100%;height:155px;object-fit:contain;object-position:center;background:#07152f;border-radius:7px"
+                    style="width:100%;height:155px;object-fit:contain;object-position:center;background:#07152f;border-radius:7px">
                 ` : '<div style="font-size:35px">⚽</div>'}
 
                 <strong style="display:block;font-size:12px;margin:7px 0">
@@ -10234,6 +10280,15 @@ const maiorVotacaoPublica = Math.max(
                   style="width:100%;font-size:10px;padding:7px">
                   ${votos.erivando===String(person.id)?'✓ ERIVANDO':'VOTO ERIVANDO'}
                 </button>
+                ${precisaBenarte && idsEmpatados.has(String(person.id)) ? `
+                  <button type="button"
+                    class="gold"
+                    data-commission-voter="benarte"
+                    data-commission-candidate="${esc(person.id)}"
+                    style="width:100%;font-size:10px;padding:7px;margin-top:5px;border:1px solid #e4bd43">
+                    ${votos.benarte===String(person.id)?'✓ BENARTE':'DESEMPATE · BENARTE'}
+                  </button>
+                ` : ''}
 
               </div>
             `).join('')}
@@ -10243,7 +10298,7 @@ const maiorVotacaoPublica = Math.max(
           <button type="button" id="nextCommissionCategory"
             class="gold"
             style="width:100%;margin-top:16px"
-            ${!votos.elizanio || !votos.erivando?'disabled':''}>
+            ${!votos.elizanio || !votos.erivando || (precisaBenarte && !votos.benarte)?'disabled':''}>
             ${etapaAtual===etapasValidas.length-1
               ? 'FINALIZAR VOTAÇÃO DA COMISSÃO'
               : 'FINALIZAR CATEGORIA E AVANÇAR'}
@@ -10264,10 +10319,14 @@ const maiorVotacaoPublica = Math.max(
 
       $('nextCommissionCategory')?.addEventListener('click',()=>{
 
-  if(!votos.elizanio || !votos.erivando){
-    alert('Escolha um candidato para cada responsável.');
-    return;
-  }
+  if(
+  !votos.elizanio ||
+  !votos.erivando ||
+  (precisaBenarte && !votos.benarte)
+){
+  alert('Escolha os votos da comissão e resolva o empate com Benarte.');
+  return;
+}
 
   if(etapaAtual < etapasValidas.length - 1){
 
@@ -10720,6 +10779,7 @@ async function renderHighlightsSelection(){
     if(error) throw error;
 
     const selection = data?.dados?.selection || [];
+    const electionClosed = data?.dados?.eleicaoEncerrada === true;
 
     if(!selection.length){
       out.innerHTML = '<div class="empty">Seleção ainda não cadastrada.</div>';
@@ -10830,10 +10890,10 @@ async function renderHighlightsSelection(){
                 class="gold"
                 data-vote-index="${i}"
                 data-vote-candidate="${esc(id)}"
-                ${voted ? 'disabled' : ''}
+                ${(voted || electionClosed) ? 'disabled' : ''}
                 style="display:block;width:100%;margin-top:12px;
-                  ${voted ? 'background:#555;cursor:not-allowed' : ''}">
-                ${voted ? 'VOTO REGISTRADO' : 'VOTAR'}
+                  ${(voted || electionClosed) ? 'background:#555;cursor:not-allowed' : ''}">
+                ${electionClosed ? 'ELEIÇÃO ENCERRADA' : (voted ? 'VOTO REGISTRADO' : 'VOTAR')}
               </button>
             </div>
           `;
@@ -10880,24 +10940,31 @@ async function renderHighlightsSelection(){
 
       out.querySelectorAll(`[data-vote-index="${index}"]`)
         .forEach(btn => {
-          btn.disabled = true;
-          btn.textContent = 'VOTO REGISTRADO';
-          btn.style.background = '#555';
+         btn.disabled = true;
+btn.textContent = electionClosed
+  ? 'ELEIÇÃO ENCERRADA'
+  : 'VOTO REGISTRADO';
+btn.style.background = '#555';
+btn.style.cursor = 'not-allowed';
         });
 
       return total;
     }
 
     for(let i=0;i<positions.length;i++){
-      if(localStorage.getItem(
-        `bid_votou_${competitionId}_selection_${i}`
-      ) === '1'){
-        await showResults(i);
-      }
-    }
+  if(electionClosed || localStorage.getItem(
+    `bid_votou_${competitionId}_selection_${i}`
+  ) === '1'){
+    await showResults(i);
+  }
+}
 
     out.querySelectorAll('[data-vote-index]').forEach(button => {
       button.addEventListener('click',async()=>{
+      if(electionClosed){
+  alert('Esta eleição já foi encerrada.');
+  return;
+}
         const index = Number(button.dataset.voteIndex);
         const candidateId = button.dataset.voteCandidate;
         const categoria = `selection_${index}`;
@@ -11056,7 +11123,7 @@ async function renderHighlightsCategories(){
                   data-highlight-candidate="${esc(athleteId)}"
                   ${voted ? 'disabled' : ''}
                   style="display:block;width:100%;margin-top:12px;
-                    ${voted ? 'background:#555;cursor:not-allowed' : ''}">
+                    ${(voted || electionClosed) ? 'background:#555;cursor:not-allowed' : ''}">
                   ${voted ? 'VOTO REGISTRADO' : 'VOTAR'}
                 </button>
               </div>
@@ -11091,25 +11158,32 @@ async function renderHighlightsCategories(){
           }
         });
 
-        out.querySelectorAll(
-          `[data-highlight-category="${category.key}"]`
-        ).forEach(btn=>{
-          btn.disabled = true;
-          btn.textContent = 'VOTO REGISTRADO';
-          btn.style.background = '#555';
-        });
+       out.querySelectorAll(
+  `[data-highlight-category="${category.key}"]`
+).forEach(btn=>{
+  btn.disabled = true;
+  btn.textContent = electionClosed
+    ? 'ELEIÇÃO ENCERRADA'
+    : 'VOTO REGISTRADO';
+  btn.style.background = '#555';
+  btn.style.cursor = 'not-allowed';
+});
       }
 
-      if(voted){
-        showResults().catch(error=>{
-          console.error('Erro ao consultar votação:',error);
-        });
-      }
+      if(voted || electionClosed){
+  showResults().catch(error=>{
+    console.error('Erro ao consultar votação:',error);
+  });
+}
 
       out.querySelectorAll(
         `[data-highlight-category="${category.key}"]`
       ).forEach(button=>{
         button.addEventListener('click',async()=>{
+        if(electionClosed){
+  alert('Esta eleição já foi encerrada.');
+  return;
+}
           const candidateId = button.dataset.highlightCandidate;
 
           if(localStorage.getItem(voteKey) === '1'){
