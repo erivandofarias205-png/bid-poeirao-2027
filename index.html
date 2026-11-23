@@ -11105,7 +11105,8 @@ async function renderHighlightsCategories(){
 
     if(error) throw error;
 
-    const electionClosed = dados.eleicaoEncerrada === true;
+const dados = data?.dados || {};
+const electionClosed = dados.eleicaoEncerrada === true;
 
     const tokenKey = 'bid_eleicao_eleitor_token';
     let eleitorToken = localStorage.getItem(tokenKey);
@@ -11130,7 +11131,21 @@ async function renderHighlightsCategories(){
       const voted = localStorage.getItem(voteKey) === '1';
 
       out.innerHTML = `
-        <h3>${category.title}</h3>
+        ${electionClosed ? `
+  <div style="
+    background:#8b1111;
+    color:#fff;
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+    font-weight:bold;
+    margin-bottom:12px;
+  ">
+    🏆 ELEIÇÃO ENCERRADA — RESULTADO OFICIAL
+  </div>
+` : ''}
+
+<h3>${category.title}</h3>
         <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
           ${candidates.map(item=>{
             const athleteId = String(item.athleteId || '');
