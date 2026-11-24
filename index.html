@@ -8177,29 +8177,7 @@ async function buscarJogosEquipeProfissional() {
 </div>
 <div class="hidden" id="adminProtected">
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
-<!-- MENU COMPACTO DO ADMINISTRADOR -->
-<div id="adminQuickMenu" style="
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px;
-  margin:12px 0 18px;
-">
-  <button type="button" onclick="document.getElementById('adminDashboard').scrollIntoView({behavior:'smooth'})">
-    PAINEL GERAL
-  </button>
 
-  <button type="button" onclick="document.getElementById('competitionPhaseManager').scrollIntoView({behavior:'smooth'})">
-    COMPETIÇÕES AMADORAS
-  </button>
-
-  <button type="button" onclick="document.getElementById('adminHighlightsPanel').scrollIntoView({behavior:'smooth'})">
-    ELEIÇÃO
-  </button>
-
-  <button type="button" onclick="document.getElementById('painelAtualizacaoProfissional').scrollIntoView({behavior:'smooth'})">
-    FUTEBOL PROFISSIONAL
-  </button>
-</div>
 <!-- CONTROLE DE COMPETIÇÕES -->
 <div class="admin-only" style="margin:20px 0;padding:15px;background:#101827;border:1px solid #d4af37;border-radius:10px">
 
@@ -8315,7 +8293,13 @@ async function buscarJogosEquipeProfissional() {
   </div>
 </div>
   </div>
-  <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
+  <details class="panel" id="competitionManagementPanel">
+  <summary class="ph" style="cursor:pointer">
+    <h3>🏆 GERENCIAMENTO DE COMPETIÇÕES</h3>
+    <span class="pill">Abrir / fechar</span>
+  </summary>
+  <div class="pad">
+    <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Formatar as competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"/></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"/></label><label>Formato da competição<select id="newCompetitionFormat"><option value="grupos">Fase de grupos</option><option value="mata-mata">Mata-mata</option><option value="pontos-corridos">Pontos corridos</option><option value="mista">Mista (grupos + mata-mata)</option></select></label>
  <label>Quantidade total de equipes
   <input id="newCompetitionTotalTeams" type="number" min="2" max="256" value="18" placeholder="Ex.: 18"/>
@@ -8464,7 +8448,8 @@ async function buscarJogosEquipeProfissional() {
 
 <div id="phaseTies" class="tablewrap"></div>
 </div></div>
-
+  </div>
+</details>
 <!-- SÚMULA OFICIAL -->
 <details class="panel" id="officialMatchSheetPanel">
   <summary class="ph">
