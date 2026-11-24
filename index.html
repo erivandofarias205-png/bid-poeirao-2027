@@ -17732,7 +17732,27 @@ window.refreshPhotoCompetitionSelect = loadCompetitions;
           '<p class="empty">Nenhuma foto disponível nesta competição.</p>';
         return;
       }
+window.baixarFotoPublica = async function(url, nome) {
+  try {
+    const resposta = await fetch(url);
+    if (!resposta.ok) throw new Error('Falha no download');
 
+    const arquivo = await resposta.blob();
+    const link = document.createElement('a');
+    const temporario = URL.createObjectURL(arquivo);
+
+    link.href = temporario;
+    link.download = nome || 'foto-bid.jpg';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(temporario), 2000);
+  } catch (erro) {
+    console.error('Erro ao baixar foto:', erro);
+    alert('Não foi possível baixar esta foto.');
+  }
+};
       gallery.innerHTML = files.map(f => {
         const path = folder + '/' + f.name;
         const url = supabaseClient.storage
@@ -17740,14 +17760,23 @@ window.refreshPhotoCompetitionSelect = loadCompetitions;
           .getPublicUrl(path).data.publicUrl;
 
         return `
-          <div class="public-photo-item">
-            <img
-              src="${url}"
-              alt="Foto da competição"
-              loading="lazy"
-              style="width:100%;height:auto;object-fit:contain"
-            >
-          </div>
+         <div class="public-photo-item">
+  <img
+    src="${url}"
+    alt="Foto da competição"
+    loading="lazy"
+    style="width:100%;height:auto;object-fit:contain"
+  >
+
+  <button
+    type="button"
+    class="gold"
+    style="width:100%;margin-top:8px"
+    onclick="baixarFotoPublica('${url}', '${f.name.replace(/'/g, "\\'")}')"
+  >
+    ⬇ BAIXAR FOTO
+  </button>
+</div>
         `;
       }).join('');
 
