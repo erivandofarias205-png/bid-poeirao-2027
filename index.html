@@ -21939,5 +21939,92 @@ document.addEventListener('DOMContentLoaded', function () {
   gerente.appendChild(area);
 });
     </script>
-</body>
+<style>
+#adminMainAccordion {
+  margin: 12px 0 !important;
+  border: 1px solid #d4af37 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: #07152f !important;
+}
+
+#adminMainAccordion > .ph {
+  padding: 15px !important;
+  background: linear-gradient(90deg,#edc84e,#b98b1c) !important;
+  color: #111 !important;
+  cursor: pointer;
+}
+
+#adminMainAccordion > .ph h3 {
+  margin: 0 !important;
+  color: #111 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+
+#adminMainAccordion > .ph::after {
+  content: '＋';
+  float: right;
+  font-size: 20px;
+}
+
+#adminMainAccordion > .ph[aria-expanded="true"]::after {
+  content: '－';
+}
+
+#adminMainAccordion > .pad[hidden] {
+  display: none !important;
+}
+
+#adminMainAccordion > .pad {
+  padding: 10px !important;
+}
+</style>
+
+<script id="admin-painel-principal">
+document.addEventListener('DOMContentLoaded', function () {
+  const admin = document.getElementById('adminProtected');
+
+  if (!admin || document.getElementById('adminMainAccordion')) return;
+
+  const painel = document.createElement('div');
+  painel.id = 'adminMainAccordion';
+  painel.className = 'panel';
+
+  const cabecalho = document.createElement('div');
+  cabecalho.className = 'ph';
+  cabecalho.setAttribute('role', 'button');
+  cabecalho.setAttribute('tabindex', '0');
+  cabecalho.setAttribute('aria-expanded', 'false');
+  cabecalho.innerHTML = '<h3>⚙️ ADMINISTRAÇÃO DO BID — CLIQUE PARA ABRIR</h3>';
+
+  const conteudo = document.createElement('div');
+  conteudo.className = 'pad';
+  conteudo.hidden = true;
+
+  while (admin.firstChild) {
+    conteudo.appendChild(admin.firstChild);
+  }
+
+  painel.appendChild(cabecalho);
+  painel.appendChild(conteudo);
+  admin.appendChild(painel);
+
+  function alternar() {
+    const abrir = cabecalho.getAttribute('aria-expanded') !== 'true';
+    cabecalho.setAttribute('aria-expanded', String(abrir));
+    conteudo.hidden = !abrir;
+  }
+
+  cabecalho.addEventListener('click', alternar);
+
+  cabecalho.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      alternar();
+    }
+  });
+});
+</script>
+    </body>
 </html>
