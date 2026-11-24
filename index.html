@@ -8177,7 +8177,97 @@ async function buscarJogosEquipeProfissional() {
 </div>
 <div class="hidden" id="adminProtected">
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
+<!-- ORGANIZAÇÃO GERAL -->
+<details class="panel" id="organizacaoGeral">
+  <summary class="ph" style="cursor:pointer">
+    <h3>⚙️ ORGANIZAÇÃO GERAL</h3>
+    <span class="pill">Abrir / fechar</span>
+  </summary>
 
+ <div class="pad" id="organizacaoGeralConteudo">
+
+  <h3>1. ESCOLHER A COMPETIÇÃO</h3>
+
+  <label>
+    Selecione a competição que deseja organizar
+    <select id="organizacaoCompeticaoSelect">
+      <option value="">Carregando competições...</option>
+    </select>
+  </label>
+
+ <div id="organizacaoCompeticaoInfo" class="note">
+  Escolha uma competição para começar o gerenciamento.
+</div>
+
+<div id="organizacaoFormatoArea" class="hidden">
+
+  <hr>
+
+  <h3>3. FORMATO DA COMPETIÇÃO</h3>
+
+  <p>Como será disputada a competição?</p>
+
+  <label for="organizacaoFormato">
+    Escolha o formato
+  </label>
+
+  <select id="organizacaoFormato">
+    <option value="">Selecione o formato</option>
+    <option value="grupos">Fase de grupos</option>
+    <option value="mata_mata">Mata-mata direto</option>
+    <option value="grupos_mata_mata">Grupos + mata-mata</option>
+    <option value="pontos_corridos">Pontos corridos</option>
+  </select>
+
+  <div id="organizacaoFormatoDescricao" class="note">
+    Selecione o formato para configurar a disputa.
+  </div>
+
+  <button type="button" id="organizacaoSalvarFormato">
+    SALVAR FORMATO DA COMPETIÇÃO
+  </button>
+
+</div>
+
+<div id="organizacaoEquipesArea" class="hidden">
+
+  <hr>
+
+  <h3>2. ESCOLHER AS EQUIPES PARTICIPANTES</h3>
+
+  <label for="organizacaoBuscaEquipe">Pesquisar equipe</label>
+  <input
+    type="search"
+    id="organizacaoBuscaEquipe"
+    placeholder="Digite o nome da equipe..."
+  >
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0">
+    <button type="button" id="organizacaoMarcarTodas">
+      MARCAR TODAS
+    </button>
+
+    <button type="button" id="organizacaoDesmarcarTodas">
+      DESMARCAR TODAS
+    </button>
+  </div>
+
+  <div class="note" id="organizacaoContadorEquipes">
+    0 equipes selecionadas
+  </div>
+
+  <div id="organizacaoListaEquipes"></div>
+
+  <button type="button" id="organizacaoSalvarEquipes">
+    SALVAR EQUIPES NA COMPETIÇÃO
+  </button>
+
+</div>
+
+</div>
+
+  </div>
+</details>
 <!-- CONTROLE DE COMPETIÇÕES -->
 <div class="admin-only" style="margin:20px 0;padding:15px;background:#101827;border:1px solid #d4af37;border-radius:10px">
 
