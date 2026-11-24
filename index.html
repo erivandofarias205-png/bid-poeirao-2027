@@ -8177,7 +8177,13 @@ async function buscarJogosEquipeProfissional() {
 </div>
 <div class="hidden" id="adminProtected">
 <div class="note"><b>Aviso:</b> o acesso administrativo agora exige login do Supabase. As equipes e atletas com vínculo ao Supabase podem ser sincronizados conforme as políticas do banco. Competições extras e prévias de mídia desta versão de teste ficam localmente neste navegador; ainda precisam de tabelas/políticas de Storage para sincronizar entre aparelhos.</div>
-<!-- ORGANIZAÇÃO GERAL -->
+<!-- PAINEL 1 — GERENCIAMENTO DA COMPETIÇÃO -->
+<details class="panel" id="painelPrincipalCompeticao">
+  <summary class="ph" style="cursor:pointer">
+    <h3>🏆 GERENCIAMENTO DA COMPETIÇÃO</h3>
+    <span class="pill">Cadastro, organização, jogos e súmula</span>
+  </summary>
+  <div class="pad">
 <details class="panel" id="organizacaoGeral">
   <summary class="ph" style="cursor:pointer">
     <h3>⚙️ ORGANIZAÇÃO GERAL</h3>
@@ -8383,17 +8389,10 @@ async function buscarJogosEquipeProfissional() {
   </div>
 </div>
   </div>
-  <details class="panel" id="competitionManagementPanel">
+<details class="panel" id="competitionManagementPanel">
   <summary class="ph" style="cursor:pointer">
-    <h3>🏆 GERENCIAMENTO DE COMPETIÇÕES</h3>
-    <!-- NOVO MENU: GERENCIAMENTO DA COMPETIÇÃO -->
-<details class="panel" id="competitionHubPanel">
-  <summary class="ph">
     <h3>🏆 GERENCIAMENTO DA COMPETIÇÃO</h3>
-    <span class="pill">Organização da competição</span>
-  </summary>
-  <div class="pad">
-    <span class="pill">Abrir / fechar</span>
+    <span class="pill">Cadastro, fases, jogos e súmula</span>
   </summary>
   <div class="pad">
     <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
@@ -8904,7 +8903,17 @@ async function buscarJogosEquipeProfissional() {
     min-width: 0;
   }
 </style>
-<<details class="panel">
+  </div>
+</details>
+
+<!-- PAINEL 2 — ORGANIZAÇÃO DO SITE -->
+<details class="panel" id="painelOrganizacaoSite">
+  <summary class="ph" style="cursor:pointer">
+    <h3>⚙️ ORGANIZAÇÃO DO SITE</h3>
+    <span class="pill">Cadastros, mídias e administração</span>
+  </summary>
+  <div class="pad">
+<details class="panel">
   <summary class="ph">
     <h3>Cadastrar equipe</h3>
     <span class="pill">1 · Equipes</span>
@@ -9133,6 +9142,8 @@ async function buscarJogosEquipeProfissional() {
 </details>
 
   <div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
+</div>
+</details>
 </div></section>
 <section class="hidden" id="gameView">
 <details class="panel">
@@ -22068,63 +22079,30 @@ document.addEventListener('DOMContentLoaded', function () {
   font-size: 20px;
 }
 
-#adminMainAccordion > .ph[aria-expanded="true"]::after {
-  content: '－';
+/* PAINÉIS ADMINISTRATIVOS — FECHADOS POR PADRÃO */
+#adminProtected > details:not([open]) > .pad {
+  display: none;
 }
 
-#adminMainAccordion > .pad[hidden] {
-  display: none !important;
+#adminProtected details > summary {
+  cursor: pointer;
+  list-style: none;
 }
 
-#adminMainAccordion > .pad {
-  padding: 10px !important;
+#adminProtected details > summary::-webkit-details-marker {
+  display: none;
+}
+
+#adminProtected details > summary::after {
+  content: "＋";
+  margin-left: auto;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+#adminProtected details[open] > summary::after {
+  content: "－";
 }
 </style>
-
-<script id="admin-painel-principal">
-document.addEventListener('DOMContentLoaded', function () {
-  const admin = document.getElementById('adminProtected');
-
-  if (!admin || document.getElementById('adminMainAccordion')) return;
-
-  const painel = document.createElement('div');
-  painel.id = 'adminMainAccordion';
-  painel.className = 'panel';
-
-  const cabecalho = document.createElement('div');
-  cabecalho.className = 'ph';
-  cabecalho.setAttribute('role', 'button');
-  cabecalho.setAttribute('tabindex', '0');
-  cabecalho.setAttribute('aria-expanded', 'false');
-  cabecalho.innerHTML = '<h3>⚙️ ADMINISTRAÇÃO DO BID — CLIQUE PARA ABRIR</h3>';
-
-  const conteudo = document.createElement('div');
-  conteudo.className = 'pad';
-  conteudo.hidden = true;
-
-  while (admin.firstChild) {
-    conteudo.appendChild(admin.firstChild);
-  }
-
-  painel.appendChild(cabecalho);
-  painel.appendChild(conteudo);
-  admin.appendChild(painel);
-
-  function alternar() {
-    const abrir = cabecalho.getAttribute('aria-expanded') !== 'true';
-    cabecalho.setAttribute('aria-expanded', String(abrir));
-    conteudo.hidden = !abrir;
-  }
-
-  cabecalho.addEventListener('click', alternar);
-
-  cabecalho.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      alternar();
-    }
-  });
-});
-</script>
     </body>
 </html>
