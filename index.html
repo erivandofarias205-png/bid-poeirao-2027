@@ -9025,48 +9025,6 @@ async function buscarJogosEquipeProfissional() {
   </div>
 </details>
 
-<details class="panel" id="adminPhotoGalleryPanel">
-  <summary class="ph">
-    <h3>GALERIA DE FOTOS</h3>
-    <span class="pill">Adicionar / remover fotos</span>
-  </summary>
-  <div class="pad">
-    <p class="small">
-      Selecione a competição e envie várias fotos. Serão aceitas imagens verticais,
-      horizontais e quadradas, sem corte.
-    </p>
-
-    <div class="formgrid">
-      <label class="wide">
-        Competição
-        <select id="photoCompetitionSelect">
-          <option value="">Carregando competições...</option>
-        </select>
-      </label>
-
-      <label class="wide">
-        Selecionar fotos
-        <input accept="image/*" id="photoGalleryUpload" multiple type="file">
-      </label>
-    </div>
-
-    <div class="actions">
-      <button class="gold" id="uploadGalleryPhotosBtn" type="button">
-        Enviar fotos
-      </button>
-      <button class="secondary" id="refreshGalleryPhotosBtn" type="button">
-        Atualizar galeria
-      </button>
-    </div>
-
-    <p class="small" id="photoGalleryAdminStatus" role="status" aria-live="polite">
-      Selecione uma competição para gerenciar suas fotos.
-    </p>
-
-       <div class="game-promo-admin-list" id="photoGalleryAdminList"></div>
-  </div>
-</details>
-
   <div class="actions"><button class="gold" id="saveEverything" type="button">Salvar tudo agora</button><button class="secondary" id="export">Exportar cópia de segurança (JSON)</button><button class="secondary" id="importBtn">Importar cópia de segurança</button><input accept=".json,application/json" class="hidden" id="importFile" type="file"/><button class="danger" id="reset">Apagar dados locais da prévia</button></div>
 </div></section>
 <section class="hidden" id="gameView">
