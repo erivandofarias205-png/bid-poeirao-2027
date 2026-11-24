@@ -8274,122 +8274,8 @@ async function buscarJogosEquipeProfissional() {
 
   </div>
 </details>
-<!-- CONTROLE DE COMPETIÇÕES -->
-<div class="admin-only" style="margin:20px 0;padding:15px;background:#101827;border:1px solid #d4af37;border-radius:10px">
 
-  <button
-    onclick="abrirControleCompeticoes()"
-    style="width:100%;padding:14px;background:#d4af37;color:#111;font-weight:900;border:0;border-radius:8px;cursor:pointer">
-    ⚙️ CONTROLE DE COMPETIÇÕES
-  </button>
-
-  <div id="painelControleCompeticoes" style="display:none;margin-top:15px">
-    <h3 style="color:#d4af37">COMPETIÇÕES PROFISSIONAIS</h3>
-    <div id="listaProfissionais"></div>
-
-    <hr style="border-color:#444;margin:18px 0">
-
-    <h3 style="color:#d4af37">COMPETIÇÕES AMADORAS</h3>
-    <div id="listaAmadoras"></div>
-  </div>
-</div>
-<div class="panel" id="painelAtualizacaoProfissional">
-  <div class="ph">
-    <h3>🔄 ATUALIZAÇÃO DAS COMPETIÇÕES PROFISSIONAIS</h3>
-  </div>
-  <div class="pad">
-    <button
-      type="button"
-      class="gold"
-      id="btnAtualizarTodasProfissionais"
-      onclick="atualizarTodasProfissionais()"
-      style="width:100%;padding:14px;font-weight:900">
-      🔄 ATUALIZAR TODAS AS COMPETIÇÕES
-    </button>
-    <p id="statusAtualizacaoProfissional" class="small">
-      Atualize classificação, jogos e artilharia das competições.
-    </p>
-  </div>
-</div>
-<!-- PAINEL GERAL ADMINISTRATIVO -->
-    <!-- PAINEL GERAL ADMINISTRATIVO -->
-<div class="panel" id="adminDashboard">
-  <div class="ph">
-    <h3>📊 PAINEL GERAL DO BID</h3>
-    <button type="button" class="gold" id="refreshAdminDashboard">
-      🔄 ATUALIZAR
-    </button>
-  </div>
-  <div class="pad" id="adminDashboardContent">
-    <div class="empty">Aguardando carregamento dos indicadores...</div>
-  </div>
-</div>
-<!-- GERENCIAMENTO DA ELEIÇÃO -->
-<div class="panel" id="adminHighlightsPanel">
-  <div class="ph">
-    <h3>🏆 GERENCIAMENTO DA ELEIÇÃO</h3>
-    <span class="pill">Destaques da competição</span>
-  </div>
-
-  <div class="pad">
-    <p>Selecione a competição para organizar os indicados de cada categoria.</p>
-
-    <label>Competição
-      <select id="adminHighlightsCompetition">
-        <option value="">Selecione uma competição</option>
-      </select>
-    </label>
-
-    <div class="actions">
-      <button class="gold" id="loadAdminHighlights">
-        Gerenciar indicados
-      </button>
-    </div>
-
-    <div id="adminHighlightsContent" class="hidden">
-      <p><strong>Categorias da eleição</strong></p>
-      <div id="adminHighlightsCategories">
-        <div class="empty">Selecione uma competição para começar.</div>
-      </div>
-      <div class="actions" style="margin-top:20px">
-  <button class="gold" id="saveAdminHighlights">
-    💾 SALVAR ELEIÇÃO
-  </button>
-</div>
- <hr style="border-color:#d4af37;margin:25px 0">
-
-<div id="adminCommissionElection"
-     class="panel"
-     style="margin-top:20px;border:1px solid #d4af37">
-
-  <h3 style="color:#d4af37">🗳️ VOTAÇÃO DA COMISSÃO</h3>
-
-  <p>Escolha os vencedores de cada categoria e posição.</p>
-
-  <div id="adminCommissionVoters"></div>
-
-  <div class="actions" style="margin-top:20px">
-    <button type="button" class="gold" id="saveCommissionVotes">
-      💾 SALVAR VOTOS DA COMISSÃO
-    </button>
-  </div>
-
-  <div id="adminCommissionStatus" class="empty"
-       style="margin-top:12px">
-    Aguardando configuração dos votos.
-  </div>
-
-  <hr style="border-color:#555;margin:20px 0">
-
-  <button type="button" class="gold" id="closeElectionGeneral"
-          style="width:100%">
-    🏆 ENCERRAR ELEIÇÃO GERAL
-  </button>
-</div>   
-  </div>
-</div>
-  </div>
-<details class="panel" id="competitionManagementPanel">
+<h3>CADASTRO E GERENCIAMENTO DAS COMPETIÇÕES</h3>
   <summary class="ph" style="cursor:pointer">
     <h3>🏆 GERENCIAMENTO DA COMPETIÇÃO</h3>
     <span class="pill">Cadastro, fases, jogos e súmula</span>
@@ -8593,10 +8479,7 @@ async function buscarJogosEquipeProfissional() {
   </div>
 </details>
 <!-- FIM DA SÚMULA OFICIAL -->
-  </div>
-</details>
-<!-- FIM DO GERENCIAMENTO DA COMPETIÇÃO -->
-    <style id="quarter-finals-style">
+      <style id="quarter-finals-style">
   #quarterFinalsPanel .quarter-finals-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -8913,8 +8796,123 @@ async function buscarJogosEquipeProfissional() {
     <span class="pill">Cadastros, mídias e administração</span>
   </summary>
   <div class="pad">
-<details class="panel">
-  <summary class="ph">
+  <!-- CONTROLE DE COMPETIÇÕES -->
+<div class="admin-only" style="margin:20px 0;padding:15px;background:#101827;border:1px solid #d4af37;border-radius:10px">
+
+  <button
+    onclick="abrirControleCompeticoes()"
+    style="width:100%;padding:14px;background:#d4af37;color:#111;font-weight:900;border:0;border-radius:8px;cursor:pointer">
+    ⚙️ CONTROLE DE COMPETIÇÕES
+  </button>
+
+  <div id="painelControleCompeticoes" style="display:none;margin-top:15px">
+    <h3 style="color:#d4af37">COMPETIÇÕES PROFISSIONAIS</h3>
+    <div id="listaProfissionais"></div>
+
+    <hr style="border-color:#444;margin:18px 0">
+
+    <h3 style="color:#d4af37">COMPETIÇÕES AMADORAS</h3>
+    <div id="listaAmadoras"></div>
+  </div>
+</div>
+<div class="panel" id="painelAtualizacaoProfissional">
+  <div class="ph">
+    <h3>🔄 ATUALIZAÇÃO DAS COMPETIÇÕES PROFISSIONAIS</h3>
+  </div>
+  <div class="pad">
+    <button
+      type="button"
+      class="gold"
+      id="btnAtualizarTodasProfissionais"
+      onclick="atualizarTodasProfissionais()"
+      style="width:100%;padding:14px;font-weight:900">
+      🔄 ATUALIZAR TODAS AS COMPETIÇÕES
+    </button>
+    <p id="statusAtualizacaoProfissional" class="small">
+      Atualize classificação, jogos e artilharia das competições.
+    </p>
+  </div>
+</div>
+<!-- PAINEL GERAL ADMINISTRATIVO -->
+    <!-- PAINEL GERAL ADMINISTRATIVO -->
+<div class="panel" id="adminDashboard">
+  <div class="ph">
+    <h3>📊 PAINEL GERAL DO BID</h3>
+    <button type="button" class="gold" id="refreshAdminDashboard">
+      🔄 ATUALIZAR
+    </button>
+  </div>
+  <div class="pad" id="adminDashboardContent">
+    <div class="empty">Aguardando carregamento dos indicadores...</div>
+  </div>
+</div>
+<!-- GERENCIAMENTO DA ELEIÇÃO -->
+<div class="panel" id="adminHighlightsPanel">
+  <div class="ph">
+    <h3>🏆 GERENCIAMENTO DA ELEIÇÃO</h3>
+    <span class="pill">Destaques da competição</span>
+  </div>
+
+  <div class="pad">
+    <p>Selecione a competição para organizar os indicados de cada categoria.</p>
+
+    <label>Competição
+      <select id="adminHighlightsCompetition">
+        <option value="">Selecione uma competição</option>
+      </select>
+    </label>
+
+    <div class="actions">
+      <button class="gold" id="loadAdminHighlights">
+        Gerenciar indicados
+      </button>
+    </div>
+
+    <div id="adminHighlightsContent" class="hidden">
+      <p><strong>Categorias da eleição</strong></p>
+      <div id="adminHighlightsCategories">
+        <div class="empty">Selecione uma competição para começar.</div>
+      </div>
+      <div class="actions" style="margin-top:20px">
+  <button class="gold" id="saveAdminHighlights">
+    💾 SALVAR ELEIÇÃO
+  </button>
+</div>
+ <hr style="border-color:#d4af37;margin:25px 0">
+
+<div id="adminCommissionElection"
+     class="panel"
+     style="margin-top:20px;border:1px solid #d4af37">
+
+  <h3 style="color:#d4af37">🗳️ VOTAÇÃO DA COMISSÃO</h3>
+
+  <p>Escolha os vencedores de cada categoria e posição.</p>
+
+  <div id="adminCommissionVoters"></div>
+
+  <div class="actions" style="margin-top:20px">
+    <button type="button" class="gold" id="saveCommissionVotes">
+      💾 SALVAR VOTOS DA COMISSÃO
+    </button>
+  </div>
+
+  <div id="adminCommissionStatus" class="empty"
+       style="margin-top:12px">
+    Aguardando configuração dos votos.
+  </div>
+
+  <hr style="border-color:#555;margin:20px 0">
+
+  <button type="button" class="gold" id="closeElectionGeneral"
+          style="width:100%">
+    🏆 ENCERRAR ELEIÇÃO GERAL
+  </button>
+</div>
+</div>
+</div>
+  </div>
+  <details class="panel">
+    <summary class="ph">
     <h3>Cadastrar equipe</h3>
     <span class="pill">1 · Equipes</span>
   </summary>
@@ -22102,6 +22100,50 @@ document.addEventListener('DOMContentLoaded', function () {
 
 #adminProtected details[open] > summary::after {
   content: "－";
+}
+</style>
+<style id="admin-dois-paineis">
+#painelPrincipalCompeticao,
+#painelOrganizacaoSite {
+  margin: 18px 0;
+  border: 1px solid #d6ad36;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+#painelPrincipalCompeticao > summary,
+#painelOrganizacaoSite > summary {
+  cursor: pointer;
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px;
+  background: linear-gradient(100deg,#e6bd45,#b88b20);
+  color: #111;
+}
+
+#painelPrincipalCompeticao > summary h3,
+#painelOrganizacaoSite > summary h3 {
+  color: #111;
+  font-weight: 900;
+}
+
+#painelPrincipalCompeticao > summary::after,
+#painelOrganizacaoSite > summary::after {
+  content: "+";
+  font-size: 22px;
+  font-weight: 900;
+}
+
+#painelPrincipalCompeticao[open] > summary::after,
+#painelOrganizacaoSite[open] > summary::after {
+  content: "−";
+}
+
+#painelPrincipalCompeticao:not([open]) > .pad,
+#painelOrganizacaoSite:not([open]) > .pad {
+  display: none !important;
 }
 </style>
     </body>
