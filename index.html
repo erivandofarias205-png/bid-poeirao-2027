@@ -8386,6 +8386,13 @@ async function buscarJogosEquipeProfissional() {
   <details class="panel" id="competitionManagementPanel">
   <summary class="ph" style="cursor:pointer">
     <h3>🏆 GERENCIAMENTO DE COMPETIÇÕES</h3>
+    <!-- NOVO MENU: GERENCIAMENTO DA COMPETIÇÃO -->
+<details class="panel" id="competitionHubPanel">
+  <summary class="ph">
+    <h3>🏆 GERENCIAMENTO DA COMPETIÇÃO</h3>
+    <span class="pill">Organização da competição</span>
+  </summary>
+  <div class="pad">
     <span class="pill">Abrir / fechar</span>
   </summary>
   <div class="pad">
@@ -8587,6 +8594,9 @@ async function buscarJogosEquipeProfissional() {
   </div>
 </details>
 <!-- FIM DA SÚMULA OFICIAL -->
+  </div>
+</details>
+<!-- FIM DO GERENCIAMENTO DA COMPETIÇÃO -->
     <style id="quarter-finals-style">
   #quarterFinalsPanel .quarter-finals-grid {
     display: grid;
@@ -12133,6 +12143,21 @@ function updateSelects(){
  const opts=activeCompetitionTeams().map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
  ['athTeam','gameTeam','matchHome','matchAway'].forEach(id=>{const el=$(id);if(el)el.innerHTML=opts});
  const competitions=db.competitions||[];
+ const organizacaoSelect = $('organizacaoCompeticaoSelect');
+
+if (organizacaoSelect) {
+  const selecionada = organizacaoSelect.value;
+
+  organizacaoSelect.innerHTML =
+    '<option value="">Selecione a competição</option>' +
+    competitions.map(c =>
+      `<option value="${esc(c.id)}">${esc(c.name)} · ${esc(c.season || '')}</option>`
+    ).join('');
+
+  if (selecionada && competitions.some(c => String(c.id) === String(selecionada))) {
+    organizacaoSelect.value = selecionada;
+  }
+}
  const compOpts='<option value="">Selecione a competição</option>'+
    competitions.map(c=>`<option value="${esc(c.id)}">${esc(c.name)} · ${esc(c.season||'')}</option>`).join('');
  ['teamCompetition','athCompetition'].forEach(id=>{
