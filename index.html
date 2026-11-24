@@ -22155,5 +22155,209 @@ document.addEventListener('DOMContentLoaded', function () {
   display: none !important;
 }
 </style>
-    </body>
+<style id="admv2-style">
+#admV2{display:grid;gap:14px;max-width:100%;overflow-x:hidden}
+#admV2 *{min-width:0;max-width:100%}
+#admV2 .tablewrap,#admV2 [class*="tablewrap"]{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#admV2 table{max-width:none}
+.admv2-top{border:2px solid #d6ad36;border-radius:16px;background:#0d1117;overflow:hidden}
+.admv2-top>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px;background:linear-gradient(135deg,#e6bf48,#c79a2a);color:#111;font-weight:900;font-size:17px;letter-spacing:.02em}
+.admv2-top>summary::-webkit-details-marker{display:none}
+.admv2-top>summary small{display:block;font-weight:600;font-size:12px;letter-spacing:0;opacity:.8;margin-top:2px}
+.admv2-top>summary::after{content:"+";margin-left:auto;font-size:26px;line-height:1}
+.admv2-top[open]>summary::after{content:"−"}
+.admv2-body{padding:10px;display:grid;gap:8px}
+.admv2-step{border:1px solid #6b5720;border-radius:12px;background:#101010;overflow:hidden}
+.admv2-step>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px 14px;color:#f1d36a;font-weight:800;font-size:15px}
+.admv2-step>summary::-webkit-details-marker{display:none}
+.admv2-step>summary .n{flex:none;width:26px;height:26px;border-radius:50%;background:#d6ad36;color:#111;display:grid;place-items:center;font-size:13px;font-weight:900}
+.admv2-step>summary::after{content:"+";margin-left:auto;font-size:22px}
+.admv2-step[open]>summary::after{content:"−"}
+.admv2-step[open]>summary{border-bottom:1px solid #3a3115}
+.admv2-step-body{padding:12px;display:grid;gap:12px;color:#f5f5f5}
+.admv2-step-body>.panel,.admv2-step-body>details.panel{margin:0!important}
+.admv2-step-body h3.admv2-hide-title,.admv2-step-body hr{display:none}
+.admv2-step-body>.panel>.ph:not(summary){padding:8px 10px}
+.admv2-hint{display:none;padding:10px 12px;border:1px dashed #6b5720;border-radius:10px;color:#f1d36a;font-size:13px}
+.admv2-hint:has(+ .hidden){display:block}
+.admv2-open-sub{background:#1b1b1b;color:#f1d36a;border:1px solid #6b5720;width:100%;text-align:left}
+.admv2-gone{display:none!important}
+#adminProtected>.note{display:none}
+#organizacaoFormatoArea>h3,#organizacaoEquipesArea>h3,#organizacaoFormatoArea>p{display:none}
+</style>
+<script id="admv2-script">
+(function () {
+  'use strict';
+  var DONE = false;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function panelByTitle(txt) {
+    var hs = document.querySelectorAll('#adminView h3, #gameView h3, #gamesView h3');
+    txt = txt.toLowerCase();
+    for (var i = 0; i < hs.length; i++) {
+      if (hs[i].textContent.trim().toLowerCase().indexOf(txt) === 0) {
+        return hs[i].closest('details.panel, .panel') || hs[i].parentElement;
+      }
+    }
+    return null;
+  }
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html) e.innerHTML = html;
+    return e;
+  }
+  function step(n, title, nodes, group) {
+    var d = el('details', 'admv2-step');
+    d.dataset.group = group;
+    d.innerHTML = '<summary><span class="n">' + n + '</span><span>' + title + '</span></summary>';
+    var body = el('div', 'admv2-step-body');
+    nodes.forEach(function (x) { if (x) body.appendChild(x); });
+    d.appendChild(body);
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      d.parentElement.querySelectorAll(':scope > .admv2-step[open]').forEach(function (o) {
+        if (o !== d) o.open = false;
+      });
+    });
+    return d;
+  }
+  function sub(label, node) {
+    if (!node) return null;
+    var w = el('div');
+    var b = el('button', 'admv2-open-sub');
+    b.type = 'button';
+    b.textContent = '+ ' + label;
+    node.style.display = 'none';
+    b.addEventListener('click', function () {
+      var show = node.style.display === 'none';
+      node.style.display = show ? '' : 'none';
+      b.textContent = (show ? '− ' : '+ ') + label;
+    });
+    w.appendChild(b); w.appendChild(node);
+    return w;
+  }
+  function hint(text) { return el('div', 'admv2-hint', text); }
+
+  function build() {
+    if (DONE) return;
+    var ap = $('adminProtected');
+    if (!ap || !$('organizacaoCompeticaoSelect')) return;
+    DONE = true;
+
+    var root = el('div'); root.id = 'admV2';
+
+    /* PAINEL 1 */
+    var p1 = el('details', 'admv2-top');
+    p1.id = 'admV2Comp';
+    p1.innerHTML = '<summary><span>🏆 1. GERENCIAMENTO DA COMPETIÇÃO<small>Escolher, montar, classificar e fases</small></span></summary>';
+    var b1 = el('div', 'admv2-body');
+
+    var pm = $('competitionPhaseManager');
+    var B = { cfg: [], groups: [], games: [], stand: [], ko: [] };
+    var ko = $('competitionKnockoutStages');
+    if (pm) {
+      var cur = 'cfg';
+      Array.prototype.slice.call(pm.children).forEach(function (c) {
+        if (c.classList.contains('ph')) return;
+        if (c === ko) { B.ko.push(c); return; }
+        if (c.tagName === 'H4') {
+          var t = c.textContent.trim().toLowerCase();
+          if (t.indexOf('1.') === 0) cur = 'groups';
+          else if (t.indexOf('jogos da fase') === 0) cur = 'games';
+          else if (t.indexOf('2.') === 0) cur = 'stand';
+          else if (t.indexOf('3.') === 0) cur = 'ko';
+        }
+        B[cur].push(c);
+      });
+    }
+
+    var selLabel = $('organizacaoCompeticaoSelect').closest('label');
+    var s1 = step(1, 'Escolher a competição', [
+      selLabel, $('organizacaoCompeticaoInfo'),
+      sub('Formatar as competições', panelByTitle('Formatar as competições'))
+    ], 'comp');
+    var s2 = step(2, 'Equipes participantes', [
+      hint('Escolha a competição no passo 1 para liberar as equipes.'),
+      $('organizacaoEquipesArea')
+    ], 'comp');
+    var s3 = step(3, 'Formato e regras de classificação', [
+      hint('Escolha a competição no passo 1 para liberar o formato.'),
+      $('organizacaoFormatoArea')
+    ].concat(B.cfg), 'comp');
+    var s4 = step(4, 'Grupos e jogos da fase de grupos', B.groups.concat(B.games), 'comp');
+    var s5 = step(5, 'Classificação', B.stand, 'comp');
+    var s6 = step(6, 'Fases eliminatórias (mata-mata, semi, 3º lugar e final)', B.ko, 'comp');
+    var s7 = step(7, 'Súmula oficial da partida', [$('officialMatchSheetPanel')], 'comp');
+
+    [s1, s2, s3, s4, s5, s6, s7].forEach(function (s) { b1.appendChild(s); });
+    p1.appendChild(b1);
+
+    /* PAINEL 2 */
+    var p2 = el('details', 'admv2-top');
+    p2.id = 'admV2Site';
+    p2.innerHTML = '<summary><span>⚙️ 2. ORGANIZAÇÃO DO SITE<small>Competições, jogos, eventos, equipes, mídia e eleição</small></span></summary>';
+    var b2 = el('div', 'admv2-body');
+
+    var saveBar = null;
+    var sb = $('saveEverything');
+    if (sb) saveBar = sb.closest('.actions');
+
+    var t1 = step(1, 'Cadastrar competição', [panelByTitle('Cadastrar competição')], 'site');
+    var t2 = step(2, 'Tabela oficial de jogos', [panelByTitle('Tabela oficial de jogos')], 'site');
+    var t3 = step(3, 'Registrar evento da partida', [panelByTitle('Registrar evento da partida')], 'site');
+    var t4 = step(4, 'Eventos registrados', [panelByTitle('Eventos registrados')], 'site');
+    var t5 = step(5, 'Competições no site (profissionais e amadoras)', [
+      $('painelControleCompeticoes'), $('painelAtualizacaoProfissional')
+    ], 'site');
+    var t6 = step(6, 'Equipes e atletas', [
+      panelByTitle('Cadastrar equipe'), panelByTitle('Cadastrar atleta'), $('adminListPanel')
+    ], 'site');
+    var t7 = step(7, 'Divulgação, patrocinadores e mídias', [
+      $('adminGamePromoPanel'), $('adminSponsorsPanel'), $('adminMediaPreviewPanel')
+    ], 'site');
+    var t8 = step(8, 'Painel geral e eleição', [
+      $('adminDashboard'), $('adminHighlightsPanel')
+    ], 'site');
+    var t9 = step(9, 'Salvar e cópia de segurança', [saveBar], 'site');
+
+    [t1, t2, t3, t4, t5, t6, t7, t8, t9].forEach(function (s) { b2.appendChild(s); });
+    p2.appendChild(b2);
+
+    [p1, p2].forEach(function (p) {
+      p.addEventListener('toggle', function () {
+        if (!p.open) return;
+        [p1, p2].forEach(function (o) { if (o !== p) o.open = false; });
+      });
+    });
+
+    root.appendChild(p1); root.appendChild(p2);
+
+    ['painelPrincipalCompeticao', 'painelOrganizacaoSite'].forEach(function (id) {
+      var o = $(id); if (o) o.classList.add('admv2-gone');
+    });
+    Array.prototype.slice.call(ap.children).forEach(function (c) {
+      if (c.classList.contains('note')) return;
+      c.classList.add('admv2-gone');
+    });
+    ap.insertBefore(root, ap.firstChild.nextSibling);
+
+    var s = $('organizacaoCompeticaoSelect'), ps = $('phaseCompetitionSelect');
+    if (s && ps) {
+      s.addEventListener('change', function () {
+        var ok = Array.prototype.some.call(ps.options, function (o) { return o.value === s.value; });
+        if (ok && ps.value !== s.value) {
+          ps.value = s.value;
+          ps.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    }
+  }
+
+  function start() { build(); if (!DONE) setTimeout(build, 600); }
+  if (document.readyState === 'complete') setTimeout(start, 50);
+  else window.addEventListener('load', function () { setTimeout(start, 50); });
+})();
+</script>
+  </body>
 </html>
