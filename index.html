@@ -8275,13 +8275,8 @@ async function buscarJogosEquipeProfissional() {
   </div>
 </details>
 
-<h3>CADASTRO E GERENCIAMENTO DAS COMPETIÇÕES</h3>
-  <summary class="ph" style="cursor:pointer">
-    <h3>🏆 GERENCIAMENTO DA COMPETIÇÃO</h3>
-    <span class="pill">Cadastro, fases, jogos e súmula</span>
-  </summary>
-  <div class="pad">
-    <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
+<div class="pad">
+  <div class="panel"><div class="ph"><h3>Cadastrar competição</h3><span class="pill">Identidade do sistema</span></div><div class="pad"><div class="formgrid"><label class="wide">Competição principal (exibição)<input id="competitionName" placeholder="Ex.: Copa Poeirão 2026"/></label></div><div class="actions"><button class="gold" id="saveCompetition">Salvar competição principal</button></div></div></div>
 <div class="panel"><div class="ph"><h3>Formatar as competições</h3><span class="pill">Várias competições</span></div><div class="pad"><div class="formgrid"><label>Nova competição<input id="newCompetitionName" placeholder="Ex.: Copa Poeirão 2026"/></label><label>Temporada<input id="newCompetitionSeason" placeholder="Ex.: 2026"/></label><label>Formato da competição<select id="newCompetitionFormat"><option value="grupos">Fase de grupos</option><option value="mata-mata">Mata-mata</option><option value="pontos-corridos">Pontos corridos</option><option value="mista">Mista (grupos + mata-mata)</option></select></label>
  <label>Quantidade total de equipes
   <input id="newCompetitionTotalTeams" type="number" min="2" max="256" value="18" placeholder="Ex.: 18"/>
@@ -18057,38 +18052,52 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* O formulário de cadastro e a tabela de administração só ficam disponíveis após login. */
-  const gamePanels = Array.from(gamesView.querySelectorAll(':scope > .panel'));
-  gamePanels.forEach(function (panel) {
-    if (panel.querySelector('#matchDate') || panel.querySelector('#matchRows')) {
-      adminProtected.appendChild(panel);
-    }
-  });
+/* MÓDULOS ADMINISTRATIVOS DENTRO DO GERENCIAMENTO DA COMPETIÇÃO */
+const competitionAdminContent =
+  document.querySelector('#painelPrincipalCompeticao > .pad') ||
+  adminProtected;
 
-  /* Remover da área pública a classificação demonstrativa duplicada; a classificação pública
-     oficial fica na aba própria, junto da artilharia e dos cartões. */
-  gamesView.querySelectorAll(':scope > .panel').forEach(function (panel) {
-    if (panel.querySelector('#standingRows')) adminProtected.appendChild(panel);
-  });
-/* Registro e exclusão de eventos somente para o administrador. */
+/* Cadastro de jogos e tabela oficial */
+const gamePanels = Array.from(
+  gamesView.querySelectorAll(':scope > .panel')
+);
+
+gamePanels.forEach(function(panel) {
+  if (
+    panel.querySelector('#matchDate') ||
+    panel.querySelector('#matchRows')
+  ) {
+    competitionAdminContent.appendChild(panel);
+  }
+});
+
+/* Classificação administrativa */
+gamesView.querySelectorAll(':scope > .panel').forEach(function(panel) {
+  if (panel.querySelector('#standingRows')) {
+    competitionAdminContent.appendChild(panel);
+  }
+});
+
+/* Registro e consulta de eventos da partida */
 const gameView = $id('gameView');
 
-if(gameView){
+if (gameView) {
   const eventPanels = Array.from(
     gameView.querySelectorAll(':scope > .panel')
   );
 
-  eventPanels.forEach(function(panel){
-    if(
+  eventPanels.forEach(function(panel) {
+    if (
       panel.querySelector('#gameName') ||
       panel.querySelector('#eventList') ||
       panel.querySelector('#eventTotal')
-    ){
-      adminProtected.appendChild(panel);
+    ) {
+      competitionAdminContent.appendChild(panel);
     }
   });
 
   const quickNote = gameView.querySelector(':scope > .note');
-  if(quickNote) quickNote.remove();
+  if (quickNote) quickNote.remove();
 }
   /* Se o painel público de jogos estiver vazio, apresentar mensagem clara. */
   if (!gamesView.querySelector('.next-match-panel')) {
