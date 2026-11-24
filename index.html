@@ -9056,49 +9056,37 @@ async function buscarJogosEquipeProfissional() {
 </section>
 
 <section class="hidden" id="photosView">
-<details class="panel" id="adminPhotoGalleryPanel">
-  <summary class="ph">
-    <h3>GALERIA DE FOTOS</h3>
-    <span class="pill">Adicionar / remover fotos</span>
-  </summary>
 
-  <div class="pad">
-    <p class="small">
-      Selecione a competição e envie várias fotos. Serão aceitas imagens verticais,
-      horizontais e quadradas, sem corte.
-    </p>
+  <div class="panel">
+    <div class="ph">
+      <h3>GALERIA DE FOTOS</h3>
+      <span class="pill">TVFP SPORTS</span>
+    </div>
 
-    <div class="formgrid">
+    <div class="pad">
+      <p class="small">
+        Escolha uma competição para visualizar as fotos.
+      </p>
+
       <label class="wide">
-        Competição
-        <select id="photoCompetitionSelect">
-          <option value="">Carregando competições...</option>
+        COMPETIÇÃO
+        <select id="publicPhotoCompetition">
+          <option value="">Selecione uma competição</option>
         </select>
       </label>
 
-      <label class="wide">
-        Selecionar fotos
-        <input accept="image/*" id="photoGalleryUpload" multiple type="file">
-      </label>
+      <div
+        id="publicPhotoGallery"
+        class="public-photo-gallery"
+        style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:18px"
+      >
+        <p class="empty">
+          Escolha uma competição para visualizar as fotos.
+        </p>
+      </div>
     </div>
-
-    <div class="actions">
-      <button class="gold" id="uploadGalleryPhotosBtn" type="button">
-        Enviar fotos
-      </button>
-
-      <button class="secondary" id="refreshGalleryPhotosBtn" type="button">
-        Atualizar galeria
-      </button>
-    </div>
-
-    <p class="small" id="photoGalleryAdminStatus" role="status" aria-live="polite">
-      Selecione uma competição para gerenciar suas fotos.
-    </p>
-
-    <div class="game-promo-admin-list" id="photoGalleryAdminList"></div>
   </div>
-</details>
+
 </section>
 </main>
   <style id="details-panel-style">
