@@ -1465,10 +1465,95 @@ try {
 } catch (erro) {
   console.error('[GE PLAYOFFS]', erro.message);
 }
-          dadosOriginais = {
-      classificacao: dadosTabela,
-      jogos: listaGE
-    };
+         // PLAYOFFS DE ACESSO — BUSCA AUTOMÁTICA NO GE
+const resourceIdPlayoff = '009b5a68-dd09-46b8-95b3-293a2d494366';
+
+const fasesPlayoff = [
+  'brasileiro-serie-b-2026-playoff-de-acesso',
+  'playoff-de-acesso'
+];
+
+for (const fase of fasesPlayoff) {
+  for (const rodadaPlayoff of ['01', '02']) {
+    try {
+      const urlPlayoff =
+        `https://api.globoesporte.globo.com/tabela/${resourceIdPlayoff}/fase/${fase}/rodada/${rodadaPlayoff}/jogos/`;
+
+      const respostaPlayoff = await fetch(urlPlayoff, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!respostaPlayoff.ok) continue;
+
+      const retornoPlayoff = await respostaPlayoff.json();
+
+      const partidasPlayoff = Array.isArray(retornoPlayoff)
+        ? retornoPlayoff
+        : retornoPlayoff.jogos || [];
+
+      for (const partida of partidasPlayoff) {
+        if (!jogosPlayoffGE.some(j => String(j.id) === String(partida.id))) {
+          jogosPlayoffGE.push(partida);
+        }
+      }
+    } catch (erro) {
+      console.error('[GE PLAYOFF]', fase, rodadaPlayoff, erro.message);
+    }
+  }
+}
+
+console.log('[GE PLAYOFFS ENCONTRADOS]', jogosPlayoffGE.length);
+
+// Converte os jogos dos playoffs para o formato do site
+const jogosPlayoffFormatados = jogosPlayoffGE.map(jogo => {
+  const mandante = jogo.equipes?.mandante || {};
+  const visitante = jogo.equipes?.visitante || {};
+
+  const temPlacar =
+    jogo.placar_oficial_mandante != null &&
+    jogo.placar_oficial_visitante != null;
+
+  return {
+    id: jogo.id,
+    date: jogo.data_realizacao
+      ? jogo.data_realizacao.split('T')[0]
+      : '',
+    time: jogo.hora_realizacao || '',
+    status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+      ? 'finished'
+      : jogo.jogo_ja_comecou
+        ? 'live'
+        : 'scheduled',
+    homeTeam: {
+      name: mandante.nome_popular || '',
+      badge: mandante.escudo || ''
+    },
+    awayTeam: {
+      name: visitante.nome_popular || '',
+      badge: visitante.escudo || ''
+    },
+    score: temPlacar
+      ? {
+          home: Number(jogo.placar_oficial_mandante),
+          away: Number(jogo.placar_oficial_visitante)
+        }
+      : null,
+    venue: jogo.sede?.nome_popular || '',
+    fase: 'PLAYOFF DE ACESSO'
+  };
+});
+
+// Junta os jogos da fase regular com os playoffs
+jogos = [...jogos, ...jogosPlayoffFormatados];
+
+dadosOriginais = {
+  classificacao: dadosTabela,
+  jogos: [...listaGE, ...jogosPlayoffGE]
+};
+
     } // fecha o else da rodada da Série B
   } else if (chave === 'brasileirao-d') {
       const serie = chave.slice(-1);
