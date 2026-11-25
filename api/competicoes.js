@@ -1436,7 +1436,35 @@ if (jogo.placar_penaltis_mandante != null ||
           venue: jogo.sede?.nome_popular || ''
         };
       });
+// PLAYOFFS DE ACESSO — CONSULTA AUTOMÁTICA NO GE
+let jogosPlayoffGE = [];
 
+try {
+  const urlPlayoffGE =
+    'https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/playoff-de-acesso/rodada/01/jogos/';
+
+  const respostaPlayoffGE = await fetch(urlPlayoffGE, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  });
+
+  if (respostaPlayoffGE.ok) {
+    const dadosPlayoffGE = await respostaPlayoffGE.json();
+
+    if (Array.isArray(dadosPlayoffGE)) {
+      jogosPlayoffGE = dadosPlayoffGE;
+    }
+  }
+
+  console.log('[GE PLAYOFFS]', {
+    total: jogosPlayoffGE.length
+  });
+
+} catch (erro) {
+  console.error('[GE PLAYOFFS]', erro.message);
+}
           dadosOriginais = {
       classificacao: dadosTabela,
       jogos: listaGE
