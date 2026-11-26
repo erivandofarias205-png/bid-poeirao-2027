@@ -7178,7 +7178,7 @@ area.innerHTML = `
       }
     }
   }
-async function carregarArtilhariaProfissional(nome) {
+window.carregarArtilhariaProfissional = async function(nome) {
   const area = document.getElementById('profissionalArtilharia');
   if (!area) return;
 
