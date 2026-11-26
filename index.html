@@ -7051,6 +7051,9 @@ const ehSerieB = /série\s*b/i.test(
   dados.competition?.name || ''
 );
 const idVisualizacao = 'visualizacao-serie-b-' + Date.now();
+const jogosPlayoff = (dados.matches || []).filter(jogo =>
+  String(jogo.fase || '').toUpperCase().includes('PLAYOFF')
+);
 
 area.innerHTML = `
   <div style="margin-bottom:20px">
@@ -7161,8 +7164,100 @@ area.innerHTML = `
   </p>
 
   <div id="${idVisualizacao}-placares">
-    <p style="text-align:center">Consultando resultados no GE Globo...</p>
-  </div>
+
+  ${jogosPlayoff.length ? jogosPlayoff.map(jogo => {
+    const data = jogo.date
+      ? jogo.date.split('-').reverse().join('/')
+      : '';
+
+    const placar = jogo.score
+      ? `${jogo.score.home} × ${jogo.score.away}`
+      : 'VS';
+
+    const status = jogo.status === 'finished'
+      ? 'ENCERRADO'
+      : jogo.status === 'live'
+        ? 'AO VIVO'
+        : 'AGENDADO';
+
+    return `
+      <div style="
+        background:#fff;
+        color:#222;
+        border:1px solid #d4af37;
+        border-radius:9px;
+        padding:12px;
+        margin-bottom:10px;
+      ">
+
+        <div style="
+          text-align:center;
+          color:#b58920;
+          font-weight:bold;
+          font-size:11px;
+          margin-bottom:10px;
+        ">
+          PLAYOFF DE ACESSO
+        </div>
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 75px 1fr;
+          align-items:center;
+          gap:8px;
+        ">
+
+          <div style="text-align:center">
+            ${jogo.homeTeam?.badge ? `
+              <img src="${jogo.homeTeam.badge}"
+                style="width:38px;height:38px;object-fit:contain">
+            ` : ''}
+            <strong style="display:block;font-size:12px">
+              ${jogo.homeTeam?.name || 'A definir'}
+            </strong>
+          </div>
+
+          <strong style="
+            text-align:center;
+            font-size:23px;
+            color:#b58920;
+          ">
+            ${placar}
+          </strong>
+
+          <div style="text-align:center">
+            ${jogo.awayTeam?.badge ? `
+              <img src="${jogo.awayTeam.badge}"
+                style="width:38px;height:38px;object-fit:contain">
+            ` : ''}
+            <strong style="display:block;font-size:12px">
+              ${jogo.awayTeam?.name || 'A definir'}
+            </strong>
+          </div>
+
+        </div>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          border-top:1px solid #ddd;
+          padding-top:8px;
+          margin-top:8px;
+          font-size:11px;
+        ">
+          <span>${data} ${jogo.time || ''}</span>
+          <strong>${status}</strong>
+        </div>
+
+      </div>
+    `;
+  }).join('') : `
+    <p style="text-align:center;color:#777">
+      Nenhum jogo de playoff encontrado na consulta do GE Globo.
+    </p>
+  `}
+
+</div>
 
   <p style="text-align:center;font-size:13px;color:#777">
     Resultados consultados automaticamente. Em caso de igualdade, prevalece a melhor campanha, conforme o regulamento.
