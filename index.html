@@ -7263,7 +7263,7 @@ const jogadores = resultado.artilheiros.map(jogador => ({
   nome: jogador.nome || jogador.jogador,
   clube: jogador.clube || jogador.equipe
 }));
-
+area.innerHTML = `
   <div style="margin-bottom:10px">
     <strong style="color:#222">
       ${escapar(resultado.competicao || nome)}
