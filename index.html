@@ -7169,7 +7169,78 @@ area.innerHTML = `
   </p>
 </div>
 
-      
+// CARREGAR PLACARES DOS PLAYOFFS DA SÉRIE B
+(async () => {
+  const areaPlacares = document.getElementById(
+    `${idVisualizacao}-placares`
+  );
+
+  if (!areaPlacares) return;
+
+  try {
+    const resposta = await fetch(
+      '/api/competicoes?competicao=brasileirao-b',
+      { cache: 'no-store' }
+    );
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível consultar o GE.');
+    }
+
+    const retorno = await resposta.json();
+
+    const competencia = retorno.competicoes?.find(
+      item => item.chave === 'brasileirao-b'
+    );
+
+    const jogos = competencia?.jogos || retorno.jogos || [];
+
+    const playoffs = jogos.filter(jogo =>
+      String(jogo.fase || '').toUpperCase().includes('PLAYOFF')
+    );
+
+    if (!playoffs.length) {
+      areaPlacares.innerHTML =
+        '<p style="text-align:center">Os jogos dos playoffs ainda não foram encontrados no GE.</p>';
+      return;
+    }
+
+    areaPlacares.innerHTML = playoffs.map(jogo => {
+      const placar = jogo.score
+        ? `${jogo.score.home} × ${jogo.score.away}`
+        : 'VS';
+
+      const data = jogo.date
+        ? jogo.date.split('-').reverse().join('/')
+        : '';
+
+      const status = jogo.status === 'finished'
+        ? 'ENCERRADO'
+        : jogo.status === 'live'
+          ? 'EM ANDAMENTO'
+          : 'AGENDADO';
+
+      return `
+        <div style="background:#fff;color:#222;border:1px solid #d4af37;border-radius:8px;padding:12px;margin:10px 0">
+          <div style="display:grid;grid-template-columns:1fr 65px 1fr;align-items:center;gap:5px">
+            <strong style="text-align:center">${jogo.homeTeam?.name || 'A definir'}</strong>
+            <strong style="text-align:center;color:#b58920;font-size:18px">${placar}</strong>
+            <strong style="text-align:center">${jogo.awayTeam?.name || 'A definir'}</strong>
+          </div>
+          <p style="text-align:center;font-size:12px;margin-bottom:0">
+            ${data} · ${status}
+          </p>
+        </div>
+      `;
+    }).join('');
+
+  } catch (erro) {
+    areaPlacares.innerHTML =
+      '<p style="text-align:center">Erro ao consultar os playoffs no GE.</p>';
+    console.error('[PLAYOFFS SÉRIE B]', erro);
+  }
+})();
+
           } catch (erro) {
       area.innerHTML = `
         <p>Não foi possível carregar a classificação.</p>
