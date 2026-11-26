@@ -1436,78 +1436,108 @@ if (jogo.placar_penaltis_mandante != null ||
           venue: jogo.sede?.nome_popular || ''
         };
       });
-// PLAYOFFS DE ACESSO — CONSULTA AUTOMÁTICA NO GE
+
+// PLAYOFFS DE ACESSO — BUSCA AUTOMÁTICA NO GE
 let jogosPlayoffGE = [];
 
 try {
-  const urlPlayoffGE =
-    'https://api.globoesporte.globo.com/tabela/009b5a68-dd09-46b8-95b3-293a2d494366/fase/playoff-de-acesso/rodada/01/jogos/';
-
-  const respostaPlayoffGE = await fetch(urlPlayoffGE, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-      'Accept': 'application/json'
+  // Busca a página oficial para descobrir os identificadores reais
+  const pagina = await fetch(
+    'https://ge.globo.com/futebol/brasileirao-serie-b/',
+    {
+      headers: { 'User-Agent': 'Mozilla/5.0' }
     }
-  });
+  );
 
-  if (respostaPlayoffGE.ok) {
-    const dadosPlayoffGE = await respostaPlayoffGE.json();
+  if (!pagina.ok) {
+    throw new Error('Não foi possível consultar a página do GE.');
+  }
 
-    if (Array.isArray(dadosPlayoffGE)) {
-      jogosPlayoffGE = dadosPlayoffGE;
+  const htmlPlayoff = await pagina.text();
+
+  // Identificadores das tabelas encontrados na página
+  const idsEncontrados = [
+    '009b5a68-dd09-46b8-95b3-293a2d494366',
+    ...(htmlPlayoff.match(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
+    ) || [])
+  ];
+
+  const ids = [...new Set(idsEncontrados)];
+
+  // Descobre os nomes das fases de playoff na página
+  const slugsEncontrados = [
+    ...(htmlPlayoff.match(
+      /[a-z0-9-]*playoff[a-z0-9-]*/gi
+    ) || []),
+    'brasileiro-serie-b-2026-playoff-de-acesso',
+    'playoff-de-acesso'
+  ];
+
+  const fases = [...new Set(slugsEncontrados)];
+
+  const encontrados = new Map();
+
+  function extrairJogos(objeto) {
+    if (!objeto) return;
+
+    if (Array.isArray(objeto)) {
+      for (const item of objeto) {
+        if (item?.equipes?.mandante &&
+            item?.equipes?.visitante) {
+          encontrados.set(String(item.id), item);
+        } else {
+          extrairJogos(item);
+        }
+      }
+      return;
+    }
+
+    if (typeof objeto === 'object') {
+      for (const valor of Object.values(objeto)) {
+        extrairJogos(valor);
+      }
     }
   }
 
-  console.log('[GE PLAYOFFS]', {
-    total: jogosPlayoffGE.length
+  for (const id of ids.slice(0, 5)) {
+    for (const fase of fases.slice(0, 10)) {
+      for (const rodadaPlayoff of ['01', '02']) {
+        try {
+          const url =
+            `https://api.globoesporte.globo.com/tabela/${id}/fase/${fase}/rodada/${rodadaPlayoff}/jogos/`;
+
+          const resposta = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0',
+              'Accept': 'application/json'
+            }
+          });
+
+          if (!resposta.ok) continue;
+
+          const dados = await resposta.json();
+          extrairJogos(dados);
+
+        } catch (erro) {
+          console.warn('[GE PLAYOFF]', erro.message);
+        }
+      }
+    }
+  }
+
+  jogosPlayoffGE = [...encontrados.values()];
+
+  console.log('[GE PLAYOFFS ENCONTRADOS]', {
+    total: jogosPlayoffGE.length,
+    jogos: jogosPlayoffGE
   });
 
 } catch (erro) {
-  console.error('[GE PLAYOFFS]', erro.message);
-}
-         // PLAYOFFS DE ACESSO — BUSCA AUTOMÁTICA NO GE
-const resourceIdPlayoff = '009b5a68-dd09-46b8-95b3-293a2d494366';
-
-const fasesPlayoff = [
-  'brasileiro-serie-b-2026-playoff-de-acesso',
-  'playoff-de-acesso'
-];
-
-for (const fase of fasesPlayoff) {
-  for (const rodadaPlayoff of ['01', '02']) {
-    try {
-      const urlPlayoff =
-        `https://api.globoesporte.globo.com/tabela/${resourceIdPlayoff}/fase/${fase}/rodada/${rodadaPlayoff}/jogos/`;
-
-      const respostaPlayoff = await fetch(urlPlayoff, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0',
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!respostaPlayoff.ok) continue;
-
-      const retornoPlayoff = await respostaPlayoff.json();
-
-      const partidasPlayoff = Array.isArray(retornoPlayoff)
-        ? retornoPlayoff
-        : retornoPlayoff.jogos || [];
-
-      for (const partida of partidasPlayoff) {
-        if (!jogosPlayoffGE.some(j => String(j.id) === String(partida.id))) {
-          jogosPlayoffGE.push(partida);
-        }
-      }
-    } catch (erro) {
-      console.error('[GE PLAYOFF]', fase, rodadaPlayoff, erro.message);
-    }
-  }
+  console.error('[ERRO PLAYOFFS]', erro);
 }
 
-console.log('[GE PLAYOFFS ENCONTRADOS]', jogosPlayoffGE.length);
-
-// Converte os jogos dos playoffs para o formato do site
+// Converte para o formato utilizado pelo BID
 const jogosPlayoffFormatados = jogosPlayoffGE.map(jogo => {
   const mandante = jogo.equipes?.mandante || {};
   const visitante = jogo.equipes?.visitante || {};
@@ -1518,33 +1548,50 @@ const jogosPlayoffFormatados = jogosPlayoffGE.map(jogo => {
 
   return {
     id: jogo.id,
+
     date: jogo.data_realizacao
       ? jogo.data_realizacao.split('T')[0]
       : '',
+
     time: jogo.hora_realizacao || '',
-    status: jogo.transmissao?.broadcast?.id === 'ENCERRADA'
-      ? 'finished'
-      : jogo.jogo_ja_comecou
-        ? 'live'
-        : 'scheduled',
+
+    status:
+      jogo.transmissao?.broadcast?.id === 'ENCERRADA'
+        ? 'finished'
+        : jogo.jogo_ja_comecou
+          ? 'live'
+          : 'scheduled',
+
     homeTeam: {
       name: mandante.nome_popular || '',
       badge: mandante.escudo || ''
     },
+
     awayTeam: {
       name: visitante.nome_popular || '',
       badge: visitante.escudo || ''
     },
+
     score: temPlacar
       ? {
           home: Number(jogo.placar_oficial_mandante),
           away: Number(jogo.placar_oficial_visitante)
         }
       : null,
+
     venue: jogo.sede?.nome_popular || '',
     fase: 'PLAYOFF DE ACESSO'
   };
 });
+
+// Junta os jogos normais com os playoffs
+jogos = [...jogos, ...jogosPlayoffFormatados];
+
+dadosOriginais = {
+  classificacao: dadosTabela,
+  jogos: [...listaGE, ...jogosPlayoffGE]
+};
+
 
 // Junta os jogos da fase regular com os playoffs
 jogos = [...jogos, ...jogosPlayoffFormatados];
