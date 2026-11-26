@@ -7152,96 +7152,244 @@ area.innerHTML = `
 <div id="${idVisualizacao}-playoffs"
   style="display:none;padding:18px;border:1px solid #d4af37;border-radius:8px">
 
-  ${(() => {
-    const classificacaoFinal = [...(tabelasValidas[0]?.entries || [])]
-      .sort((a, b) => Number(a.position) - Number(b.position));
+  <h3 style="color:#d4af37;text-align:center;margin-top:0">
+    PLAYOFFS DE ACESSO — SÉRIE B 2026
+  </h3>
 
-    const terceiro = classificacaoFinal.find(e => Number(e.position) === 3);
-    const quarto = classificacaoFinal.find(e => Number(e.position) === 4);
-    const quinto = classificacaoFinal.find(e => Number(e.position) === 5);
-    const sexto = classificacaoFinal.find(e => Number(e.position) === 6);
+  <p style="text-align:center">
+    <strong>Vagas para o Brasileirão Série A 2027</strong>
+  </p>
 
-    const confrontos = [
-      {
-        titulo: 'PLAYOFF A — ACESSO',
-        ida: [sexto, terceiro],
-        volta: [terceiro, sexto]
-      },
-      {
-        titulo: 'PLAYOFF B — ACESSO',
-        ida: [quinto, quarto],
-        volta: [quarto, quinto]
-      }
-    ];
+  <div id="${idVisualizacao}-placares">
+    <p style="text-align:center">Consultando resultados no GE Globo...</p>
+  </div>
 
-    const clube = equipe => {
-      if (!equipe) return '<strong>Aguardando classificação</strong>';
+  <p style="text-align:center;font-size:13px;color:#777">
+    Resultados consultados automaticamente. Em caso de igualdade, prevalece a melhor campanha, conforme o regulamento.
+  </p>
+</div>
 
-      return `
-        <div style="display:flex;align-items:center;justify-content:center;gap:9px;padding:8px">
-          ${equipe.team?.badge
-            ? `<img src="${equipe.team.badge}" style="width:30px;height:30px;object-fit:contain">`
-            : ''}
-          <strong>${equipe.team?.name || 'Clube'}</strong>
-          <span style="color:#d4af37">(${equipe.position}º)</span>
-        </div>
-      `;
-    };
+<script>
+(() => {
+  const container = document.getElementById('${idVisualizacao}-placares');
+  if (!container) return;
 
-    if (!terceiro || !quarto || !quinto || !sexto) {
-      return `
-        <h3 style="color:#d4af37;text-align:center">PLAYOFFS DE ACESSO</h3>
-        <p style="text-align:center">Aguardando a classificação final da Série B para definir os quatro clubes.</p>
-      `;
+  const confrontos = [
+    {
+      titulo: 'PLAYOFF A — ACESSO',
+      ida: ['Atlético', 'Vila Nova'],
+      volta: ['Vila Nova', 'Atlético']
+    },
+    {
+      titulo: 'PLAYOFF B — ACESSO',
+      ida: ['Criciúma', 'Fortaleza'],
+      volta: ['Fortaleza', 'Criciúma']
     }
+  ];
 
-    return `
-      <h3 style="color:#d4af37;text-align:center;margin-top:0">
-        PLAYOFFS DE ACESSO — SÉRIE B 2026
-      </h3>
+  const normalizar = nome => (nome || '')
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .toLowerCase();
 
-      <p style="text-align:center">
-        <strong>Vagas para o Brasileirão Série A 2027</strong>
-      </p>
+  async function atualizarPlayoffs() {
+    try {
+      const resposta = await fetch(
+        '/api/competicoes?competicao=brasileirao-b',
+        { cache: 'no-store' }
+      );
 
-      ${confrontos.map(confronto => `
+      if (!resposta.ok) throw new Error('Falha na consulta ao GE');
+
+      const retorno = await resposta.json();
+
+      const competicao = retorno.competicoes?.find(
+        item => item.chave === 'brasileirao-b'
+      );
+
+      const jogos = competicao?.jogos || retorno.jogos || [];
+
+      const encontrarJogo = (times) => jogos.find(jogo => {
+        const mandante = normalizar(jogo.homeTeam?.name);
+        const visitante = normalizar(jogo.awayTeam?.name);
+
+        return mandante.includes(normalizar(times[0])) &&
+               visitante.includes(normalizar(times[1]));
+      });
+
+      const exibirJogo = (times) => {
+        const jogo = encontrarJogo(times);
+
+        if (!jogo) {
+          return `
+            <div style="text-align:center;padding:10px">
+              <strong>${times[0]} x ${times[1]}</strong>
+              <div style="color:#999;font-size:12px">Placar aguardando dados do GE</div>
+            </div>
+          `;
+        }
+
+        const placar = jogo.score &&
+          jogo.score.home !== null &&
+          jogo.score.away !== null
+            ? `${jogo.score.home} × ${jogo.score.away}`
+            : 'VS';
+
+        return `
+          <div style="display:grid;grid-template-columns:1fr 75px 1fr;align-items:center;gap:5px;padding:10px">
+            <strong style="text-align:right">${jogo.homeTeam?.name || times[0]}</strong>
+            <strong style="text-align:center;color:#d4af37;font-size:20px">${placar}</strong>
+            <strong>${jogo.awayTeam?.name || times[1]}</strong>
+          </div>
+          <div style="text-align:center;font-size:11px;color:#777">
+            ${jogo.status === 'finished' ? 'ENCERRADO' :
+              jogo.status === 'scheduled' ? 'AGENDADO' : 'EM ANDAMENTO'}
+          </div>
+        `;
+      };
+
+      container.innerHTML = confrontos.map(confronto => `
         <div style="border:1px solid #d4af37;border-radius:9px;margin:16px 0;padding:14px">
-
-          <h3 style="text-align:center;color:#d4af37">
-            ${confronto.titulo}
-          </h3>
+          <h3 style="text-align:center;color:#d4af37">${confronto.titulo}</h3>
 
           <div style="text-align:center;font-weight:bold;color:#777">
-            JOGO DE IDA — 21/11/2026
+            JOGO DE IDA
           </div>
-
-          ${clube(confronto.ida[0])}
-          <div style="text-align:center;color:#d4af37;font-weight:bold">X</div>
-          ${clube(confronto.ida[1])}
+          ${exibirJogo(confronto.ida)}
 
           <div style="border-top:1px solid #ddd;margin:12px 0"></div>
 
           <div style="text-align:center;font-weight:bold;color:#777">
-            JOGO DE VOLTA — 28/11/2026
+            JOGO DE VOLTA
           </div>
-
-          ${clube(confronto.volta[0])}
-          <div style="text-align:center;color:#d4af37;font-weight:bold">X</div>
-          ${clube(confronto.volta[1])}
-
+          ${exibirJogo(confronto.volta)}
         </div>
-      `).join('')}
+      `).join('');
 
-      <p style="text-align:center;font-size:13px;color:#777">
-        Os clubes de melhor campanha decidem em casa e têm vantagem em caso de igualdade conforme o regulamento.
-        Não haverá disputa de pênaltis.
-      </p>
-    `;
-  })()}
-</div>
+    } catch (erro) {
+      container.innerHTML = `
+        <p style="text-align:center;color:#b33">
+          Não foi possível consultar os resultados do GE.
+        </p>
+      `;
+      console.error('Erro nos playoffs:', erro);
+    }
+  }
+
+  atualizarPlayoffs();
+  setInterval(atualizarPlayoffs, 60000);
+})();
+</script>      `;
+   </div>
 
   </div>
 `;
+// ATUALIZAÇÃO DOS PLACARES DOS PLAYOFFS — GE
+async function atualizarPlayoffs() {
+  const container = document.getElementById(
+    `${idVisualizacao}-placares`
+  );
+
+  if (!container) return;
+
+  const classificacao = [...(tabelasValidas[0]?.entries || [])]
+    .sort((a, b) => Number(a.position) - Number(b.position));
+
+  const terceiro = classificacao.find(e => Number(e.position) === 3);
+  const quarto = classificacao.find(e => Number(e.position) === 4);
+  const quinto = classificacao.find(e => Number(e.position) === 5);
+  const sexto = classificacao.find(e => Number(e.position) === 6);
+
+  if (!terceiro || !quarto || !quinto || !sexto) {
+    container.innerHTML = '<p>Aguardando classificação final.</p>';
+    return;
+  }
+
+  const confrontos = [
+    {
+      titulo: 'PLAYOFF A — ACESSO',
+      ida: [sexto, terceiro],
+      volta: [terceiro, sexto]
+    },
+    {
+      titulo: 'PLAYOFF B — ACESSO',
+      ida: [quinto, quarto],
+      volta: [quarto, quinto]
+    }
+  ];
+
+  const normalizar = nome => (nome || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+  try {
+    const resposta = await fetch(
+      '/api/competicoes?competicao=brasileirao-b',
+      { cache: 'no-store' }
+    );
+
+    if (!resposta.ok) throw new Error('Erro na consulta ao GE');
+
+    const retorno = await resposta.json();
+
+    const competencia = retorno.competicoes?.find(
+      item => item.chave === 'brasileirao-b'
+    );
+
+    const jogos = competencia?.jogos || retorno.jogos || [];
+
+    const mostrarJogo = (mandante, visitante) => {
+      const jogo = jogos.find(j =>
+        normalizar(j.homeTeam?.name) === normalizar(mandante.team?.name) &&
+        normalizar(j.awayTeam?.name) === normalizar(visitante.team?.name)
+      );
+
+      if (!jogo) {
+        return `<div style="text-align:center;padding:12px">
+          ${mandante.team?.name} x ${visitante.team?.name}
+          <p style="color:#999;font-size:12px">Placar não localizado no GE</p>
+        </div>`;
+      }
+
+      const placar = jogo.score &&
+        jogo.score.home != null &&
+        jogo.score.away != null
+          ? `${jogo.score.home} × ${jogo.score.away}`
+          : 'VS';
+
+      return `<div style="display:grid;grid-template-columns:1fr 70px 1fr;align-items:center;gap:5px;padding:10px">
+        <strong style="text-align:right">${jogo.homeTeam?.name || mandante.team?.name}</strong>
+        <strong style="text-align:center;color:#d4af37;font-size:20px">${placar}</strong>
+        <strong>${jogo.awayTeam?.name || visitante.team?.name}</strong>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#777">
+        ${jogo.status === 'finished' ? 'ENCERRADO' :
+          jogo.status === 'scheduled' ? 'AGENDADO' : 'EM ANDAMENTO'}
+      </div>`;
+    };
+
+    container.innerHTML = confrontos.map(c => `
+      <div style="border:1px solid #d4af37;border-radius:9px;margin:16px 0;padding:14px">
+        <h3 style="text-align:center;color:#d4af37">${c.titulo}</h3>
+        <p style="text-align:center;font-weight:bold">JOGO DE IDA</p>
+        ${mostrarJogo(c.ida[0], c.ida[1])}
+        <hr>
+        <p style="text-align:center;font-weight:bold">JOGO DE VOLTA</p>
+        ${mostrarJogo(c.volta[0], c.volta[1])}
+      </div>
+    `).join('');
+
+  } catch (erro) {
+    console.error('Erro nos playoffs:', erro);
+    container.innerHTML =
+      '<p style="text-align:center;color:#b33">Não foi possível consultar os resultados do GE.</p>';
+  }
+}
+
+atualizarPlayoffs();
+setInterval(atualizarPlayoffs, 60000);
 
   } catch (erro) {
     area.innerHTML = `
