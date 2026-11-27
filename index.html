@@ -4826,7 +4826,31 @@ if (painelClassificacao) {
         'SEMIFINAL',
         'FINAL'
       ];
+const CACHE_CLUBES = 'bid_clubes_profissionais_v1';
 
+const cacheClubes = localStorage.getItem(CACHE_CLUBES);
+
+if (cacheClubes) {
+  const salvos = JSON.parse(cacheClubes);
+if (!salvos.brasil.some(n =>
+  normalizar(n).includes('vasco')
+)) {
+  salvos.brasil.push('VASCO DA GAMA');
+  localStorage.setItem(CACHE_CLUBES, JSON.stringify(salvos));
+}
+
+  preencher(brasil, salvos.brasil.map(n => ({
+    value: n,
+    nome: n
+  })), 'Selecione um clube brasileiro');
+
+  preencher(internacional, salvos.internacional.map(n => ({
+    value: n,
+    nome: n
+  })), 'Selecione um clube internacional');
+
+  return;
+}
       const resposta = await fetch(
         `/api/competicoes?competicao=copa-do-brasil&fase=${fase}`
       );
@@ -22922,7 +22946,10 @@ const unicos = arr => [...new Map(
   arr.map(n => [normalizar(n), n])
 ).values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
-const clubesBrasil = unicos(br);
+const clubesBrasil = unicos([
+  ...br,
+  'VASCO DA GAMA'
+]);
 
 const nomesBrasileiros = new Set(
   clubesBrasil.map(n => normalizar(n))
@@ -22931,6 +22958,10 @@ const nomesBrasileiros = new Set(
 const clubesInternacionais = unicos(int).filter(
   nome => !nomesBrasileiros.has(normalizar(nome))
 );
+localStorage.setItem(CACHE_CLUBES, JSON.stringify({
+  brasil: clubesBrasil,
+  internacional: clubesInternacionais
+}));
 
 preencher(brasil, clubesBrasil.map(n => ({
   value: n, nome: n
