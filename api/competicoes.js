@@ -1648,6 +1648,32 @@ const chaveEquipePlayoff = nome => {
   return n.trim();
 };
 
+// REUTILIZAR ESCUDOS DA CLASSIFICAÇÃO DA SÉRIE B
+const escudosSerieB = new Map();
+
+for (const tabela of (dadosTabela.tables || [])) {
+  for (const item of (tabela.entries || [])) {
+    const nome = item.team?.name;
+    const escudo = item.team?.badge;
+
+    if (nome && escudo) {
+      escudosSerieB.set(
+        chaveEquipePlayoff(nome),
+        escudo
+      );
+    }
+  }
+}
+
+// Preencher os escudos dos quatro jogos
+for (const jogo of jogosPlayoffOficiais) {
+  jogo.homeTeam.badge =
+    escudosSerieB.get(chaveEquipePlayoff(jogo.homeTeam.name)) || '';
+
+  jogo.awayTeam.badge =
+    escudosSerieB.get(chaveEquipePlayoff(jogo.awayTeam.name)) || '';
+}
+
 const jogosPlayoffCompletos = [...jogosPlayoffFormatados];
 
 for (const oficial of jogosPlayoffOficiais) {
