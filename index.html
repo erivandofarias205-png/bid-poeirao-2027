@@ -22792,21 +22792,55 @@ adicionar(nomeTime(jogo.awayTeam));
   'copa-do-mundo'
 ];
 
-  function atualizarCompeticoes(tipo) {
-    const permitidas = tipo === 'amador'
-      ? []
-      : tipo === 'brasil' ? BRASIL : INTERNACIONAL;
+  
+function atualizarCompeticoes(tipo) {
+  const chaves = tipo === 'brasil'
+    ? BRASIL
+    : tipo === 'internacional'
+      ? INTERNACIONAL
+      : [];
 
-    const lista = tipo === 'amador'
-      ? []
-      : competicoes.filter(c => permitidas.includes(c.chave))
-        .map(c => ({
-          value: c.chave,
-          nome: c.competicao || c.chave
-        }));
+  const nomes = {
+    'brasileirao-a': 'Brasileirão Série A',
+    'brasileirao-b': 'Brasileirão Série B',
+    'brasileirao-c': 'Brasileirão Série C',
+    'brasileirao-d': 'Brasileirão Série D',
+    'copa-do-brasil': 'Copa do Brasil',
+    'copinha': 'Copinha',
+    'cearense': 'Campeonato Cearense',
+    'paulista': 'Campeonato Paulista',
+    'carioca': 'Campeonato Carioca',
+    'mineiro': 'Campeonato Mineiro',
+    'gaucho': 'Campeonato Gaúcho',
+    'pernambucano': 'Campeonato Pernambucano',
+    'baiano': 'Campeonato Baiano',
+    'libertadores': 'CONMEBOL Libertadores',
+    'sul-americana': 'Copa Sul-Americana',
+    'champions': 'Champions League',
+    'europa': 'Europa League',
+    'conference': 'Conference League',
+    'premier-league': 'Premier League',
+    'la-liga': 'La Liga',
+    'serie-a-italia': 'Campeonato Italiano',
+    'bundesliga': 'Bundesliga',
+    'ligue-1': 'Campeonato Francês',
+    'liga-das-nacoes': 'Liga das Nações',
+    'amistosos': 'Amistosos',
+    'copa-do-mundo': 'Copa do Mundo'
+  };
 
-    preencher(competicao, lista, 'Escolha sua competição');
-  }
+  const lista = chaves.map(chave => ({
+    value: chave,
+    nome: nomes[chave] || chave
+  }));
+
+  preencher(
+    competicao,
+    lista,
+    'Escolha sua competição'
+  );
+}
+
 
   async function carregarAmador() {
     const { data, error } = await supabaseClient
