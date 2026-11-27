@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'bid-futebol-amador-shell-v2';
+const CACHE_NAME = 'bid-futebol-amador-shell-v3';
 
 const APP_SHELL = [
   './',
