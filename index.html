@@ -22564,6 +22564,7 @@ body table tbody td * {
 </style>
 
 
+
 <!-- MEU FUTEBOL - PRIMEIRO ACESSO -->
 <div id="bidMeuFutebolModal" style="
   display:none;position:fixed;inset:0;z-index:999999;
@@ -22584,7 +22585,7 @@ body table tbody td * {
       <div style="font-size:38px">⚽</div>
       <h2 style="color:#d6ad36;margin:8px 0">MEU FUTEBOL</h2>
       <p style="color:#ddd;font-size:14px">
-        Escolha seus times e personalize sua experiência!
+        Escolha seu time, atleta e competição favorita!
       </p>
     </div>
 
@@ -22593,50 +22594,31 @@ body table tbody td * {
       <select id="bidTipoEquipe">
         <option value="amador">Futebol amador</option>
         <option value="brasil">Profissional brasileiro</option>
-        <option value="internacional">Futebol internacional</option>
+        <option value="internacional">Profissional internacional</option>
       </select>
     </label>
 
     <label style="color:#d6ad36;margin-top:14px">
-  SEU TIME DO CORAÇÃO
-
-  <select id="bidFavoritoEquipe">
-    <option value="">Carregando equipes...</option>
-  </select>
-</label>
-
-<label style="color:#d6ad36;margin-top:12px">
-  OU DIGITE O NOME DO SEU TIME OU CLUBE
-
-  <input
-    id="bidEquipePersonalizada"
-    type="text"
-    maxlength="100"
-    placeholder="Ex.: Corinthians, Flamengo, Portuguesa..."
-    style="
-      width:100%;
-      box-sizing:border-box;
-      margin-top:8px;
-      padding:12px;
-      border:1px solid #66521e;
-      border-radius:8px;
-      background:#222;
-      color:white;
-    "
-  >
-</label>
-
-    <label style="color:#d6ad36;margin-top:12px">
-      OU DIGITE O NOME DO SEU TIME
-      <input id="bidEquipePersonalizada"
-        placeholder="Ex.: meu time não está na lista">
+      SUA EQUIPE FAVORITA
+      <select id="bidFavoritoEquipe">
+        <option value="">Carregando equipes...</option>
+      </select>
     </label>
+
+    <div id="bidAreaOutraEquipe" hidden>
+      <label style="color:#d6ad36;margin-top:12px">
+        DIGITE O NOME DA SUA EQUIPE
+        <input id="bidEquipePersonalizada"
+          type="text" maxlength="100"
+          placeholder="Digite o nome do seu time">
+      </label>
+    </div>
 
     <label style="color:#d6ad36;margin-top:14px">
       SEU ATLETA FAVORITO
-      <select id="bidFavoritoAtleta">
-        <option value="">Escolha seu atleta</option>
-      </select>
+      <input id="bidAtletaDigitado"
+        type="text" maxlength="100"
+        placeholder="Digite o nome do atleta">
     </label>
 
     <label style="color:#d6ad36;margin-top:14px">
@@ -22676,10 +22658,7 @@ body table tbody td * {
   </div>
 </div>
 
-<script>
-// ==========================================
-// MEU FUTEBOL - PREFERÊNCIAS DO USUÁRIO
-// ==========================================
+
 (function iniciarMeuFutebol() {
   const CHAVE = 'bid_meu_futebol_apresentado_v2';
   const CHAVE_ID = 'bid_meu_futebol_instalacao_id';
@@ -22687,16 +22666,16 @@ body table tbody td * {
   const modal = document.getElementById('bidMeuFutebolModal');
   if (!modal) return;
 
-  const equipe = document.getElementById('bidFavoritoEquipe');
   const tipo = document.getElementById('bidTipoEquipe');
+  const equipe = document.getElementById('bidFavoritoEquipe');
+  const areaOutra = document.getElementById('bidAreaOutraEquipe');
   const personalizada = document.getElementById('bidEquipePersonalizada');
-  const atleta = document.getElementById('bidFavoritoAtleta');
+  const atleta = document.getElementById('bidAtletaDigitado');
   const competicao = document.getElementById('bidFavoritaCompeticao');
   const status = document.getElementById('bidMeuFutebolStatus');
 
   let equipes = [];
-  let atletas = [];
-  let competicoes = [];
+  let competicoesAmadoras = [];
 
   function obterIdInstalacao() {
     let id = localStorage.getItem(CHAVE_ID);
@@ -22730,54 +22709,118 @@ body table tbody td * {
     });
   }
 
+  function carregarCompProfissionais(tipoEscolhido) {
+    const cards = [...document.querySelectorAll(
+      '#profissionalView .prof-card'
+    )];
+
+    const nomes = cards.map(card => {
+      const strong = card.querySelector('strong');
+      return strong ? strong.textContent.trim() : '';
+    }).filter(Boolean);
+
+    const lista = nomes.filter(nome => {
+      const n = nome.toUpperCase();
+
+      const internacional = [
+        'CHAMPIONS',
+        'EUROPA LEAGUE',
+        'CONFERENCE',
+        'PREMIER LEAGUE',
+        'LA LIGA',
+        'SERIE A',
+        'BUNDESLIGA',
+        'LIGUE 1'
+      ].some(x => n.includes(x));
+
+      return tipoEscolhido === 'internacional'
+        ? internacional
+        : !internacional;
+    });
+
+    competicao.innerHTML = '<option value="">Escolha sua competição</option>';
+
+    [...new Set(lista)].forEach(nome => {
+      const option = document.createElement('option');
+      option.value = nome;
+      option.textContent = nome;
+      competicao.appendChild(option);
+    });
+  }
+
   async function carregarAmador() {
-    const [eq, at, co] = await Promise.all([
+    const [eq, co] = await Promise.all([
       supabaseClient.from('EQUIPES')
         .select('id,nome').order('nome'),
-
-      supabaseClient.from('ATLETAS')
-        .select('id,nome,equipe_id').order('nome'),
 
       supabaseClient.from('COMPETICOES')
         .select('id,nome').order('nome')
     ]);
 
     if (eq.error) throw eq.error;
-    if (at.error) throw at.error;
     if (co.error) throw co.error;
 
     equipes = eq.data || [];
-    atletas = at.data || [];
-    competicoes = co.data || [];
+    competicoesAmadoras = co.data || [];
 
-    preencher(equipe, equipes, 'Escolha uma equipe amadora');
-    preencher(atleta, atletas, 'Escolha seu atleta');
-    preencher(competicao, competicoes, 'Escolha uma competição');
+    preencher(
+      equipe,
+      equipes,
+      'Escolha sua equipe amadora'
+    );
+
+    const nenhuma = document.createElement('option');
+    nenhuma.value = 'nenhuma';
+    nenhuma.textContent = 'NENHUMA DAS EQUIPES';
+    equipe.appendChild(nenhuma);
+
+    preencher(
+      competicao,
+      competicoesAmadoras,
+      'Escolha sua competição amadora'
+    );
   }
 
-  tipo.addEventListener('change', function() {
+  function atualizarTipo() {
     personalizada.value = '';
+    areaOutra.hidden = true;
     equipe.value = '';
 
     if (tipo.value === 'amador') {
-      preencher(equipe, equipes, 'Escolha uma equipe amadora');
-    } else if (tipo.value === 'brasil') {
-      preencher(equipe, [], 'Digite o nome do clube brasileiro');
+      preencher(equipe, equipes, 'Escolha sua equipe amadora');
+
+      const nenhuma = document.createElement('option');
+      nenhuma.value = 'nenhuma';
+      nenhuma.textContent = 'NENHUMA DAS EQUIPES';
+      equipe.appendChild(nenhuma);
+
+      preencher(
+        competicao,
+        competicoesAmadoras,
+        'Escolha sua competição amadora'
+      );
     } else {
-      preencher(equipe, [], 'Digite o nome do clube internacional');
+      preencher(
+        equipe,
+        [],
+        tipo.value === 'brasil'
+          ? 'Selecione seu clube brasileiro'
+          : 'Selecione seu clube internacional'
+      );
+
+      carregarCompProfissionais(tipo.value);
     }
-  });
+  }
+
+  tipo.addEventListener('change', atualizarTipo);
 
   equipe.addEventListener('change', function() {
-    personalizada.value = '';
+    const nenhuma = tipo.value === 'amador' &&
+      equipe.value === 'nenhuma';
 
-    const filtrados = equipe.value
-      ? atletas.filter(a =>
-          String(a.equipe_id) === String(equipe.value)
-        )
-      : atletas;
+    areaOutra.hidden = !nenhuma;
 
-    preencher(atleta, filtrados, 'Escolha seu atleta favorito');
+    if (!nenhuma) personalizada.value = '';
   });
 
   async function salvarPreferencia(decisao) {
@@ -22785,31 +22828,31 @@ body table tbody td * {
       x => String(x.id) === String(equipe.value)
     );
 
-    const atletaSelecionado = atletas.find(
-      x => String(x.id) === String(atleta.value)
-    );
+    const digitada = personalizada.value.trim();
 
-    const competicaoSelecionada = competicoes.find(
-      x => String(x.id) === String(competicao.value)
-    );
+    let nomeEquipe = '';
+    let idEquipe = null;
 
-    const nomeDigitado = personalizada.value.trim();
-
-    const nomeEquipe = nomeDigitado ||
-      (selecionada ? selecionada.nome : '');
+    if (tipo.value === 'amador') {
+      if (equipe.value === 'nenhuma') {
+        nomeEquipe = digitada;
+      } else if (selecionada) {
+        nomeEquipe = selecionada.nome;
+        idEquipe = String(selecionada.id);
+      }
+    } else {
+      nomeEquipe = equipe.value.trim();
+    }
 
     const registro = {
       installation_id: instalacaoId,
       tipo_equipe: tipo.value,
-      equipe_id: !nomeDigitado && selecionada
-        ? String(selecionada.id) : null,
+      equipe_id: idEquipe,
       equipe_nome: nomeEquipe || null,
-      atleta_id: atletaSelecionado
-        ? String(atletaSelecionado.id) : null,
-      atleta_nome: atletaSelecionado?.nome || null,
-      competicao_id: competicaoSelecionada
-        ? String(competicaoSelecionada.id) : null,
-      competicao_nome: competicaoSelecionada?.nome || null,
+      atleta_id: null,
+      atleta_nome: atleta.value.trim() || null,
+      competicao_id: null,
+      competicao_nome: competicao.value || null,
       notificacao_status: decisao,
       permissao_navegador:
         ('Notification' in window)
@@ -22838,7 +22881,6 @@ body table tbody td * {
   document.getElementById('bidMeuFutebolSim')
     .addEventListener('click', async function() {
       this.disabled = true;
-      status.textContent = 'Solicitando autorização...';
 
       try {
         if ('Notification' in window &&
@@ -22856,31 +22898,20 @@ body table tbody td * {
     .addEventListener('click', () => salvarPreferencia('recusou'));
 
   document.getElementById('bidMeuFutebolFechar')
-  .addEventListener('click', function() {
-
-    // Fecha imediatamente
-    modal.style.display = 'none';
-
-    // Registra que o usuário já visualizou
-    localStorage.setItem(CHAVE, '1');
-
-    // Tenta registrar o fechamento sem impedir a janela de fechar
-    salvarPreferencia('fechou').catch(erro => {
-      console.error('Erro ao registrar fechamento:', erro);
+    .addEventListener('click', function() {
+      modal.style.display = 'none';
+      localStorage.setItem(CHAVE, '1');
     });
-
-  });
 
   async function iniciar() {
     if (localStorage.getItem(CHAVE) === '1') return;
 
     try {
       await carregarAmador();
+      atualizarTipo();
     } catch (erro) {
-      console.error('Erro ao carregar opções:', erro);
-      status.textContent =
-        'Não foi possível carregar as equipes. Você pode digitar o nome.';
-      preencher(equipe, [], 'Escolha ou digite seu time');
+      console.error('Erro ao carregar Meu Futebol:', erro);
+      status.textContent = 'Erro ao carregar as opções.';
     }
 
     modal.style.display = 'flex';
