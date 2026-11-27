@@ -23018,10 +23018,14 @@ internacional.addEventListener('change', () => {
     .upsert(registro, { onConflict: 'installation_id' });
 
   if (error) {
-    console.error(error);
-    status.textContent = 'Erro ao salvar. Tente novamente.';
-    return;
-  }
+  console.error('ERRO AO SALVAR PREFERÊNCIAS:', error);
+
+  status.textContent =
+    'ERRO: ' + error.message +
+    ' | CÓDIGO: ' + (error.code || 'não informado');
+
+  return;
+}
 
   localStorage.setItem(CHAVE, '1');
   modal.style.display = 'none';
@@ -23052,30 +23056,41 @@ internacional.addEventListener('change', () => {
     });
   });
 
-  async function iniciar() {
-    if (localStorage.getItem(CHAVE) === '1') return;
+  
+async function iniciar() {
+  if (localStorage.getItem(CHAVE) === '1') return;
 
-    modal.style.display = 'flex';
+  modal.style.display = 'flex';
+  status.textContent = 'Carregando suas equipes...';
 
-    try {
-      await Promise.all([
-        carregarAmador(),
-        carregarProfissionais()
-      ]);
-      atualizarCompeticoes('amador');
-    } catch (erro) {
-      console.error('Meu Futebol:', erro);
-      status.textContent =
-        'Erro ao carregar as equipes. Confira o Console.';
-    }
+  const tarefas = await Promise.allSettled([
+    carregarAmador(),
+    carregarProfissionais()
+  ]);
+
+  const erroAmador = tarefas[0].status === 'rejected';
+  const erroProfissional = tarefas[1].status === 'rejected';
+
+  atualizarCompeticoes('amador');
+
+  if (erroAmador) {
+    console.error('Erro ao carregar equipes amadoras:', tarefas[0].reason);
+    amador.innerHTML = '<option value="">Erro ao carregar equipes</option>';
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciar);
+  if (erroProfissional) {
+    console.error('Erro ao carregar clubes profissionais:', tarefas[1].reason);
+    brasil.innerHTML = '<option value="">Erro ao carregar clubes</option>';
+    internacional.innerHTML = '<option value="">Erro ao carregar clubes</option>';
+  }
+
+  if (erroAmador || erroProfissional) {
+    status.textContent = 'Algumas listas não carregaram. Verifique a conexão.';
   } else {
-    iniciar();
+    status.textContent = 'Escolha suas preferências.';
   }
-})();
+}
+
 
 </script>
 <script>
