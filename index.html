@@ -22635,14 +22635,14 @@ body table tbody td * {
     <label style="display:block;color:#d6ad36;margin-top:18px">
       2. FUTEBOL PROFISSIONAL BRASILEIRO
       <select id="bidEquipeBrasil" style="width:100%;margin-top:7px">
-        <option value="">Carregando clubes brasileiros...</option>
+        <option value="">Escolha seu clube brasileiro</option>
       </select>
     </label>
 
     <label style="display:block;color:#d6ad36;margin-top:18px">
       3. FUTEBOL PROFISSIONAL INTERNACIONAL
       <select id="bidEquipeInternacional" style="width:100%;margin-top:7px">
-        <option value="">Carregando clubes internacionais...</option>
+       <option value="">Escolha seu clube internacional</option>
       </select>
     </label>
 
@@ -22788,33 +22788,44 @@ adicionar(nomeTime(jogo.awayTeam));
   'brasileirao-a',
   'brasileirao-b',
   'brasileirao-c',
-  'brasileirao-d',
-  'copa-do-brasil',
-  'cearense',
-  'paulista',
-  'carioca',
-  'mineiro',
-  'gaucho',
-  'pernambucano',
-  'baiano',
-  'copinha'
+  'cearense'
 ];
 
-  const INTERNACIONAL = [
-  'libertadores',
-  'sul-americana',
-  'champions',
-  'europa',
-  'conference',
-  'premier-league',
+const INTERNACIONAL = [
   'la-liga',
-  'serie-a-italia',
   'bundesliga',
+  'serie-a-italia',
   'ligue-1',
-  'liga-das-nacoes',
-  'amistosos',
-  'copa-do-mundo'
+  'liga-portugal'
 ];
+
+function atualizarCompeticoes(tipo) {
+  const nomes = {
+    'brasileirao-a': 'Brasileirão Série A',
+    'brasileirao-b': 'Brasileirão Série B',
+    'brasileirao-c': 'Brasileirão Série C',
+    'cearense': 'Campeonato Cearense',
+
+    'la-liga': 'La Liga (Espanha)',
+    'bundesliga': 'Bundesliga (Alemanha)',
+    'serie-a-italia': 'Campeonato Italiano',
+    'ligue-1': 'Ligue 1 (França)',
+    'liga-portugal': 'Campeonato Português'
+  };
+
+  const chaves = [...BRASIL, ...INTERNACIONAL];
+
+  const lista = chaves.map(chave => ({
+    value: chave,
+    nome: nomes[chave]
+  }));
+
+  preencher(
+    competicao,
+    lista,
+    'Escolha sua competição'
+  );
+}
 
  function atualizarCompeticoes(tipo) {
   // Mostra todas as competições que possuem painel no BID.
@@ -22887,92 +22898,183 @@ adicionar(nomeTime(jogo.awayTeam));
     amador.appendChild(nenhuma);
   }
 
-  async function carregarProfissionais() {
-    const resposta = await fetch('/api/competicoes?competicao=todas', {
-      cache: 'no-store'
-    });
-
-    if (!resposta.ok) throw new Error('Erro ao consultar competições.');
-
-    const dados = await resposta.json();
-    competicoes = dados.competicoes || [];
-
-    const br = [];
-    const int = [];
-
-    competicoes.forEach(c => {
-      if (!c || c.sucesso === false) return;
-
-      const chave = String(c.chave || '').toLowerCase();
-      const destino = BRASIL.includes(chave)
-        ? br
-        : INTERNACIONAL.includes(chave) ? int : null;
-
-      if (!destino) return;
-
-      const jogos = c.jogos || [];
-      const nomes = extrairTimes(jogos);
-
-// Busca somente os nomes reais dos clubes na classificação.
-(c.classificacao || []).forEach(tabela => {
-
-  const entradas =
-    tabela.entries ||
-    tabela.rows ||
-    tabela.classificacao ||
-    [];
-
-  if (!Array.isArray(entradas)) return;
-
-  entradas.forEach(linha => {
-    const equipe = linha.team || linha.time || linha.equipe;
-
-    const nome = nomeTime(equipe);
-
-    if (
-      nome &&
-      !['classificacao', 'classificacao geral']
-        .includes(normalizar(nome))
-    ) {
-      nomes.push(nome);
-    }
-  });
-});
-
-      nomes.forEach(nome => destino.push(nome));
-    });
-
-const unicos = arr => [...new Map(
-  arr.map(n => [normalizar(n), n])
-).values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
-const clubesBrasil = unicos([
-  ...br,
-  'VASCO DA GAMA'
-]);
-
-const nomesBrasileiros = new Set(
-  clubesBrasil.map(n => normalizar(n))
-);
-
-const clubesInternacionais = unicos(int).filter(
-  nome => !nomesBrasileiros.has(normalizar(nome))
-);
-localStorage.setItem(CACHE_CLUBES, JSON.stringify({
-  brasil: clubesBrasil,
-  internacional: clubesInternacionais
-}));
-
-preencher(brasil, clubesBrasil.map(n => ({
-  value: n, nome: n
-})), 'Selecione um clube brasileiro');
-
-preencher(internacional, clubesInternacionais.map(n => ({
-  value: n, nome: n
-})), 'Selecione um clube internacional');
-  }
-
  // EQUIPE AMADORA
+
+function carregarProfissionais() {
+  const clubesBrasil = [
+    'Athletico-PR',
+    'Atlético-MG',
+    'Bahia',
+    'Botafogo',
+    'Bragantino',
+    'Corinthians',
+    'Coritiba',
+    'Cruzeiro',
+    'Flamengo',
+    'Fluminense',
+    'Fortaleza',
+    'Grêmio',
+    'Internacional',
+    'Palmeiras',
+    'Santos',
+    'São Paulo',
+    'Vasco',
+    'Vitória',
+    'Ceará',
+    'Chapecoense',
+    'CRB',
+    'Goiás',
+    'Sport',
+    'Náutico',
+    'Cuiabá',
+    'Operário-PR',
+    'Botafogo-SP',
+    'São Bernardo',
+    'Athletic Club',
+    'Maringá',
+    'Ferroviária',
+    'Inter de Limeira',
+    'Santa Cruz',
+    'Floresta',
+    'ABC',
+    'Amazonas',
+    'Avaí',
+    'Brusque',
+    'Figueirense',
+    'Guarani',
+    'Londrina',
+    'Paysandu',
+    'Ponte Preta',
+    'Ypiranga-RS'
+  ];
+
+  const clubesInternacionais = [
+    // Espanha
+    'Alavés',
+    'Athletic Bilbao',
+    'Atlético de Madrid',
+    'Barcelona',
+    'Celta de Vigo',
+    'Deportivo La Coruña',
+    'Elche',
+    'Espanyol',
+    'Getafe',
+    'Levante',
+    'Málaga',
+    'Osasuna',
+    'Racing Santander',
+    'Rayo Vallecano',
+    'Real Betis',
+    'Real Madrid',
+    'Real Sociedad',
+    'Sevilla',
+    'Valencia',
+    'Villarreal',
+
+    // Alemanha
+    'Bayern de Munique',
+    'Borussia Dortmund',
+    'RB Leipzig',
+    'Bayer Leverkusen',
+    'Stuttgart',
+    'Freiburg',
+    'Eintracht Frankfurt',
+    'Hoffenheim',
+    'Augsburg',
+    'Mainz',
+    'Union Berlin',
+    'Borussia Mönchengladbach',
+    'Hamburgo',
+    'Colônia',
+    'Werder Bremen',
+    'Schalke 04',
+    'Elversberg',
+    'Paderborn',
+
+    // Itália
+    'Atalanta',
+    'Bologna',
+    'Cagliari',
+    'Como',
+    'Fiorentina',
+    'Frosinone',
+    'Genoa',
+    'Inter de Milão',
+    'Juventus',
+    'Lazio',
+    'Lecce',
+    'Milan',
+    'Monza',
+    'Napoli',
+    'Parma',
+    'Roma',
+    'Sassuolo',
+    'Torino',
+    'Udinese',
+    'Venezia',
+
+    // França
+    'PSG',
+    'Olympique de Marseille',
+    'Olympique de Lyon',
+    'Monaco',
+    'Lille',
+    'Lens',
+    'Nice',
+    'Rennes',
+    'Strasbourg',
+    'Toulouse',
+    'Brest',
+    'Nantes',
+    'Montpellier',
+    'Auxerre',
+    'Angers',
+    'Le Havre',
+    'Lorient',
+    'Le Mans',
+    'Troyes',
+    'Paris FC',
+
+    // Portugal
+    'Benfica',
+    'Porto',
+    'Sporting',
+    'Braga',
+    'Vitória de Guimarães',
+    'Boavista',
+    'Famalicão',
+    'Rio Ave',
+    'Gil Vicente',
+    'Moreirense',
+    'Arouca',
+    'Casa Pia',
+    'Estoril',
+    'Nacional',
+    'Santa Clara',
+    'Farense',
+    'AVS',
+    'Tondela'
+  ];
+
+  preencher(
+    brasil,
+    clubesBrasil.map(nome => ({
+      value: nome,
+      nome: nome
+    })),
+    'Escolha seu clube brasileiro'
+  );
+
+  preencher(
+    internacional,
+    clubesInternacionais.map(nome => ({
+      value: nome,
+      nome: nome
+    })),
+    'Escolha seu clube internacional'
+  );
+}
+
 amador.addEventListener('change', () => {
   areaOutra.style.display =
     amador.value === 'nenhuma' ? 'block' : 'none';
@@ -23122,37 +23224,29 @@ internacional.addEventListener('change', () => {
   });
 
   
+
 async function iniciar() {
   if (localStorage.getItem(CHAVE) === '1') return;
 
   modal.style.display = 'flex';
   status.textContent = 'Carregando suas equipes...';
 
-  const tarefas = await Promise.allSettled([
-    carregarAmador(),
-    carregarProfissionais()
-  ]);
+  try {
+    carregarProfissionais();
 
-  const erroAmador = tarefas[0].status === 'rejected';
-  const erroProfissional = tarefas[1].status === 'rejected';
+    await carregarAmador();
 
-  atualizarCompeticoes('amador');
+    atualizarCompeticoes('amador');
 
-  if (erroAmador) {
-    console.error('Erro ao carregar equipes amadoras:', tarefas[0].reason);
-    amador.innerHTML = '<option value="">Erro ao carregar equipes</option>';
-  }
-
-  if (erroProfissional) {
-    console.error('Erro ao carregar clubes profissionais:', tarefas[1].reason);
-    brasil.innerHTML = '<option value="">Erro ao carregar clubes</option>';
-    internacional.innerHTML = '<option value="">Erro ao carregar clubes</option>';
-  }
-
-  if (erroAmador || erroProfissional) {
-    status.textContent = 'Algumas listas não carregaram. Verifique a conexão.';
-  } else {
     status.textContent = 'Escolha suas preferências.';
+  } catch (erro) {
+    console.error('Erro ao carregar equipes amadoras:', erro);
+
+    amador.innerHTML =
+      '<option value="">Erro ao carregar equipes</option>';
+
+    status.textContent =
+      'Não foi possível carregar as equipes. Verifique a conexão.';
   }
 }
 
