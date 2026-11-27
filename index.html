@@ -9956,7 +9956,18 @@ async function renderAdminDashboard(){
         Dados registrados no Supabase. Período mensal: mês fechado anterior.
       </small>
     `;
+    out.insertAdjacentHTML('beforeend', `
+      <div id="meuFutebolAdmin" style="margin-top:25px">
+        <h3 style="color:#e4bd43">
+          ⚽ MEU FUTEBOL — PREFERÊNCIAS DOS USUÁRIOS
+        </h3>
+        <div id="meuFutebolAdminDados">
+          Carregando preferências...
+        </div>
+      </div>
+    `);
 
+    await renderPreferenciasMeuFutebolAdmin();
   }catch(error){
     console.error('Erro no painel administrativo:',error);
     out.innerHTML =
@@ -22551,5 +22562,496 @@ body table tbody td * {
   color: #111111 !important;
 }
 </style>
+
+<!-- MEU FUTEBOL - PRIMEIRO ACESSO -->
+<div id="bidMeuFutebolModal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  background:rgba(0,0,0,.88);
+  padding:15px;
+  align-items:center;
+  justify-content:center;
+  overflow-y:auto;
+">
+  <div style="
+    background:#101010;
+    color:white;
+    border:2px solid #d6ad36;
+    border-radius:18px;
+    width:100%;
+    max-width:480px;
+    padding:24px;
+    position:relative;
+    margin:auto;
+    box-shadow:0 15px 50px #000;
+  ">
+
+    <button id="bidMeuFutebolFechar" type="button"
+      aria-label="Fechar"
+      style="
+        position:absolute;
+        top:10px;
+        right:10px;
+        background:#292929;
+        color:white;
+        border:1px solid #555;
+        border-radius:50%;
+        width:36px;
+        height:36px;
+        padding:0;
+        font-size:20px;
+      ">×</button>
+
+    <div style="text-align:center">
+      <div style="font-size:38px">⚽</div>
+      <h2 style="color:#d6ad36;margin:8px 0">
+        MEU FUTEBOL
+      </h2>
+      <p style="color:#ddd;font-size:14px">
+        Personalize seu BID Futebol Amador!
+      </p>
+    </div>
+
+    <label style="color:#d6ad36;margin-top:18px">
+      SEU TIME DO CORAÇÃO
+      <select id="bidFavoritoEquipe">
+        <option value="">Escolha sua equipe</option>
+      </select>
+    </label>
+
+    <label style="color:#d6ad36;margin-top:14px">
+      SEU ATLETA FAVORITO
+      <select id="bidFavoritoAtleta">
+        <option value="">Escolha seu atleta</option>
+      </select>
+    </label>
+
+    <label style="color:#d6ad36;margin-top:14px">
+      SUA COMPETIÇÃO PREFERIDA
+      <select id="bidFavoritaCompeticao">
+        <option value="">Escolha sua competição</option>
+      </select>
+    </label>
+
+    <div style="
+      margin-top:20px;
+      padding:15px;
+      border:1px solid #66521e;
+      border-radius:12px;
+      background:#191919;
+    ">
+      <h3 style="color:#d6ad36;margin:0 0 8px">
+        🔔 Quer receber notificações?
+      </h3>
+
+      <p style="font-size:13px;color:#ddd">
+        Receba avisos dos jogos da sua equipe favorita,
+        início das partidas, gols e resultados.
+      </p>
+
+      <button id="bidMeuFutebolSim" type="button"
+        style="width:100%;background:#d6ad36;color:#111">
+        SIM, QUERO RECEBER
+      </button>
+
+      <button id="bidMeuFutebolNao" type="button"
+        style="width:100%;margin-top:9px;background:#333;color:white">
+        NÃO, OBRIGADO
+      </button>
+    </div>
+
+    <p id="bidMeuFutebolStatus"
+      style="text-align:center;color:#aaa;font-size:12px;margin-top:14px">
+      Você poderá alterar suas preferências depois.
+    </p>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// BID - MEU FUTEBOL / PRIMEIRO ACESSO
+// ==========================================
+(function iniciarMeuFutebol() {
+  const CHAVE = 'bid_meu_futebol_apresentado_v1';
+  const CHAVE_ID = 'bid_meu_futebol_instalacao_id';
+  const PENDENTE = 'bid_meu_futebol_pendente';
+
+  const modal = document.getElementById('bidMeuFutebolModal');
+  if (!modal) return;
+
+  const instalado =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  // Não exibir para quem somente visita o site.
+  if (!instalado) return;
+
+  function obterIdInstalacao() {
+    let id = localStorage.getItem(CHAVE_ID);
+
+    if (!id) {
+      id = crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'bid-' + Date.now() + '-' +
+          Math.random().toString(36).slice(2);
+
+      localStorage.setItem(CHAVE_ID, id);
+    }
+
+    return id;
+  }
+
+  const instalacaoId = obterIdInstalacao();
+
+  const equipe = document.getElementById('bidFavoritoEquipe');
+  const atleta = document.getElementById('bidFavoritoAtleta');
+  const competicao = document.getElementById('bidFavoritaCompeticao');
+  const status = document.getElementById('bidMeuFutebolStatus');
+
+  let equipes = [];
+  let atletas = [];
+  let competicoes = [];
+
+  function preencher(select, lista, texto) {
+    select.innerHTML =
+      '<option value="">' + texto + '</option>';
+
+    lista.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.nome;
+      select.appendChild(option);
+    });
+  }
+
+  async function carregarOpcoes() {
+    const [eq, at, co] = await Promise.all([
+      supabaseClient
+        .from('EQUIPES')
+        .select('id,nome')
+        .order('nome'),
+
+      supabaseClient
+        .from('ATLETAS')
+        .select('id,nome,equipe_id')
+        .order('nome'),
+
+      supabaseClient
+        .from('COMPETICOES')
+        .select('id,nome,temporada,publicada')
+        .order('nome')
+    ]);
+
+    if (eq.error) throw eq.error;
+    if (at.error) throw at.error;
+    if (co.error) throw co.error;
+
+    equipes = eq.data || [];
+    atletas = at.data || [];
+    competicoes = co.data || [];
+
+    preencher(equipe, equipes, 'Escolha sua equipe');
+    preencher(atleta, atletas, 'Escolha seu atleta');
+
+    preencher(
+      competicao,
+      competicoes,
+      'Escolha sua competição'
+    );
+  }
+
+  // Ao escolher uma equipe, prioriza os atletas dela.
+  equipe.addEventListener('change', function() {
+    const equipeId = equipe.value;
+
+    const filtrados = equipeId
+      ? atletas.filter(a =>
+          String(a.equipe_id) === String(equipeId)
+        )
+      : atletas;
+
+    preencher(
+      atleta,
+      filtrados,
+      'Escolha seu atleta favorito'
+    );
+  });
+
+  async function registrarPreferencia(tipo) {
+    const equipeEscolhida = equipes.find(
+      x => String(x.id) === equipe.value
+    );
+
+    const atletaEscolhido = atletas.find(
+      x => String(x.id) === atleta.value
+    );
+
+    const competicaoEscolhida = competicoes.find(
+      x => String(x.id) === competicao.value
+    );
+
+    const registro = {
+      installation_id: instalacaoId,
+      equipe_id: equipeEscolhida ? String(equipeEscolhida.id) : null,
+      equipe_nome: equipeEscolhida?.nome || null,
+      atleta_id: atletaEscolhido ? String(atletaEscolhido.id) : null,
+      atleta_nome: atletaEscolhido?.nome || null,
+      competicao_id: competicaoEscolhida
+        ? String(competicaoEscolhida.id)
+        : null,
+      competicao_nome: competicaoEscolhida?.nome || null,
+      notificacao_status: tipo,
+      permissao_navegador:
+        typeof Notification === 'undefined'
+          ? 'indisponivel'
+          : Notification.permission
+    };
+
+    try {
+      const { error } = await supabaseClient
+        .from('app_preferencias_usuario')
+        .insert([registro]);
+
+      if (error && error.code !== '23505') {
+        throw error;
+      }
+
+      localStorage.removeItem(PENDENTE);
+      localStorage.setItem(CHAVE, '1');
+
+    } catch (erro) {
+      console.error('Erro ao salvar preferências:', erro);
+
+      // Tentar enviar novamente na próxima abertura.
+      localStorage.setItem(PENDENTE, JSON.stringify(registro));
+      localStorage.setItem(CHAVE, '1');
+    }
+
+    modal.style.display = 'none';
+  }
+
+  async function enviarPendente() {
+    const pendente = localStorage.getItem(PENDENTE);
+    if (!pendente) return;
+
+    try {
+      const registro = JSON.parse(pendente);
+
+      const { error } = await supabaseClient
+        .from('app_preferencias_usuario')
+        .insert([registro]);
+
+      if (error && error.code !== '23505') throw error;
+
+      localStorage.removeItem(PENDENTE);
+    } catch (erro) {
+      console.error('Preferência pendente:', erro);
+    }
+  }
+
+  document.getElementById('bidMeuFutebolSim')
+    .addEventListener('click', async function() {
+      this.disabled = true;
+      status.textContent = 'Solicitando autorização...';
+
+      try {
+        if ('Notification' in window) {
+          if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+          }
+        }
+
+        await registrarPreferencia('aceitou');
+
+      } catch (erro) {
+        console.error(erro);
+        status.textContent = 'Não foi possível concluir.';
+        this.disabled = false;
+      }
+    });
+
+  document.getElementById('bidMeuFutebolNao')
+    .addEventListener('click', async function() {
+      await registrarPreferencia('recusou');
+    });
+
+  document.getElementById('bidMeuFutebolFechar')
+    .addEventListener('click', async function() {
+      await registrarPreferencia('fechou');
+    });
+
+  async function iniciar() {
+    await enviarPendente();
+
+    if (localStorage.getItem(CHAVE) === '1') return;
+
+    try {
+      await carregarOpcoes();
+    } catch (erro) {
+      console.error('Erro ao carregar Meu Futebol:', erro);
+      status.textContent =
+        'Não foi possível carregar as opções. Tente novamente mais tarde.';
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciar);
+  } else {
+    iniciar();
+  }
+})();
+</script>
+
+<script>
+// RELATÓRIO MEU FUTEBOL NO PAINEL ADMINISTRATIVO
+async function renderPreferenciasMeuFutebolAdmin() {
+  const out = document.getElementById('meuFutebolAdminDados');
+  if (!out) return;
+
+  if (window.__BID_ADMIN_VERIFIED !== true) return;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('app_preferencias_usuario')
+      .select('*')
+      .order('criado_em', { ascending: false })
+      .limit(200);
+
+    if (error) throw error;
+
+    const registros = data || [];
+
+    const aceitou = registros.filter(
+      x => x.notificacao_status === 'aceitou'
+    ).length;
+
+    const recusou = registros.filter(
+      x => x.notificacao_status === 'recusou'
+    ).length;
+
+    const fechou = registros.filter(
+      x => x.notificacao_status === 'fechou'
+    ).length;
+
+    const times = {};
+    const atletas = {};
+    const competicoes = {};
+
+    registros.forEach(r => {
+      if (r.equipe_nome) {
+        times[r.equipe_nome] = (times[r.equipe_nome] || 0) + 1;
+      }
+
+      if (r.atleta_nome) {
+        atletas[r.atleta_nome] = (atletas[r.atleta_nome] || 0) + 1;
+      }
+
+      if (r.competicao_nome) {
+        competicoes[r.competicao_nome] =
+          (competicoes[r.competicao_nome] || 0) + 1;
+      }
+    });
+
+    const ranking = objeto => Object.entries(objeto)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0,5);
+
+    const cards = `
+      <div style="
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:10px;
+        margin:15px 0;
+      ">
+        <div class="panel" style="padding:12px;text-align:center">
+          <strong style="font-size:25px;color:#e4bd43">
+            ${registros.length}
+          </strong>
+          <div>Registros</div>
+        </div>
+
+        <div class="panel" style="padding:12px;text-align:center">
+          <strong style="font-size:25px;color:#16a34a">
+            ${aceitou}
+          </strong>
+          <div>Aceitaram</div>
+        </div>
+
+        <div class="panel" style="padding:12px;text-align:center">
+          <strong style="font-size:25px;color:#e4bd43">
+            ${recusou + fechou}
+          </strong>
+          <div>Não aceitaram / fecharam</div>
+        </div>
+      </div>
+    `;
+
+    function listaRanking(titulo, dados) {
+      return `
+        <div class="panel" style="padding:12px;margin-bottom:10px">
+          <b style="color:#e4bd43">${titulo}</b>
+          ${dados.length
+            ? dados.map(([nome,total]) => `
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                padding:8px 0;
+                border-bottom:1px solid #444;
+                gap:10px;
+              ">
+                <span>${esc(nome)}</span>
+                <b>${total}</b>
+              </div>
+            `).join('')
+            : '<p class="muted">Nenhuma escolha registrada.</p>'
+          }
+        </div>
+      `;
+    }
+
+    out.innerHTML = cards +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">' +
+      listaRanking('🏆 TIMES MAIS ESCOLHIDOS', ranking(times)) +
+      listaRanking('⚽ ATLETAS MAIS ESCOLHIDOS', ranking(atletas)) +
+      listaRanking('🥇 COMPETIÇÕES PREFERIDAS', ranking(competicoes)) +
+      '</div>' +
+      '<h4 style="color:#e4bd43">ÚLTIMOS REGISTROS</h4>' +
+      `<div style="overflow-x:auto">
+        <table style="width:100%">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Equipe</th>
+              <th>Atleta</th>
+              <th>Competição</th>
+              <th>Notificações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${registros.map(r => `
+              <tr>
+                <td>${new Date(r.criado_em).toLocaleString('pt-BR')}</td>
+                <td>${esc(r.equipe_nome || 'Não escolheu')}</td>
+                <td>${esc(r.atleta_nome || '—')}</td>
+                <td>${esc(r.competicao_nome || '—')}</td>
+                <td>${esc(r.notificacao_status)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (erro) {
+    console.error('Erro nas preferências:', erro);
+    out.innerHTML =
+      '<p>Erro ao consultar preferências: ' +
+      esc(erro.message) + '</p>';
+  }
+}
+</script>
+
   </body>
 </html>
