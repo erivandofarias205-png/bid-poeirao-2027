@@ -22799,125 +22799,10 @@ const INTERNACIONAL = [
   'liga-portugal'
 ];
 
-function atualizarCompeticoes(tipo) {
-  const nomes = {
-    'brasileirao-a': 'Brasileirão Série A',
-    'brasileirao-b': 'Brasileirão Série B',
-    'brasileirao-c': 'Brasileirão Série C',
-    'cearense': 'Campeonato Cearense',
-
-    'la-liga': 'La Liga (Espanha)',
-    'bundesliga': 'Bundesliga (Alemanha)',
-    'serie-a-italia': 'Campeonato Italiano',
-    'ligue-1': 'Ligue 1 (França)',
-    'liga-portugal': 'Campeonato Português'
-  };
-
   const chaves = [...BRASIL, ...INTERNACIONAL];
 
-  const lista = chaves.map(chave => ({
-    value: chave,
-    nome: nomes[chave]
-  }));
 
-  preencher(
-    competicao,
-    lista,
-    'Escolha sua competição'
-  );
-}
-
- function atualizarCompeticoes(tipo) {
-  // Mostra todas as competições que possuem painel no BID.
-  const chaves = [...BRASIL, ...INTERNACIONAL];
-
-  const BRASIL = [
-  'brasileirao-a',
-  'brasileirao-b',
-  'brasileirao-c',
-  'brasileirao-d',
-  'copa-brasil',
-  'supercopa-brasil',
-  'copa-nordeste',
-  'copa-verde',
-  'cearense',
-  'outros-estaduais'
-];
-
-const INTERNACIONAL = [
-  'libertadores',
-  'sul-americana',
-  'recopa-sul-americana',
-  'libertadores-feminina',
-  'champions-league',
-  'europa-league',
-  'conference-league',
-  'supercopa-uefa',
-  'la-liga',
-  'premier-league',
-  'bundesliga',
-  'serie-a-italia',
-  'ligue-1',
-  'liga-portugal',
-  'mundial-clubes',
-  'copa-intercontinental',
-  'copa-mundo',
-  'eliminatorias-copa',
-  'copa-america',
-  'eurocopa',
-  'nations-league'
-];
-
-function atualizarCompeticoes(tipo) {
-  const nomes = {
-    'brasileirao-a': 'Brasileirão Série A',
-    'brasileirao-b': 'Brasileirão Série B',
-    'brasileirao-c': 'Brasileirão Série C',
-    'brasileirao-d': 'Brasileirão Série D',
-    'copa-brasil': 'Copa do Brasil',
-    'supercopa-brasil': 'Supercopa do Brasil',
-    'copa-nordeste': 'Copa do Nordeste',
-    'copa-verde': 'Copa Verde',
-    'cearense': 'Campeonato Cearense',
-    'outros-estaduais': 'Outros Campeonatos Estaduais',
-    'libertadores': 'Copa Libertadores',
-    'sul-americana': 'Copa Sul-Americana',
-    'recopa-sul-americana': 'Recopa Sul-Americana',
-    'libertadores-feminina': 'Libertadores Feminina',
-    'champions-league': 'Champions League',
-    'europa-league': 'Europa League',
-    'conference-league': 'Conference League',
-    'supercopa-uefa': 'Supercopa da UEFA',
-    'la-liga': 'La Liga (Espanha)',
-    'premier-league': 'Premier League (Inglaterra)',
-    'bundesliga': 'Bundesliga (Alemanha)',
-    'serie-a-italia': 'Serie A (Itália)',
-    'ligue-1': 'Ligue 1 (França)',
-    'liga-portugal': 'Campeonato Português',
-    'mundial-clubes': 'Mundial de Clubes',
-    'copa-intercontinental': 'Copa Intercontinental',
-    'copa-mundo': 'Copa do Mundo',
-    'eliminatorias-copa': 'Eliminatórias da Copa',
-    'copa-america': 'Copa América',
-    'eurocopa': 'Eurocopa',
-    'nations-league': 'Nations League'
-  };
-
-  const chaves = [...BRASIL, ...INTERNACIONAL];
-
-  const lista = chaves.map(chave => ({
-    value: chave,
-    nome: nomes[chave]
-  }));
-
-  preencher(
-    competicao,
-    lista,
-    'Escolha sua competição'
-  );
-}
-
-  async function carregarAmador() {
+    async function carregarAmador() {
     const { data, error } = await supabaseClient
       .from('EQUIPES')
       .select('id,nome')
@@ -23269,7 +23154,7 @@ internacional.addEventListener('change', () => {
   
 
 async function iniciar() {
-  // TESTE: forçar a abertura da pesquisa
+  if (localStorage.getItem(CHAVE) === '1') return;
 
   modal.style.display = 'flex';
   status.textContent = 'Carregando suas equipes...';
@@ -23282,23 +23167,17 @@ async function iniciar() {
     atualizarCompeticoes('amador');
 
     status.textContent = 'Escolha suas preferências.';
+
   } catch (erro) {
-    console.error('Erro ao carregar equipes amadoras:', erro);
+    console.error('ERRO NO MEU FUTEBOL:', erro);
+
+    status.textContent =
+      'Erro ao carregar os dados. Verifique a conexão.';
 
     amador.innerHTML =
       '<option value="">Erro ao carregar equipes</option>';
-
-    status.textContent =
-      'Não foi possível carregar as equipes. Verifique a conexão.';
   }
 }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciar);
-  } else {
-    iniciar();
-  }
-})();
 
 </script>
 <script>
@@ -23518,7 +23397,8 @@ async function renderPreferenciasMeuFutebolAdmin() {
       esc(erro.message) + '</p>';
   }
 }
+})();
 </script>
 
-  </body>
+</body>
 </html>
