@@ -22792,13 +22792,9 @@ adicionar(nomeTime(jogo.awayTeam));
   'copa-do-mundo'
 ];
 
-  
-function atualizarCompeticoes(tipo) {
-  const chaves = tipo === 'brasil'
-    ? BRASIL
-    : tipo === 'internacional'
-      ? INTERNACIONAL
-      : [];
+ function atualizarCompeticoes(tipo) {
+  // Mostra todas as competições que possuem painel no BID.
+  const chaves = [...BRASIL, ...INTERNACIONAL];
 
   const nomes = {
     'brasileirao-a': 'Brasileirão Série A',
@@ -22814,6 +22810,7 @@ function atualizarCompeticoes(tipo) {
     'gaucho': 'Campeonato Gaúcho',
     'pernambucano': 'Campeonato Pernambucano',
     'baiano': 'Campeonato Baiano',
+
     'libertadores': 'CONMEBOL Libertadores',
     'sul-americana': 'Copa Sul-Americana',
     'champions': 'Champions League',
