@@ -23044,9 +23044,12 @@ internacional.addEventListener('change', () => {
 
   status.textContent = 'Salvando suas preferências...';
 
-  const { error } = await supabaseClient
-    .from('app_preferencias_usuario')
-    .upsert(registro, { onConflict: 'installation_id' });
+ const { error } = await supabaseClient.rpc(
+  'salvar_preferencia_app',
+  {
+    p_registro: registro
+  }
+);
 
   if (error) {
   console.error('ERRO AO SALVAR PREFERÊNCIAS:', error);
