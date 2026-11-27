@@ -22759,17 +22759,36 @@ body table tbody td * {
 
   // As chaves abaixo correspondem às competições da API.
   const BRASIL = [
-    'brasileirao-a', 'serie-b', 'serie-c', 'serie-d',
-    'copa-do-brasil', 'cearense', 'paulista', 'carioca',
-    'mineiro', 'gaucho', 'pernambucano', 'baiano',
-    'copa-do-nordeste', 'copinha'
-  ];
+  'brasileirao-a',
+  'brasileirao-b',
+  'brasileirao-c',
+  'brasileirao-d',
+  'copa-do-brasil',
+  'cearense',
+  'paulista',
+  'carioca',
+  'mineiro',
+  'gaucho',
+  'pernambucano',
+  'baiano',
+  'copinha'
+];
 
   const INTERNACIONAL = [
-    'libertadores', 'sul-americana', 'champions',
-    'europa', 'conference', 'premier-league',
-    'la-liga', 'serie-a-italia', 'bundesliga', 'ligue-1'
-  ];
+  'libertadores',
+  'sul-americana',
+  'champions',
+  'europa',
+  'conference',
+  'premier-league',
+  'la-liga',
+  'serie-a-italia',
+  'bundesliga',
+  'ligue-1',
+  'liga-das-nacoes',
+  'amistosos',
+  'copa-do-mundo'
+];
 
   function atualizarCompeticoes(tipo) {
     const permitidas = tipo === 'amador'
@@ -22795,7 +22814,10 @@ body table tbody td * {
 
     if (error) throw error;
 
-    equipesAmadoras = data || [];
+    equipesAmadoras = (data || []).filter(e => {
+  const nome = normalizar(e.nome);
+  return nome !== 'off' && nome !== 'equipe off';
+});
 
     preencher(amador, equipesAmadoras.map(e => ({
       value: String(e.id),
@@ -22930,17 +22952,21 @@ body table tbody td * {
       return;
     }
 
-    const registro = {
-      installation_id: idInstalacao(),
-      tipo_equipe: e.tipo,
-      equipe_id: e.equipe_id,
-      equipe_nome: e.equipe_nome || null,
-      atleta_nome: atleta.value.trim() || null,
-      competicao_nome: competicao.value
-        ? competicao.selectedOptions[0].textContent
-        : null,
-      notificacao_status: decisao
-    };
+ const registro = {
+  installation_id: idInstalacao(),
+  equipe_id: e.equipe_id,
+  equipe_nome: e.equipe_nome || null,
+  atleta_nome: atleta.value.trim() || null,
+  competicao_id: competicao.value || null,
+  competicao_nome: competicao.value
+    ? competicao.selectedOptions[0].textContent
+    : null,
+  notificacao_status: decisao,
+  permissao_navegador:
+    ('Notification' in window)
+      ? Notification.permission
+      : 'indisponivel'
+};
 
     status.textContent = 'Salvando suas preferências...';
 
