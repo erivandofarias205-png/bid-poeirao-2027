@@ -22887,124 +22887,145 @@ adicionar(nomeTime(jogo.awayTeam));
       nomes.forEach(nome => destino.push(nome));
     });
 
-    const unicos = arr => [...new Map(
-      arr.map(n => [normalizar(n), n])
-    ).values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+const unicos = arr => [...new Map(
+  arr.map(n => [normalizar(n), n])
+).values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
-    preencher(brasil, unicos(br).map(n => ({
-      value: n, nome: n
-    })), 'Selecione um clube brasileiro');
+const clubesBrasil = unicos(br);
 
-    preencher(internacional, unicos(int).map(n => ({
-      value: n, nome: n
-    })), 'Selecione um clube internacional');
+const nomesBrasileiros = new Set(
+  clubesBrasil.map(n => normalizar(n))
+);
+
+const clubesInternacionais = unicos(int).filter(
+  nome => !nomesBrasileiros.has(normalizar(nome))
+);
+
+preencher(brasil, clubesBrasil.map(n => ({
+  value: n, nome: n
+})), 'Selecione um clube brasileiro');
+
+preencher(internacional, clubesInternacionais.map(n => ({
+  value: n, nome: n
+})), 'Selecione um clube internacional');
   }
 
-  amador.addEventListener('change', () => {
-    areaOutra.style.display =
-      amador.value === 'nenhuma' ? 'block' : 'none';
+ // EQUIPE AMADORA
+amador.addEventListener('change', () => {
+  areaOutra.style.display =
+    amador.value === 'nenhuma' ? 'block' : 'none';
 
-    if (amador.value !== 'nenhuma') personalizada.value = '';
-    atualizarCompeticoes('amador');
-  });
+  if (amador.value !== 'nenhuma') {
+    personalizada.value = '';
+  }
 
-  brasil.addEventListener('change', () => {
-    if (brasil.value) {
-      amador.value = '';
-      internacional.value = '';
-      areaOutra.style.display = 'none';
-    }
-    atualizarCompeticoes('brasil');
-  });
+  atualizarCompeticoes('amador');
+});
 
-  internacional.addEventListener('change', () => {
-    if (internacional.value) {
-      amador.value = '';
-      brasil.value = '';
-      areaOutra.style.display = 'none';
-    }
-    atualizarCompeticoes('internacional');
-  });
+// CLUBE BRASILEIRO
+brasil.addEventListener('change', () => {
+  atualizarCompeticoes('brasil');
+});
+
+// CLUBE INTERNACIONAL
+internacional.addEventListener('change', () => {
+  atualizarCompeticoes('internacional');
+});
 
   function escolha() {
-    if (amador.value) {
-      const equipe = equipesAmadoras.find(
-        e => String(e.id) === amador.value
-      );
+  const equipe = equipesAmadoras.find(
+    e => String(e.id) === amador.value
+  );
 
-      return {
-        tipo: 'amador',
-        equipe_id: equipe ? String(equipe.id) : null,
-        equipe_nome: amador.value === 'nenhuma'
-          ? personalizada.value.trim()
-          : equipe?.nome || ''
-      };
-    }
+  return {
+    equipe_id: equipe ? String(equipe.id) : null,
 
-    if (brasil.value) {
-      return {
-        tipo: 'brasil',
-        equipe_id: null,
-        equipe_nome: brasil.value
-      };
-    }
+    equipe_nome: amador.value === 'nenhuma'
+      ? personalizada.value.trim() || null
+      : equipe?.nome || null,
 
-    if (internacional.value) {
-      return {
-        tipo: 'internacional',
-        equipe_id: null,
-        equipe_nome: internacional.value
-      };
-    }
+    equipe_brasileira_nome: brasil.value || null,
 
-    return { tipo: null, equipe_id: null, equipe_nome: '' };
-  }
-
+    equipe_internacional_nome: internacional.value || null
+  };
+}
   async function salvar(decisao) {
-    const e = escolha();
+  const e = escolha();
 
-    if (amador.value === 'nenhuma' && !e.equipe_nome) {
-      status.textContent = 'Digite o nome da sua equipe.';
-      personalizada.focus();
-      return;
-    }
-
-    if (!e.tipo) {
-      status.textContent = 'Escolha uma das três opções de futebol.';
-      return;
-    }
-
- const registro = {
-  installation_id: idInstalacao(),
-  equipe_id: e.equipe_id,
-  equipe_nome: e.equipe_nome || null,
-  atleta_nome: atleta.value.trim() || null,
-  competicao_id: competicao.value || null,
-  competicao_nome: competicao.value
-    ? competicao.selectedOptions[0].textContent
-    : null,
-  notificacao_status: decisao,
-  permissao_navegador:
-    ('Notification' in window)
-      ? Notification.permission
-      : 'indisponivel'
-};
-
-    status.textContent = 'Salvando suas preferências...';
-
-    const { error } = await supabaseClient
-      .from('app_preferencias_usuario')
-      .upsert(registro, { onConflict: 'installation_id' });
-
-    if (error) {
-      console.error(error);
-      status.textContent = 'Erro ao salvar. Tente novamente.';
-      return;
-    }
-
-    localStorage.setItem(CHAVE, '1');
-    modal.style.display = 'none';
+  if (!amador.value) {
+    status.textContent = 'Escolha sua equipe amadora.';
+    amador.focus();
+    return;
   }
+
+  if (amador.value === 'nenhuma' && !e.equipe_nome) {
+    status.textContent = 'Digite o nome da sua equipe.';
+    personalizada.focus();
+    return;
+  }
+
+  if (!brasil.value) {
+    status.textContent = 'Escolha seu clube brasileiro.';
+    brasil.focus();
+    return;
+  }
+
+  if (!internacional.value) {
+    status.textContent = 'Escolha seu clube internacional.';
+    internacional.focus();
+    return;
+  }
+
+  const dispositivo = /android/i.test(navigator.userAgent)
+    ? 'Android'
+    : /iPhone|iPad|iPod/i.test(navigator.userAgent)
+      ? 'iPhone/iPad'
+      : /Windows/i.test(navigator.userAgent)
+        ? 'Windows'
+        : /Mac/i.test(navigator.userAgent)
+          ? 'Mac'
+          : 'Outro';
+
+  const registro = {
+    installation_id: idInstalacao(),
+
+    equipe_id: e.equipe_id,
+    equipe_nome: e.equipe_nome,
+    equipe_brasileira_nome: e.equipe_brasileira_nome,
+    equipe_internacional_nome: e.equipe_internacional_nome,
+
+    atleta_nome: atleta.value.trim() || null,
+
+    competicao_id: competicao.value || null,
+    competicao_nome: competicao.value
+      ? competicao.selectedOptions[0].textContent
+      : null,
+
+    dispositivo: dispositivo,
+
+    notificacao_status: decisao,
+
+    permissao_navegador:
+      ('Notification' in window)
+        ? Notification.permission
+        : 'indisponivel'
+  };
+
+  status.textContent = 'Salvando suas preferências...';
+
+  const { error } = await supabaseClient
+    .from('app_preferencias_usuario')
+    .upsert(registro, { onConflict: 'installation_id' });
+
+  if (error) {
+    console.error(error);
+    status.textContent = 'Erro ao salvar. Tente novamente.';
+    return;
+  }
+
+  localStorage.setItem(CHAVE, '1');
+  modal.style.display = 'none';
+}
 
   // X fecha sem depender de gravação no banco.
   $('bidMeuFutebolFechar').addEventListener('click', () => {
@@ -23059,6 +23080,7 @@ adicionar(nomeTime(jogo.awayTeam));
 </script>
 <script>
 // RELATÓRIO MEU FUTEBOL NO PAINEL ADMINISTRATIVO
+
 async function renderPreferenciasMeuFutebolAdmin() {
   const out = document.getElementById('meuFutebolAdminDados');
   if (!out) return;
@@ -23088,28 +23110,48 @@ async function renderPreferenciasMeuFutebolAdmin() {
       x => x.notificacao_status === 'fechou'
     ).length;
 
-    const times = {};
+    const equipesAmadoras = {};
+    const clubesBrasileiros = {};
+    const clubesInternacionais = {};
     const atletas = {};
     const competicoes = {};
+    const dispositivos = {};
 
     registros.forEach(r => {
       if (r.equipe_nome) {
-        times[r.equipe_nome] = (times[r.equipe_nome] || 0) + 1;
+        equipesAmadoras[r.equipe_nome] =
+          (equipesAmadoras[r.equipe_nome] || 0) + 1;
+      }
+
+      if (r.equipe_brasileira_nome) {
+        clubesBrasileiros[r.equipe_brasileira_nome] =
+          (clubesBrasileiros[r.equipe_brasileira_nome] || 0) + 1;
+      }
+
+      if (r.equipe_internacional_nome) {
+        clubesInternacionais[r.equipe_internacional_nome] =
+          (clubesInternacionais[r.equipe_internacional_nome] || 0) + 1;
       }
 
       if (r.atleta_nome) {
-        atletas[r.atleta_nome] = (atletas[r.atleta_nome] || 0) + 1;
+        atletas[r.atleta_nome] =
+          (atletas[r.atleta_nome] || 0) + 1;
       }
 
       if (r.competicao_nome) {
         competicoes[r.competicao_nome] =
           (competicoes[r.competicao_nome] || 0) + 1;
       }
+
+      if (r.dispositivo) {
+        dispositivos[r.dispositivo] =
+          (dispositivos[r.dispositivo] || 0) + 1;
+      }
     });
 
     const ranking = objeto => Object.entries(objeto)
-      .sort((a,b) => b[1] - a[1])
-      .slice(0,5);
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
 
     const cards = `
       <div style="
@@ -23145,8 +23187,9 @@ async function renderPreferenciasMeuFutebolAdmin() {
       return `
         <div class="panel" style="padding:12px;margin-bottom:10px">
           <b style="color:#e4bd43">${titulo}</b>
+
           ${dados.length
-            ? dados.map(([nome,total]) => `
+            ? dados.map(([nome, total]) => `
               <div style="
                 display:flex;
                 justify-content:space-between;
@@ -23164,39 +23207,89 @@ async function renderPreferenciasMeuFutebolAdmin() {
       `;
     }
 
-    out.innerHTML = cards +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">' +
-      listaRanking('🏆 TIMES MAIS ESCOLHIDOS', ranking(times)) +
-      listaRanking('⚽ ATLETAS MAIS ESCOLHIDOS', ranking(atletas)) +
-      listaRanking('🥇 COMPETIÇÕES PREFERIDAS', ranking(competicoes)) +
+    out.innerHTML =
+      cards +
+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">' +
+
+      listaRanking(
+        '🏆 EQUIPES AMADORAS',
+        ranking(equipesAmadoras)
+      ) +
+
+      listaRanking(
+        '🇧🇷 CLUBES BRASILEIROS',
+        ranking(clubesBrasileiros)
+      ) +
+
+      listaRanking(
+        '🌎 CLUBES INTERNACIONAIS',
+        ranking(clubesInternacionais)
+      ) +
+
+      listaRanking(
+        '⚽ ATLETAS MAIS ESCOLHIDOS',
+        ranking(atletas)
+      ) +
+
+      listaRanking(
+        '🥇 COMPETIÇÕES PREFERIDAS',
+        ranking(competicoes)
+      ) +
+
+      listaRanking(
+        '📱 DISPOSITIVOS',
+        ranking(dispositivos)
+      ) +
+
       '</div>' +
+
       '<h4 style="color:#e4bd43">ÚLTIMOS REGISTROS</h4>' +
+
       `<div style="overflow-x:auto">
-        <table style="width:100%">
+        <table style="width:100%;min-width:1000px">
           <thead>
             <tr>
               <th>Data</th>
-              <th>Equipe</th>
+              <th>Equipe amadora</th>
+              <th>Clube brasileiro</th>
+              <th>Clube internacional</th>
               <th>Atleta</th>
               <th>Competição</th>
+              <th>Dispositivo</th>
               <th>Notificações</th>
             </tr>
           </thead>
+
           <tbody>
             ${registros.map(r => `
               <tr>
-                <td>${new Date(r.criado_em).toLocaleString('pt-BR')}</td>
-                <td>${esc(r.equipe_nome || 'Não escolheu')}</td>
+                <td>${r.criado_em
+                  ? new Date(r.criado_em).toLocaleString('pt-BR')
+                  : '—'}</td>
+
+                <td>${esc(r.equipe_nome || '—')}</td>
+
+                <td>${esc(r.equipe_brasileira_nome || '—')}</td>
+
+                <td>${esc(r.equipe_internacional_nome || '—')}</td>
+
                 <td>${esc(r.atleta_nome || '—')}</td>
+
                 <td>${esc(r.competicao_nome || '—')}</td>
-                <td>${esc(r.notificacao_status)}</td>
+
+                <td>${esc(r.dispositivo || 'Não identificado')}</td>
+
+                <td>${esc(r.notificacao_status || '—')}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
       </div>`;
+
   } catch (erro) {
     console.error('Erro nas preferências:', erro);
+
     out.innerHTML =
       '<p>Erro ao consultar preferências: ' +
       esc(erro.message) + '</p>';
