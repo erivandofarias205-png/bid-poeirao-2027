@@ -22750,6 +22750,8 @@ body table tbody td * {
       adicionar(nomeTime(jogo.time_visitante));
       adicionar(nomeTime(jogo.home));
       adicionar(nomeTime(jogo.away));
+      adicionar(nomeTime(jogo.homeTeam));
+adicionar(nomeTime(jogo.awayTeam));
     });
 
     return [...mapa.values()].sort((a, b) =>
@@ -22856,11 +22858,31 @@ body table tbody td * {
       const jogos = c.jogos || [];
       const nomes = extrairTimes(jogos);
 
-      // Aproveita também os nomes presentes na classificação.
-      (c.classificacao || []).forEach(linha => {
-        const nome = nomeTime(linha.time || linha.equipe || linha);
-        if (nome) nomes.push(nome);
-      });
+// Busca somente os nomes reais dos clubes na classificação.
+(c.classificacao || []).forEach(tabela => {
+
+  const entradas =
+    tabela.entries ||
+    tabela.rows ||
+    tabela.classificacao ||
+    [];
+
+  if (!Array.isArray(entradas)) return;
+
+  entradas.forEach(linha => {
+    const equipe = linha.team || linha.time || linha.equipe;
+
+    const nome = nomeTime(equipe);
+
+    if (
+      nome &&
+      !['classificacao', 'classificacao geral']
+        .includes(normalizar(nome))
+    ) {
+      nomes.push(nome);
+    }
+  });
+});
 
       nomes.forEach(nome => destino.push(nome));
     });
