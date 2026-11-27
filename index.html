@@ -22856,7 +22856,20 @@ body table tbody td * {
     .addEventListener('click', () => salvarPreferencia('recusou'));
 
   document.getElementById('bidMeuFutebolFechar')
-    .addEventListener('click', () => salvarPreferencia('fechou'));
+  .addEventListener('click', function() {
+
+    // Fecha imediatamente
+    modal.style.display = 'none';
+
+    // Registra que o usuário já visualizou
+    localStorage.setItem(CHAVE, '1');
+
+    // Tenta registrar o fechamento sem impedir a janela de fechar
+    salvarPreferencia('fechou').catch(erro => {
+      console.error('Erro ao registrar fechamento:', erro);
+    });
+
+  });
 
   async function iniciar() {
     if (localStorage.getItem(CHAVE) === '1') return;
