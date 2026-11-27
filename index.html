@@ -7266,6 +7266,126 @@ area.innerHTML = `
 
   `;
 
+// CARREGAR PLACARES DOS PLAYOFFS DA SÉRIE B
+if (ehSerieB) {
+  const areaPlayoffs = document.getElementById(
+    `${idVisualizacao}-placares`
+  );
+
+  if (areaPlayoffs) {
+    (async () => {
+      try {
+        areaPlayoffs.innerHTML =
+          '<p style="text-align:center">Atualizando placares...</p>';
+
+        const resposta = await fetch(
+          '/api/competicoes?competicao=brasileirao-b',
+          { cache: 'no-store' }
+        );
+
+        if (!resposta.ok) {
+          throw new Error('Falha ao consultar a API.');
+        }
+
+        const retorno = await resposta.json();
+
+        const serieB = retorno.competicoes?.find(
+          item => item.chave === 'brasileirao-b'
+        ) || retorno;
+
+        const playoffs = (serieB.jogos || [])
+          .filter(jogo =>
+            String(jogo.fase || '').toUpperCase().includes('PLAYOFF')
+          );
+
+        console.log('[PLAYOFFS NO SITE]', playoffs);
+
+        if (!playoffs.length) {
+          areaPlayoffs.innerHTML =
+            '<p style="text-align:center;color:#b58920">' +
+            'A API ainda não retornou os jogos dos playoffs.</p>';
+          return;
+        }
+
+        areaPlayoffs.innerHTML = playoffs.map(jogo => {
+          const placar = jogo.score
+            ? `${jogo.score.home} × ${jogo.score.away}`
+            : 'VS';
+
+          const data = jogo.date
+            ? jogo.date.split('-').reverse().join('/')
+            : '';
+
+          const status = jogo.status === 'finished'
+            ? 'ENCERRADO'
+            : jogo.status === 'live'
+              ? 'EM ANDAMENTO'
+              : 'AGENDADO';
+
+          return `
+            <div style="
+              background:#fff;
+              border:1px solid #ddd;
+              border-radius:8px;
+              padding:12px;
+              margin:10px 0;
+              color:#111;
+            ">
+              <div style="
+                display:grid;
+                grid-template-columns:1fr 75px 1fr;
+                align-items:center;
+                gap:8px;
+              ">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <img src="${jogo.homeTeam?.badge || ''}"
+                    style="width:30px;height:30px;object-fit:contain">
+                  <strong>${jogo.homeTeam?.name || 'A definir'}</strong>
+                </div>
+
+                <strong style="
+                  text-align:center;
+                  color:#b58920;
+                  font-size:19px;
+                ">${placar}</strong>
+
+                <div style="
+                  display:flex;
+                  align-items:center;
+                  justify-content:flex-end;
+                  gap:6px;
+                ">
+                  <strong>${jogo.awayTeam?.name || 'A definir'}</strong>
+                  <img src="${jogo.awayTeam?.badge || ''}"
+                    style="width:30px;height:30px;object-fit:contain">
+                </div>
+              </div>
+
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                border-top:1px solid #ddd;
+                margin-top:8px;
+                padding-top:7px;
+                font-size:11px;
+              ">
+                <span>${data} · ${jogo.time || ''}</span>
+                <strong>${status}</strong>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (erro) {
+        console.error('[ERRO PLAYOFFS]', erro);
+
+        areaPlayoffs.innerHTML =
+          '<p style="text-align:center;color:red">' +
+          'Não foi possível atualizar os placares.</p>';
+      }
+    })();
+  }
+}
 
           } catch (erro) {
     area.innerHTML = '<p>Não foi possível carregar a classificação.</p><p>' + erro.message + '</p>';

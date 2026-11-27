@@ -1585,7 +1585,101 @@ const jogosPlayoffFormatados = jogosPlayoffGE.map(jogo => {
 });
 
 // Junta os jogos normais com os playoffs
-jogos = [...jogos, ...jogosPlayoffFormatados];
+
+// PLAYOFFS SÉRIE B — COMPLEMENTO OFICIAL CBF
+const jogosPlayoffOficiais = [
+  {
+    id: 'cbf-382',
+    etapa: 'IDA',
+    date: '2026-11-22',
+    time: '16:00',
+    status: 'finished',
+    homeTeam: { name: 'Criciúma', badge: '' },
+    awayTeam: { name: 'Fortaleza', badge: '' },
+    score: { home: 1, away: 0 },
+    fase: 'PLAYOFF DE ACESSO'
+  },
+  {
+    id: 'cbf-381',
+    etapa: 'IDA',
+    date: '2026-11-22',
+    time: '18:30',
+    status: 'finished',
+    homeTeam: { name: 'Atlético-GO', badge: '' },
+    awayTeam: { name: 'Vila Nova', badge: '' },
+    score: { home: 1, away: 1 },
+    fase: 'PLAYOFF DE ACESSO'
+  },
+  {
+    id: 'cbf-383',
+    etapa: 'VOLTA',
+    date: '2026-11-27',
+    time: '20:00',
+    status: 'scheduled',
+    homeTeam: { name: 'Vila Nova', badge: '' },
+    awayTeam: { name: 'Atlético-GO', badge: '' },
+    score: null,
+    fase: 'PLAYOFF DE ACESSO'
+  },
+  {
+    id: 'cbf-384',
+    etapa: 'VOLTA',
+    date: '2026-11-28',
+    time: '20:00',
+    status: 'scheduled',
+    homeTeam: { name: 'Fortaleza', badge: '' },
+    awayTeam: { name: 'Criciúma', badge: '' },
+    score: null,
+    fase: 'PLAYOFF DE ACESSO'
+  }
+];
+
+const chaveEquipePlayoff = nome => {
+  const n = (nome || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  if (n.includes('criciuma')) return 'criciuma';
+  if (n.includes('fortaleza')) return 'fortaleza';
+  if (n.includes('atletico')) return 'atletico-go';
+  if (n.includes('vila nova')) return 'vila-nova';
+
+  return n.trim();
+};
+
+const jogosPlayoffCompletos = [...jogosPlayoffFormatados];
+
+for (const oficial of jogosPlayoffOficiais) {
+  const existente = jogosPlayoffCompletos.find(jogo =>
+    jogo.date === oficial.date &&
+    chaveEquipePlayoff(jogo.homeTeam?.name) ===
+      chaveEquipePlayoff(oficial.homeTeam.name) &&
+    chaveEquipePlayoff(jogo.awayTeam?.name) ===
+      chaveEquipePlayoff(oficial.awayTeam.name)
+  );
+
+  if (!existente) {
+    jogosPlayoffCompletos.push(oficial);
+  } else {
+    existente.etapa = oficial.etapa;
+
+    if (oficial.score) {
+      existente.score = oficial.score;
+      existente.status = 'finished';
+    }
+  }
+}
+
+jogosPlayoffCompletos.sort((a, b) =>
+  `${a.date} ${a.time}`.localeCompare(
+    `${b.date} ${b.time}`
+  )
+);
+
+console.log('[PLAYOFFS COMPLETOS]', jogosPlayoffCompletos);
+
+jogos = [...jogos, ...jogosPlayoffCompletos];
 
 dadosOriginais = {
   classificacao: dadosTabela,
