@@ -23178,6 +23178,11 @@ async function iniciar() {
       '<option value="">Erro ao carregar equipes</option>';
   }
 }
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', iniciar);
+} else {
+  iniciar();
+}
 
 </script>
 <script>
