@@ -23200,11 +23200,12 @@ async function iniciar() {
   status.textContent = 'Carregando suas equipes...';
 
   try {
-    carregarProfissionais();
+    await Promise.all([
+  carregarAmador(),
+  carregarProfissionais()
+]);
 
-    await carregarAmador();
-
-    await carregarCompeticoesAmadoras();
+atualizarCompeticoes('amador');
 
     status.textContent = 'Escolha suas preferências.';
 
