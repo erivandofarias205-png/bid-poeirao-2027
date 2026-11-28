@@ -22712,13 +22712,14 @@ const CHAVE = 'bid_meu_futebol_apresentado_v4';
 
   let equipesAmadoras = [];
   let competicoes = [];
-function atualizarCompeticoes(tipo) {
+
+
+async function atualizarCompeticoes(tipo) {
   const nomes = {
     'brasileirao-a': 'Brasileirão Série A',
     'brasileirao-b': 'Brasileirão Série B',
     'brasileirao-c': 'Brasileirão Série C',
     'cearense': 'Campeonato Cearense',
-
     'la-liga': 'La Liga (Espanha)',
     'bundesliga': 'Bundesliga (Alemanha)',
     'serie-a-italia': 'Campeonato Italiano',
@@ -22726,28 +22727,45 @@ function atualizarCompeticoes(tipo) {
     'liga-portugal': 'Campeonato Português'
   };
 
-  const lista = [...BRASIL, ...INTERNACIONAL].map(chave => ({
-    value: chave,
-    nome: nomes[chave] || chave
-  }));
+  try {
+    const { data, error } = await supabaseClient
+      .from('COMPETICOES')
+      .select('id,nome,temporada')
+      .order('nome', { ascending: true });
 
-  preencher(
-    competicao,
-    lista,
-    'Escolha sua competição'
-  );
-}
+    if (error) throw error;
 
-  competicoes = data || [];
-
-  preencher(
-    competicao,
-    competicoes.map(c => ({
+    const listaBanco = (data || []).map(c => ({
       value: String(c.id),
-      nome: c.temporada ? `${c.nome} - ${c.temporada}` : c.nome
-    })),
-    'Escolha sua competição'
-  );
+      nome: c.temporada
+        ? `${c.nome} - ${c.temporada}`
+        : c.nome
+    }));
+
+    const listaProfissionais = [
+      ...BRASIL,
+      ...INTERNACIONAL
+    ].map(chave => ({
+      value: `prof:${chave}`,
+      nome: nomes[chave] || chave
+    }));
+
+    const lista = [
+      ...listaBanco,
+      ...listaProfissionais
+    ];
+
+    preencher(
+      competicao,
+      lista,
+      'Escolha sua competição'
+    );
+
+  } catch (erro) {
+    console.error('Erro ao carregar competições:', erro);
+    competicao.innerHTML =
+      '<option value="">Erro ao carregar competições</option>';
+  }
 }
 
   function idInstalacao() {
