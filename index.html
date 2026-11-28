@@ -22801,12 +22801,16 @@ const INTERNACIONAL = [
 
 
     async function carregarAmador() {
+      console.log('TESTE: iniciando consulta das equipes...');
     const { data, error } = await supabaseClient
       .from('EQUIPES')
       .select('id,nome')
       .order('nome');
 
     if (error) throw error;
+   
+    console.log('EQUIPES RETORNADAS DO SUPABASE:', data);
+console.log('TOTAL DE EQUIPES:', data?.length);
 
     equipesAmadoras = (data || []).filter(e => {
   const nome = normalizar(e.nome);
