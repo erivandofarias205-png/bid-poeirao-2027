@@ -22712,18 +22712,31 @@ const CHAVE = 'bid_meu_futebol_apresentado_v4';
 
   let equipesAmadoras = [];
   let competicoes = [];
-async function atualizarCompeticoes(tipo) {
-  const { data, error } = await supabaseClient
-    .from('COMPETICOES')
-    .select('id,nome,temporada')
-    .order('nome', { ascending: true });
+function atualizarCompeticoes(tipo) {
+  const nomes = {
+    'brasileirao-a': 'Brasileirão Série A',
+    'brasileirao-b': 'Brasileirão Série B',
+    'brasileirao-c': 'Brasileirão Série C',
+    'cearense': 'Campeonato Cearense',
 
-  if (error) {
-    console.error('ERRO AO CARREGAR COMPETIÇÕES:', error);
-    competicao.innerHTML =
-      '<option value="">ERRO AO CARREGAR COMPETIÇÕES</option>';
-    return;
-  }
+    'la-liga': 'La Liga (Espanha)',
+    'bundesliga': 'Bundesliga (Alemanha)',
+    'serie-a-italia': 'Campeonato Italiano',
+    'ligue-1': 'Ligue 1 (França)',
+    'liga-portugal': 'Campeonato Português'
+  };
+
+  const lista = [...BRASIL, ...INTERNACIONAL].map(chave => ({
+    value: chave,
+    nome: nomes[chave] || chave
+  }));
+
+  preencher(
+    competicao,
+    lista,
+    'Escolha sua competição'
+  );
+}
 
   competicoes = data || [];
 
