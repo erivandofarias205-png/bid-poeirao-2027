@@ -22587,8 +22587,6 @@ body table tbody td * {
 }
 </style>
 
-
-
 <!-- MEU FUTEBOL - PRIMEIRO ACESSO -->
 <div id="bidMeuFutebolModal" style="
   display:none;position:fixed;inset:0;z-index:999999;
@@ -23154,7 +23152,7 @@ internacional.addEventListener('change', () => {
   
 
 async function iniciar() {
-  if (localStorage.getItem(CHAVE) === '1') return;
+  // TESTE: ignorar bloqueio de apresentação
 
   modal.style.display = 'flex';
   status.textContent = 'Carregando suas equipes...';
