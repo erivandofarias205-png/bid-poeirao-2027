@@ -22710,16 +22710,27 @@ body table tbody td * {
 const CHAVE = 'bid_meu_futebol_apresentado_v4';
   const ID_KEY = 'bid_meu_futebol_instalacao_id';
 
-  let equipesAmadoras = [];
-  let competicoes = [];
 
+let equipesAmadoras = [];
+let competicoes = [];
 
 async function atualizarCompeticoes(tipo) {
   const nomes = {
     'brasileirao-a': 'Brasileirão Série A',
     'brasileirao-b': 'Brasileirão Série B',
     'brasileirao-c': 'Brasileirão Série C',
+    'brasileirao-d': 'Brasileirão Série D',
+    'copa-do-brasil': 'Copa do Brasil',
+    'copa-do-nordeste': 'Copa do Nordeste',
+    'copa-verde': 'Copa Verde',
     'cearense': 'Campeonato Cearense',
+    'libertadores': 'Copa Libertadores',
+    'sul-americana': 'Copa Sul-Americana',
+    'recopa': 'Recopa Sul-Americana',
+    'mundial-clubes': 'Mundial de Clubes',
+    'champions-league': 'Champions League',
+    'europa-league': 'Europa League',
+    'conference-league': 'Conference League',
     'la-liga': 'La Liga (Espanha)',
     'bundesliga': 'Bundesliga (Alemanha)',
     'serie-a-italia': 'Campeonato Italiano',
@@ -22750,10 +22761,7 @@ async function atualizarCompeticoes(tipo) {
       nome: nomes[chave] || chave
     }));
 
-    const lista = [
-      ...listaBanco,
-      ...listaProfissionais
-    ];
+    const lista = [...listaBanco, ...listaProfissionais];
 
     preencher(
       competicao,
@@ -22767,6 +22775,7 @@ async function atualizarCompeticoes(tipo) {
       '<option value="">Erro ao carregar competições</option>';
   }
 }
+
 
   function idInstalacao() {
     let id = localStorage.getItem(ID_KEY);
@@ -22841,10 +22850,27 @@ adicionar(nomeTime(jogo.awayTeam));
   'brasileirao-a',
   'brasileirao-b',
   'brasileirao-c',
-  'cearense'
+  'brasileirao-d',
+  'copa-do-brasil',
+  'supercopa-brasil',
+  'copa-do-nordeste',
+  'copa-verde',
+  'copa-paulista',
+  'campeonato-carioca',
+  'campeonato-paulista',
+  'campeonato-mineiro',
+  'campeonato-gaucho',
+  'campeonato-cearense'
 ];
 
 const INTERNACIONAL = [
+  'libertadores',
+  'sul-americana',
+  'recopa-sul-americana',
+  'champions-league',
+  'europa-league',
+  'conference-league',
+  'mundial-de-clubes',
   'la-liga',
   'bundesliga',
   'serie-a-italia',
