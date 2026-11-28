@@ -22812,10 +22812,18 @@ const INTERNACIONAL = [
     console.log('EQUIPES RETORNADAS DO SUPABASE:', data);
 console.log('TOTAL DE EQUIPES:', data?.length);
 
-    equipesAmadoras = (data || []).filter(e => {
-  const nome = normalizar(e.nome);
-  return nome !== 'off' && nome !== 'equipe off';
-});
+    equipesAmadoras = (data || [])
+  .filter(e => {
+    const nome = normalizar(e.nome);
+    return nome !== 'off' && nome !== 'equipe off';
+  })
+  .sort((a, b) =>
+    String(a.nome || '').localeCompare(
+      String(b.nome || ''),
+      'pt-BR',
+      { sensitivity: 'base' }
+    )
+  );
 
     preencher(amador, equipesAmadoras.map(e => ({
       value: String(e.id),
@@ -22985,6 +22993,13 @@ function carregarProfissionais() {
     'AVS',
     'Tondela'
   ];
+clubesBrasil.sort((a, b) =>
+  a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
+);
+
+clubesInternacionais.sort((a, b) =>
+  a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
+);
 
   preencher(
     brasil,
@@ -23013,8 +23028,7 @@ amador.addEventListener('change', () => {
     personalizada.value = '';
   }
 
-  atualizarCompeticoes('amador');
-});
+  });
 
 // CLUBE BRASILEIRO
 brasil.addEventListener('change', () => {
@@ -23166,7 +23180,7 @@ async function iniciar() {
 
     await carregarAmador();
 
-    atualizarCompeticoes('amador');
+    await carregarCompeticoesAmadoras();
 
     status.textContent = 'Escolha suas preferências.';
 
