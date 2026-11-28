@@ -22712,6 +22712,30 @@ const CHAVE = 'bid_meu_futebol_apresentado_v4';
 
   let equipesAmadoras = [];
   let competicoes = [];
+async function atualizarCompeticoes(tipo) {
+  const { data, error } = await supabaseClient
+    .from('COMPETICOES')
+    .select('id,nome,temporada')
+    .order('nome', { ascending: true });
+
+  if (error) {
+    console.error('ERRO AO CARREGAR COMPETIÇÕES:', error);
+    competicao.innerHTML =
+      '<option value="">ERRO AO CARREGAR COMPETIÇÕES</option>';
+    return;
+  }
+
+  competicoes = data || [];
+
+  preencher(
+    competicao,
+    competicoes.map(c => ({
+      value: String(c.id),
+      nome: c.temporada ? `${c.nome} - ${c.temporada}` : c.nome
+    })),
+    'Escolha sua competição'
+  );
+}
 
   function idInstalacao() {
     let id = localStorage.getItem(ID_KEY);
