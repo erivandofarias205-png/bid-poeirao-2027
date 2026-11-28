@@ -23251,7 +23251,9 @@ internacional.addEventListener('change', () => {
   
 
 async function iniciar() {
-  // TESTE: ignorar bloqueio de apresentação
+  if (localStorage.getItem(CHAVE) === '1') return;
+
+  modal.style.display = 'flex';
 
   modal.style.display = 'flex';
   status.textContent = 'Carregando suas equipes...';
